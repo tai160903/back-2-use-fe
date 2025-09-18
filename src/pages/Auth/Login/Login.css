@@ -1,0 +1,112 @@
+.auth-content {
+  flex-direction: row;
+  justify-content: center;
+}
+.auth-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-left-title {
+  font-size: 2.5rem !important;
+  font-weight: bold !important;
+  margin-bottom: 1rem !important;
+}
+
+.auth-left-subtitle {
+  font-size: 1.2rem !important;
+  color: #666 !important;
+  margin-bottom: 3rem !important;
+  text-align: center !important;
+  max-width: 400px !important;
+}
+
+.auth-form {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 400px !important;
+}
+
+.auth-forget {
+  color: #3a704e !important;
+  text-align: right !important;
+  align-items: end;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+.auth-forget:hover {
+  color: #3a704e !important;
+}
+
+button.auth-button {
+  background: #3a704e;
+  width: 100%;
+  color: white;
+  margin-top: 20px;
+  border-radius: 8px;
+}
+
+.auth-subtitle {
+  display: flex !important;
+  font-size: 1rem !important;
+  color: #666 !important;
+  text-align: center !important;
+  margin-top: 40px !important;
+  width: 100% !important;
+}
+
+.auth-subtitle-line {
+  border-bottom: 1px solid #ccc;
+  flex-grow: 1;
+  margin: 0 10px;
+  align-self: center;
+}
+
+.auth-social {
+  display: flex !important;
+  justify-content: space-around !important;
+  margin-top: 40px !important;
+  width: 100%;
+}
+
+.auth-social-image {
+  width: 15x;
+  height: 15px;
+  margin-right: 10px;
+}
+
+button.auth-social-button {
+  border: 1px solid #939393 !important;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px !important;
+  text-transform: none !important;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+}
+
+.auth-footer {
+  margin-top: 20px !important;
+}
+
+.auth-bottom-link {
+  color: #3a704e !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+.auth-bottom-link:hover {
+  color: #3a704e !important;
+  text-decoration: none !important;
+}
+
+.auth-image {
+  border-top-left-radius: 40px;
+  border-bottom-left-radius: 40px;
+}
+
