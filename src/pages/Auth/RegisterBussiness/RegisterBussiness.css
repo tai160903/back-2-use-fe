@@ -1,0 +1,162 @@
+.registerBusiness-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: url("https://media.istockphoto.com/id/1411289606/vi/anh/b%E1%BB%99-%C4%91%E1%BB%93-%C4%83n-d%C3%B9ng-m%E1%BB%99t-l%E1%BA%A7n-th%C3%A2n-thi%E1%BB%87n-v%E1%BB%9Bi-m%C3%B4i-tr%C6%B0%E1%BB%9Dng-b%E1%BA%B1ng-gi%E1%BA%A5y-v%E1%BB%9Bi-c%C3%A1c-d%E1%BA%A5u-hi%E1%BB%87u-t%C3%A1i-ch%E1%BA%BF-tr%C3%AAn-n%E1%BB%81n-c%E1%BB%A7a.jpg?s=612x612&w=0&k=20&c=MQ3e0zUbZMNoexBtcB4y0Z18fLWuj887iMTQoTZjcAQ=")
+    center/cover no-repeat;
+  position: relative;
+}
+
+.registerBusiness-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(2px);
+  z-index: 0;
+}
+
+.registerBusiness-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  z-index: 1;
+}
+
+.registerBusiness-formPaper {
+  width: 100%;
+  max-width: 900px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+}
+
+.registerBusiness-formHeader {
+  background: linear-gradient(to right, #2e7d32, #388e3c);
+  color: white;
+  padding: 24px;
+}
+
+.registerBusiness-form {
+  padding: 40px;
+}
+
+.registerBussiness-info,
+.registerBussiness-bussiness,
+.registerBusiness-sectionTitle {
+  color: white;
+  font-weight: 600 !important;
+}
+
+.registerBusiness-line {
+  border: 1px solid #ccc;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.registerBusinessForm {
+  width: 100%;
+  margin-top: 30px !important;
+}
+
+.registerBusiness-fileSection {
+  margin-top: 32px;
+}
+
+.registerBusiness-fileUpload {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  text-align: center;
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.registerBusiness-fileUpload:hover {
+  border-color: #99dc9d;
+}
+
+.registerBusiness-fileInput {
+  display: none;
+}
+
+.registerBusiness-uploadBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+
+.registerBusiness-uploadBox p {
+  margin: 8px 0 4px;
+  font-weight: 500;
+  color: #fff;
+}
+
+button.registerBusiness-submitBtn {
+  margin-top: 40px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+button.registerBusiness-submitBtn:hover {
+  transform: scale(1.02);
+  background-color: #2e7d32;
+}
+
+/* Style cho TextField */
+.registerBusinessForm .MuiOutlinedInput-root {
+  color: #fff;
+}
+
+.registerBusinessForm .MuiInputLabel-root {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.registerBusinessForm .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.registerBusinessForm
+  .MuiOutlinedInput-root:hover
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #fff;
+}
+
+.registerBusinessForm
+  .MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #99dc9d !important;
+}
+
+.registerBusinessForm .MuiInputLabel-root.Mui-focused {
+  color: #99dc9d !important;
+}
+
+/* Style cho thông báo lỗi */
+.registerBusinessForm .MuiFormHelperText-root {
+  color: #ff1744 !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  margin-top: 10px !important;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+}
+
+.registerBusiness-error {
+  color: #ff1744 !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  margin-top: 6px !important;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}

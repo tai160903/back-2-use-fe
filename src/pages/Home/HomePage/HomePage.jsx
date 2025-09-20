@@ -41,7 +41,9 @@ export default function HomePage() {
           </p>
 
           {/* CTA Button */}
-          <Button className="cta-button">Get Start</Button>
+          <Button className="cta-button">
+            <Link href="/auth/login">Get Start</Link>
+          </Button>
         </div>
       </section>
       {/* welcome */}
@@ -58,9 +60,8 @@ export default function HomePage() {
               <button className="welcome-btn">More about</button>
             </Grid>
             <Grid size={7} className="welcome-right">
-              <Grid container spacing={3} >
+              <Grid container spacing={3}>
                 {" "}
-               
                 <Grid item size={4}>
                   <div className="welcome-item">
                     <Typography variant="h3" color="text.primary">
@@ -282,8 +283,8 @@ export default function HomePage() {
       {/* global */}
       <section className="global-section">
         <div className="homePage-container">
-          <Grid container spacing={45} sx={{ maxWidth: "1700px" }}>
-            <Grid size={5} className="global-left">
+          <Grid container spacing={35} sx={{ maxWidth: "1600px" }}>
+            <Grid size={6} className="global-left">
               <Typography className="global-text-title">
                 Our Global Network for change
               </Typography>
@@ -291,9 +292,16 @@ export default function HomePage() {
                 Become part of our global network and help make reusables the
                 new standard!
               </Typography>
-              <button className="global-btn">Become a Partner Now!</button>
+              <button className="global-btn">
+                <Link
+                  href="/auth/register/bussiness"
+                  sx={{ textDecoration: "none", color: "white" }}
+                >
+                  Become a Partner Now!
+                </Link>
+              </button>
             </Grid>
-            <Grid size={7} className="global-right">
+            <Grid size={6} className="global-right">
               <div className="globe">
                 <img
                   src="https://cdn.prod.website-files.com/67518f48ef6518d6394c6a67/67810cdf17ff5303f9441371_vytal_globe_grey_white.jpg"

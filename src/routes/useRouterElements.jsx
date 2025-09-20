@@ -9,6 +9,7 @@ import { PATH } from "./path";
 import { useRoutes } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 import MainLayout from "../layouts/MainLayout/MainLayout";
+import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -24,6 +25,10 @@ export default function useRouterElements() {
         {
           path: PATH.REGISTER,
           element: <Register />,
+        },
+         {
+          path: PATH.REGISTERBUSSINESS,
+          element: <RegisterBussiness />,
         },
       ],
     },

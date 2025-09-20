@@ -1,6 +1,7 @@
 import React from "react";
 import "./Header.css";
 import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
 
 export default function Header() {
   return (
@@ -26,7 +27,11 @@ export default function Header() {
           <a href="#about">About</a>
         </div>
         <div className="cta">
-          <button>Get started</button>
+          <button>
+            <Link href="/auth/login" sx={{ textDecoration: "none", color:"white" }}>
+              Get started
+            </Link>
+          </button>
         </div>
       </div>
     </div>
