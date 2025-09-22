@@ -9,6 +9,7 @@ export const PATH = {
 
     // USER
     HOME: "/",
+    PROFILE:"/profile",
 
     // BUSINESS
     BUSINESS: "/business",

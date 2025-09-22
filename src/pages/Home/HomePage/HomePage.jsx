@@ -42,7 +42,9 @@ export default function HomePage() {
 
           {/* CTA Button */}
           <Button className="cta-button">
-            <Link href="/auth/login">Get Start</Link>
+            <Link href="/auth/login" sx={{ color: "white" }}>
+              Get Start
+            </Link>
           </Button>
         </div>
       </section>
