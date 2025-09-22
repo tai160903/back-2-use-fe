@@ -10,6 +10,7 @@ import { useRoutes } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness";
+import Profile from "../pages/Home/Profile/Profile";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -41,6 +42,10 @@ export default function useRouterElements() {
         {
           index: true,
           element: <HomePage />,
+        },
+          {
+          path: PATH.PROFILE,
+          element: <Profile />,
         },
       ],
     },

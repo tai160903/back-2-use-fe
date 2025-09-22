@@ -97,7 +97,7 @@ function RegisterBussiness() {
           </div>
 
           <form
-            className="registerBusiness-form bg-white/5 backdrop-blur-sm"
+            className="registerBusiness-form"
             onSubmit={handleSubmit(onSubmit)}
           >
             <div className="registerBusiness-formSection">
