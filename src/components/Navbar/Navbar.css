@@ -1,0 +1,76 @@
+.navbar {
+  transition: width 0.3s;
+  overflow-x: hidden;
+  white-space: nowrap;
+}
+
+.navbar-paper {
+  border-right: none;
+  top: 64px; /* nếu có header */
+  height: calc(100% - 64px);
+}
+
+.navbar-open {
+  width: 250px !important;
+}
+
+.navbar-closed {
+  width: 70px !important;
+}
+
+.navbar-content {
+  line-height: 38px !important;
+  padding: 10px !important;
+}
+
+.navbar-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+.navbar-item {
+  margin-top: 20px;
+}
+
+.navbar-item:hover {
+  border-radius: 10px;
+  background: #e7f3e7 !important;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.navbar-item .MuiListItemText-primary {
+  font-weight: 400;
+  transition: font-weight 0.2s ease-in-out;
+}
+
+.navbar-item:hover .MuiListItemText-primary {
+  font-weight: 600; /* bold */
+}
+
+.navbar-item.active {
+  border-radius: 10px;
+  background: #007c00;
+  color: white;
+}
+
+.navbar-item.active:hover  {
+  border-radius: 10px;
+  background: #007c00 !important;
+  color: white;
+  cursor: pointer;
+}
+
+.navbar-item.active:hover .MuiListItemText-primary {
+    font-weight: 100 !important; 
+}
+
+.navbar-item.active .navbar-icon {
+  color: white !important;
+}
+
+.navbar-icon {
+  min-width: 40px !important;
+  font-size: 22px;
+}
