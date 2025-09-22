@@ -1,0 +1,76 @@
+.store {
+  padding: 30px;
+}
+
+.store-container {
+  padding: 30px;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  height: 100vh;
+}
+
+.store-header {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+  line-height: 20px !important;
+}
+
+.store-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600 !important;
+  font-size: 30px !important;
+  text-transform: uppercase;
+}
+
+.store-search {
+  position: relative;
+  margin-top: 30px;
+}
+
+.MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #efefef !important;
+  border-width: 2px !important;
+}
+
+.store-content {
+  display: flex;
+  width: 100%;
+  gap: 30px;
+  align-items: stretch;
+  /* height: 140vh; */
+  margin-top: 50px;
+}
+
+.store-map {
+  width: 65%;
+  background-color: #fff;
+  padding: 30px 40px;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.store-rightInfo {
+  width: 35%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.store-nearby {
+  background-color: #ffffff;
+  flex: 1;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  border-radius: 10px;
+  padding: 30px 40px;
+}
+
+.store-legend {
+  background-color: #ffffff;
+  flex: 1;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  border-radius: 10px;
+  padding: 30px 40px;
+}

@@ -11,6 +11,7 @@ import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness";
 import Profile from "../pages/Home/Profile/Profile";
+import StorePage from "../pages/Home/Store/StorePage";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -27,7 +28,7 @@ export default function useRouterElements() {
           path: PATH.REGISTER,
           element: <Register />,
         },
-         {
+        {
           path: PATH.REGISTERBUSSINESS,
           element: <RegisterBussiness />,
         },
@@ -43,38 +44,40 @@ export default function useRouterElements() {
           index: true,
           element: <HomePage />,
         },
-          {
+        {
           path: PATH.PROFILE,
           element: <Profile />,
+        },
+        {
+          path: PATH.STORE,
+          element: <StorePage />,
         },
       ],
     },
 
     // business
     {
-        path: PATH.BUSINESS,
-        element: <BussinessLayout />,
-        children: [
-          {
-            index: true,
-            element: <BusinessDashboard />,
-          },
-        ],
+      path: PATH.BUSINESS,
+      element: <BussinessLayout />,
+      children: [
+        {
+          index: true,
+          element: <BusinessDashboard />,
+        },
+      ],
     },
 
     // admin
     {
-        path: PATH.ADMIN,
-        element: <AdminLayout />,
-        children: [
-          {
-            index: true,
-            element: <AdminDashboard />,
-          },
-        ],
-    }
+      path: PATH.ADMIN,
+      element: <AdminLayout />,
+      children: [
+        {
+          index: true,
+          element: <AdminDashboard />,
+        },
+      ],
+    },
   ]);
   return elements;
 }
-
-

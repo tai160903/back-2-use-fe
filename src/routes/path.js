@@ -10,6 +10,7 @@ export const PATH = {
     // USER
     HOME: "/",
     PROFILE:"/profile",
+    STORE:"/store",
 
     // BUSINESS
     BUSINESS: "/business",
