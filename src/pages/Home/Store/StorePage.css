@@ -1,3 +1,4 @@
+@import "leaflet/dist/leaflet.css";
 .store {
   padding: 30px;
 }
@@ -67,10 +68,141 @@
   padding: 30px 40px;
 }
 
+.store-nearby-title span {
+  color: #8e8e8e;
+}
+
+.stotre-nearby-content-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.stotFre-nearby-content-name {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+.stotre-nearby-content-name span {
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.stotre-nearby-content-des {
+  color: #8e8e8e !important;
+}
+
 .store-legend {
   background-color: #ffffff;
   flex: 1;
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
   border-radius: 10px;
   padding: 30px 40px;
+}
+
+.store-legend-title {
+  font-weight: bold !important;
+  font-size: 20px !important;
+  margin-bottom: 20px;
+}
+
+.store-legend-btn {
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0px;
+}
+
+.store-legend-btn-info {
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  align-items: center;
+  font-size: 20px !important;
+  color: #8e8e8e;
+  line-height: 2.5 !important;
+}
+
+.store-legend-btn-above {
+  background-color: #009988;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-right: 10px;
+
+}
+
+.store-legend-btn-below {
+  background-color: #ec4b3b;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.store-legend-btn-location {
+  background-color: black;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+
+.leaflet-popup-content-title {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+
+}
+
+.leaflet-popup-content-name {
+  font-weight: bold !important;
+  font-size: 20px !important;
+}
+
+.leaflet-popup-content-address {
+  margin-top: -10px !important;
+  color: #8e8e8e;
+}
+
+.leaflet-popup-content-daily {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  margin-top: -10px !important;
+  color: #8e8e8e;
+}
+
+.leaflet-popup-content-btn {
+  display: flex;
+  justify-content: space-between;
+}
+
+button.leaflet-popup-btn-derection {
+  padding: 10px;
+  background-color: #1a891b;
+  color: #fff;
+  border-radius: 8px;
+}
+
+button.leaflet-popup-btn-details {
+  font-weight: bold;
+  margin-left: 10px;
+   padding: 10px;
+  background-color: #ffff;
+  color: black;
+  border-radius: 8px;
+  border: 1px solid #efefef;
+  transition: 0.5s;
+}
+
+button.leaflet-popup-btn-details:hover{
+  background-color: #009988;
+  color: white;
+}
+
+.leaflet-routing-container {
+  display: none !important;
 }
