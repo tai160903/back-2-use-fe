@@ -12,6 +12,7 @@ import MainLayout from "../layouts/MainLayout/MainLayout";
 import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness";
 import Profile from "../pages/Home/Profile/Profile";
 import StorePage from "../pages/Home/Store/StorePage";
+import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -51,6 +52,10 @@ export default function useRouterElements() {
         {
           path: PATH.STORE,
           element: <StorePage />,
+        },
+           {
+          path: PATH.TRANSACTION_HISTORY,
+          element: <TransactionHistory />,
         },
       ],
     },

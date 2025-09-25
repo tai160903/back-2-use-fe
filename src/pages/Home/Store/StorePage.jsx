@@ -4,13 +4,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import { MdOutlineLocationOn } from "react-icons/md";
 import { IoIosSearch } from "react-icons/io";
 import "./StorePage.css";
-import {
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMap,
-} from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import { GoClock } from "react-icons/go";
@@ -19,27 +13,29 @@ import Button from "@mui/material/Button";
 import { IoEyeOutline } from "react-icons/io5";
 import "leaflet-routing-machine";
 
-// Mock dữ liệu store
+// ================== MOCK DATA ==================
+// Thêm coords (latitude, longitude) cho các store
 const mockStores = [
   {
     id: 1,
     name: "Green Café Downtown",
-    address: "123 Main St, Downtown, City 12345",
+    address: "1262 Kha Vạn Cân, Thủ Đức, TP.HCM",
+    coords: [10.8565, 106.7709], // tọa độ thật
     distance: "1.2 km",
     products: ["cup", "container", "bottle"],
-    daily: "9AM -8PM",
+    daily: "9AM - 8PM",
   },
   {
     id: 2,
     name: "Eco Coffee Shop",
     address: "456 River Rd, Uptown, City 67890",
+    coords: [10.768, 106.673], // giữ địa chỉ cũ hoặc đổi tùy ý
     distance: "2.5 km",
     products: ["cup"],
     daily: "9AM - 8PM",
   },
 ];
 
-// Icon mặc định
 const defaultIcon = new L.Icon({
   iconUrl: "https://vectorified.com/images/google-maps-marker-icon-38.png",
   iconSize: [40, 50],
@@ -47,7 +43,6 @@ const defaultIcon = new L.Icon({
   popupAnchor: [9, -45],
 });
 
-// Icon khi được chọn
 const selectedIcon = new L.Icon({
   iconUrl:
     "https://icons.iconarchive.com/icons/paomedia/small-n-flat/512/map-marker-icon.png",
@@ -56,62 +51,69 @@ const selectedIcon = new L.Icon({
   popupAnchor: [0, -45],
 });
 
-// Icon user
 const userIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
   iconSize: [35, 35],
   iconAnchor: [17, 35],
 });
 
-// Component vẽ chỉ đường
-function Routing({ userLocation, storeLocation }) {
+
+function RoutingPolyline({ userLocation, storeLocation }) {
   const map = useMap();
+  const [polyline, setPolyline] = useState(null);
 
   useEffect(() => {
     if (!userLocation || !storeLocation) return;
 
-    const routingControl = L.Routing.control({
-      waypoints: [
-        L.latLng(userLocation[0], userLocation[1]),
-        L.latLng(storeLocation[0], storeLocation[1]),
-      ],
-      lineOptions: {
-        styles: [{ color: "#03790a", weight: 5 }],
-      },
-      addWaypoints: false,
-      draggableWaypoints: false,
-      fitSelectedRoutes: true,
-      show: false,
-    }).addTo(map);
+    // Xóa polyline cũ trước khi vẽ mới
+    if (polyline) {
+      map.removeLayer(polyline);
+    }
 
-    return () => map.removeControl(routingControl);
+    const fetchRoute = async () => {
+      try {
+        const apiKey = import.meta.env.VITE_ORS_API_KEY;
+        const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${userLocation[1]},${userLocation[0]}&end=${storeLocation[1]},${storeLocation[0]}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const coords = data.features[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+
+        const newPolyline = L.polyline(coords, { color: "#03790a", weight: 5 }).addTo(map);
+
+        map.fitBounds(newPolyline.getBounds());
+        setPolyline(newPolyline); // lưu polyline mới
+      } catch (err) {
+        console.error("Route error:", err);
+      }
+    };
+
+    fetchRoute();
   }, [userLocation, storeLocation, map]);
 
-  return <div id="map" style={{ height: "100vh", width: "100%" }} />; 
+  return null;
 }
 
+
 export default function StorePage() {
-  const [userLocation, setUserLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState([10.762621, 106.660172]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [directionTo, setDirectionTo] = useState(null);
 
   // Lấy vị trí user
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation([pos.coords.latitude, pos.coords.longitude]);
-        },
-        (err) => {
-          console.error("Không thể lấy vị trí: ", err);
-        }
-      );
-    }
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+      (err) => console.error(err)
+    );
   }, []);
 
   return (
     <div className="store">
       <div className="store-container">
+        {/* Header */}
         <div className="store-header">
           <Typography className="store-title text-black">
             <MdOutlineLocationOn className="mr-2 size-10 text-green-300" />{" "}
@@ -122,7 +124,7 @@ export default function StorePage() {
           </span>
         </div>
 
-        {/* Search */}
+        {/* Search bar */}
         <div className="store-search">
           <TextField
             placeholder="Search for location or store name..."
@@ -138,11 +140,12 @@ export default function StorePage() {
           />
         </div>
 
+        {/* Content */}
         <div className="store-content">
-          {/* Bản đồ */}
+          {/* Map */}
           <div className="store-map">
             <MapContainer
-              center={userLocation || [10.762622, 106.660172]}
+              center={userLocation}
               zoom={13}
               style={{ height: "100%", width: "100%" }}
             >
@@ -159,62 +162,52 @@ export default function StorePage() {
               )}
 
               {/* Marker stores */}
-              {mockStores.map((store) => {
-                const storeCoords = [
-                  10.762622 + store.id * 0.01,
-                  106.660172,
-                ];
+              {mockStores.map((store) => (
+                <Marker
+                  key={store.id}
+                  position={store.coords} // dùng tọa độ thật
+                  icon={selectedStore === store.id ? selectedIcon : defaultIcon}
+                  eventHandlers={{ click: () => setSelectedStore(store.id) }}
+                >
+                  <Popup className="leaflet-popup-content">
+                    <div className="leaflet-popup-content-title">
+                      <Typography className="leaflet-popup-content-name">
+                        {store.name}
+                      </Typography>
+                      <Typography className="leaflet-popup-content-address">
+                        {store.address}
+                      </Typography>
+                      <Typography className="leaflet-popup-content-daily">
+                        <GoClock style={{ marginRight: "10px" }} />
+                        Daily: {store.daily}
+                      </Typography>
 
-                return (
-                  <Marker
-                    key={store.id}
-                    position={storeCoords}
-                    icon={
-                      selectedStore === store.id ? selectedIcon : defaultIcon
-                    }
-                    eventHandlers={{
-                      click: () => setSelectedStore(store.id),
-                    }}
-                  >
-                    <Popup className="leaflet-popup-content">
-                      <div className="leaflet-popup-content-title">
-                        <Typography className="leaflet-popup-content-name">
-                          {store.name}
-                        </Typography>
-                        <Typography className="leaflet-popup-content-address">
-                          {store.address}
-                        </Typography>
-                        <Typography className="leaflet-popup-content-daily">
-                          <GoClock style={{ marginRight: "10px" }} />
-                          Daily: {store.daily}
-                        </Typography>
-                        <div className="leaflet-popup-content-btn">
-                          {/* 🟢 Chỉ đường */}
-                          <Button
-                            className="leaflet-popup-btn-derection"
-                            onClick={() => setDirectionTo(storeCoords)}
-                          >
-                            <BiNavigation
-                              style={{ marginRight: "10px", fontSize: "20px" }}
-                            />{" "}
-                            Derections
-                          </Button>
-                          <Button className="leaflet-popup-btn-details">
-                            <IoEyeOutline
-                              style={{ marginRight: "10px", fontSize: "20px" }}
-                            />{" "}
-                            Details
-                          </Button>
-                        </div>
+                      <div className="leaflet-popup-content-btn">
+                        <Button
+                          className="leaflet-popup-btn-derection"
+                          onClick={() => setDirectionTo(store.coords)}
+                        >
+                          <BiNavigation
+                            style={{ marginRight: "10px", fontSize: "20px" }}
+                          />{" "}
+                          Directions
+                        </Button>
+                        <Button className="leaflet-popup-btn-details">
+                          <IoEyeOutline
+                            style={{ marginRight: "10px", fontSize: "20px" }}
+                          />{" "}
+                          Details
+                        </Button>
                       </div>
-                    </Popup>
-                  </Marker>
-                );
-              })}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
 
-              {/* 🟢 Vẽ tuyến đường */}
+              {/* Vẽ tuyến đường */}
               {userLocation && directionTo && (
-                <Routing
+                <RoutingPolyline
+                
                   userLocation={userLocation}
                   storeLocation={directionTo}
                 />
@@ -236,9 +229,7 @@ export default function StorePage() {
                 {mockStores.map((store) => {
                   const visibleProducts = store.products.slice(0, 2);
                   const extraCount =
-                    store.products.length > 2
-                      ? store.products.length - 2
-                      : 0;
+                    store.products.length > 2 ? store.products.length - 2 : 0;
 
                   return (
                     <div
@@ -330,21 +321,16 @@ export default function StorePage() {
 
             {/* Chú thích */}
             <div className="store-legend">
-              <Typography className="store-legend-title">
-                Map Legend
-              </Typography>
+              <Typography className="store-legend-title">Map Legend</Typography>
               <div className="store-legend-btn">
                 <Typography className="store-legend-btn-info">
-                  <div className="store-legend-btn-above"></div>
-                  Partner Store
+                  <div className="store-legend-btn-above"></div> Partner Store
                 </Typography>
                 <Typography className="store-legend-btn-info">
-                  <div className="store-legend-btn-below"></div>
-                  Selected Store
+                  <div className="store-legend-btn-below"></div> Selected Store
                 </Typography>
                 <Typography className="store-legend-btn-info">
-                  <div className="store-legend-btn-location"></div>
-                  My location
+                  <div className="store-legend-btn-location"></div> My location
                 </Typography>
               </div>
             </div>

@@ -29,7 +29,7 @@ const sidebarItems = [
   { id: "profile", label: "Profile", path: PATH.PROFILE },
   { id: "wallet", label: "Wallet", path: PATH.WALLET },
   { id: "stores", label: "Stores", path: PATH.STORE },
-  { id: "history", label: "History", path: PATH.HISTORY },
+  { id: "history", label: "History", path: PATH.TRANSACTION_HISTORY },
   { id: "rewards", label: "Rewards", path: PATH.REWARDS },
   { id: "assistant", label: "Assistant", path: PATH.ASSISTANT },
 ];

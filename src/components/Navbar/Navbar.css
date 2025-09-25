@@ -1,13 +1,16 @@
 .navbar {
   transition: width 0.3s;
-  overflow-x: hidden;
+  overflow: hidden !important;
   white-space: nowrap;
 }
+
+
 
 .navbar-paper {
   border-right: none;
   top: 64px; /* nếu có header */
   height: calc(100% - 64px);
+  overflow: hidden !important;
 }
 
 .navbar-open {
@@ -55,7 +58,7 @@
   color: white;
 }
 
-.navbar-item.active:hover  {
+.navbar-item.active:hover {
   border-radius: 10px;
   background: #007c00 !important;
   color: white;
@@ -63,7 +66,7 @@
 }
 
 .navbar-item.active:hover .MuiListItemText-primary {
-    font-weight: 100 !important; 
+  font-weight: 100 !important;
 }
 
 .navbar-item.active .navbar-icon {
@@ -71,6 +74,6 @@
 }
 
 .navbar-icon {
-  min-width: 40px !important;
+  text-align: center;
   font-size: 22px;
 }
