@@ -27,7 +27,7 @@ const sidebarItems = [
   { id: "home", label: "Home", path: PATH.HOME },
   { id: "ai-checker", label: "AI Check", path: PATH.AI_CHECK },
   { id: "profile", label: "Profile", path: PATH.PROFILE },
-  { id: "wallet", label: "Wallet", path: PATH.WALLET },
+  { id: "wallet", label: "Wallet", path: PATH.WALLET_CUSTOMER },
   { id: "stores", label: "Stores", path: PATH.STORE },
   { id: "history", label: "History", path: PATH.TRANSACTION_HISTORY },
   { id: "rewards", label: "Rewards", path: PATH.REWARDS },

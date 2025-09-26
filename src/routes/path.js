@@ -12,6 +12,7 @@ export const PATH = {
     PROFILE:"/profile",
     STORE:"/store",
     TRANSACTION_HISTORY:"/transaction_history",
+    WALLET_CUSTOMER:"/walllet_customer",
 
     // BUSINESS
     BUSINESS: "/business",

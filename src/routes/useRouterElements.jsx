@@ -13,6 +13,7 @@ import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness
 import Profile from "../pages/Home/Profile/Profile";
 import StorePage from "../pages/Home/Store/StorePage";
 import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
+import WalletCustomer from "../pages/Home/WalletCustomer/WalletCustomer";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -53,9 +54,13 @@ export default function useRouterElements() {
           path: PATH.STORE,
           element: <StorePage />,
         },
-           {
+        {
           path: PATH.TRANSACTION_HISTORY,
           element: <TransactionHistory />,
+        },
+            {
+          path: PATH.WALLET_CUSTOMER,
+          element: <WalletCustomer />,
         },
       ],
     },

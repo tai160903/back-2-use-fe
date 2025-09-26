@@ -248,7 +248,7 @@ button.borrow-content-btn:hover {
   color: #cc3500;
   font-size: 14px;
   border-radius: 8px;
-  width: 180%;
+  min-width: 120%;
 }
 
 .borrow-content-overdue-success {
@@ -259,7 +259,7 @@ button.borrow-content-btn:hover {
   color: #b05b05;
   font-size: 14px;
   border-radius: 8px;
-  width: 160%;
+  min-width: 120%;
 }
 
 .borrow-content-overdue-failed {
@@ -270,7 +270,7 @@ button.borrow-content-btn:hover {
   color: #bd0311;
   font-size: 14px;
   border-radius: 8px;
-  width: 160%;
+   min-width: 120%;
 }
 
 .borrow-content-overdue-title {
