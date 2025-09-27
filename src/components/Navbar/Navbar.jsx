@@ -19,9 +19,12 @@ import { CiStar } from "react-icons/ci";
 import { GoHistory } from "react-icons/go";
 import { TiMessages } from "react-icons/ti";
 import { AiOutlineMenuFold, AiOutlineMenuUnfold } from "react-icons/ai";
+import { CiLogout } from "react-icons/ci";
 import "./Navbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PATH } from "../../routes/path";
+import { useDispatch } from "react-redux";
+import { logout } from "../../store/slices/authSlice";
 
 const sidebarItems = [
   { id: "home", label: "Home", path: PATH.HOME },
@@ -32,12 +35,20 @@ const sidebarItems = [
   { id: "history", label: "History", path: PATH.TRANSACTION_HISTORY },
   { id: "rewards", label: "Rewards", path: PATH.REWARDS },
   { id: "assistant", label: "Assistant", path: PATH.ASSISTANT },
+  { id: "logout", label: "Logout", path: null },
 ];
 
 const Navbar = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation(); // 👉 lấy URL hiện tại
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // LOGOUT
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate(PATH.LOGIN)
+  };
 
   const getIconComponent = (iconName) => {
     const icons = {
@@ -54,6 +65,7 @@ const Navbar = () => {
       history: <GoHistory color="#6a1b9a" className="navbar-icon" />,
       rewards: <MdRedeem color="#fbc02d" className="navbar-icon" />,
       assistant: <TiMessages color="#0097a7" className="navbar-icon" />,
+      logout: <CiLogout color="#fb4225" className="navbar-icon" />,
     };
     return icons[iconName];
   };
@@ -77,7 +89,9 @@ const Navbar = () => {
             button
             key={item.id}
             selected={location.pathname === item.path}
-            onClick={() => navigate(item.path)}
+            onClick={() =>
+              item.id === "logout" ? handleLogout() : navigate(item.path)
+            }
             className={`navbar-item ${
               location.pathname === item.path ? "active" : ""
             }`}

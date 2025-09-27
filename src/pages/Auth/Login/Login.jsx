@@ -15,6 +15,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import IconButton from "@mui/material/IconButton";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { loginAPI } from "../../../store/slices/authSlice";
+import toast from "react-hot-toast";
+import { PATH } from "../../../routes/path";
+import useAuth from "../../../hooks/useAuth";
 
 const schema = yup
   .object({
@@ -27,6 +31,8 @@ const schema = yup
   .required();
 
 export default function Login() {
+  const { dispatch, navigate, isLoading } = useAuth();
+
   const {
     register,
     handleSubmit,
@@ -35,11 +41,46 @@ export default function Login() {
     resolver: yupResolver(schema),
   });
 
-  const [showPassword, setShowPassword] =useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const handleClickShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
-  const onSubmit = (data) => console.log(data);
+
+  
+  const onSubmit = async (data) => {
+    dispatch(loginAPI(data))
+      .unwrap()
+      .then((payload) => {
+        if (payload && payload.data) {
+          toast.success("Login Success");
+          localStorage.setItem("currentUser", JSON.stringify(payload.data));
+
+          const userType = payload.data.user.role?.trim().toLowerCase();
+          if (userType === "customer") {
+            navigate(PATH.HOME, { replace: true });
+          } else if (userType === "bussiness") {
+            navigate(PATH.BUSINESS, { replace: true });
+          } else if (userType === "admin" || userType === "administrator") {
+            navigate(PATH.ADMIN, { replace: true });
+          } else {
+            toast.error(
+              "Vai trò không hợp lệ, vui lòng liên hệ quản trị viên."
+            );
+          }
+        } else {
+          toast.error(
+            payload.message || "Đăng nhập thất bại, vui lòng thử lại."
+          );
+        }
+      })
+      .catch((error) => {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Đăng nhập thất bại, vui lòng thử lại.";
+        toast.error(errorMessage);
+      });
+  };
 
   return (
     <>
@@ -74,7 +115,7 @@ export default function Login() {
                     id="password"
                     label="Password"
                     variant="standard"
-                     type={showPassword ? "text" : "password"}
+                    type={showPassword ? "text" : "password"}
                     {...register("password")}
                     error={!!errors.password}
                     helperText={errors.password?.message}
@@ -96,8 +137,12 @@ export default function Login() {
                     control={<Checkbox defaultChecked />}
                     label="Remember me"
                   />
-                  <Button type="submit" className="auth-button">
-                    Sign In
+                  <Button
+                    type="submit"
+                    className="auth-button"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Registering..." : "Sign Up"}
                   </Button>
                 </form>
 
