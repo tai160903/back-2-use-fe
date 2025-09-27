@@ -5,24 +5,72 @@
 .wallet-container {
   padding: 30px;
   border: 1px solid #e8e8e8;
-  background: linear-gradient(
-    to right,
-    #eaf4eb 0%,
-    #e1efe2 100%
-  );
-  
+  background: linear-gradient(to right, #eaf4eb 0%, #e1efe2 100%);
+
   border-radius: 10px;
   height: auto;
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 .wallet-title {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .wallet-balance {
-    margin-top: 40px;
-    display: flex;
-    justify-content: space-between;
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.wallet-balance-transaction {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: #069139;
+  color: #ffffff;
+  border-radius: 10px;
+}
+
+.wallet-balance-transaction-withdraw {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: #ffe1e0;
+  color: #c10610;
+  border-radius: 10px;
+}
+
+.recentTransaction {
+  padding: 10px 30px;
+}
+
+.recentTransaction-container {
+  padding: 30px;
+  border: 1px solid #e8e8e8;
+  background-color: #fefefe;
+  border-radius: 10px;
+  height: auto;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.recentTransaction-title {
+  display: flex;
+  align-items: center;
+  font-size: 20px !important;
+}
+
+.recentTransaction-tabs {
+  margin-top: 20px;
+}
+
+.recentTransaction-tabs .MuiTabs-root {
+  width: 100%;
+}
+
+
+.recentTransaction-tabs .MuiTab-root {
+  flex-grow: 1;
+  max-width: 50%;
+  gap: 10px;
 }

@@ -1,0 +1,19 @@
+.modalWallet {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  border: 1px solid transparent !important;
+}
+
+.modalWallet-title span {
+  color: #767676;
+  font-size: small;
+}
+
+
