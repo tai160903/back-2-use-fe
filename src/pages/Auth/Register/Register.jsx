@@ -15,13 +15,12 @@ import Checkbox from "@mui/material/Checkbox";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useDispatch, useSelector } from "react-redux";
 import { registerApi } from "../../../store/slices/authSlice";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 import { PATH } from "../../../routes/path";
 
 import { isValid, isAfter, parse } from "date-fns";
+import useAuth from "../../../hooks/useAuth";
 
 const schema = yup
   .object({
@@ -64,9 +63,7 @@ const schema = yup
   .required();
 
 export default function Register() {
-  const dispatch = useDispatch();
-  const { isLoading } = useSelector((state) => state.auth);
-  const navigate = useNavigate();
+  const { dispatch, navigate, isLoading } = useAuth();
 
   const {
     register,

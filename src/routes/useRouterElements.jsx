@@ -14,6 +14,7 @@ import Profile from "../pages/Home/Profile/Profile";
 import StorePage from "../pages/Home/Store/StorePage";
 import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
 import WalletCustomer from "../pages/Home/WalletCustomer/WalletCustomer";
+import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -24,15 +25,27 @@ export default function useRouterElements() {
       children: [
         {
           path: PATH.LOGIN,
-          element: <Login />,
+          element: (
+            <ProtectedRoute allowAnonymous>
+              <Login />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.REGISTER,
-          element: <Register />,
+          element: (
+            <ProtectedRoute allowAnonymous>
+              <Register />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.REGISTERBUSSINESS,
-          element: <RegisterBussiness />,
+          element: (
+            <ProtectedRoute allowAnonymous>
+              <RegisterBussiness />
+            </ProtectedRoute>
+          ),
         },
       ],
     },
@@ -48,19 +61,35 @@ export default function useRouterElements() {
         },
         {
           path: PATH.PROFILE,
-          element: <Profile />,
+          element: (
+            <ProtectedRoute allowedRoles={["customer", "bussiness", "admin"]}>
+              <Profile />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.STORE,
-          element: <StorePage />,
+          element: (
+            <ProtectedRoute allowedRoles={["customer", "bussiness"]}>
+              <StorePage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.TRANSACTION_HISTORY,
-          element: <TransactionHistory />,
+            element: (
+            <ProtectedRoute allowedRoles={["customer", "bussiness"]}>
+              <TransactionHistory />
+            </ProtectedRoute>
+          ),
         },
-            {
+        {
           path: PATH.WALLET_CUSTOMER,
-          element: <WalletCustomer />,
+             element: (
+            <ProtectedRoute allowedRoles={["customer",]}>
+              <WalletCustomer />
+            </ProtectedRoute>
+          ),
         },
       ],
     },
@@ -72,7 +101,11 @@ export default function useRouterElements() {
       children: [
         {
           index: true,
-          element: <BusinessDashboard />,
+            element: (
+            <ProtectedRoute allowedRoles={["bussiness"]}>
+              <BusinessDashboard />
+            </ProtectedRoute>
+          ),
         },
       ],
     },
@@ -84,7 +117,11 @@ export default function useRouterElements() {
       children: [
         {
           index: true,
-          element: <AdminDashboard />,
+            element: (
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          ),
         },
       ],
     },
