@@ -105,11 +105,11 @@ export default function Login() {
                     helperText={errors.email?.message}
                   />
                   <Link
-                    href="/"
+                    href="/auth/forgotpassword"
                     sx={{ marginTop: "20px" }}
                     className="auth-forget"
                   >
-                    Forget password?
+                    Forgot password?
                   </Link>
                   <TextField
                     id="password"

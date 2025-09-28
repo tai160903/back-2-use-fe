@@ -6,6 +6,7 @@ export const PATH = {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
     REGISTERBUSSINESS: "/auth/register/bussiness",
+    FORGOTPASSWORD:"/auth/forgotpassword",
 
     // USER
     HOME: "/",
