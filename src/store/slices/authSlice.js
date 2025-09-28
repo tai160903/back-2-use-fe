@@ -34,6 +34,21 @@ export const loginAPI = createAsyncThunk(
   }
 );
 
+// Forgot password
+export const forgotPasswordAPI = createAsyncThunk(
+  "auth/forgotPasswordAPI",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/auth/forgot-password", data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -46,7 +61,6 @@ const authSlice = createSlice({
       state.currentUser = null;
       localStorage.removeItem("currentUser");
       toast.success("Đăng xuất thành công");
-     
     },
     login: (state, { payload }) => {
       state.currentUser = payload;
@@ -78,8 +92,20 @@ const authSlice = createSlice({
       .addCase(loginAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-      });
+      })
+      .addCase(forgotPasswordAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(forgotPasswordAPI.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentUser = payload
+      })
+      .addCase(forgotPasswordAPI.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload
+      })
   },
 });
-export const {logout} = authSlice.actions
+export const { logout } = authSlice.actions;
 export default authSlice.reducer;

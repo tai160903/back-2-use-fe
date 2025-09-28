@@ -15,6 +15,7 @@ import StorePage from "../pages/Home/Store/StorePage";
 import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
 import WalletCustomer from "../pages/Home/WalletCustomer/WalletCustomer";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
+import ForgotPassword from "../pages/Auth/ForgotPassword/ForgotPassword";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -44,6 +45,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowAnonymous>
               <RegisterBussiness />
+            </ProtectedRoute>
+          ),
+        },
+                {
+          path: PATH.FORGOTPASSWORD,
+          element: (
+            <ProtectedRoute allowAnonymous>
+              <ForgotPassword />
             </ProtectedRoute>
           ),
         },
