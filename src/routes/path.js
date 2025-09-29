@@ -7,6 +7,8 @@ export const PATH = {
     REGISTER: "/auth/register",
     REGISTERBUSSINESS: "/auth/register/bussiness",
     FORGOTPASSWORD:"/auth/forgotpassword",
+    RESETPASSWORD: "/auth/reset-password",
+    GOOGLECALLBACK:"/auth/google-callback",
 
     // USER
     HOME: "/",

@@ -3,7 +3,7 @@ import "./Login.css";
 import imageAuth from "../../../assets/image/ZRRXzB20OVRZOT67Cgq3GEIwusisOXv9FVHoHmSs.webp";
 import imageGoogle from "../../../assets/image/search.png";
 import imageFacebook from "../../../assets/image/facebook.png";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Link from "@mui/material/Link";
@@ -15,23 +15,32 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import IconButton from "@mui/material/IconButton";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { loginAPI } from "../../../store/slices/authSlice";
+import { loginAPI } from "../../../store/slices/authSlice"; 
 import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
-import useAuth from "../../../hooks/useAuth";
+import useAuth from "../../../hooks/useAuth"; 
+
 
 const schema = yup
   .object({
     email: yup
       .string()
-      .email("Invalid email format")
-      .required("Email is not a required"),
-    password: yup.string().required("Password is not a required"),
+      .email("Email không hợp lệ")
+      .required("Email là bắt buộc"),
+    password: yup.string().required("Mật khẩu là bắt buộc"),
   })
   .required();
 
 export default function Login() {
   const { dispatch, navigate, isLoading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+
+
+  // Clear error when component mounts
+  useEffect(() => {
+    setLoginError(null);
+  }, []);
 
   const {
     register,
@@ -41,45 +50,49 @@ export default function Login() {
     resolver: yupResolver(schema),
   });
 
-  const [showPassword, setShowPassword] = useState(false);
   const handleClickShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
 
-  
+  // Hàm xử lý login thường (email/password)
   const onSubmit = async (data) => {
-    dispatch(loginAPI(data))
-      .unwrap()
-      .then((payload) => {
-        if (payload && payload.data) {
-          toast.success("Login Success");
-          localStorage.setItem("currentUser", JSON.stringify(payload.data));
+    try {
+      setLoginError(null); 
+      const payload = await dispatch(loginAPI(data)).unwrap();
+      
+      if (payload && payload.data) {
+        toast.success("Đăng nhập thành công!");
+        localStorage.setItem("currentUser", JSON.stringify(payload.data));
 
-          const userType = payload.data.user.role?.trim().toLowerCase();
-          if (userType === "customer") {
-            navigate(PATH.HOME, { replace: true });
-          } else if (userType === "bussiness") {
-            navigate(PATH.BUSINESS, { replace: true });
-          } else if (userType === "admin" || userType === "administrator") {
-            navigate(PATH.ADMIN, { replace: true });
-          } else {
-            toast.error(
-              "Vai trò không hợp lệ, vui lòng liên hệ quản trị viên."
-            );
-          }
+        const userType = payload.data.user?.role?.trim().toLowerCase();
+        if (userType === "customer") {
+          navigate(PATH.HOME, { replace: true });
+        } else if (userType === "bussiness") {
+          navigate(PATH.BUSINESS, { replace: true });
+        } else if (userType === "admin" || userType === "administrator") {
+          navigate(PATH.ADMIN, { replace: true });
         } else {
-          toast.error(
-            payload.message || "Đăng nhập thất bại, vui lòng thử lại."
-          );
+          toast.error("Vai trò không hợp lệ, vui lòng liên hệ quản trị viên.");
         }
-      })
-      .catch((error) => {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.message ||
-          "Đăng nhập thất bại, vui lòng thử lại.";
-        toast.error(errorMessage);
-      });
+      } else {
+        toast.error(payload?.message || "Đăng nhập thất bại, vui lòng thử lại.");
+      }
+    } catch {
+      // Lỗi đã được xử lý trong authSlice, chỉ cần set error state cho UI
+      setLoginError("Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.");
+    }
+  };
+
+  // Hàm xử lý login Google
+  const handleGoogleLogin = async () => {
+    try {
+      window.location.href = "http://localhost:8000/auth/google";
+    
+    } catch (error) {
+      const errorMessage =
+        error?.message || "Sign in with Google failed, please try again.";
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -90,10 +103,10 @@ export default function Login() {
             <Grid item size={{ xs: 6, md: 6 }} className="auth-left">
               <div className="auth-left-content">
                 <Typography className="auth-left-title">
-                  Welcome Back!
+                Welcome back!
                 </Typography>
                 <Typography className="auth-left-subtitle">
-                  Enter your Credential to access your account
+                 Enter your login information to access your account
                 </Typography>
                 <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
                   <TextField
@@ -109,7 +122,7 @@ export default function Login() {
                     sx={{ marginTop: "20px" }}
                     className="auth-forget"
                   >
-                    Forgot password?
+                   Forgot your password?
                   </Link>
                   <TextField
                     id="password"
@@ -131,45 +144,47 @@ export default function Login() {
                       ),
                     }}
                   />
-
                   <FormControlLabel
                     sx={{ marginTop: "20px" }}
                     control={<Checkbox defaultChecked />}
                     label="Remember me"
                   />
+              
                   <Button
                     type="submit"
                     className="auth-button"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Registering..." : "Sign Up"}
+                    {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                   </Button>
                 </form>
-
                 <div className="auth-subtitle-container">
                   <Typography className="auth-subtitle">
                     <div className="auth-subtitle-line" />
-                    or
+                    hoặc
                     <div className="auth-subtitle-line" />
                   </Typography>
                 </div>
                 <div className="auth-social">
-                  <Button className="auth-social-button google">
+                  <Button
+                    className="auth-social-button google"
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                  >
                     <img src={imageGoogle} className="auth-social-image" />
                     Sign in with Google
                   </Button>
                   <Button className="auth-social-button facebook">
                     <img src={imageFacebook} className="auth-social-image" />
-                    Sign in with Facebook
+                    Log in with Facebook
                   </Button>
                 </div>
               </div>
-
               <div className="auth-footer">
                 <Typography className="auth-bottom-text">
                   Don't have an account?{" "}
                   <Link href="/auth/register" className="auth-bottom-link">
-                    Sign Up
+                  Sing up
                   </Link>
                 </Typography>
               </div>
@@ -178,7 +193,7 @@ export default function Login() {
               <img
                 className="auth-image"
                 src={imageAuth}
-                alt="Login Illustration"
+                alt="Hình minh họa đăng nhập"
               />
             </Grid>
           </Grid>

@@ -9,7 +9,6 @@ import Button from "@mui/material/Button";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { PATH } from "../../../routes/path";
 import useAuth from "../../../hooks/useAuth";
 
 import toast from "react-hot-toast";
@@ -25,7 +24,7 @@ const schema = yup
   .required();
 
 export default function ForgotPassword() {
-  const { dispatch, navigate, isLoading } = useAuth();
+  const { dispatch, isLoading } = useAuth();
   const [successMessage, setSuccessMessage] = useState(false);
 
   const {
@@ -36,15 +35,18 @@ export default function ForgotPassword() {
     resolver: yupResolver(schema),
   });
 
+
   const onSubmit = async (data) => {
     try {
       const response = await dispatch(forgotPasswordAPI(data)).unwrap();
       toast.success("Yêu cầu đặt lại mật khẩu đã được gửi!");
-      setSuccessMessage(true); // Hiển thị thông báo thành công trên UI
+      setSuccessMessage(true);
     } catch (error) {
       toast.error(error?.message || "Có lỗi xảy ra, vui lòng thử lại!");
     }
   };
+
+
 
   return (
     <div className="auth-container">
@@ -52,7 +54,9 @@ export default function ForgotPassword() {
         <Grid container spacing={2}>
           <Grid item size={{ xs: 6, md: 6 }} className="auth-left">
             <div className="auth-left-content">
-              <Typography className="auth-left-title">Forgot password</Typography>
+              <Typography className="auth-left-title">
+                Forgot password
+              </Typography>
               {successMessage ? (
                 <Typography
                   variant="h6"
