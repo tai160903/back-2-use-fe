@@ -2,6 +2,21 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import fetcher from "../../apis/fetcher";
 import toast from "react-hot-toast";
 
+// Helper function để xử lý error message
+const handleErrorMessage = (payload, defaultMessage) => {
+  let errorMessage = defaultMessage;
+  
+  if (payload?.message) {
+    if (typeof payload.message === 'object' && payload.message.message) {
+      errorMessage = payload.message.message;
+    } else if (typeof payload.message === 'string') {
+      errorMessage = payload.message;
+    }
+  }
+  
+  toast.error(errorMessage);
+};
+
 const userLocal = JSON.parse(localStorage.getItem("currentUser"));
 
 // Register API
@@ -49,6 +64,36 @@ export const forgotPasswordAPI = createAsyncThunk(
   }
 );
 
+// Reset password
+export const resetPasswordAPI = createAsyncThunk(
+  "auth/resetPasswordAPI",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/auth/reset-password", data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Google
+export const loginGoogleAPI = createAsyncThunk(
+  "/auth/loginGoogleAPI",
+  async(_, {rejectWithValue}) => {
+    try {
+      const response = await fetcher.get("/auth/google");
+      return response.data
+    } catch (error) {
+       return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -80,6 +125,7 @@ const authSlice = createSlice({
       .addCase(registerApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+        handleErrorMessage(payload, "Đăng ký thất bại. Vui lòng thử lại.");
       })
       .addCase(loginAPI.pending, (state) => {
         state.isLoading = true;
@@ -92,20 +138,48 @@ const authSlice = createSlice({
       .addCase(loginAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+        handleErrorMessage(payload, "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.");
       })
       .addCase(forgotPasswordAPI.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(forgotPasswordAPI.fulfilled, (state, {payload}) => {
+      .addCase(forgotPasswordAPI.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.error = null;
-        state.currentUser = payload
+        state.currentUser = payload;
       })
-      .addCase(forgotPasswordAPI.rejected, (state, {payload}) => {
+      .addCase(forgotPasswordAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.error = payload
+        state.error = payload;
+        handleErrorMessage(payload, "Gửi email đặt lại mật khẩu thất bại. Vui lòng thử lại.");
+      })
+      .addCase(resetPasswordAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(resetPasswordAPI.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentUser = payload;
+      })
+      .addCase(resetPasswordAPI.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload;
+        handleErrorMessage(payload, "Đặt lại mật khẩu thất bại. Vui lòng thử lại.");
+      })
+      .addCase(loginGoogleAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(loginGoogleAPI.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentUser = payload;
+      })
+      .addCase(loginGoogleAPI.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload;
+        handleErrorMessage(payload, "Đăng nhập Google thất bại. Vui lòng thử lại.");
       })
   },
 });
-export const { logout } = authSlice.actions;
+export const { logout,login } = authSlice.actions;
 export default authSlice.reducer;

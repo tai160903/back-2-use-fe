@@ -16,6 +16,8 @@ import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHist
 import WalletCustomer from "../pages/Home/WalletCustomer/WalletCustomer";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ForgotPassword from "../pages/Auth/ForgotPassword/ForgotPassword";
+import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
+import GoogleCallback from "../pages/Auth/GoogleCallback/GoogleCallback";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -48,11 +50,27 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
-                {
+        {
           path: PATH.FORGOTPASSWORD,
           element: (
             <ProtectedRoute allowAnonymous>
               <ForgotPassword />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.RESETPASSWORD,
+          element: (
+            <ProtectedRoute allowAnonymous>
+              <ResetPassword />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.GOOGLECALLBACK,
+          element: (
+            <ProtectedRoute allowAnonymous>
+              <GoogleCallback />
             </ProtectedRoute>
           ),
         },
@@ -86,7 +104,7 @@ export default function useRouterElements() {
         },
         {
           path: PATH.TRANSACTION_HISTORY,
-            element: (
+          element: (
             <ProtectedRoute allowedRoles={["customer", "bussiness"]}>
               <TransactionHistory />
             </ProtectedRoute>
@@ -94,8 +112,8 @@ export default function useRouterElements() {
         },
         {
           path: PATH.WALLET_CUSTOMER,
-             element: (
-            <ProtectedRoute allowedRoles={["customer",]}>
+          element: (
+            <ProtectedRoute allowedRoles={["customer"]}>
               <WalletCustomer />
             </ProtectedRoute>
           ),
@@ -110,7 +128,7 @@ export default function useRouterElements() {
       children: [
         {
           index: true,
-            element: (
+          element: (
             <ProtectedRoute allowedRoles={["bussiness"]}>
               <BusinessDashboard />
             </ProtectedRoute>
@@ -126,8 +144,8 @@ export default function useRouterElements() {
       children: [
         {
           index: true,
-            element: (
-            <ProtectedRoute allowedRoles={["Admin"]}>
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
               <AdminDashboard />
             </ProtectedRoute>
           ),
