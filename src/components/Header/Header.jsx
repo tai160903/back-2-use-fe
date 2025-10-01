@@ -2,24 +2,32 @@ import React from "react";
 import "./Header.css";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
+import logoImage from "../../assets/image/Back2Use-Review 1.png";
 
 export default function Header() {
   return (
     <div className="header">
       <div className="headerTitles">
         <div className="header-logo">
-          <Typography sx={{ fontSize: "30px", fontWeight: "700" }}>
-            Back2Use
-          </Typography>
-          <span
-            style={{
-              fontSize: "15px",
-              color: "white",
-              textTransform: "none",
-            }}
-          >
-            Reusable Packaging
-          </span>
+          <img 
+            src={logoImage} 
+            alt="Back2Use Logo" 
+            className="logo-image"
+          />
+          <div className="logo-text">
+            <Typography sx={{ fontSize: "30px", fontWeight: "700" }}>
+              Back2Use
+            </Typography>
+            <span
+              style={{
+                fontSize: "15px",
+                color: "white",
+                textTransform: "none",
+              }}
+            >
+              Reusable Packaging
+            </span>
+          </div>
         </div>
         <div className="header-nav">
           <a href="#solutions">Feature</a>
