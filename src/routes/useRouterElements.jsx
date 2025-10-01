@@ -1,5 +1,10 @@
 import BussinessLayout from "../layouts/BussinessLayout/BussinessLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
+import Users from "../pages/Admin/Users";
+import Business from "../pages/Admin/Business";
+import Analytics from "../pages/Admin/Analytics";
+import Reports from "../pages/Admin/Reports";
+import Settings from "../pages/Admin/Settings";
 import BusinessDashboard from "../pages/Bussiness/BussinessDashbord";
 import AdminLayout from "../layouts/AdminLayout/AdminLayout";
 import Login from "../pages/Auth/Login/Login";
@@ -145,9 +150,49 @@ export default function useRouterElements() {
         {
           index: true,
           element: (
-            <ProtectedRoute allowedRoles={["admin"]}>
+            // <ProtectedRoute allowedRoles={["admin"]}>
               <AdminDashboard />
-            </ProtectedRoute>
+            // </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_USERS,
+          element: (
+            // <ProtectedRoute allowedRoles={["admin"]}>
+              <Users />
+            // </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_BUSINESS,
+          element: (
+            // <ProtectedRoute allowedRoles={["admin"]}>
+              <Business />
+            // </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_ANALYTICS,
+          element: (
+            // <ProtectedRoute allowedRoles={["admin"]}>
+              <Analytics />
+            // </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_REPORTS,
+          element: (
+            // <ProtectedRoute allowedRoles={["admin"]}>
+              <Reports />
+            // </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_SETTINGS,
+          element: (
+            // <ProtectedRoute allowedRoles={["admin"]}>
+              <Settings />
+            // </ProtectedRoute>
           ),
         },
       ],

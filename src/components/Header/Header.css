@@ -30,6 +30,19 @@
   color: #006c1e;
   text-transform: uppercase;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-image {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-text {
+  display: flex;
   flex-direction: column;
   align-items: start;
 }
