@@ -84,16 +84,15 @@ export default function Login() {
   };
 
   // Hàm xử lý login Google
-  const handleGoogleLogin = async () => {
-    try {
-      window.location.href = "http://localhost:8000/auth/google";
-    
-    } catch (error) {
-      const errorMessage =
-        error?.message || "Sign in with Google failed, please try again.";
-      toast.error(errorMessage);
-    }
-  };
+const handleGoogleLogin = async () => {
+  try {
+    // Chuyển hướng đến backend để auth Google
+    window.location.href = "http://localhost:8000/auth/google";
+  } catch (error) {
+    toast.error("Sign in with Google failed, please try again.");
+  }
+};
+
 
   return (
     <>
