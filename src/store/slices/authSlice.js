@@ -79,20 +79,7 @@ export const resetPasswordAPI = createAsyncThunk(
   }
 );
 
-// Google
-export const loginGoogleAPI = createAsyncThunk(
-  "/auth/loginGoogleAPI",
-  async(_, {rejectWithValue}) => {
-    try {
-      const response = await fetcher.get("/auth/google");
-      return response.data
-    } catch (error) {
-       return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-)
+
 
 const authSlice = createSlice({
   name: "auth",
@@ -165,19 +152,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         handleErrorMessage(payload, "Đặt lại mật khẩu thất bại. Vui lòng thử lại.");
-      })
-      .addCase(loginGoogleAPI.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(loginGoogleAPI.fulfilled, (state, {payload}) => {
-        state.isLoading = false;
-        state.error = null;
-        state.currentUser = payload;
-      })
-      .addCase(loginGoogleAPI.rejected, (state, {payload}) => {
-        state.isLoading = false;
-        state.error = payload;
-        handleErrorMessage(payload, "Đăng nhập Google thất bại. Vui lòng thử lại.");
       })
   },
 });
