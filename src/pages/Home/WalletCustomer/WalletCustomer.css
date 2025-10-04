@@ -6,7 +6,6 @@
   padding: 30px;
   border: 1px solid #e8e8e8;
   background: linear-gradient(to right, #eaf4eb 0%, #e1efe2 100%);
-
   border-radius: 10px;
   height: auto;
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
@@ -30,6 +29,7 @@
   background: #069139;
   color: #ffffff;
   border-radius: 10px;
+  cursor: pointer;
 }
 
 .wallet-balance-transaction-withdraw {
@@ -39,6 +39,7 @@
   background: #ffe1e0;
   color: #c10610;
   border-radius: 10px;
+  cursor: pointer;
 }
 
 .recentTransaction {
@@ -68,9 +69,35 @@
   width: 100%;
 }
 
-
 .recentTransaction-tabs .MuiTab-root {
   flex-grow: 1;
   max-width: 50%;
   gap: 10px;
+}
+
+/* Additional styles to match the image */
+.recentTransaction-tabs .MuiChip-root {
+  margin: 4px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+.recentTransaction-tabs .MuiChip-root.MuiChip-colorPrimary {
+  background-color: #e0e0e0;
+  color: #000;
+}
+
+.recentTransaction-tabs .MuiChip-root.MuiChip-colorSuccess {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.recentTransaction-tabs .MuiChip-root.MuiChip-colorError {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.recentTransaction-tabs .MuiChip-root.MuiChip-clickable:hover {
+  opacity: 0.8;
 }

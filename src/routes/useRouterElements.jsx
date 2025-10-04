@@ -23,6 +23,8 @@ import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ForgotPassword from "../pages/Auth/ForgotPassword/ForgotPassword";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import GoogleCallback from "../pages/Auth/GoogleCallback/GoogleCallback";
+import Registration from "../pages/Admin/Registration/Registration";
+
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -195,6 +197,14 @@ export default function useRouterElements() {
             // </ProtectedRoute>
           ),
         },
+        {
+          path: PATH.ADMIN_REGISTRATION,
+          element: (
+            // <ProtectedRoute allowedRoles={["admin"]}>
+              <Registration />
+            // </ProtectedRoute>
+          ),
+        }
       ],
     },
   ]);

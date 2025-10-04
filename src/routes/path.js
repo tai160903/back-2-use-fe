@@ -8,6 +8,7 @@ export const PATH = {
     REGISTERBUSSINESS: "/auth/register/bussiness",
     FORGOTPASSWORD:"/auth/forgotpassword",
     RESETPASSWORD: "/auth/reset-password",
+    ACTIVEACCOUNT: "/active-account",
     GOOGLECALLBACK:"/auth/google-callback",
 
     // USER
@@ -23,6 +24,7 @@ export const PATH = {
     // ADMIN
     ADMIN: "/admin",
     ADMIN_USERS: "/admin/users",
+    ADMIN_REGISTRATION: "/admin/registration",
     ADMIN_BUSINESS: "/admin/business",
     ADMIN_ANALYTICS: "/admin/analytics",
     ADMIN_SETTINGS: "/admin/settings",

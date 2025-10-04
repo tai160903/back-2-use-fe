@@ -37,6 +37,7 @@ import logoImage from "../../assets/image/Back2Use-Review 1.png";
 
 const adminSidebarItems = [
   { id: "admin-dashboard", label: "Dashboard", path: PATH.ADMIN },
+  { id: "registration", label: "Registration", path: PATH.ADMIN_REGISTRATION },
   { id: "users", label: "Users", path: PATH.ADMIN_USERS },
   { id: "business", label: "Business", path: PATH.ADMIN_BUSINESS },
   { id: "analytics", label: "Analytics", path: PATH.ADMIN_ANALYTICS },
@@ -60,6 +61,7 @@ const AdminNavbar = () => {
   const getIconComponent = (iconName) => {
     const icons = {
       "admin-dashboard": <IoHomeOutline color="#dc2626" className="navbar-icon" />,
+      registration: <People color="#1976d2" className="navbar-icon" />,
       users: <People color="#1976d2" className="navbar-icon" />,
       business: <Store color="#2e7d32" className="navbar-icon" />,
       analytics: <Assessment color="#f57c00" className="navbar-icon" />,
