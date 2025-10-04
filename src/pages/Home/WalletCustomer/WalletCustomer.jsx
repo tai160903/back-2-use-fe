@@ -1,13 +1,12 @@
 import Typography from "@mui/material/Typography";
 import "./WalletCustomer.css";
-import "../../../components/TabPanelRecent/TabPanelRecent";
 import { LuWallet } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
 import { FaMinus } from "react-icons/fa";
 import { useState } from "react";
 import ModalWallet from "../../../components/ModalWallet/ModalWallet";
 import { MdAttachMoney } from "react-icons/md";
-import { Tabs, Tab, Box, Chip } from "@mui/material";
+import { Tabs, Tab, Box, Chip, Button } from "@mui/material";
 import TabPanelRecent from "../../../components/TabPanelRecent/TabPanelRecent";
 
 export default function WalletCustomer() {
@@ -16,6 +15,7 @@ export default function WalletCustomer() {
   const [openWithdraw, setOpenWithdraw] = useState(false);
   const [addAmount, setAddAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [filter, setFilter] = useState("All");
 
   const handleOpenAddFunds = () => setOpenAddFunds(true);
   const handleCloseAddFunds = () => setOpenAddFunds(false);
@@ -24,7 +24,6 @@ export default function WalletCustomer() {
 
   const handleAddFundsSubmit = (e) => {
     e.preventDefault();
-    // Add logic to handle adding funds (e.g., API call)
     console.log("Adding funds:", addAmount);
     setAddAmount("");
     handleCloseAddFunds();
@@ -37,12 +36,15 @@ export default function WalletCustomer() {
     handleCloseWithdraw();
   };
 
-  // tab
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
-  //fake data
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+  };
+
+  // Fake data
   const subscriptionsData = [
     {
       id: "TXN-SUB-001",
@@ -72,7 +74,6 @@ export default function WalletCustomer() {
     },
   ];
 
-  // Dummy data for Deposits & Refunds
   const depositsData = [
     {
       id: "TXN-ADD-001",
@@ -91,6 +92,14 @@ export default function WalletCustomer() {
       status: "completed",
     },
   ];
+
+  // Filter logic
+  const getFilteredData = (data) => {
+    if (filter === "All") return data;
+    if (filter === "Plus Money") return data.filter(item => item.amount.startsWith("+"));
+    if (filter === "Minus Money") return data.filter(item => item.amount.startsWith("-"));
+    return data;
+  };
 
   return (
     <>
@@ -178,14 +187,16 @@ export default function WalletCustomer() {
               <Tab label="Subscriptions & Withdrawals" />
               <Tab label="Deposits & Refunds" />
             </Tabs>
-            {/* Tab content for Subscriptions & Withdrawals */}
             <TabPanelRecent value={value} index={0}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Chip label="All" color="default" sx={{ mr: 1 }} />
-                <Chip label="Plus Money" color="success" sx={{ mr: 1 }} />
-                <Chip label="Minus Money" color="error" />
-              </Box>
-              {subscriptionsData.map((item) => (
+              <div
+                className="mb-2"
+                style={{ display: "flex", justifyContent: "flex-end" }}
+              >
+                <Button>
+                  {/* Placeholder for filter button if needed */}
+                </Button>
+              </div>
+              {getFilteredData(subscriptionsData).map((item) => (
                 <Box
                   key={item.id}
                   sx={{
@@ -220,14 +231,28 @@ export default function WalletCustomer() {
                 </Box>
               ))}
             </TabPanelRecent>
-            {/* Tab content for Deposits & Refunds */}
             <TabPanelRecent value={value} index={1}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Chip label="All" color="default" sx={{ mr: 1 }} />
-                <Chip label="Plus Money" color="success" sx={{ mr: 1 }} />
-                <Chip label="Minus Money" color="error" />
+                <Chip
+                  label="All"
+                  color={filter === "All" ? "primary" : "default"}
+                  onClick={() => handleFilterChange("All")}
+                  sx={{ mr: 1, cursor: "pointer" }}
+                />
+                <Chip
+                  label="Plus Money"
+                  color={filter === "Plus Money" ? "success" : "default"}
+                  onClick={() => handleFilterChange("Plus Money")}
+                  sx={{ mr: 1, cursor: "pointer" }}
+                />
+                <Chip
+                  label="Minus Money"
+                  color={filter === "Minus Money" ? "error" : "default"}
+                  onClick={() => handleFilterChange("Minus Money")}
+                  sx={{ cursor: "pointer" }}
+                />
               </Box>
-              {depositsData.map((item) => (
+              {getFilteredData(depositsData).map((item) => (
                 <Box
                   key={item.id}
                   sx={{

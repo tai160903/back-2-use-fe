@@ -1,0 +1,36 @@
+.reject-popup-title {
+  font-weight: bold !important;
+  font-size: 20px !important;
+  margin-bottom: 15px;
+}
+
+.reject-textfield {
+  margin-top: 30px !important;
+}
+
+.reject-popup-actions {
+  display: flex;
+  justify-content: space-around !important;
+  width: 100%;
+  padding: 0px 20px !important;
+}
+
+.reject-popup-cancel {
+  width: 100% !important;
+  background-color: grey !important;
+  color: white !important;
+}
+
+.reject-popup-cancel:hover {
+  background-color: darkgrey !important;
+}
+
+.reject-popup-reject {
+  width: 100% !important;
+  background-color: #e9000e !important;
+  color: white !important;
+}
+
+button.reject-popup-reject:hover {
+  background-color: #dd9191 !important;
+}

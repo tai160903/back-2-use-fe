@@ -1,54 +1,33 @@
-import { TextField, Button, Grid, Paper, Typography } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import IconButton from "@mui/material/IconButton";
+import {
+  TextField,
+  Button,
+  Grid,
+  Paper,
+  Typography,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 import "./RegisterBussiness.css";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useState } from "react";
+import { registerBusinessAPI } from "../../../store/slices/authSlice";
+import useAuth from "../../../hooks/useAuth";
 
 const schema = yup
   .object({
-    companyName: yup.string().required("Tên công ty là bắt buộc"),
-    email: yup
+    storeName: yup.string().required("Tên công ty là bắt buộc"),
+    storeMail: yup
       .string()
       .email("Định dạng email không hợp lệ")
       .required("Email là bắt buộc"),
-    phone: yup
+    storePhone: yup
       .string()
       .matches(/^[0-9]{10,15}$/, "Số điện thoại phải có từ 10 đến 15 chữ số")
       .required("Số điện thoại là bắt buộc"),
-    password: yup.string().required("Mật khẩu là bắt buộc"),
-    confirmPassword: yup
-      .string()
-      .oneOf([yup.ref("password"), null], "Mật khẩu xác nhận phải khớp")
-      .required("Xác nhận mật khẩu là bắt buộc"),
-    typeOfBusiness: yup.string().required("Loại hình kinh doanh là bắt buộc"),
-    taxNumber: yup.string().required("Mã số thuế là bắt buộc"),
-    businessLicense: yup
-      .mixed()
-      .required("Giấy phép kinh doanh là bắt buộc")
-      .test("fileSize", "Kích thước file quá lớn (tối đa 5MB)", (value) => {
-        return value && value.size <= 5 * 1024 * 1024; // 5MB
-      })
-      .test("fileType", "Chỉ hỗ trợ PDF, JPG, PNG", (value) => {
-        return (
-          value &&
-          ["application/pdf", "image/jpeg", "image/png"].includes(value.type)
-        );
-      }),
-    foodSafetyCert: yup
-      .mixed()
-      .required("Chứng nhận an toàn thực phẩm là bắt buộc")
-      .test("fileSize", "Kích thước file quá lớn (tối đa 5MB)", (value) => {
-        return value && value.size <= 5 * 1024 * 1024; // 5MB
-      })
-      .test("fileType", "Chỉ hỗ trợ PDF, JPG, PNG", (value) => {
-        return (
-          value &&
-          ["application/pdf", "image/jpeg", "image/png"].includes(value.type)
-        );
-      }),
+    storeAddress: yup.string().required("Store address là bắt buộc"),
+    taxCode: yup.string().required("Mã số thuế là bắt buộc"),
   })
   .required();
 
@@ -61,28 +40,53 @@ function RegisterBussiness() {
     resolver: yupResolver(schema),
   });
   const [files, setFiles] = useState({
-    businessLicense: null,
-    foodSafetyCert: null,
+    businessLicenseFile: null,
+    foodLicenseFile: null,
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState({ type: "", message: "" });
+
+  const { dispatch } = useAuth();
 
   const handleFileChange = (e, type) => {
     const file = e.target.files?.[0] || null;
     setFiles((prev) => ({ ...prev, [type]: file }));
   };
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    setSubmitMessage({ type: "", message: "" });
 
-  const handleClickShowPassword = () => {
-    setShowPassword((prev) => !prev);
-  };
+    try {
+      // Tạo FormData để gửi file
+      const formData = new FormData();
 
-  const handleClickShowConfirmPassword = () => {
-    setShowConfirmPassword((prev) => !prev);
-  };
+      // Thêm thông tin form
+      formData.append("storeName", data.storeName);
+      formData.append("storeMail", data.storeMail);
+      formData.append("storePhone", data.storePhone);
+      formData.append("storeAddress", data.storeAddress);
+      formData.append("taxCode", data.taxCode);
 
-  const onSubmit = (data) => {
-    console.log({ ...data, files });
+      // Thêm file
+      if (files.businessLicenseFile) {
+        formData.append("businessLicenseFile", files.businessLicenseFile);
+      }
+      if (files.foodLicenseFile) {
+        formData.append("foodLicenseFile", files.foodLicenseFile);
+      }
+
+      await dispatch(registerBusinessAPI(formData)).unwrap();
+    } catch (error) {
+      setSubmitMessage({
+        type: "error",
+        message:
+          error.response?.data?.message ||
+          "Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -108,69 +112,30 @@ function RegisterBussiness() {
                   <div>
                     <TextField
                       className="registerBusinessForm "
-                      id="email"
+                      id="storeMail"
                       label="Email"
                       variant="outlined"
-                      {...register("email")}
-                      error={!!errors.email}
-                      helperText={errors.email?.message}
+                      {...register("storeMail")}
+                      error={!!errors.storeMail}
+                      helperText={errors.storeMail?.message}
                     />
                     <TextField
                       className="registerBusinessForm "
-                      id="phone"
-                      label="Số điện thoại"
+                      id="storePhone"
+                      label="Store Phone"
                       variant="outlined"
-                      {...register("phone")}
-                      error={!!errors.phone}
-                      helperText={errors.phone?.message}
+                      {...register("storePhone")}
+                      error={!!errors.storePhone}
+                      helperText={errors.storePhone?.message}
                     />
                     <TextField
                       className="registerBusinessForm "
-                      id="password"
-                      label="Mật khẩu"
+                      id="storeAddress"
+                      label="Store Address"
                       variant="outlined"
-                      type={showPassword ? "text" : "password"}
-                      {...register("password")}
-                      error={!!errors.password}
-                      helperText={errors.password?.message}
-                      InputProps={{
-                        endAdornment: (
-                          <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={handleClickShowPassword}
-                            edge="end"
-                            className="text-white"
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        ),
-                      }}
-                    />
-                    <TextField
-                      className="registerBusinessForm "
-                      id="confirmPassword"
-                      label="Xác nhận mật khẩu"
-                      variant="outlined"
-                      type={showConfirmPassword ? "text" : "password"}
-                      {...register("confirmPassword")}
-                      error={!!errors.confirmPassword}
-                      helperText={errors.confirmPassword?.message}
-                      InputProps={{
-                        endAdornment: (
-                          <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={handleClickShowConfirmPassword}
-                            edge="end"
-                            className="text-white"
-                          >
-                            {showConfirmPassword ? (
-                              <VisibilityOff />
-                            ) : (
-                              <Visibility />
-                            )}
-                          </IconButton>
-                        ),
-                      }}
+                      {...register("storeAddress")}
+                      error={!!errors.storeAddress}
+                      helperText={errors.storeAddress?.message}
                     />
                   </div>
                 </Grid>
@@ -180,30 +145,21 @@ function RegisterBussiness() {
                   <div className="registerBusiness-line"></div>
                   <TextField
                     className="registerBusinessForm"
-                    id="companyName"
-                    label="Tên công ty"
+                    id="storeName"
+                    label="Store Name"
                     variant="outlined"
-                    {...register("companyName")}
-                    error={!!errors.companyName}
-                    helperText={errors.companyName?.message}
-                  />
-                  <TextField
-                    className="registerBusinessForm "
-                    id="typeOfBusiness"
-                    label="Loại hình kinh doanh"
-                    variant="outlined"
-                    {...register("typeOfBusiness")}
-                    error={!!errors.typeOfBusiness}
-                    helperText={errors.typeOfBusiness?.message}
+                    {...register("storeName")}
+                    error={!!errors.storeName}
+                    helperText={errors.storeName?.message}
                   />
                   <TextField
                     className="registerBusinessForm"
-                    id="taxNumber"
-                    label="Mã số thuế"
+                    id="taxCode"
+                    label="Tax Code"
                     variant="outlined"
-                    {...register("taxNumber")}
-                    error={!!errors.taxNumber}
-                    helperText={errors.taxNumber?.message}
+                    {...register("taxCode")}
+                    error={!!errors.taxCode}
+                    helperText={errors.taxCode?.message}
                   />
                 </Grid>
               </Grid>
@@ -222,30 +178,31 @@ function RegisterBussiness() {
                   <div className="registerBusiness-fileUpload mt-2">
                     <input
                       type="file"
-                      id="businessLicense"
+                      id="businessLicenseFile"
                       accept=".pdf,.jpg,.jpeg,.png"
-                      {...register("businessLicense")}
-                      onChange={(e) => handleFileChange(e, "businessLicense")}
+                      onChange={(e) =>
+                        handleFileChange(e, "businessLicenseFile")
+                      }
                       className="registerBusiness-fileInput"
                     />
                     <label
-                      htmlFor="businessLicense"
+                      htmlFor="businessLicenseFile"
                       className="registerBusiness-fileLabel"
                     >
-                      {files.businessLicense ? (
+                      {files.businessLicenseFile ? (
                         <span className="text-white">
-                          {files.businessLicense.name}
+                          {files.businessLicenseFile.name}
                         </span>
                       ) : (
                         <div className="registerBusiness-uploadBox">
                           <p>Giấy phép kinh doanh</p>
-                          <small>PDF, JPG, PNG (tối đa 5MB)</small>
+                          <small>PDF, JPG, PNG (tối đa 50MB)</small>
                         </div>
                       )}
                     </label>
-                    {errors.businessLicense && (
+                    {errors.businessLicenseFile && (
                       <p className="registerBusiness-error">
-                        {errors.businessLicense.message}
+                        {errors.businessLicenseFile.message}
                       </p>
                     )}
                   </div>
@@ -255,30 +212,29 @@ function RegisterBussiness() {
                   <div className="registerBusiness-fileUpload mt-2">
                     <input
                       type="file"
-                      id="foodSafetyCert"
+                      id="foodLicenseFile"
                       accept=".pdf,.jpg,.jpeg,.png"
-                      {...register("foodSafetyCert")}
-                      onChange={(e) => handleFileChange(e, "foodSafetyCert")}
+                      onChange={(e) => handleFileChange(e, "foodLicenseFile")}
                       className="registerBusiness-fileInput"
                     />
                     <label
-                      htmlFor="foodSafetyCert"
+                      htmlFor="foodLicenseFile"
                       className="registerBusiness-fileLabel"
                     >
-                      {files.foodSafetyCert ? (
+                      {files.foodLicenseFile ? (
                         <span className="text-white">
-                          {files.foodSafetyCert.name}
+                          {files.foodLicenseFile.name}
                         </span>
                       ) : (
                         <div className="registerBusiness-uploadBox">
                           <p>Chứng nhận an toàn thực phẩm</p>
-                          <small>PDF, JPG, PNG (tối đa 5MB)</small>
+                          <small>PDF, JPG, PNG (tối đa 50MB)</small>
                         </div>
                       )}
                     </label>
-                    {errors.foodSafetyCert && (
+                    {errors.foodLicenseFile && (
                       <p className="registerBusiness-error">
-                        {errors.foodSafetyCert.message}
+                        {errors.foodLicenseFile.message}
                       </p>
                     )}
                   </div>
@@ -286,14 +242,32 @@ function RegisterBussiness() {
               </Grid>
             </div>
 
+            {/* Hiển thị thông báo */}
+            {submitMessage.message && (
+              <Alert
+                severity={
+                  submitMessage.type === "success" ? "success" : "error"
+                }
+                sx={{ mb: 2 }}
+              >
+                {submitMessage.message}
+              </Alert>
+            )}
+
             <Button
               type="submit"
               variant="contained"
               color="success"
               fullWidth
               className="registerBusiness-submitBtn"
+              disabled={isLoading}
+              startIcon={
+                isLoading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : null
+              }
             >
-              Đăng ký
+              {isLoading ? "Đang xử lý..." : "Đăng ký"}
             </Button>
           </form>
         </Paper>
