@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Registration.css";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
@@ -22,82 +22,53 @@ import Button from "@mui/material/Button";
 import ModalRegistration from "../../../components/ModalRegistration/ModalRegistration";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllBusinesses } from "../../../store/slices/bussinessSlice";
 
 export default function Registration() {
   const [filter, setFilter] = useState("Pending");
   const [searchTerm, setSearchTerm] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Mock data based on the image
-  const mockData = [
-    {
-      id: 1,
-      name: "Green Bistro",
-      email: "contact@greenbistro.com",
-      phone: "+1234567895",
-      address: "789 Elm St, Midtown, City 12347",
-      type: "Restaurant",
-      status: "Pending",
-      appliedDate: "25/1/2024",
-    },
-    {
-      id: 2,
-      name: "Eco Coffee House",
-      email: "mike@ecocoffee.com",
-      phone: "+1555234567",
-      address: "456 Green Avenue, Downtown, City 12348",
-      type: "Coffee Shop",
-      status: "Pending",
-      appliedDate: "12/2/2024",
-    },
-    {
-      id: 3,
-      name: "Fresh Market Deli",
-      email: "lisa@freshmarket.com",
-      phone: "+1555345678",
-      address: "123 Market Street, Uptown, City 12349",
-      type: "Grocery Store",
-      status: "Pending",
-      appliedDate: "15/3/2024",
-    },
-    {
-      id: 4,
-      name: "Blue Cafe",
-      email: "info@bluecafe.com",
-      phone: "+1998765432",
-      address: "321 Blue Lane, City 12350",
-      type: "Cafe",
-      status: "Approved",
-      appliedDate: "10/1/2024",
-    },
-    {
-      id: 5,
-      name: "Red Bakery",
-      email: "contact@redbakery.com",
-      phone: "+1444333222",
-      address: "555 Red Road, City 12351",
-      type: "Bakery",
-      status: "Rejected",
-      appliedDate: "20/2/2024",
-    },
-  ];
+  const dispatch = useDispatch();
+  const { isLoading, error, businesses, totalPages } = useSelector(
+    (state) => state.businesses
+  );
+  useEffect(() => {
+    dispatch(getAllBusinesses({ page: currentPage, limit: 10 }))
+      .unwrap()
+      .then((data) => {
+        console.log("Businesses data:", data); // Debug
+      })
+      .catch((error) => {
+        console.error("Error fetching businesses:", error); // Debug
+      });
+  }, [dispatch, currentPage]);
+
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+  };
 
   const handleFilterChange = (event, newFilter) => {
     setFilter(newFilter);
+    setCurrentPage(1);
   };
 
-  const getFilteredData = (data) => {
-    let filtered = [...data];
+  const getFilteredData = (businesses) => {
+    let filtered = [...businesses];
     if (filter !== "All") {
-      filtered = filtered.filter((item) => item.status === filter);
+      filtered = filtered.filter(
+        (item) => item.status.toLowerCase() === filter.toLowerCase()
+      );
     }
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.phone.includes(searchTerm)
+          item.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.storeMail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.storePhone.includes(searchTerm)
       );
     }
     return filtered;
@@ -123,7 +94,7 @@ export default function Registration() {
                 <div>
                   <Typography className="registration-card-title">
                     Total Applications
-                    <span> {mockData.length}</span>
+                    <span> {businesses.length}</span>
                   </Typography>
                 </div>
                 <div>
@@ -137,7 +108,7 @@ export default function Registration() {
                     <span className="text-[#f6ba35]">
                       {" "}
                       {
-                        mockData.filter((item) => item.status === "Pending")
+                        businesses.filter((item) => item.status === "pending")
                           .length
                       }
                     </span>
@@ -154,7 +125,7 @@ export default function Registration() {
                     <span className="text-[#127300]">
                       {" "}
                       {
-                        mockData.filter((item) => item.status === "Approved")
+                        businesses.filter((item) => item.status === "approved")
                           .length
                       }
                     </span>
@@ -171,7 +142,7 @@ export default function Registration() {
                     <span className="text-[#d3011c]">
                       {" "}
                       {
-                        mockData.filter((item) => item.status === "Rejected")
+                        businesses.filter((item) => item.status === "rejected")
                           .length
                       }
                     </span>
@@ -191,7 +162,7 @@ export default function Registration() {
               </div>
               <Typography className="registration-body-text">
                 <IoWarningOutline className="mr-2 size-6" />{" "}
-                {mockData.filter((item) => item.status === "Pending").length}{" "}
+                {businesses.filter((item) => item.status === "pending").length}{" "}
                 pending
               </Typography>
             </div>
@@ -244,61 +215,64 @@ export default function Registration() {
               >
                 <Tab
                   label={`Pending (${
-                    mockData.filter((item) => item.status === "Pending").length
+                    businesses.filter((item) => item.status === "pending")
+                      .length
                   })`}
-                  value="Pending"
+                  value="pending"
                   icon={<CiClock2 />}
                   iconPosition="start"
                 />
                 <Tab
                   label={`Approved (${
-                    mockData.filter((item) => item.status === "Approved").length
+                    businesses.filter((item) => item.status === "approved")
+                      .length
                   })`}
-                  value="Approved"
+                  value="approved"
                   icon={<SiTicktick />}
                   iconPosition="start"
                 />
                 <Tab
                   label={`Rejected (${
-                    mockData.filter((item) => item.status === "Rejected").length
+                    businesses.filter((item) => item.status === "rejected")
+                      .length
                   })`}
-                  value="Rejected"
+                  value="rejected"
                   icon={<BiMessageSquareX />}
                   iconPosition="start"
                 />
               </Tabs>
-              {getFilteredData(mockData).map((item) => (
+              {getFilteredData(businesses).map((item) => (
                 <Box className="registration-card-item" key={item.id}>
                   <div className="registration-card-content">
                     <div className="registration-card-avt">
-                      {item.name.charAt(0).toUpperCase()}
+                      {item.storeName.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <Typography className="registration-card-name">
-                        {item.name}
+                        {item.storeName}
                         <span className="registration-card-status">
                           {item.status}
                         </span>
                       </Typography>
                       <Typography className="registration-card-info">
                         <CiMail className="mr-2" />
-                        {item.email}
+                        {item.storeMail}
                       </Typography>
                       <Typography className="registration-card-info">
                         <MdOutlinePhone className="mr-2" />
-                        {item.phone}
+                        {item.storePhone}
                       </Typography>
                       <Typography className="registration-card-info">
                         <IoLocationOutline className="mr-2" />
-                        {item.address}
+                        {item.storeAddress}
                       </Typography>
                       <Typography className="registration-card-info">
                         <TiClipboard className="mr-2" />
-                        {item.type}
+                        {item.taxCode}
                       </Typography>
                       <Typography className="registration-card-info">
                         <GrSchedule className="mr-2" />
-                        {item.appliedDate}
+                        {item.updatedAt}
                       </Typography>
                     </div>
                   </div>
@@ -306,11 +280,11 @@ export default function Registration() {
                     <Button
                       variant="contained"
                       color={
-                        item.status === "Pending" ? "primary" : "secondary"
+                        item.status === "pending" ? "primary" : "secondary"
                       }
                       onClick={() => handleActionClick(item)}
                     >
-                      {item.status === "Pending"
+                      {item.status === "pending"
                         ? "Await Approval"
                         : "View Details"}
                     </Button>
@@ -327,7 +301,13 @@ export default function Registration() {
                 justifyContent: "center",
               }}
             >
-              <Pagination count={10} variant="outlined" shape="rounded" />
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                variant="outlined"
+                shape="rounded"
+              />
             </Stack>
           </div>
         </div>
