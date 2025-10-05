@@ -6,11 +6,6 @@ import Link from "@mui/material/Link";
 import AddIcon from "@mui/icons-material/Add";
 
 export default function HomePage() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
-  console.log("Received token:", token);
-
-  
   return (
     <div className="homePage">
       {/* banner */}

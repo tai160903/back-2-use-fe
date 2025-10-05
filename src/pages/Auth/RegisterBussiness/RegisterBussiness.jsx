@@ -14,6 +14,7 @@ import * as yup from "yup";
 import { useState } from "react";
 import { registerBusinessAPI } from "../../../store/slices/authSlice";
 import useAuth from "../../../hooks/useAuth";
+import toast from "react-hot-toast";
 
 const schema = yup
   .object({
@@ -77,6 +78,11 @@ function RegisterBussiness() {
       }
 
       await dispatch(registerBusinessAPI(formData)).unwrap();
+      toast.success("Registration successful! Please wait for approval.");
+      setSubmitMessage({
+        type: "success",
+        message: "Registration successful! Please wait for approval.",
+      });
     } catch (error) {
       setSubmitMessage({
         type: "error",

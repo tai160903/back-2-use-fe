@@ -10,12 +10,22 @@ import { IoMdPerson } from "react-icons/io";
 import { LuClipboardList } from "react-icons/lu";
 import { BiMessageSquareX } from "react-icons/bi";
 import { SiTicktick } from "react-icons/si";
+import toast from "react-hot-toast";
+import CircularProgress from "@mui/material/CircularProgress"; // Import CircularProgress for loading
 
 import "./ModalRegistration.css";
 import RejectPopup from "../RejectPopup/RejectPopup";
+import { useDispatch } from "react-redux";
+import {
+  approveBusiness,
+  getAllBusinesses,
+  rejectBusiness,
+} from "../../store/slices/bussinessSlice";
 
 const ModalRegistration = ({ open, onClose, selectedItem }) => {
   const [isRejectPopupOpen, setIsRejectPopupOpen] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const dispatch = useDispatch();
 
   const handleRejectClick = () => {
     setIsRejectPopupOpen(true);
@@ -25,11 +35,43 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
     setIsRejectPopupOpen(false);
   };
 
+  // logic reject application
   const handleRejectApplication = () => {
-    // Logic xử lý từ chối ứng dụng (ở đây chỉ đóng popup)
     setIsRejectPopupOpen(false);
-    // Có thể thêm logic gửi yêu cầu từ chối ở đây
+    dispatch(rejectBusiness(selectedItem._id))
+      .unwrap()
+      .then(() => {
+        toast.success("Business rejected successfully!");
+        dispatch(getAllBusinesses({ page: 1, limit: 10 }));
+        onClose();
+      })
+      .catch((error) => {
+        toast.error("Failed to reject business: " + error);
+      });
   };
+
+  // logic approve application
+  const handleApproveApplication = () => {
+    setIsApproving(true);
+
+    dispatch(approveBusiness(selectedItem._id))
+      .unwrap()
+      .then(() => {
+        toast.success("Business approved successfully!");
+        dispatch(getAllBusinesses({ page: 1, limit: 10 }));
+        onClose();
+      })
+      .catch((error) => {
+        toast.error("Failed to approve business: " + error);
+      })
+      .finally(() => {
+        setIsApproving(false);
+      });
+  };
+
+  const isFinalStatus =
+    selectedItem?.status?.toLowerCase() === "approved" ||
+    selectedItem?.status?.toLowerCase() === "rejected";
 
   return (
     <Dialog
@@ -46,10 +88,14 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
     >
       <Box className="popup-header">
         <Typography className="popup-title">
-          {selectedItem?.name.charAt(0)}
+          {selectedItem?.storeName?.charAt(0) || ""}
         </Typography>
-        <Typography className="popup-name">{selectedItem?.name}</Typography>
-        <Typography className="popup-status">{selectedItem?.status}</Typography>
+        <Typography className="popup-name">
+          {selectedItem?.storeName || "N/A"}
+        </Typography>
+        <Typography className="popup-status">
+          {selectedItem?.status || "N/A"}
+        </Typography>
       </Box>
       <Box className="popup-des">
         <Typography>
@@ -66,19 +112,13 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
             <div style={{ border: "1px solid #ccc", marginTop: "8px" }}></div>
             <Typography className="popUp-info">
               <strong className="popUp-info-span">Business Name</strong>{" "}
-              {selectedItem?.name}
-            </Typography>
-            <Typography className="popUp-info ">
-              <strong>Business Type</strong> {selectedItem?.type}
+              {selectedItem?.storeName || "N/A"}
             </Typography>
             <Typography className="popUp-info">
-              <strong>Address</strong> {selectedItem?.address || "N/A"}
+              <strong>Address</strong> {selectedItem?.storeAddress || "N/A"}
             </Typography>
             <Typography className="popUp-info">
-              <strong>Tax ID</strong> {selectedItem?.taxId || "N/A"}
-            </Typography>
-            <Typography className="popUp-info">
-              <strong>Description</strong> {selectedItem?.description || "N/A"}
+              <strong>Tax ID</strong> {selectedItem?.taxCode || "N/A"}
             </Typography>
           </Box>
           <Box className="info-section">
@@ -87,17 +127,14 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
             </Typography>
             <div style={{ border: "1px solid #ccc", marginTop: "8px" }}></div>
             <Typography className="popUp-info">
-              <strong>Contact Person</strong>{" "}
-              {selectedItem?.contactPerson || "N/A"}
+              <strong>Email</strong> {selectedItem?.storeMail || "N/A"}
             </Typography>
             <Typography className="popUp-info">
-              <strong>Email</strong> {selectedItem?.email || "N/A"}
+              <strong>Phone</strong> {selectedItem?.storePhone || "N/A"}
             </Typography>
             <Typography className="popUp-info">
-              <strong>Phone</strong> {selectedItem?.phone}
-            </Typography>
-            <Typography className="popUp-info">
-              <strong>Application Date</strong> {selectedItem?.appliedDate}
+              <strong>Application Date</strong>{" "}
+              {selectedItem?.updatedAt || "N/A"}
             </Typography>
           </Box>
         </Box>
@@ -110,45 +147,65 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
             <Typography className="popUp-info-documents">
               <strong>Business License</strong>{" "}
               <a
-                href={selectedItem?.businessLicense}
+                href={selectedItem?.businessLicenseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {selectedItem?.businessLicense}
+                {selectedItem?.businessLicenseUrl || "N/A"}
               </a>
             </Typography>
             <Typography className="popUp-info-documents">
               <strong>Food Safety Certificate:</strong>{" "}
               <a
-                href={selectedItem?.foodSafetyCertificate}
+                href={selectedItem?.foodLicenseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {selectedItem?.foodSafetyCertificate}
+                {selectedItem?.foodLicenseUrl || "N/A"}
               </a>
             </Typography>
           </div>
         </Box>
         <div style={{ border: "1px solid #ccc", marginTop: "8px" }}></div>
+        {selectedItem?.status?.toLowerCase() === "rejected" && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h6" className="popUp-info-title">
+              Rejection Reason
+            </Typography>
+            <Typography className="popUp-info">
+              {selectedItem?.rejectionReason || "No reason provided"}
+            </Typography>
+          </Box>
+        )}
       </DialogContent>
 
       <DialogActions>
-        <div className="popup-actions">
-          <Button onClick={handleRejectClick} className="popup-button-reject">
-            <BiMessageSquareX className="mr-3 size-4" /> Reject Application
-          </Button>
-          <Button onClick={onClose} className="popup-button-approve">
-            <SiTicktick className="mr-3 size-4" /> Approve Application
-          </Button>
-        </div>
+        {!isFinalStatus && (
+          <div className="popup-actions">
+            <Button onClick={handleRejectClick} className="popup-button-reject">
+              <BiMessageSquareX className="mr-3 size-4" /> Reject Application
+            </Button>
+            <Button
+              onClick={handleApproveApplication}
+              className="popup-button-approve"
+              disabled={isApproving}
+            >
+              {isApproving ? (
+                <CircularProgress size={20} className="mr-3" />
+              ) : (
+                <SiTicktick className="mr-3 size-4" />
+              )}
+              Approve Application
+            </Button>
+          </div>
+        )}
       </DialogActions>
 
-      {/* Popup từ chối */}
       <RejectPopup
         open={isRejectPopupOpen}
         onClose={handleRejectPopupClose}
         onReject={handleRejectApplication}
-        businessName={selectedItem?.name}
+        businessName={selectedItem?.storeName}
       />
     </Dialog>
   );

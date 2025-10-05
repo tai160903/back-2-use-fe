@@ -66,8 +66,8 @@ export default function Login() {
 
         const userType = payload.data.user?.role?.trim().toLowerCase();
         if (userType === "customer") {
-          navigate(PATH.HOME, { replace: true });
-        } else if (userType === "bussiness") {
+          navigate(PATH.USER_DASHBOARD, { replace: true });
+        } else if (userType === "business") {
           navigate(PATH.BUSINESS, { replace: true });
         } else if (userType === "admin" || userType === "administrator") {
           navigate(PATH.ADMIN, { replace: true });
