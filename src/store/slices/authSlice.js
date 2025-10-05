@@ -79,7 +79,7 @@ export const resetPasswordAPI = createAsyncThunk(
   }
 );
 
-// active account
+// Active account
 export const activeAccountAPI = createAsyncThunk(
   "auth/activeAccountAPI",
   async (data, { rejectWithValue }) => {
@@ -94,7 +94,22 @@ export const activeAccountAPI = createAsyncThunk(
   }
 );
 
-// register business
+// Resend OTP
+export const resendOtpAPI = createAsyncThunk(
+  "auth/resendOtpAPI",
+  async (data, { rejectWithValue }) => {  
+    try {
+      const response = await fetcher.post("/auth/resend-otp", data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    } 
+  }
+);
+
+// Register business
 export const registerBusinessAPI = createAsyncThunk(
   "auth/registerBusinessAPI",
   async (data, { rejectWithValue }) => {
@@ -124,7 +139,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.currentUser = null;
       localStorage.removeItem("currentUser");
-      toast.success("Đăng xuất thành công");
+      toast.success("Logout successful.");
     },
     login: (state, { payload }) => {
       state.currentUser = payload;
@@ -139,15 +154,14 @@ const authSlice = createSlice({
       .addCase(registerApi.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
-        // Không lưu currentUser ngay lập tức, chờ xác nhận email
         toast.success(
-          "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản."
+          "Registration successful! Please check your email to verify your account."
         );
       })
       .addCase(registerApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        handleErrorMessage(payload, "Đăng ký thất bại. Vui lòng thử lại.");
+        handleErrorMessage(payload, "Registration failed. Please try again.");
       })
       .addCase(loginAPI.pending, (state) => {
         state.isLoading = true;
@@ -162,7 +176,7 @@ const authSlice = createSlice({
         state.error = payload;
         handleErrorMessage(
           payload,
-          "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu."
+          "Login failed. Please check your email and password."
         );
       })
       .addCase(forgotPasswordAPI.pending, (state) => {
@@ -178,7 +192,7 @@ const authSlice = createSlice({
         state.error = payload;
         handleErrorMessage(
           payload,
-          "Gửi email đặt lại mật khẩu thất bại. Vui lòng thử lại."
+          "Failed to send password reset email. Please try again."
         );
       })
       .addCase(resetPasswordAPI.pending, (state) => {
@@ -194,23 +208,7 @@ const authSlice = createSlice({
         state.error = payload;
         handleErrorMessage(
           payload,
-          "Đặt lại mật khẩu thất bại. Vui lòng thử lại."
-        );
-      })
-      .addCase(registerBusinessAPI.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(registerBusinessAPI.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        state.currentUser = payload;
-      })
-      .addCase(registerBusinessAPI.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        handleErrorMessage(
-          payload,
-          "Đăng ký doanh nghiệp thất bại. Vui lòng thử lại."
+          "Password reset failed. Please try again."
         );
       })
       .addCase(activeAccountAPI.pending, (state) => {
@@ -221,14 +219,30 @@ const authSlice = createSlice({
         state.error = null;
         state.currentUser = payload;
         localStorage.setItem("currentUser", JSON.stringify(payload));
-        toast.success("Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
+        toast.success("Registration successful! You can log in now.");
       })
       .addCase(activeAccountAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
         handleErrorMessage(
           payload,
-          "Kích hoạt tài khoản thất bại. Vui lòng thử lại."
+          "Account activation failed. Please try again."
+        );
+      })
+      .addCase(resendOtpAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(resendOtpAPI.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+        toast.success("OTP has been resent successfully! Please check your email.");
+      })
+      .addCase(resendOtpAPI.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        handleErrorMessage(
+          payload,
+          "Failed to resend OTP. Please try again."
         );
       });
   },

@@ -17,17 +17,17 @@ import useAuth from "../../../hooks/useAuth";
 
 const schema = yup
   .object({
-    storeName: yup.string().required("Tên công ty là bắt buộc"),
+    storeName: yup.string().required("Company name is required."),
     storeMail: yup
       .string()
-      .email("Định dạng email không hợp lệ")
-      .required("Email là bắt buộc"),
+      .email("Invalid email format.")
+      .required("Email is required."),
     storePhone: yup
       .string()
-      .matches(/^[0-9]{10,15}$/, "Số điện thoại phải có từ 10 đến 15 chữ số")
-      .required("Số điện thoại là bắt buộc"),
-    storeAddress: yup.string().required("Store address là bắt buộc"),
-    taxCode: yup.string().required("Mã số thuế là bắt buộc"),
+      .matches(/^[0-9]{10,15}$/, "Phone number must contain between 10 and 15 digits.")
+      .required("Phone number is required."),
+    storeAddress: yup.string().required("Store address  is required."),
+    taxCode: yup.string().required("Tax code is required."),
   })
   .required();
 
@@ -94,9 +94,9 @@ function RegisterBussiness() {
       <div className="registerBusiness-main">
         <Paper elevation={6} className="registerBusiness-formPaper">
           <div className="registerBusiness-formHeader">
-            <Typography variant="h5">Đăng ký doanh nghiệp</Typography>
+            <Typography variant="h5">Business registration</Typography>
             <Typography variant="body2">
-              Tham gia mạng lưới cốc tái chế back2use
+              Join the Back2Use cup recycling network
             </Typography>
           </div>
 
@@ -107,7 +107,7 @@ function RegisterBussiness() {
             <div className="registerBusiness-formSection">
               <Grid container spacing={3}>
                 <Grid item size={6} className="registerBussiness-info">
-                  Thông tin tài khoản
+                  Account information
                   <div className="registerBusiness-line"></div>
                   <div>
                     <TextField
@@ -141,7 +141,7 @@ function RegisterBussiness() {
                 </Grid>
 
                 <Grid item size={6} className="registerBussiness-bussiness">
-                  Thông tin doanh nghiệp
+                  Business information
                   <div className="registerBusiness-line"></div>
                   <TextField
                     className="registerBusinessForm"
@@ -170,7 +170,7 @@ function RegisterBussiness() {
                 variant="subtitle1"
                 className="registerBusiness-sectionTitle"
               >
-                Tài liệu đính kèm
+                Attached document
               </Typography>
 
               <Grid container spacing={3}>
@@ -195,8 +195,8 @@ function RegisterBussiness() {
                         </span>
                       ) : (
                         <div className="registerBusiness-uploadBox">
-                          <p>Giấy phép kinh doanh</p>
-                          <small>PDF, JPG, PNG (tối đa 50MB)</small>
+                          <p>Business license</p>
+                          <small>PDF, JPG, PNG (Maximum 5MB)</small>
                         </div>
                       )}
                     </label>
@@ -227,8 +227,8 @@ function RegisterBussiness() {
                         </span>
                       ) : (
                         <div className="registerBusiness-uploadBox">
-                          <p>Chứng nhận an toàn thực phẩm</p>
-                          <small>PDF, JPG, PNG (tối đa 50MB)</small>
+                          <p>CFood safety certificate</p>
+                          <small>PDF, JPG, PNG (Maximum 5MB)</small>
                         </div>
                       )}
                     </label>
@@ -267,7 +267,7 @@ function RegisterBussiness() {
                 ) : null
               }
             >
-              {isLoading ? "Đang xử lý..." : "Đăng ký"}
+              {isLoading ? "Processing..." : "Register"}
             </Button>
           </form>
         </Paper>

@@ -20,6 +20,8 @@ import { TiClipboard } from "react-icons/ti";
 import { GrSchedule } from "react-icons/gr";
 import Button from "@mui/material/Button";
 import ModalRegistration from "../../../components/ModalRegistration/ModalRegistration";
+import Pagination from "@mui/material/Pagination";
+import Stack from "@mui/material/Stack";
 
 export default function Registration() {
   const [filter, setFilter] = useState("Pending");
@@ -316,6 +318,17 @@ export default function Registration() {
                 </Box>
               ))}
             </div>
+            <Stack
+              spacing={2}
+              className="mt-5 mb-5"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Pagination count={10} variant="outlined" shape="rounded" />
+            </Stack>
           </div>
         </div>
       </div>
