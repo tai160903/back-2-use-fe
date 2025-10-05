@@ -18,6 +18,8 @@ import { useSearchParams } from "react-router-dom";
 
 const schema = yup
   .object({
+    email: yup.string().email("Invalid email format.").required("Email is required."),
+    otp: yup.string().required("OTP lis required."),
     newPassword: yup.string().required("Password is required"),
     confirmNewPassword: yup
       .string()
@@ -32,6 +34,7 @@ export default function ResetPassword() {
   const [showConfirmPassword, setConfirmPassword] = useState(false);
   const [searchParams] = useSearchParams(); 
   const token = searchParams.get("token"); 
+  const email = searchParams.get("email") || ""; 
 
   const {
     register,
@@ -39,9 +42,9 @@ export default function ResetPassword() {
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
+    defaultValues: { email, otp: "", newPassword: "", confirmNewPassword: "" },
   });
 
- 
   useEffect(() => {
     if (!token) {
       toast.error("Invalid or missing reset token");
@@ -61,10 +64,11 @@ export default function ResetPassword() {
     try {
       const payload = {
         token,
+        email: data.email,
+        otp: data.otp,
         newPassword: data.newPassword,
         confirmNewPassword: data.confirmNewPassword,
       };
-      console.log("Payload gửi lên server:", payload);
 
       await dispatch(resetPasswordAPI(payload)).unwrap();
       toast.success("Password reset successfully! You can now log in with your new password.");
@@ -90,10 +94,29 @@ export default function ResetPassword() {
                 Reset password
               </Typography>
               <Typography className="auth-left-subtitle">
-                Enter your new password
+                Enter your new password and OTP
               </Typography>
               <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-                {/* New Password */}
+                <TextField
+                  id="email"
+                  label="Email"
+                  variant="standard"
+                  sx={{ marginTop: "20px" }}
+                  {...register("email")}
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                  defaultValue={email}
+                  disabled
+                />
+                <TextField
+                  id="otp"
+                  label="OTP"
+                  variant="standard"
+                  sx={{ marginTop: "20px" }}
+                  {...register("otp")}
+                  error={!!errors.otp}
+                  helperText={errors.otp?.message}
+                />
                 <TextField
                   id="newPassword"
                   label="New password"
@@ -115,8 +138,6 @@ export default function ResetPassword() {
                     ),
                   }}
                 />
-
-                {/* Confirm New Password */}
                 <TextField
                   id="confirmNewPassword"
                   label="Confirm new password"
@@ -133,28 +154,22 @@ export default function ResetPassword() {
                         onClick={handleClickShowConfirmPassword}
                         edge="end"
                       >
-                        {showConfirmPassword ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     ),
                   }}
                 />
-
                 <Button
                   type="submit"
                   className="auth-button"
                   disabled={isLoading || !token}
+                  sx={{ mt: 2 }}
                 >
                   {isLoading ? "Processing..." : "Reset password"}
                 </Button>
               </form>
             </div>
           </Grid>
-
-          {/* Right side illustration */}
           <Grid item size={{ xs: 6, md: 6 }} className="auth-right">
             <img
               className="auth-image"

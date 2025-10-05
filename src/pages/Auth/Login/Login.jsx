@@ -25,9 +25,9 @@ const schema = yup
   .object({
     email: yup
       .string()
-      .email("Email không hợp lệ")
-      .required("Email là bắt buộc"),
-    password: yup.string().required("Mật khẩu là bắt buộc"),
+      .email("Invalid email format.")
+      .required("Email is required"),
+    password: yup.string().required("Password is required"),
   })
   .required();
 
@@ -61,7 +61,7 @@ export default function Login() {
       const payload = await dispatch(loginAPI(data)).unwrap();
       
       if (payload && payload.data) {
-        toast.success("Đăng nhập thành công!");
+        toast.success("Login successful!");
         localStorage.setItem("currentUser", JSON.stringify(payload.data));
 
         const userType = payload.data.user?.role?.trim().toLowerCase();
@@ -72,14 +72,14 @@ export default function Login() {
         } else if (userType === "admin" || userType === "administrator") {
           navigate(PATH.ADMIN, { replace: true });
         } else {
-          toast.error("Vai trò không hợp lệ, vui lòng liên hệ quản trị viên.");
+          toast.error("Unknown user role. Please contact support.");
         }
       } else {
-        toast.error(payload?.message || "Đăng nhập thất bại, vui lòng thử lại.");
+        toast.error(payload?.message || "Login failed. Please try again.");
       }
     } catch {
       // Lỗi đã được xử lý trong authSlice, chỉ cần set error state cho UI
-      setLoginError("Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.");
+      setLoginError(" Login failed. Please check your email and password.");
     }
   };
 
@@ -154,7 +154,7 @@ const handleGoogleLogin = async () => {
                     className="auth-button"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+                    {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </form>
                 <div className="auth-subtitle-container">
@@ -192,7 +192,7 @@ const handleGoogleLogin = async () => {
               <img
                 className="auth-image"
                 src={imageAuth}
-                alt="Hình minh họa đăng nhập"
+                alt="Login illustration"
               />
             </Grid>
           </Grid>
