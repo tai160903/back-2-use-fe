@@ -8,18 +8,16 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-
 import {
   IoHomeOutline,
   IoPersonOutline,
   IoStorefrontOutline,
 } from "react-icons/io5";
 import { MdOutlineAccountBalanceWallet, MdRedeem } from "react-icons/md";
-import { CiStar } from "react-icons/ci";
+import { CiStar, CiLogout } from "react-icons/ci";
 import { GoHistory } from "react-icons/go";
 import { TiMessages } from "react-icons/ti";
 import { AiOutlineMenuFold, AiOutlineMenuUnfold } from "react-icons/ai";
-import { CiLogout } from "react-icons/ci";
 import "./Navbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PATH } from "../../routes/path";
@@ -42,12 +40,12 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   // LOGOUT
   const handleLogout = () => {
     dispatch(logout());
-    navigate(PATH.LOGIN)
+    navigate(PATH.LOGIN);
   };
 
   const getIconComponent = (iconName) => {
@@ -71,11 +69,13 @@ const Navbar = () => {
   };
 
   return (
-    <Drawer
-      variant="permanent"
+    <div
       className={`navbar ${isOpen ? "navbar-open" : "navbar-closed"}`}
-      classes={{
-        paper: `navbar-paper ${isOpen ? "navbar-open" : "navbar-closed"}`,
+      style={{
+      height:"auto",// trừ chiều cao Header
+        background: "#fff",
+        borderRight: "1px solid #ddd",
+        transition: "width 0.3s",
       }}
     >
       <div className="navbar-header">
@@ -83,6 +83,7 @@ const Navbar = () => {
           {isOpen ? <AiOutlineMenuFold /> : <AiOutlineMenuUnfold />}
         </IconButton>
       </div>
+
       <List className="navbar-content">
         {sidebarItems.map((item) => (
           <ListItem
@@ -105,7 +106,7 @@ const Navbar = () => {
           </ListItem>
         ))}
       </List>
-    </Drawer>
+    </div>
   );
 };
 

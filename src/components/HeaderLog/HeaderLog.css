@@ -1,0 +1,96 @@
+.header-log {
+  position: sticky;
+  top: 0;
+  height: 64px;
+  background-color: #ffffff;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 200px;
+  font-weight: bold;
+  z-index: 1201;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin-top: 20px;
+}
+
+.header-log-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-log-atv {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007c00;
+  color: white;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+  margin-right: 20px !important;
+}
+
+.header-log-info {
+  display: flex;
+  flex-direction: row;
+  margin-left: 10px;
+  color: black;
+}
+
+.header-log-name {
+  font-size: 16px;
+  font-weight: bold !important;
+  color: black;
+}
+
+.header-log-role {
+  display: flex;
+  flex-direction: row;
+  font-size: 14px;
+  color: gray;
+}
+
+.header-log-balance {
+  color: white !important;
+  background: #007c00;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: black;
+  margin-left: 10px;
+  border-radius: 10px;
+  padding: 0px 5px;
+}
+
+.header-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  color: black;
+  font-size: 25px !important;
+  cursor: pointer;
+}
+
+.header-log-icon-notificate {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px; 
+  right: -9px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+}

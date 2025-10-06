@@ -25,14 +25,30 @@ import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import GoogleCallback from "../pages/Auth/GoogleCallback/GoogleCallback";
 import Registration from "../pages/Admin/Registration/Registration";
 import UserDashborad from "../pages/Home/UserDashborad/UserDashborad";
+import LandingLayout from "../layouts/LandingLayout/LandingLayout"; // Thêm import
+import ListStore from "../pages/Home/ListStore/ListStore";
 
 export default function useRouterElements() {
   const elements = useRoutes([
-    // Root path without MainLayout
+    // Landing page route với LandingLayout
     {
       path: PATH.HOME,
-      index: true,
-      element: <HomePage />, // or <HomePage /> if you prefer
+      element: <LandingLayout />,
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+        },
+         {
+          path: PATH.LISTSTORE,
+          element: (
+            <ProtectedRoute allowAnonymous>
+              <ListStore />
+            </ProtectedRoute>
+          ),
+        },
+        
+      ],
     },
 
     // Auth routes
@@ -91,7 +107,7 @@ export default function useRouterElements() {
       ],
     },
 
-    // User routes with MainLayout
+    // User routes với MainLayout
     {
       path: PATH.HOME,
       element: <MainLayout />,
@@ -184,6 +200,7 @@ export default function useRouterElements() {
           path: PATH.ADMIN_SETTINGS,
           element: <Settings />,
         },
+
         {
           path: PATH.ADMIN_REGISTRATION,
           element: <Registration />,

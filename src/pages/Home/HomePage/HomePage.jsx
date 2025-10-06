@@ -58,7 +58,17 @@ export default function HomePage() {
               <Typography className="welcome-text-description">
                 We are the world’s largest reusable system.
               </Typography>
-              <button className="welcome-btn">More about</button>
+              <button className="welcome-btn">
+                <Link
+                  href="/auth/register/bussiness"
+                  sx={{
+                    textDecoration: "none",
+                    color: "white",
+                  }}
+                >
+                  Become a Partner!
+                </Link>
+              </button>
             </Grid>
             <Grid size={7} className="welcome-right">
               <Grid container spacing={3}>
@@ -166,7 +176,7 @@ export default function HomePage() {
         <Typography className="partners-title">
           PARTNERS WORKING WITH US
         </Typography>
-        <div className="partners-container">
+        <div className="partners-containers">
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWFGeQAZXgKnplOilFt7XCt6f-Q6JCoPGiRg&s"
             alt="OMR"
