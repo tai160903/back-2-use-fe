@@ -1,15 +1,15 @@
 .navbar {
+  display: flex;
+  flex-direction: column;
+  height: 200vh;
   transition: width 0.3s;
   overflow: hidden !important;
   white-space: nowrap;
 }
 
-
-
 .navbar-paper {
   border-right: none;
-  top: 64px; /* nếu có header */
-  height: calc(100% - 64px);
+  height: 100% !important;
   overflow: hidden !important;
 }
 

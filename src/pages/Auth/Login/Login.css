@@ -1,6 +1,7 @@
 .auth-content {
   flex-direction: row;
   justify-content: center;
+  overflow-y: hidden;
 }
 .auth-left {
   display: flex;
@@ -108,5 +109,6 @@ button.auth-social-button {
 .auth-image {
   border-top-left-radius: 40px;
   border-bottom-left-radius: 40px;
+  margin-top: 150px;
 }
 

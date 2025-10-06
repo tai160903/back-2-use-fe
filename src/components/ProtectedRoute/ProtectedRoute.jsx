@@ -8,19 +8,15 @@ const ProtectedRoute = memo(({ children, allowedRoles, allowAnonymous }) => {
 
 
   if (allowAnonymous) {
-    if (isAuthenticated()) {
-      const userRole = getUserRole();
-      const redirectPath = getRedirectPath(userRole);
-      return <Navigate to={redirectPath} replace />;
-    }
-
-    return children;
+    return children;  
   }
 
+ 
   if (!isAuthenticated()) {
     return <Navigate to={PATH.LOGIN} replace />;
   }
 
+ 
   const userRole = getUserRole();
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     const redirectPath = getRedirectPath(userRole);

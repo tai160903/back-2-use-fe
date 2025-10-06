@@ -18,6 +18,7 @@ export const PATH = {
     TRANSACTION_HISTORY:"/transaction_history",
     WALLET_CUSTOMER:"/walllet_customer",
     USER_DASHBOARD:"/user_dashborad",
+    LISTSTORE:"/liststore",
 
     // BUSINESS
     BUSINESS: "/business",

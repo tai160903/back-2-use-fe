@@ -1,45 +1,139 @@
 import React from "react";
+import { useLocation, Link } from "react-router-dom";
 import "./Header.css";
-import Typography from "@mui/material/Typography";
-import Link from "@mui/material/Link";
+import Button from "@mui/material/Button";
+import Avatar from "@mui/material/Avatar";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import { useState } from "react";
 import logoImage from "../../assets/image/Back2Use-Review 1.png";
+import useAuth from "../../hooks/useAuth"; // bạn đã có custom hook này
+import { logout } from "../../store/slices/authSlice";
 
 export default function Header() {
+  const location = useLocation();
+  const { currentUser, dispatch, navigate } = useAuth();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  // Danh sách trang auth
+  const isAuthPage = [
+    "/auth/login",
+    "/auth/register",
+    "/auth/forgotpassword",
+  ].includes(location.pathname);
+
+  const buttonText = isAuthPage ? "Become Business" : "Get started";
+  const buttonLink = isAuthPage ? "/auth/register/bussiness" : "/auth/login";
+
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    handleMenuClose();
+    navigate("/auth/login");
+  };
+
   return (
     <div className="header">
       <div className="headerTitles">
+        {/* LOGO */}
         <div className="header-logo">
-          <img 
-            src={logoImage} 
-            alt="Back2Use Logo" 
-            className="logo-image"
-          />
+          <img src={logoImage} alt="Back2Use Logo" className="logo-image" />
           <div className="logo-text">
-            <Typography sx={{ fontSize: "30px", fontWeight: "700" }}>
-              Back2Use
-            </Typography>
-            <span
-              style={{
-                fontSize: "15px",
-                color: "white",
+            <Button
+              sx={{
+                fontSize: "30px",
+                fontWeight: "700",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "start",
                 textTransform: "none",
               }}
             >
-              Reusable Packaging
-            </span>
+              <Link to="/" style={{ textDecoration: "none", color: "#006C1E" }}>
+                Back2Use
+              </Link>
+              <span
+                style={{
+                  fontSize: "15px",
+                  color: "white",
+                  textTransform: "none",
+                }}
+              >
+                Reusable Packaging
+              </span>
+            </Button>
           </div>
         </div>
+
+        {/* NAV LINKS */}
         <div className="header-nav">
+          <Link to="/liststore">Stores</Link>
           <a href="#solutions">Feature</a>
           <a href="#customers">Pricing</a>
           <a href="#about">About</a>
         </div>
+
+        {/* CTA hoặc Avatar */}
         <div className="cta">
-          <button>
-            <Link href="/auth/login" sx={{ textDecoration: "none", color:"white" }}>
-              Get started
-            </Link>
-          </button>
+          {currentUser ? (
+            <>
+              <Avatar
+                src={currentUser?.user?.avatar || ""}
+                alt={currentUser?.user?.name || "User"}
+                onClick={handleMenuOpen}
+                sx={{
+                  cursor: "pointer",
+                  bgcolor: "#2e7d32",
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                {currentUser?.user?.name
+                  ? currentUser.user.name.charAt(0).toUpperCase()
+                  : "U"}
+              </Avatar>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleMenuClose}
+                PaperProps={{
+                  elevation: 3,
+                  sx: { mt: 1.5 },
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    navigate("/profile");
+                    handleMenuClose();
+                  }}
+                >
+                  Profile
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    navigate("/wallet");
+                    handleMenuClose();
+                  }}
+                >
+                  Wallet
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <Button>
+              <Link
+                to={buttonLink}
+                style={{ textDecoration: "none", color: "white" }}
+              >
+                {buttonText}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </div>
