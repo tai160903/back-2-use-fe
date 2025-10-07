@@ -183,7 +183,7 @@ const handleGoogleLogin = async () => {
                 <Typography className="auth-bottom-text">
                   Don't have an account?{" "}
                   <Link href="/auth/register" className="auth-bottom-link">
-                  Sing up
+                  Sign up
                   </Link>
                 </Typography>
               </div>

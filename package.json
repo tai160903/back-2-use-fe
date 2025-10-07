@@ -22,6 +22,7 @@
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "install": "^0.13.0",
+    "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "npm": "^11.6.0",

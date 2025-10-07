@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { login } from "../../../store/slices/authSlice";
 import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const GoogleCallback = () => {
   const location = useLocation();

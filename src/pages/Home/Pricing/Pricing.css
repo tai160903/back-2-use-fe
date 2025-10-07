@@ -1,0 +1,146 @@
+.pricing-page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Pricing Cards Grid */
+.pricing-cards-grid-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.pricing-card {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.pricing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.pricing-card .MuiCardContent-root {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.pricing-card .MuiListItem-root {
+  padding-left: 0;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.pricing-card .MuiListItemIcon-root {
+  min-width: 30px;
+}
+
+/* Everything Included Grid */
+.included-features-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.included-feature-card {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.included-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* FAQ Grid */
+.faq-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.faq-item {
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.faq-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* CTA Section */
+.cta-section {
+  background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+  color: white;
+  border-radius: 16px;
+  margin: 40px auto;
+  max-width: 1200px;
+  overflow: hidden;
+  padding: 40px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .pricing-cards-grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .pricing-card:nth-child(4) {
+    grid-column: 2 / 3;
+  }
+}
+
+@media (max-width: 900px) {
+  .pricing-cards-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .pricing-card:nth-child(3),
+  .pricing-card:nth-child(4) {
+    grid-column: auto;
+  }
+
+  .included-features-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .faq-grid-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .pricing-cards-grid-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .included-features-grid-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .cta-section {
+    margin: 20px auto;
+    border-radius: 8px;
+  }
+}

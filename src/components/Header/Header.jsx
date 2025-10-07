@@ -71,9 +71,9 @@ export default function Header() {
         {/* NAV LINKS */}
         <div className="header-nav">
           <Link to="/liststore">Stores</Link>
-          <a href="#solutions">Feature</a>
-          <a href="#customers">Pricing</a>
-          <a href="#about">About</a>
+          <Link to="/features">Features</Link>
+          <Link to="/pricing">Pricing</Link>
+          <Link to="/about">About</Link>
         </div>
 
         {/* CTA hoặc Avatar */}
