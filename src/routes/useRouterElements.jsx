@@ -27,6 +27,9 @@ import Registration from "../pages/Admin/Registration/Registration";
 import UserDashborad from "../pages/Home/UserDashborad/UserDashborad";
 import LandingLayout from "../layouts/LandingLayout/LandingLayout"; // Thêm import
 import ListStore from "../pages/Home/ListStore/ListStore";
+import Features from "../pages/Home/Features/Features";
+import Pricing from "../pages/Home/Pricing/Pricing";
+import About from "../pages/Home/About/About";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -46,6 +49,18 @@ export default function useRouterElements() {
               <ListStore />
             </ProtectedRoute>
           ),
+        },
+        {
+          path: PATH.FEATURES,
+          element: <Features />,
+        },
+        {
+          path: PATH.PRICING,
+          element: <Pricing />,
+        },
+        {
+          path: PATH.ABOUT,
+          element: <About />,
         },
         
       ],
