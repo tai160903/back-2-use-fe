@@ -16,7 +16,7 @@
   align-items: center;
   width: 100%;
   margin: 0 auto;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  /* box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px; */
   background-color: rgba(105, 105, 105, 0.5);
   /* border-radius: 10px; */
   padding: 20px 20px;
