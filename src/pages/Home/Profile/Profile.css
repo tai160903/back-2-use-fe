@@ -103,6 +103,7 @@
   border: 1px solid #fed7aa;
   color: #c64200;
   border-radius: 10px;
+  text-align: start;
 }
 
 .profile-info-edit-text span {
