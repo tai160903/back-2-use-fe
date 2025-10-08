@@ -13,39 +13,114 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CallMissedOutgoingIcon from "@mui/icons-material/CallMissedOutgoing";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import AddIcon from "@mui/icons-material/Add";
-import { useState } from "react";
+import CakeIcon from "@mui/icons-material/Cake";
+import { useEffect, useState } from "react";
 import "./Profile.css";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getProfileApi,
+  updateProfileApi,
+} from "../../../store/slices/userSlice";
+import { useForm, Controller } from "react-hook-form";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { format, parseISO } from "date-fns";
+import toast from "react-hot-toast";
+import * as yup from "yup";
+
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const schema = yup.object().shape({
+  name: yup
+    .string()
+    .required("Full name is required")
+    .min(2, "Full name must be at least 2 characters"),
+  phone: yup
+    .string()
+    .matches(/^[0-9]{10,15}$/, "Invalid phone number")
+    .nullable(),
+  address: yup.string().nullable(),
+  yob: yup
+    .date()
+    .required("Date of birth is required")
+    .max(new Date(), "Date of birth cannot be in the future")
+    .typeError("Invalid date"),
+});
 
 export default function Profile() {
+  const dispatch = useDispatch();
+  const { userInfo, isLoading, error } = useSelector((state) => state.user);
+  const user = userInfo?.data?.user;
+  const wallet = userInfo?.data?.wallet;
   const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState({
-    fullName: "Sam Rahman",
-    email: "sam.rahman9920@gmail.com",
-    phone: "+1 - 555-369-030-1236",
-    address: "123 Main Street, New York, NY 10001",
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+      yob: user?.yob ? parseISO(user.yob) : null,
+    },
   });
-  const [initialData, setInitialData] = useState(userData);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUserData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  useEffect(() => {
+    dispatch(getProfileApi());
+  }, [dispatch]);
 
-  const handleSave = () => {
-    setInitialData(userData);
-    setIsEditing(false);
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        yob: user.yob ? parseISO(user.yob) : null,
+      });
+    }
+  }, [user, reset]);
+
+  const onSubmit = async (data) => {
+    try {
+      const formattedData = {
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+        yob: data.yob ? format(data.yob, "yyyy-MM-dd") : "",
+      };
+      console.log("data", formattedData);
+      await dispatch(updateProfileApi(formattedData)).unwrap();
+      toast.success("Update profile success");
+      await dispatch(getProfileApi());
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+    }
   };
 
   const handleCancel = () => {
-    setUserData(initialData);
+    reset();
     setIsEditing(false);
   };
+
+  if (isLoading) {
+    return <div>Loading profile...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message || error}</div>;
+  }
 
   return (
     <>
@@ -57,7 +132,12 @@ export default function Profile() {
             <div className="profile-info">
               <div className="profile-info-header">
                 <div className="profile-avatar">
-                  <img src="https://bigdental.com.vn/wp-content/uploads/2025/04/anh-dai-dien-6-1.jpg" />
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      user?.name || "User"
+                    )}&background=0D8ABC&color=fff&size=128`}
+                    alt="Avatar"
+                  />
                 </div>
                 <div className="profile-supInfor">
                   <Typography
@@ -79,153 +159,208 @@ export default function Profile() {
                       <EditIcon className="w-5 h-5" />
                     </button>
                   </Typography>
-                  <span>Test Login 07 Aug 2025, 14:42</span>
-                  <span>You have to join from GMT 0:00</span>
                 </div>
               </div>
               <div className="profile-info-form">
                 {isEditing && (
-                  <div className="profile-info-content-edit">
-                    <div className="profile-info-edit-text">
-                      <Typography
-                        sx={{
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        <EditIcon sx={{ marginRight: "10px" }} /> Edit Mode
-                        Active
-                      </Typography>
-                      <span>
-                        {" "}
-                        Make changes to your profile information below
-                      </span>
-                    </div>
+                  <div className="profile-info-edit-text">
+                    <Typography
+                      sx={{
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <EditIcon sx={{ marginRight: "10px" }} /> Edit Mode Active
+                    </Typography>
+                    <span>Make changes to your profile information below</span>
                   </div>
                 )}
-                <form>
-                  <div className="profile-info-content">
-                    <div className="profile-info-text">
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div className="profile-info-text-icons">
-                          <PersonIcon />
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <form onSubmit={handleSubmit(onSubmit)}>
+                    <div className="profile-info-content">
+                      <div className="profile-info-text">
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div className="profile-info-text-icons">
+                            <PersonIcon />
+                          </div>
+                          <div className="profile-info-text-des">
+                            <Typography>Full Name</Typography>
+                            {isEditing ? (
+                              <TextField
+                                {...register("name")}
+                                variant="outlined"
+                                fullWidth
+                                size="small"
+                                sx={{ marginTop: "8px" }}
+                                error={!!errors.name}
+                                helperText={errors.name?.message}
+                              />
+                            ) : (
+                              <span>{user?.name || "No name"}</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="profile-info-text-des">
-                          <Typography>Full Name</Typography>
-                          {isEditing ? (
-                            <TextField
-                              name="fullName"
-                              value={userData.fullName}
-                              onChange={handleInputChange}
-                              variant="outlined"
-                              fullWidth
-                              size="small"
-                              sx={{ marginTop: "8px" }}
-                            />
-                          ) : (
-                            <span>{userData.fullName}</span>
-                          )}
+                      </div>
+                      <div className="profile-info-text">
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div className="profile-info-text-icons">
+                            <EmailIcon />
+                          </div>
+                          <div className="profile-info-text-des">
+                            <Typography>Email</Typography>
+                            {isEditing ? (
+                              <TextField
+                                {...register("email")}
+                                variant="outlined"
+                                fullWidth
+                                size="small"
+                                type="email"
+                                sx={{ marginTop: "8px" }}
+                                disabled
+                              />
+                            ) : (
+                              <span>{user?.email || "No email"}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="profile-info-text">
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div className="profile-info-text-icons">
+                            <LocalPhoneIcon />
+                          </div>
+                          <div className="profile-info-text-des">
+                            <Typography>Phone</Typography>
+                            {isEditing ? (
+                              <TextField
+                                {...register("phone")}
+                                variant="outlined"
+                                fullWidth
+                                size="small"
+                                type="tel"
+                                sx={{ marginTop: "8px" }}
+                                error={!!errors.phone}
+                                helperText={errors.phone?.message}
+                              />
+                            ) : (
+                              <span>{user?.phone || "No phone"}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="profile-info-text">
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div className="profile-info-text-icons">
+                            <AddLocationAltIcon />
+                          </div>
+                          <div className="profile-info-text-des">
+                            <Typography>Address</Typography>
+                            {isEditing ? (
+                              <TextField
+                                {...register("address")}
+                                variant="outlined"
+                                fullWidth
+                                size="small"
+                                sx={{ marginTop: "8px" }}
+                                error={!!errors.address}
+                                helperText={errors.address?.message}
+                              />
+                            ) : (
+                              <span>{user?.address || "No address"}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="profile-info-text">
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div className="profile-info-text-icons">
+                            <CakeIcon />
+                          </div>
+                          <div className="profile-info-text-des">
+                            <Typography>Year of Birth</Typography>
+                            {isEditing ? (
+                              <Controller
+                                name="yob"
+                                control={control}
+                                render={({ field }) => (
+                                  <DatePicker
+                                    {...field}
+                                    label="Select Date of Birth"
+                                    views={["year", "month", "day"]}
+                                    format="dd/MM/yyyy"
+                                    slotProps={{
+                                      textField: {
+                                        size: "small",
+                                        sx: { marginTop: "8px" },
+                                        error: !!errors.yob,
+                                        helperText: errors.yob?.message,
+                                      },
+                                    }}
+                                  />
+                                )}
+                              />
+                            ) : (
+                              <span>
+                                {user?.yob
+                                  ? format(parseISO(user.yob), "dd/MM/yyyy")
+                                  : "No date of birth"}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="profile-info-text">
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div className="profile-info-text-icons">
-                          <EmailIcon />
-                        </div>
-                        <div className="profile-info-text-des">
-                          <Typography>Email</Typography>
-                          {isEditing ? (
-                            <TextField
-                              name="email"
-                              value={userData.email}
-                              onChange={handleInputChange}
-                              variant="outlined"
-                              fullWidth
-                              size="small"
-                              type="email"
-                              sx={{ marginTop: "8px" }}
-                            />
-                          ) : (
-                            <span>{userData.email}</span>
-                          )}
-                        </div>
+                    {isEditing && (
+                      <div className="profile-info-footer">
+                        <Button
+                          className="profile-info-btn profile-info-btn-save"
+                          variant="contained"
+                          type="submit"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          className="profile-info-btn profile-info-btn-cancel"
+                          variant="outlined"
+                          onClick={handleCancel}
+                        >
+                          Cancel
+                        </Button>
                       </div>
-                    </div>
-                    <div className="profile-info-text">
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div className="profile-info-text-icons">
-                          <LocalPhoneIcon />
-                        </div>
-                        <div className="profile-info-text-des">
-                          <Typography>Phone</Typography>
-                          {isEditing ? (
-                            <TextField
-                              name="phone"
-                              value={userData.phone}
-                              onChange={handleInputChange}
-                              variant="outlined"
-                              fullWidth
-                              size="small"
-                              type="tel"
-                              sx={{ marginTop: "8px" }}
-                            />
-                          ) : (
-                            <span>{userData.phone}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="profile-info-text">
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div className="profile-info-text-icons">
-                          <AddLocationAltIcon />
-                        </div>
-                        <div className="profile-info-text-des">
-                          <Typography>Address</Typography>
-                          {isEditing ? (
-                            <TextField
-                              name="address"
-                              value={userData.address}
-                              onChange={handleInputChange}
-                              variant="outlined"
-                              fullWidth
-                              size="small"
-                              sx={{ marginTop: "8px" }}
-                            />
-                          ) : (
-                            <span>{userData.address}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </form>
+                    )}
+                  </form>
+                </LocalizationProvider>
               </div>
               {!isEditing && (
                 <Button
@@ -235,24 +370,6 @@ export default function Profile() {
                 >
                   Edit
                 </Button>
-              )}
-              {isEditing && (
-                <div className="profile-info-footer">
-                  <Button
-                    className="profile-info-btn profile-info-btn-save"
-                    variant="contained"
-                    onClick={handleSave}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    className="profile-info-btn profile-info-btn-cancel"
-                    variant="outlined"
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
-                </div>
               )}
             </div>
             <div className="right-section">
@@ -306,7 +423,7 @@ export default function Profile() {
                         fontWeight: "600",
                       }}
                     >
-                      $2,450.00
+                      ${wallet?.balance || 0}.00
                     </Typography>
                     <span>USD</span>
                   </div>
@@ -351,7 +468,7 @@ export default function Profile() {
                         fontWeight: "600",
                       }}
                     >
-                      $125.50
+                      $0.00
                     </Typography>
                     <span>USD</span>
                   </div>
@@ -376,11 +493,7 @@ export default function Profile() {
                     }}
                   >
                     <div className="profile-legitPoint-current-icons">
-                      <EmojiEventsIcon
-                        sx={{
-                          fontSize: "30px",
-                        }}
-                      />
+                      <EmojiEventsIcon sx={{ fontSize: "30px" }} />
                     </div>
                     <div className="profile-wallet-text-des">
                       <Typography
@@ -504,7 +617,7 @@ export default function Profile() {
                     <span style={{ color: "#6b7280" }}>2 hours ago</span>
                   </div>
                 </div>
-                <div className="profile-legitPoint-achievement ">
+                <div className="profile-legitPoint-achievement">
                   <div
                     style={{
                       display: "flex",
