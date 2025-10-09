@@ -23,6 +23,10 @@ export const PATH = {
     PRICING:"/pricing",
     ABOUT:"/about",
 
+    // PAYMENT
+    PAYMENTSUCESS:"/payment-success",
+    PAYMENTFAILED:"/payment-failed",
+
     // BUSINESS
     BUSINESS: "/business",
 

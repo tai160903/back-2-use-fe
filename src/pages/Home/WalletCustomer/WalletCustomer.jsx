@@ -1,39 +1,65 @@
+// WalletCustomer.js
 import Typography from "@mui/material/Typography";
 import "./WalletCustomer.css";
 import { LuWallet } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
 import { FaMinus } from "react-icons/fa";
 import { useState } from "react";
-import ModalWallet from "../../../components/ModalWallet/ModalWallet";
+
 import { MdAttachMoney } from "react-icons/md";
 import { Tabs, Tab, Box, Chip, Button } from "@mui/material";
+
+import toast from "react-hot-toast";
+import { useUserInfo } from "../../../hooks/useUserInfo";
+import useDeposit from "../../../hooks/useDeposit";
+import useWithdraw from "../../../hooks/useWithdraw";
 import TabPanelRecent from "../../../components/TabPanelRecent/TabPanelRecent";
+import ModalWallet from "../../../components/ModalWallet/ModalWallet"
 
 export default function WalletCustomer() {
+  const { walletId, balance, isLoading: profileLoading } = useUserInfo();
+
+  // Sử dụng hooks
+  const {
+    addAmount,
+    setAddAmount,
+    handleDeposit,
+    depositLoading,
+    depositError,
+    resetDeposit,
+  } = useDeposit(walletId);
+
+  const {
+    withdrawAmount,
+    setWithdrawAmount,
+    handleWithdraw,
+    withdrawLoading,
+    withdrawError,
+    resetWithdraw,
+  } = useWithdraw();
+
   const [value, setValue] = useState(0);
   const [openAddFunds, setOpenAddFunds] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
-  const [addAmount, setAddAmount] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
   const [filter, setFilter] = useState("All");
 
-  const handleOpenAddFunds = () => setOpenAddFunds(true);
-  const handleCloseAddFunds = () => setOpenAddFunds(false);
-  const handleOpenWithdraw = () => setOpenWithdraw(true);
-  const handleCloseWithdraw = () => setOpenWithdraw(false);
-
-  const handleAddFundsSubmit = (e) => {
-    e.preventDefault();
-    console.log("Adding funds:", addAmount);
-    setAddAmount("");
-    handleCloseAddFunds();
+  const handleOpenAddFunds = () => {
+    if (!walletId) {
+      toast.warning("Please refresh the page to get wallet information.");
+      return;
+    }
+    setOpenAddFunds(true);
   };
 
-  const handleWithdrawSubmit = (e) => {
-    e.preventDefault();
-    console.log("Withdrawing funds:", withdrawAmount);
-    setWithdrawAmount("");
-    handleCloseWithdraw();
+  const handleCloseAddFunds = () => {
+    setOpenAddFunds(false);
+    resetDeposit();
+  };
+
+  const handleOpenWithdraw = () => setOpenWithdraw(true);
+  const handleCloseWithdraw = () => {
+    setOpenWithdraw(false);
+    resetWithdraw(); 
   };
 
   const handleChange = (event, newValue) => {
@@ -96,10 +122,22 @@ export default function WalletCustomer() {
   // Filter logic
   const getFilteredData = (data) => {
     if (filter === "All") return data;
-    if (filter === "Plus Money") return data.filter(item => item.amount.startsWith("+"));
-    if (filter === "Minus Money") return data.filter(item => item.amount.startsWith("-"));
+    if (filter === "Plus Money")
+      return data.filter((item) => item.amount.startsWith("+"));
+    if (filter === "Minus Money")
+      return data.filter((item) => item.amount.startsWith("-"));
     return data;
   };
+
+  if (profileLoading) {
+    return (
+      <div className="wallet">
+        <div style={{ textAlign: "center", padding: "50px" }}>
+          <Typography>Loading wallet information...</Typography>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -131,7 +169,7 @@ export default function WalletCustomer() {
                     fontWeight: "bold",
                   }}
                 >
-                  $25.50
+                  ${balance.toFixed(2)}
                 </Typography>
                 <span>Available Balance</span>
               </div>
@@ -148,7 +186,7 @@ export default function WalletCustomer() {
                   onClick={handleOpenWithdraw}
                 >
                   <FaMinus className="mr-3" />
-                  With draw
+                  Withdraw
                 </div>
               </div>
             </div>
@@ -192,9 +230,7 @@ export default function WalletCustomer() {
                 className="mb-2"
                 style={{ display: "flex", justifyContent: "flex-end" }}
               >
-                <Button>
-                  {/* Placeholder for filter button if needed */}
-                </Button>
+                <Button>{/* Placeholder for filter button if needed */}</Button>
               </div>
               {getFilteredData(subscriptionsData).map((item) => (
                 <Box
@@ -293,22 +329,30 @@ export default function WalletCustomer() {
       <ModalWallet
         open={openAddFunds}
         handleClose={handleCloseAddFunds}
-        title="Add Funds to Wallet"
-        description="Add money to your wallet for container deposits and fees"
+        title="Deposit to wallet via VNPay"
+        description="Enter the amount you want to deposit (VND)"
         amount={addAmount}
         setAmount={setAddAmount}
-        handleSubmit={handleAddFundsSubmit}
-        action="add"
+        handleSubmit={handleDeposit}
+        action="deposit"
+        loading={depositLoading}
+        error={depositError}
+        walletId={walletId}
+        currency="VND"
       />
       <ModalWallet
         open={openWithdraw}
         handleClose={handleCloseWithdraw}
-        title="Withdraw Funds to Wallet"
-        description="Withdraw Funds to your wallet for container deposits and fees"
+        title="Withdraw Funds from Wallet"
+        description="Withdraw funds from your wallet for container deposits and fees"
         amount={withdrawAmount}
         setAmount={setWithdrawAmount}
-        handleSubmit={handleWithdrawSubmit}
+        handleSubmit={handleWithdraw}
         action="withdraw"
+        loading={withdrawLoading}
+        error={withdrawError}
+        walletId={walletId}
+        currency="USD" // Có thể thay đổi nếu cần thống nhất currency
       />
     </>
   );
