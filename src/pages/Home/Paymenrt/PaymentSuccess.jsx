@@ -1,12 +1,11 @@
-"use client"
-
 import { Box, Container, Typography, Button, Paper, Divider } from "@mui/material";
 import { FaCheckCircle, FaHome, FaReceipt } from "react-icons/fa";
-import { IoMdDownload } from "react-icons/io";
 import { MdAccountBalanceWallet } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 import "./CheckoutPayment.css";
 
 export default function PaymentSuccess() {
+  const navigate = useNavigate();
   const transactionData = {
     amount: "500,000",
     transactionId: "WLT20250109123456",
@@ -128,16 +127,18 @@ export default function PaymentSuccess() {
                 fullWidth
                 startIcon={<FaHome />}
                 className="checkoutPayment-button checkoutPayment-button-text"
+                onClick={() => navigate("/")}
               >
-                Back to Home
+                Về trang chủ
               </Button>
               <Button
                 variant="outlined"
                 fullWidth
                 startIcon={<FaReceipt />}
                 className="checkoutPayment-button checkoutPayment-button-outlined checkoutPayment-button-outlined-success"
+                onClick={() => navigate("/transaction_history")}
               >
-                View Transaction History
+                Xem lịch sử giao dịch
               </Button>
             </Box>
           </Box>
