@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Container,
@@ -12,9 +10,11 @@ import {
 import { MdError, MdRefresh } from "react-icons/md";
 import { FaHome, FaHeadset } from "react-icons/fa";
 import { IoMdInformationCircle } from "react-icons/io";
+import { useNavigate } from "react-router-dom";
 import "./CheckoutPayment.css";
 
 export default function PaymentFailure() {
+  const navigate = useNavigate();
   const transactionData = {
     amount: "500,000",
     transactionId: "WLT20250109123456",
@@ -40,10 +40,10 @@ export default function PaymentFailure() {
               />
             </Box>
             <Typography variant="h4" className="checkoutPayment-title">
-              Payment Failed
+              Thanh toán thất bại
             </Typography>
             <Typography variant="body1" className="checkoutPayment-subtitle">
-              Sorry, we couldn't complete the top-up transaction
+              Xin lỗi, chúng tôi không thể hoàn tất giao dịch nạp tiền
             </Typography>
           </Box>
 
@@ -63,7 +63,7 @@ export default function PaymentFailure() {
                 variant="caption"
                 className="checkoutPayment-alert-code"
               >
-                Error Code: {transactionData.errorCode}
+                Mã lỗi: {transactionData.errorCode}
               </Typography>
             </Alert>
 
@@ -78,14 +78,14 @@ export default function PaymentFailure() {
                 variant="body2"
                 className="checkoutPayment-amount-label"
               >
-                Top-Up Amount
+                Số tiền nạp
               </Typography>
             </Box>
 
             <Box className="checkoutPayment-details-box">
               <Box className="checkoutPayment-detail-row">
                 <Typography className="checkoutPayment-detail-label">
-                  Transaction Type
+                  Loại giao dịch
                 </Typography>
                 <Typography className="checkoutPayment-detail-value">
                   {transactionData.transactionType}
@@ -96,7 +96,7 @@ export default function PaymentFailure() {
 
               <Box className="checkoutPayment-detail-row">
                 <Typography className="checkoutPayment-detail-label">
-                  Transaction ID
+                  Mã giao dịch
                 </Typography>
                 <Typography className="checkoutPayment-detail-value checkoutPayment-detail-value-monospace">
                   {transactionData.transactionId}
@@ -107,7 +107,7 @@ export default function PaymentFailure() {
 
               <Box className="checkoutPayment-detail-row">
                 <Typography className="checkoutPayment-detail-label">
-                  Transaction Date
+                  Ngày giao dịch
                 </Typography>
                 <Typography className="checkoutPayment-detail-value">
                   {transactionData.date}
@@ -118,7 +118,7 @@ export default function PaymentFailure() {
 
               <Box className="checkoutPayment-detail-row">
                 <Typography className="checkoutPayment-detail-label">
-                  Time
+                  Thời gian
                 </Typography>
                 <Typography className="checkoutPayment-detail-value">
                   {transactionData.time}
@@ -129,7 +129,7 @@ export default function PaymentFailure() {
 
               <Box className="checkoutPayment-detail-row">
                 <Typography className="checkoutPayment-detail-label">
-                  Payment Method
+                  Phương thức thanh toán
                 </Typography>
                 <Typography className="checkoutPayment-detail-value">
                   {transactionData.method}
@@ -145,8 +145,9 @@ export default function PaymentFailure() {
                 fullWidth
                 startIcon={<MdRefresh />}
                 className="checkoutPayment-button checkoutPayment-button-failure"
+                onClick={() => navigate("/wallet_customer")}
               >
-                Try Top-Up Again
+                Thử nạp lại
               </Button>
 
               <Button
@@ -154,8 +155,9 @@ export default function PaymentFailure() {
                 fullWidth
                 startIcon={<FaHome />}
                 className="checkoutPayment-button checkoutPayment-button-text"
+                onClick={() => navigate("/")}
               >
-                Back to Home
+                Về trang chủ
               </Button>
             </Box>
 
@@ -164,7 +166,7 @@ export default function PaymentFailure() {
                 variant="subtitle2"
                 className="checkoutPayment-suggestions-title"
               >
-                Troubleshooting Suggestions:
+                Gợi ý khắc phục:
               </Typography>
               <Box component="ul" className="checkoutPayment-suggestions-list">
                 <Typography
@@ -172,28 +174,28 @@ export default function PaymentFailure() {
                   variant="body2"
                   className="checkoutPayment-suggestions-item"
                 >
-                  Check your bank account balance
+                  Kiểm tra số dư tài khoản ngân hàng của bạn
                 </Typography>
                 <Typography
                   component="li"
                   variant="body2"
                   className="checkoutPayment-suggestions-item"
                 >
-                  Ensure your bank card is enabled for online payments
+                  Đảm bảo thẻ ngân hàng của bạn được kích hoạt cho thanh toán trực tuyến
                 </Typography>
                 <Typography
                   component="li"
                   variant="body2"
                   className="checkoutPayment-suggestions-item"
                 >
-                  Try using a different payment method
+                  Thử sử dụng phương thức thanh toán khác
                 </Typography>
                 <Typography
                   component="li"
                   variant="body2"
                   className="checkoutPayment-suggestions-item"
                 >
-                  Contact your bank or support if the issue persists
+                  Liên hệ ngân hàng hoặc bộ phận hỗ trợ nếu vấn đề vẫn tiếp diễn
                 </Typography>
               </Box>
             </Box>

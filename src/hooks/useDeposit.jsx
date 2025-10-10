@@ -1,9 +1,11 @@
-// useDeposit.js
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import toast from "react-hot-toast";
-import { clearDepositResult, depositeMoneyApi } from "../store/slices/walletSlice";
+import {
+  clearDepositResult,
+  depositeMoneyApi,
+} from "../store/slices/walletSlice";
 
 export default function useDeposit(walletId) {
   const dispatch = useDispatch();
@@ -15,8 +17,7 @@ export default function useDeposit(walletId) {
 
   const [addAmount, setAddAmount] = useState("");
 
-
-//   function deposit money
+  //   function deposit money
   const handleDeposit = async (e) => {
     e.preventDefault();
     if (!addAmount || parseFloat(addAmount) <= 0) {
@@ -37,15 +38,14 @@ export default function useDeposit(walletId) {
       setAddAmount("");
       toast.success("Continue payment");
     } catch (err) {
-      toast.error(`Error: ${err?.message || "An error occurred while depositing"}`);
+      toast.error(
+        `Error: ${err?.message || "An error occurred while depositing"}`
+      );
     }
   };
 
-
-
   useEffect(() => {
     if (depositResult && depositResult.vnpayUrl) {
-      console.log("Redirecting to VNPay URL:", depositResult.vnpayUrl);
       // Lưu thông tin giao dịch pending
       localStorage.setItem(
         "pendingDeposit",
