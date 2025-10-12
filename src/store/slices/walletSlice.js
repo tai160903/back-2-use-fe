@@ -7,16 +7,27 @@ export const depositeMoneyApi = createAsyncThunk(
   "wallet/depositeMoneyApi",
   async ({ walletId, amount }, { rejectWithValue }) => {
     try {
-      console.log("Gọi API nạp tiền:", { walletId, amount });
       const response = await fetcher.post(`/wallets/${walletId}/deposit`, {
-        amount: parseInt(amount), 
+        amount: parseInt(amount),
       });
       return response.data;
     } catch (error) {
-      console.error("Lỗi API nạp tiền:", error.response?.data);
-      return rejectWithValue(
-        error.response?.data || error.message
-      );
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// withdraw money
+export const withdrawMoneyApi = createAsyncThunk(
+  "wallet/withdrawMoneyApi",
+  async ({ walletId, amount }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post(`/wallets/${walletId}/withdraw`, {
+        amount: parseInt(amount),
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
@@ -27,7 +38,7 @@ const walletSlice = createSlice({
     wallet: null,
     isLoading: false,
     error: null,
-    depositResult: null, 
+    depositResult: null,
   },
   reducers: {
     clearDepositResult: (state) => {
@@ -45,12 +56,24 @@ const walletSlice = createSlice({
         console.log("Deposit API response:", payload);
         state.isLoading = false;
         state.error = null;
-       state.depositResult = { vnpayUrl: payload.url };
+        state.depositResult = { vnpayUrl: payload.url };
       })
       .addCase(depositeMoneyApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-      });
+      })
+      .addCase(withdrawMoneyApi.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(withdrawMoneyApi.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.wallet = payload
+      })
+      .addCase(withdrawMoneyApi.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload
+      })
   },
 });
 

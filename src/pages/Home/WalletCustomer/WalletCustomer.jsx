@@ -19,7 +19,7 @@ import ModalWallet from "../../../components/ModalWallet/ModalWallet"
 export default function WalletCustomer() {
   const { walletId, balance, isLoading: profileLoading } = useUserInfo();
 
-  // Sử dụng hooks
+  // hook
   const {
     addAmount,
     setAddAmount,
@@ -347,12 +347,12 @@ export default function WalletCustomer() {
         description="Withdraw funds from your wallet for container deposits and fees"
         amount={withdrawAmount}
         setAmount={setWithdrawAmount}
-        handleSubmit={handleWithdraw}
+    handleSubmit={(e) => handleWithdraw(e, walletId, handleCloseWithdraw)}
         action="withdraw"
         loading={withdrawLoading}
         error={withdrawError}
         walletId={walletId}
-        currency="USD" // Có thể thay đổi nếu cần thống nhất currency
+        currency="VND" 
       />
     </>
   );
