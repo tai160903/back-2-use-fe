@@ -32,6 +32,7 @@ import Pricing from "../pages/Home/Pricing/Pricing";
 import About from "../pages/Home/About/About";
 import PaymentSuccess from "../pages/Home/Paymenrt/PaymentSuccess";
 import PaymentFailed from "../pages/Home/Paymenrt/PaymentFailed";
+import StoreDetail from "../pages/Home/Store/StoreDetail";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -71,6 +72,10 @@ export default function useRouterElements() {
         {
           path: PATH.PAYMENTFAILED,
           element: <PaymentFailed />,
+        },
+          {
+          path: PATH.STOREDETAIL,
+          element: <StoreDetail />,
         },
       ],
     },
