@@ -1,0 +1,39 @@
+.storeDetail-banner {
+  width: 100%;
+  height: 550px;
+  border-radius: 8px;
+}
+
+.storeDetail-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+}
+
+.storeDetail-box {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid #e4e4e4;
+  border-radius: 10px;
+  align-items: center;
+}
+
+.storeDetail-img {
+  padding: 20px;
+}
+
+.storeDetail-img img {
+  width: 100px;
+  height: 100px;
+  border-radius: 10%;
+  object-fit: cover;
+}
+
+.storeDetail-content {
+  flex: 10;
+  padding: 20px;
+  text-align: left;
+}

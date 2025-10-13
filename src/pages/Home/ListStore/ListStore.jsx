@@ -1,3 +1,4 @@
+// pages/Home/ListStore/ListStore.jsx
 import Typography from "@mui/material/Typography";
 import "./ListStore.css";
 import { WiStars } from "react-icons/wi";
@@ -9,7 +10,9 @@ import InputAdornment from "@mui/material/InputAdornment";
 import { IoIosSearch } from "react-icons/io";
 import Button from "@mui/material/Button";
 import { useEffect, useState } from "react";
-import MapView from "../../../components/MapView/MapView"; // Import component map riêng
+import MapView from "../../../components/MapView/MapView";
+import { useNavigate } from "react-router-dom"; 
+import { PATH } from "../../../routes/path";
 
 // Mock data chung
 const mockStores = [
@@ -33,7 +36,7 @@ const mockStores = [
 
 // Hàm tính khoảng cách Haversine
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Bán kính Trái Đất (km)
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -43,16 +46,21 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; 
+  return R * c;
 }
 
 export default function ListStore() {
+  const navigate = useNavigate(); // ← THÊM DÒNG NÀY
   const [userLocation, setUserLocation] = useState([10.762621, 106.660172]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [distanceFilter, setDistanceFilter] = useState(Infinity); // Mặc định tất cả
+  const [distanceFilter, setDistanceFilter] = useState(Infinity);
   const [filteredStores, setFilteredStores] = useState(mockStores);
   const [selectedStore, setSelectedStore] = useState(null);
   const [directionTo, setDirectionTo] = useState(null);
+
+ const handleStoreSelect = (store) => {
+  navigate(PATH.STOREDETAIL.replace(":id", store.id));
+};
 
   // Lấy vị trí user
   useEffect(() => {
@@ -63,7 +71,7 @@ export default function ListStore() {
     );
   }, []);
 
-  // Cập nhật filteredStores khi search hoặc filter thay đổi
+  // Cập nhật filteredStores
   useEffect(() => {
     let stores = mockStores
       .map((store) => ({
@@ -185,6 +193,7 @@ export default function ListStore() {
               </Typography>
             </Grid>
           </Grid>
+
           {/* Search bar */}
           <div
             className="store-search"
@@ -245,9 +254,9 @@ export default function ListStore() {
                 setSelectedStore={setSelectedStore}
                 directionTo={directionTo}
                 setDirectionTo={setDirectionTo}
+                onSelectStore={handleStoreSelect} 
               />
             </div>
-
 
             <div className="store-rightInfo">
               <div className="store-nearby">
@@ -273,7 +282,12 @@ export default function ListStore() {
                           marginBottom: "12px",
                           marginTop: "12px",
                           background: "#f6faf6",
+                          cursor: "pointer",
+                          transition: "background 0.2s", 
                         }}
+                        onClick={() => handleStoreSelect(store)} 
+                        onMouseEnter={(e) => (e.target.style.background = "#e8f5e8")}
+                        onMouseLeave={(e) => (e.target.style.background = "#f6faf6")}
                       >
                         <div className="store-nearby-content-left">
                           <div

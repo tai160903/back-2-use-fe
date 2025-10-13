@@ -16,7 +16,8 @@ const defaultIcon = new L.Icon({
 });
 
 const selectedIcon = new L.Icon({
-  iconUrl: "https://icons.iconarchive.com/icons/paomedia/small-n-flat/512/map-marker-icon.png",
+  iconUrl:
+    "https://icons.iconarchive.com/icons/paomedia/small-n-flat/512/map-marker-icon.png",
   iconSize: [40, 50],
   iconAnchor: [15, 50],
   popupAnchor: [0, -45],
@@ -45,8 +46,14 @@ function RoutingPolyline({ userLocation, storeLocation }) {
         const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${userLocation[1]},${userLocation[0]}&end=${storeLocation[1]},${storeLocation[0]}`;
         const res = await fetch(url);
         const data = await res.json();
-        const coords = data.features[0].geometry.coordinates.map((c) => [c[1], c[0]]);
-        const newPolyline = L.polyline(coords, { color: "#03790a", weight: 5 }).addTo(map);
+        const coords = data.features[0].geometry.coordinates.map((c) => [
+          c[1],
+          c[0],
+        ]);
+        const newPolyline = L.polyline(coords, {
+          color: "#03790a",
+          weight: 5,
+        }).addTo(map);
         map.fitBounds(newPolyline.getBounds());
         setPolyline(newPolyline);
       } catch (err) {
@@ -60,9 +67,21 @@ function RoutingPolyline({ userLocation, storeLocation }) {
   return null;
 }
 
-export default function MapView({ userLocation, stores, selectedStore, setSelectedStore, directionTo, setDirectionTo }) {
+export default function MapView({
+  userLocation,
+  stores,
+  selectedStore,
+  setSelectedStore,
+  directionTo,
+  setDirectionTo,
+  onSelectStore,
+}) {
   return (
-    <MapContainer center={userLocation} zoom={13} style={{ height: "100%", width: "100%" }}>
+    <MapContainer
+      center={userLocation}
+      zoom={13}
+      style={{ height: "100%", width: "100%" }}
+    >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -85,18 +104,34 @@ export default function MapView({ userLocation, stores, selectedStore, setSelect
         >
           <Popup className="leaflet-popup-content">
             <div className="leaflet-popup-content-title">
-              <Typography className="leaflet-popup-content-name">{store.name}</Typography>
-              <Typography className="leaflet-popup-content-address">{store.address}</Typography>
+              <Typography className="leaflet-popup-content-name">
+                {store.name}
+              </Typography>
+              <Typography className="leaflet-popup-content-address">
+                {store.address}
+              </Typography>
               <Typography className="leaflet-popup-content-daily">
                 <GoClock style={{ marginRight: "10px" }} />
                 Daily: {store.daily}
               </Typography>
               <div className="leaflet-popup-content-btn">
-                <Button className="leaflet-popup-btn-derection" onClick={() => setDirectionTo(store.coords)}>
-                  <BiNavigation style={{ marginRight: "10px", fontSize: "20px" }} /> Directions
+                <Button
+                  className="leaflet-popup-btn-derection"
+                  onClick={() => setDirectionTo(store.coords)}
+                >
+                  <BiNavigation
+                    style={{ marginRight: "10px", fontSize: "20px" }}
+                  />{" "}
+                  Directions
                 </Button>
-                <Button className="leaflet-popup-btn-details">
-                  <IoEyeOutline style={{ marginRight: "10px", fontSize: "20px" }} /> Details
+                <Button
+                  className="leaflet-popup-btn-details"
+                  onClick={() => onSelectStore(store)}
+                >
+                  <IoEyeOutline
+                    style={{ marginRight: "10px", fontSize: "20px" }}
+                  />{" "}
+                  Details
                 </Button>
               </div>
             </div>
@@ -106,7 +141,10 @@ export default function MapView({ userLocation, stores, selectedStore, setSelect
 
       {/* Vẽ tuyến đường */}
       {userLocation && directionTo && (
-        <RoutingPolyline userLocation={userLocation} storeLocation={directionTo} />
+        <RoutingPolyline
+          userLocation={userLocation}
+          storeLocation={directionTo}
+        />
       )}
     </MapContainer>
   );
