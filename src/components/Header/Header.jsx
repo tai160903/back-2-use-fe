@@ -6,7 +6,7 @@ import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
-import logoImage from "../../assets/image/Back2Use-Review 1.png";
+import logoImage from "../../assets/image/cup6.png";
 import useAuth from "../../hooks/useAuth"; 
 import { logout } from "../../store/slices/authSlice";
 
