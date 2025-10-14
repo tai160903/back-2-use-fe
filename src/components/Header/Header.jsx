@@ -7,7 +7,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import logoImage from "../../assets/image/Back2Use-Review 1.png";
-import useAuth from "../../hooks/useAuth"; // bạn đã có custom hook này
+import useAuth from "../../hooks/useAuth"; 
 import { logout } from "../../store/slices/authSlice";
 
 export default function Header() {
@@ -58,7 +58,7 @@ export default function Header() {
               <span
                 style={{
                   fontSize: "15px",
-                  color: "white",
+                  color: "#374151",
                   textTransform: "none",
                 }}
               >
@@ -125,7 +125,15 @@ export default function Header() {
               </Menu>
             </>
           ) : (
-            <Button>
+            <Button
+              sx={{
+                backgroundColor: "#006c1e",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#004d15",
+                },
+              }}
+            >
               <Link
                 to={buttonLink}
                 style={{ textDecoration: "none", color: "white" }}

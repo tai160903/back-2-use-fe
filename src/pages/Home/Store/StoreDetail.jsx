@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import "./StoreDetail.css";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
+import Rating from "@mui/material/Rating";
+import Stack from "@mui/material/Stack";
 
 // Mock data (cùng với StorePage)
 const mockStores = [
@@ -51,9 +53,24 @@ export default function StoreDetail() {
             <div className="storeDetail-content">
               <Grid container spacing={2}>
                 <Grid item size={12}>
-                  <Typography variant="h4" component="h1">
+                  <Typography
+                    variant="h4"
+                    component="h1"
+                    className="text-[#00ac4d]"
+                  >
                     {store.name}
                   </Typography>
+                </Grid>
+                <Grid item size={12}>
+                  <Stack spacing={1}>
+                    <Rating
+                      name="half-rating-read"
+                      defaultValue={2.5}
+                      precision={0.5}
+                      readOnly
+                    />
+                  </Stack>
+                  <Typography variant="body1">4.5 (123 reviews)</Typography>
                 </Grid>
                 <Grid item size={6}>
                   <Typography variant="body1">
