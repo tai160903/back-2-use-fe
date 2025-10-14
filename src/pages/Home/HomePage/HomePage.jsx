@@ -4,170 +4,128 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import AddIcon from "@mui/icons-material/Add";
+import { FaPlay } from "react-icons/fa";
+import { RiTruckLine, RiCustomerService2Line, RiArrowGoBackLine, RiShieldCheckLine } from "react-icons/ri";
+import image1 from "../../../assets/image/item3.png";
 
 export default function HomePage() {
   return (
     <div className="homePage">
-      {/* banner */}
-      <section className="banner">
-        <div className="bg-image-container">
-          <img
-            src="https://a.storyblok.com/f/102007/768x432/94c9316db2/sustainable-packaging-paper-eco-friendly-disposable-tableware-plates-cups-bowls-recycling-signs.jpg/m/filters:quality(90)"
-            alt="Sustainable products background"
-            className="banner-image"
-          />
-          <div className="bg-overlay"></div>
+      {/* Plant-themed Hero Section */}
+      <section className="plant-hero">
+        <div className="hero-content">
+          <div className="hero-text">
+            <p className="hero-tagline">Breathe life into your space</p>
+            <h1 className="hero-title">
+              Discover beautiful indoor plants for every corner of your home
+            </h1>
+            <p className="hero-description">
+              From indoor greens to outdoor blooms — shop plants, pots, and care
+              tools delivered with love
+            </p>
+            <div className="hero-actions">
+              <Button className="shop-now-btn">Become a Partner</Button>
+              <div className="watch-video">
+                <div className="play-icon">
+                  <FaPlay />
+                </div>
+                <span>Watch how Reusables works</span>
+              </div>
+            </div>
+            <p className="hero-stats">
+              Join 8,000+ plant lovers growing their dream spaces
+            </p>
+          </div>
+          <div className="hero-plants"></div>
         </div>
 
-        <div className="banner-content">
-          {/* Badge */}
-          <div className="badge">
-            <span className="badge-text">Reuse for a green future</span>
+        {/* Statistics Section */}
+        <div className="statistics-section">
+          <div className="stats-container">
+            <div className="stat-card">
+              <h3>Trusted by</h3>
+              <div className="stat-number">1,900+</div>
+              <p>Happy Plant Lovers</p>
+            </div>
+            <div className="stat-card">
+              <h3>Explore</h3>
+              <div className="stat-number">8,000+</div>
+              <p>Unique Green Beauties</p>
+            </div>
+            <div className="stat-card">
+              <h3>Backed by</h3>
+              <div className="stat-number">520+</div>
+              <p>Local Greenhouses</p>
+            </div>
+            <div className="stat-card">
+              <h3>Rated</h3>
+              <div className="stat-number">4.9★</div>
+              <p>by Our Customers</p>
+            </div>
           </div>
-
-          {/* Main Heading */}
-          <Typography className="main-heading">
-            The future
-            <br />
-            <span className="primary-text">of reusables</span>
-          </Typography>
-
-          {/* Subheading */}
-          <p className="subheading">
-            Join the world's largest reuse system
-            <br />
-            and let us shape the future
-          </p>
-
-          {/* CTA Button */}
-          <Button className="cta-button">
-            <Link href="/auth/login" sx={{ color: "white" }}>
-              Get Start
-            </Link>
-          </Button>
         </div>
       </section>
-      {/* welcome */}
+      {/* welcome - Why Shop layout */}
       <section className="welcome-section">
         <div className="homePage-container">
-          <Grid container spacing={10} sx={{ maxWidth: "1600px" }}>
-            <Grid size={5} className="welcome-left">
-              <Typography className="welcome-text-title">
-                Welcome to Reusables
-              </Typography>
-              <Typography className="welcome-text-description">
-                We are the world’s largest reusable system.
-              </Typography>
-              <button className="welcome-btn">
-                <Link
-                  href="/auth/register/bussiness"
-                  sx={{
-                    textDecoration: "none",
-                    color: "white",
-                  }}
-                >
-                  Become a Partner!
-                </Link>
-              </button>
-            </Grid>
-            <Grid size={7} className="welcome-right">
-              <Grid container spacing={3}>
-                {" "}
-                <Grid item size={4}>
-                  <div className="welcome-item">
-                    <Typography variant="h3" color="text.primary">
-                      +7K
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.primary"
-                      style={{ fontSize: 20 }}
-                    >
-                      Partners
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item size={4}>
-                  <div className="welcome-item">
-                    <Typography
-                      variant="h3"
-                      color="text.primary"
-                      style={{ wordWrap: "break-word" }}
-                    >
-                      +19M
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="text.primary"
-                      style={{ wordWrap: "break-word", fontSize: 20 }}
-                    >
-                      Waste Diverted
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item size={4}>
-                  <div className="image-container">
-                    <img
-                      src="https://www.elpack.co.uk/wp-content/uploads/2023/08/bigstock-Disposable-Eco-friendly-Packag-470195495-1032x1032.jpg"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </div>
-                </Grid>
-                <Grid item size={4}>
-                  <div className="image-container">
-                    <img
-                      src="https://images.squarespace-cdn.com/content/v1/613a3e0d61ffac1865f75ffe/e6bcbdc7-7a1e-466d-a3f1-e4aaf60f8df9/OKAPI_July2022_IMG_9247_JasonQuigley.jpg"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </div>
-                </Grid>
-                <Grid item size={4}>
-                  <div className="welcome-item">
-                    <Typography
-                      variant="h3"
-                      color="text.primary"
-                      style={{ wordWrap: "break-word" }}
-                    >
-                      +23K
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="text.primary"
-                      style={{ wordWrap: "break-word", fontSize: 20 }}
-                    >
-                      Countries
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item size={4}>
-                  <div className="welcome-item">
-                    <Typography
-                      variant="h3"
-                      color="text.primary"
-                      style={{ wordWrap: "break-word" }}
-                    >
-                      +10M
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="text.primary"
-                      style={{ wordWrap: "break-word", fontSize: 20 }}
-                    >
-                      Consumers
-                    </Typography>
-                  </div>
-                </Grid>
-              </Grid>
-            </Grid>
-          </Grid>
+          <div className="why-header">
+            <Typography className="why-title">Why shop with Reusables?</Typography>
+            <Typography className="why-subtitle">
+              From your screen to your space — we make sustainable shopping smooth and stress‑free.
+            </Typography>
+          </div>
+
+          <div className="why-grid">
+            <div className="why-column why-left">
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <RiTruckLine />
+                </div>
+                <div>
+                  <h4 className="feature-title">Free and Fast Delivery</h4>
+                  <p className="feature-desc">Free delivery on orders over $50. Fresh to your door.</p>
+                </div>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <RiArrowGoBackLine />
+                </div>
+                <div>
+                  <h4 className="feature-title">Hassle‑Free Returns</h4>
+                  <p className="feature-desc">Changed your mind? Return within 30 days, no stress.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="why-center">
+              <img
+                className="why-plant"
+                src={image1}
+                alt="plant"
+              />
+            </div>
+
+            <div className="why-column why-right">
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <RiCustomerService2Line />
+                </div>
+                <div>
+                  <h4 className="feature-title">24/7 Customer Support</h4>
+                  <p className="feature-desc">We’re here whenever you need us — day or night.</p>
+                </div>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <RiShieldCheckLine />
+                </div>
+                <div>
+                  <h4 className="feature-title">Secure Payments</h4>
+                  <p className="feature-desc">Pay safely with secure, encrypted checkout.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -37,3 +37,10 @@
   padding: 20px;
   text-align: left;
 }
+
+
+.storeDetail-title {
+  font-size: 50px !important;
+  font-weight: 600 !important;
+}
+

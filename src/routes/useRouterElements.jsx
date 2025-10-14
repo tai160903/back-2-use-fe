@@ -25,7 +25,7 @@ import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
 import GoogleCallback from "../pages/Auth/GoogleCallback/GoogleCallback";
 import Registration from "../pages/Admin/Registration/Registration";
 import UserDashborad from "../pages/Home/UserDashborad/UserDashborad";
-import LandingLayout from "../layouts/LandingLayout/LandingLayout"; // Thêm import
+import LandingLayout from "../layouts/LandingLayout/LandingLayout"; 
 import ListStore from "../pages/Home/ListStore/ListStore";
 import Features from "../pages/Home/Features/Features";
 import Pricing from "../pages/Home/Pricing/Pricing";
