@@ -23,6 +23,7 @@ export const PATH = {
     FEATURES:"/features",
     PRICING:"/pricing",
     ABOUT:"/about",
+    RANKINGS: "/rankings",
 
     // PAYMENT
     PAYMENTSUCESS:"/payment-success",
