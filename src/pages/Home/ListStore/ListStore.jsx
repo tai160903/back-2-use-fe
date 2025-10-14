@@ -1,14 +1,14 @@
 // pages/Home/ListStore/ListStore.jsx
 import Typography from "@mui/material/Typography";
 import "./ListStore.css";
-import { WiStars } from "react-icons/wi";
-import Grid from "@mui/material/Grid";
-import { HiOutlineBuildingStorefront } from "react-icons/hi2";
-import { AiOutlineLeft } from "react-icons/ai";
+
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import { IoIosSearch } from "react-icons/io";
-import Button from "@mui/material/Button";
+import MenuItem from "@mui/material/MenuItem";
+import storeImg1 from "../../../assets/image/item1.jpg";
+import storeImg2 from "../../../assets/image/item2.jpg";
+import storeImg3 from "../../../assets/image/item3.png";
 import { useEffect, useState } from "react";
 import MapView from "../../../components/MapView/MapView";
 import { useNavigate } from "react-router-dom"; 
@@ -23,6 +23,8 @@ const mockStores = [
     coords: [10.8565, 106.7709],
     products: ["cup", "container", "bottle"],
     daily: "9AM - 8PM",
+    image: storeImg1,
+    rating: 4.8,
   },
   {
     id: 2,
@@ -31,6 +33,18 @@ const mockStores = [
     coords: [10.768, 106.673],
     products: ["cup"],
     daily: "9AM - 8PM",
+    image: storeImg2,
+    rating: 4.5,
+  },
+  {
+    id: 3,
+    name: "Urban Reuse Hub",
+    address: "33 Nguyen Hue Blvd, District 1, HCMC",
+    coords: [10.775, 106.702],
+    products: ["container", "bottle"],
+    daily: "8AM - 9PM",
+    image: storeImg3,
+    rating: 4.9,
   },
 ];
 
@@ -50,13 +64,22 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 export default function ListStore() {
-  const navigate = useNavigate(); // ← THÊM DÒNG NÀY
+  const navigate = useNavigate();
   const [userLocation, setUserLocation] = useState([10.762621, 106.660172]);
   const [searchQuery, setSearchQuery] = useState("");
   const [distanceFilter, setDistanceFilter] = useState(Infinity);
   const [filteredStores, setFilteredStores] = useState(mockStores);
   const [selectedStore, setSelectedStore] = useState(null);
   const [directionTo, setDirectionTo] = useState(null);
+  const [maxDistanceOpt, setMaxDistanceOpt] = useState("Any");
+  const [ratingFilter, setRatingFilter] = useState("Any");
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+  const greeting = getGreeting();
 
  const handleStoreSelect = (store) => {
   navigate(PATH.STOREDETAIL.replace(":id", store.id));
@@ -88,15 +111,10 @@ export default function ListStore() {
         (store) =>
           store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           store.address.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      )
+      .filter((store) => (ratingFilter === "Any" ? true : store.rating >= parseFloat(ratingFilter)));
     setFilteredStores(stores);
-  }, [searchQuery, distanceFilter, userLocation]);
-
-  // Tính counts cho grid
-  const totalCount = filteredStores.length;
-  const veryNearbyCount = filteredStores.filter((s) => s.distance < 1).length;
-  const nearbyCount = filteredStores.filter((s) => s.distance < 2).length;
-  const withinAreaCount = filteredStores.filter((s) => s.distance < 5).length;
+  }, [searchQuery, distanceFilter, ratingFilter, userLocation]);
 
   return (
     <>
@@ -108,10 +126,10 @@ export default function ListStore() {
               gutterBottom
               className="list-store-banner-btn"
             >
-              <WiStars className="size-6 mr-2 font-bold" /> Partner Network
+              {greeting}
             </Typography>
             <Typography className="list-store-banner-title" variant="h3">
-              Discover Stores Near You
+              Find stores near you
             </Typography>
             <Typography className="list-store-banner-desc" variant="body2">
               Search for stores participating in the Back2Use reusable packaging
@@ -121,126 +139,6 @@ export default function ListStore() {
         </div>
 
         <div className="list-store-content">
-          <Grid container spacing={2} className="list-store-grid">
-            <Grid className="list-store-grid-total" item size={3}>
-              <div className="list-store-grid-total-text">
-                <div className="list-store-grid-total-icons">
-                  <HiOutlineBuildingStorefront className="size-8 text-[#6c2acc]" />
-                </div>
-                <div>
-                  <Typography className="list-store-grid-total-info">
-                    Total
-                  </Typography>
-                </div>
-              </div>
-              <Typography className="list-store-total-number">
-                {totalCount}
-              </Typography>
-              <Typography className="list-store-total-des">
-                Partner Store
-              </Typography>
-            </Grid>
-            <Grid className="list-store-grid-nearby" item size={3}>
-              <div className="list-store-grid-total-text">
-                <div className="list-store-grid-nearby-icons">
-                  <HiOutlineBuildingStorefront className="size-8 text-[#128b60]" />
-                </div>
-                <div>
-                  <Typography className="list-store-grid-nearby-info">
-                    <AiOutlineLeft /> 1km
-                  </Typography>
-                </div>
-              </div>
-              <Typography className="list-store-total-number">
-                {veryNearbyCount}
-              </Typography>
-              <Typography className="list-store-total-des">
-                Very Nearby
-              </Typography>
-            </Grid>
-            <Grid className="list-store-grid-area" item size={3}>
-              <div className="list-store-grid-total-text">
-                <div className="list-store-grid-area-icons">
-                  <HiOutlineBuildingStorefront className="size-8 text-[#1555d9]" />
-                </div>
-                <div>
-                  <Typography className="list-store-grid-area-info">
-                    <AiOutlineLeft /> 2km
-                  </Typography>
-                </div>
-              </div>
-              <Typography className="list-store-area-number">
-                {nearbyCount}
-              </Typography>
-              <Typography className="list-store-total-des">Nearby</Typography>
-            </Grid>
-            <Grid className="list-store-grid-far" item size={3}>
-              <div className="list-store-grid-total-text">
-                <div className="list-store-grid-far-icons">
-                  <HiOutlineBuildingStorefront className="size-8 text-[#ef7100]" />
-                </div>
-                <div>
-                  <Typography className="list-store-grid-far-info">
-                    <AiOutlineLeft /> 5km
-                  </Typography>
-                </div>
-              </div>
-              <Typography className="list-store-far-number">
-                {withinAreaCount}
-              </Typography>
-              <Typography className="list-store-total-des">
-                Within the Area
-              </Typography>
-            </Grid>
-          </Grid>
-
-          {/* Search bar */}
-          <div
-            className="store-search"
-            style={{ padding: "0 100px", marginTop: "30px" }}
-          >
-            <TextField
-              placeholder="Search for location or store name..."
-              variant="outlined"
-              fullWidth
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IoIosSearch size={20} color="#666" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </div>
-
-          {/* Filter buttons */}
-          <div
-            className="filter-buttons"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "10px",
-              margin: "20px 100px",
-            }}
-          >
-            <Button
-              variant="contained"
-              onClick={() => setDistanceFilter(Infinity)}
-            >
-              Tất cả
-            </Button>
-            <Button variant="contained" onClick={() => setDistanceFilter(1)}>
-              Dưới 1km
-            </Button>
-            <Button variant="contained" onClick={() => setDistanceFilter(2)}>
-              Dưới 2km
-            </Button>
-            <Button variant="contained" onClick={() => setDistanceFilter(5)}>
-              Dưới 5km
-            </Button>
-          </div>
-
           <div
             className="store-content"
             style={{ padding: "0 100px", marginTop: "50px" }}
@@ -266,6 +164,62 @@ export default function ListStore() {
                   </Typography>
                   <span>Click on map markers to view details</span>
                 </div>
+                {/* Filters and search inside Nearby box */}
+                <div className="nearby-controls">
+                  <div className="filter-bar inside">
+                    <div className="filters-left">
+                      <TextField
+                        className="filter-select"
+                        select
+                        label="Rating"
+                        value={ratingFilter}
+                        onChange={(e) => setRatingFilter(e.target.value)}
+                        size="small"
+                      >
+                        {['Any','3','4','4.5','5'].map((opt) => (
+                          <MenuItem key={opt} value={opt}>{opt === 'Any' ? 'Any rating' : `${opt}+ stars`}</MenuItem>
+                        ))}
+                      </TextField>
+
+                      <TextField
+                        className="filter-select"
+                        select
+                        label="Max Distance"
+                        value={maxDistanceOpt}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setMaxDistanceOpt(v);
+                          if (v === 'Any') setDistanceFilter(Infinity);
+                          else if (v === '1 km') setDistanceFilter(1);
+                          else if (v === '2 km') setDistanceFilter(2);
+                          else if (v === '5 km') setDistanceFilter(5);
+                        }}
+                        size="small"
+                      >
+                        {['Any','1 km','2 km','5 km'].map((opt) => (
+                          <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                        ))}
+                      </TextField>
+                    </div>
+                  </div>
+
+                  <div className="nearby-search">
+                    <TextField
+                      placeholder="Search for location or store name..."
+                      variant="outlined"
+                      fullWidth
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <IoIosSearch size={20} color="#666" />
+                          </InputAdornment>
+                        ),
+                        size: 'small'
+                      }}
+                    />
+                  </div>
+                </div>
                 <div className="store-nearby-list">
                   {filteredStores.map((store) => {
                     const visibleProducts = store.products.slice(0, 2);
@@ -283,13 +237,19 @@ export default function ListStore() {
                           marginTop: "12px",
                           background: "#f6faf6",
                           cursor: "pointer",
-                          transition: "background 0.2s", 
+                          transition: "background 0.2s",
+                          display: "flex",
+                          gap: "12px"
                         }}
                         onClick={() => handleStoreSelect(store)} 
-                        onMouseEnter={(e) => (e.target.style.background = "#e8f5e8")}
-                        onMouseLeave={(e) => (e.target.style.background = "#f6faf6")}
                       >
-                        <div className="store-nearby-content-left">
+                        <img
+                          src={store.image}
+                          alt={store.name}
+                          className="store-card-thumb"
+                          style={{ width: "120px", height: "84px", objectFit: "cover", borderRadius: "8px" }}
+                        />
+                        <div className="store-nearby-content-left" style={{ flex: 1 }}>
                           <div
                             style={{
                               display: "flex",
