@@ -34,6 +34,7 @@ import PaymentSuccess from "../pages/Home/Paymenrt/PaymentSuccess";
 import PaymentFailed from "../pages/Home/Paymenrt/PaymentFailed";
 import StoreDetail from "../pages/Home/Store/StoreDetail";
 import Rankings from "../pages/Home/Rankings/Rankings";
+import ProductDetail from "../pages/Home/Store/ProductDetail";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -81,6 +82,10 @@ export default function useRouterElements() {
         {
           path: PATH.RANKINGS,
           element: <Rankings />,
+        },
+        {
+          path: PATH.PRODUCT_DETAIL,
+          element: <ProductDetail />,
         },
       ],
     },

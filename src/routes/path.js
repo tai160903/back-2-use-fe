@@ -20,6 +20,7 @@ export const PATH = {
     USER_DASHBOARD:"/user_dashborad",
     LISTSTORE:"/liststore",
     STOREDETAIL:"/storeDetail/:id",
+    PRODUCT_DETAIL:"/product/:storeId/:productId",
     FEATURES:"/features",
     PRICING:"/pricing",
     ABOUT:"/about",
