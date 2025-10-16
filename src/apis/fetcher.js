@@ -57,7 +57,7 @@ fetcher.interceptors.response.use(
     }
     originalRequest._retry = true;
 
-    // Nếu đang refresh: xếp request hiện tại vào hàng đợi, đợi refresh xong rồi retry
+
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -74,18 +74,18 @@ fetcher.interceptors.response.use(
     isRefreshing = true;
     try {
       const stored = JSON.parse(localStorage.getItem("currentUser"));
-      const storedData = stored?.data || stored; // Dự phòng theo 2 cấu trúc lưu trữ
+      const storedData = stored?.data || stored; 
       const refreshToken = storedData?.refreshToken;
 
       if (!refreshToken) {
         throw new Error("Missing refresh token");
       }
 
-      // Gọi refresh token trực tiếp bằng axios gốc để tránh loop interceptor
+     
       const refreshEndpoint = `${import.meta.env.VITE_API_URL}/auth/refresh-token`;
       const refreshResponse = await axios.post(refreshEndpoint, { refreshToken });
 
-      // Chuẩn hóa dữ liệu trả về (hỗ trợ backend trả trực tiếp hoặc bọc trong data)
+   
       const tokenPayload = refreshResponse?.data?.data || refreshResponse?.data || {};
       const newAccessToken = tokenPayload.accessToken;
       const newRefreshToken = tokenPayload.refreshToken || refreshToken;
@@ -94,7 +94,7 @@ fetcher.interceptors.response.use(
         throw new Error("Refresh token succeeded but no access token returned");
       }
 
-      // Cập nhật localStorage theo cấu trúc đang lưu
+     
       const updatedUser = { ...stored };
       if (updatedUser?.data) {
         updatedUser.data = {
@@ -108,18 +108,18 @@ fetcher.interceptors.response.use(
       }
       localStorage.setItem("currentUser", JSON.stringify(updatedUser));
 
-      // Cập nhật header mặc định cho các request sau
+     
       fetcher.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
       processQueue(null, newAccessToken);
 
-      // Gắn lại token mới và retry request gốc
+     
       originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
       return fetcher(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      // Xử lý thất bại: xóa thông tin và điều hướng về login
+
       localStorage.removeItem("currentUser");
-      // Nếu ứng dụng có route login, điều hướng về đó (bọc trong check môi trường)
+
       if (typeof window !== "undefined") {
         window.location.href = "/auth/login";
       }

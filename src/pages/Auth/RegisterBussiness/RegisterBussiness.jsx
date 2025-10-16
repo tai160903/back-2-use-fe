@@ -5,7 +5,6 @@ import {
   Paper,
   Typography,
   CircularProgress,
-  Alert,
 } from "@mui/material";
 import "./RegisterBussiness.css";
 import { useForm } from "react-hook-form";
@@ -18,16 +17,16 @@ import toast from "react-hot-toast";
 
 const schema = yup
   .object({
-    storeName: yup.string().required("Company name is required."),
-    storeMail: yup
+    businessName: yup.string().required("Business name is required."),
+    businessMail: yup
       .string()
       .email("Invalid email format.")
       .required("Email is required."),
-    storePhone: yup
+    businessPhone: yup
       .string()
-      .matches(/^[0-9]{10,15}$/, "Phone number must contain between 10 and 15 digits.")
       .required("Phone number is required."),
-    storeAddress: yup.string().required("Store address  is required."),
+    businessAddress: yup.string().required("Business address is required."),
+    businessType: yup.string().required("Business type is required."),
     taxCode: yup.string().required("Tax code is required."),
   })
   .required();
@@ -41,13 +40,13 @@ function RegisterBussiness() {
     resolver: yupResolver(schema),
   });
   const [files, setFiles] = useState({
+    businessLogo: null,
     businessLicenseFile: null,
     foodLicenseFile: null,
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState({ type: "", message: "" });
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const { dispatch } = useAuth();
+  const { dispatch, isLoading } = useAuth();
 
   const handleFileChange = (e, type) => {
     const file = e.target.files?.[0] || null;
@@ -55,133 +54,184 @@ function RegisterBussiness() {
   };
 
   const onSubmit = async (data) => {
-    setIsLoading(true);
-    setSubmitMessage({ type: "", message: "" });
+    // Validate required files
+    if (!files.businessLogo) {
+      toast.error("Business logo is required.");
+      return;
+    }
+    if (!files.businessLicenseFile) {
+      toast.error("Business license file is required.");
+      return;
+    }
+    if (!files.foodLicenseFile) {
+      toast.error("Food safety certificate is required.");
+      return;
+    }
 
     try {
-      // Tạo FormData để gửi file
+      // Create FormData to send files
       const formData = new FormData();
 
-      // Thêm thông tin form
-      formData.append("storeName", data.storeName);
-      formData.append("storeMail", data.storeMail);
-      formData.append("storePhone", data.storePhone);
-      formData.append("storeAddress", data.storeAddress);
+      // Add form information
+      formData.append("businessName", data.businessName);
+      formData.append("businessType", data.businessType);
+      formData.append("businessMail", data.businessMail);
+      formData.append("businessAddress", data.businessAddress);
+      formData.append("businessPhone", data.businessPhone);
       formData.append("taxCode", data.taxCode);
 
-      // Thêm file
+      // Add files
+      if (files.businessLogo) {
+        formData.append("businessLogo", files.businessLogo);
+      }
       if (files.businessLicenseFile) {
         formData.append("businessLicenseFile", files.businessLicenseFile);
       }
       if (files.foodLicenseFile) {
-        formData.append("foodLicenseFile", files.foodLicenseFile);
+        formData.append("foodSafetyCertUrl", files.foodLicenseFile);
       }
 
       await dispatch(registerBusinessAPI(formData)).unwrap();
-      toast.success("Registration successful! Please wait for approval.");
-      setSubmitMessage({
-        type: "success",
-        message: "Registration successful! Please wait for approval.",
-      });
+      setIsSuccess(true);
     } catch (error) {
-      setSubmitMessage({
-        type: "error",
-        message:
-          error.response?.data?.message ||
-          "Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.",
-      });
-    } finally {
-      setIsLoading(false);
+      // Error will be handled in authSlice through toast
+      console.error("Registration error:", error);
     }
   };
 
   return (
     <div className="registerBusiness-container">
       <div className="registerBusiness-main">
-        <Paper elevation={6} className="registerBusiness-formPaper">
-          <div className="registerBusiness-formHeader">
-            <Typography variant="h5">Business registration</Typography>
-            <Typography variant="body2">
-              Join the Back2Use cup recycling network
-            </Typography>
+        <div className="registerBusiness-content">
+          {/* Left Section - Welcome Message */}
+          <div className="registerBusiness-welcome">
+            <div className="registerBusiness-welcome-content">
+              {isSuccess ? (
+                <>
+                  <Typography variant="h3" className="registerBusiness-welcome-title">
+                    Registration Successful
+                  </Typography>
+                  <Typography variant="body1" className="registerBusiness-welcome-description">
+                    Đăng ký thành công chờ hệ thống phê duyệt
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography variant="h3" className="registerBusiness-welcome-title">
+                    Let's Get Started
+                  </Typography>
+                  <Typography variant="body1" className="registerBusiness-welcome-description">
+                    Join the Back2Use cup recycling network and contribute to environmental protection. 
+                    Register your business to become a partner in our sustainable ecosystem.
+                  </Typography>
+                </>
+              )}
+            </div>
           </div>
 
-          <form
-            className="registerBusiness-form"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <div className="registerBusiness-formSection">
-              <Grid container spacing={3}>
-                <Grid item size={6} className="registerBussiness-info">
-                  Account information
-                  <div className="registerBusiness-line"></div>
-                  <div>
-                    <TextField
-                      className="registerBusinessForm "
-                      id="storeMail"
-                      label="Email"
-                      variant="outlined"
-                      {...register("storeMail")}
-                      error={!!errors.storeMail}
-                      helperText={errors.storeMail?.message}
-                    />
-                    <TextField
-                      className="registerBusinessForm "
-                      id="storePhone"
-                      label="Store Phone"
-                      variant="outlined"
-                      {...register("storePhone")}
-                      error={!!errors.storePhone}
-                      helperText={errors.storePhone?.message}
-                    />
-                    <TextField
-                      className="registerBusinessForm "
-                      id="storeAddress"
-                      label="Store Address"
-                      variant="outlined"
-                      {...register("storeAddress")}
-                      error={!!errors.storeAddress}
-                      helperText={errors.storeAddress?.message}
-                    />
-                  </div>
-                </Grid>
+          {/* Right Section - Registration Form */}
+          <div className="registerBusiness-form-section">
+            <div className="registerBusiness-form-container">
+              <Typography variant="h4" className="registerBusiness-form-title">
+                {/* Business Registration */}
+              </Typography>
 
-                <Grid item size={6} className="registerBussiness-bussiness">
-                  Business information
-                  <div className="registerBusiness-line"></div>
+              <form
+                className="registerBusiness-form"
+                onSubmit={handleSubmit(onSubmit)}
+              >
+                <div className="registerBusiness-form-fields">
                   <TextField
                     className="registerBusinessForm"
-                    id="storeName"
-                    label="Store Name"
+                    id="businessName"
+                    label="Business Name *"
                     variant="outlined"
-                    {...register("storeName")}
-                    error={!!errors.storeName}
-                    helperText={errors.storeName?.message}
+                    {...register("businessName")}
+                    error={!!errors.businessName}
+                    helperText={errors.businessName?.message}
                   />
+                  
+                  <TextField
+                    className="registerBusinessForm"
+                    id="businessMail"
+                    label="Email *"
+                    variant="outlined"
+                    {...register("businessMail")}
+                    error={!!errors.businessMail}
+                    helperText={errors.businessMail?.message}
+                  />
+                  
+                  <TextField
+                    className="registerBusinessForm"
+                    id="businessPhone"
+                    label="Phone Number *"
+                    variant="outlined"
+                    {...register("businessPhone")}
+                    error={!!errors.businessPhone}
+                    helperText={errors.businessPhone?.message}
+                  />
+                  
+                  <TextField
+                    className="registerBusinessForm"
+                    id="businessAddress"
+                    label="Business Address *"
+                    variant="outlined"
+                    multiline
+                    rows={3}
+                    {...register("businessAddress")}
+                    error={!!errors.businessAddress}
+                    helperText={errors.businessAddress?.message}
+                  />
+                  
+                  <TextField
+                    className="registerBusinessForm"
+                    id="businessType"
+                    label="Business Type *"
+                    variant="outlined"
+                    placeholder="e.g., Restaurant, Coffee Shop, Bakery..."
+                    {...register("businessType")}
+                    error={!!errors.businessType}
+                    helperText={errors.businessType?.message}
+                  />
+                  
                   <TextField
                     className="registerBusinessForm"
                     id="taxCode"
-                    label="Tax Code"
+                    label="Tax Code *"
                     variant="outlined"
                     {...register("taxCode")}
                     error={!!errors.taxCode}
                     helperText={errors.taxCode?.message}
                   />
-                </Grid>
-              </Grid>
-            </div>
+                </div>
 
-            <div className="registerBusiness-fileSection">
-              <Typography
-                variant="subtitle1"
-                className="registerBusiness-sectionTitle"
-              >
-                Attached document
-              </Typography>
+                <div className="registerBusiness-fileSection">
+                  <div className="registerBusiness-fileUpload">
+                    <input
+                      type="file"
+                      id="businessLogo"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      onChange={(e) => handleFileChange(e, "businessLogo")}
+                      className="registerBusiness-fileInput"
+                    />
+                    <label
+                      htmlFor="businessLogo"
+                      className="registerBusiness-fileLabel"
+                    >
+                      {files.businessLogo ? (
+                        <span className="registerBusiness-fileName">
+                          {files.businessLogo.name}
+                        </span>
+                      ) : (
+                        <div className="registerBusiness-uploadBox">
+                          <p>Business Logo *</p>
+                          <small>JPG, PNG, WEBP (Max 5MB)</small>
+                        </div>
+                      )}
+                    </label>
+                  </div>
 
-              <Grid container spacing={3}>
-                <Grid item size={6}>
-                  <div className="registerBusiness-fileUpload mt-2">
+                  <div className="registerBusiness-fileUpload">
                     <input
                       type="file"
                       id="businessLicenseFile"
@@ -196,26 +246,19 @@ function RegisterBussiness() {
                       className="registerBusiness-fileLabel"
                     >
                       {files.businessLicenseFile ? (
-                        <span className="text-white">
+                        <span className="registerBusiness-fileName">
                           {files.businessLicenseFile.name}
                         </span>
                       ) : (
                         <div className="registerBusiness-uploadBox">
-                          <p>Business license</p>
-                          <small>PDF, JPG, PNG (Maximum 5MB)</small>
+                          <p>Business License *</p>
+                          <small>PDF, JPG, PNG (Max 5MB)</small>
                         </div>
                       )}
                     </label>
-                    {errors.businessLicenseFile && (
-                      <p className="registerBusiness-error">
-                        {errors.businessLicenseFile.message}
-                      </p>
-                    )}
                   </div>
-                </Grid>
 
-                <Grid item size={6}>
-                  <div className="registerBusiness-fileUpload mt-2">
+                  <div className="registerBusiness-fileUpload">
                     <input
                       type="file"
                       id="foodLicenseFile"
@@ -228,55 +271,37 @@ function RegisterBussiness() {
                       className="registerBusiness-fileLabel"
                     >
                       {files.foodLicenseFile ? (
-                        <span className="text-white">
+                        <span className="registerBusiness-fileName">
                           {files.foodLicenseFile.name}
                         </span>
                       ) : (
                         <div className="registerBusiness-uploadBox">
-                          <p>CFood safety certificate</p>
-                          <small>PDF, JPG, PNG (Maximum 5MB)</small>
+                          <p>Food Safety Certificate *</p>
+                          <small>PDF, JPG, PNG (Max 5MB)</small>
                         </div>
                       )}
                     </label>
-                    {errors.foodLicenseFile && (
-                      <p className="registerBusiness-error">
-                        {errors.foodLicenseFile.message}
-                      </p>
-                    )}
                   </div>
-                </Grid>
-              </Grid>
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  className="registerBusiness-submitBtn"
+                  disabled={isLoading || isSuccess}
+                  startIcon={
+                    isLoading ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : null
+                  }
+                >
+                  {isLoading ? "Processing..." : "Register Business"}
+                </Button>
+              </form>
             </div>
-
-            {/* Hiển thị thông báo */}
-            {submitMessage.message && (
-              <Alert
-                severity={
-                  submitMessage.type === "success" ? "success" : "error"
-                }
-                sx={{ mb: 2 }}
-              >
-                {submitMessage.message}
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              variant="contained"
-              color="success"
-              fullWidth
-              className="registerBusiness-submitBtn"
-              disabled={isLoading}
-              startIcon={
-                isLoading ? (
-                  <CircularProgress size={20} color="inherit" />
-                ) : null
-              }
-            >
-              {isLoading ? "Processing..." : "Register"}
-            </Button>
-          </form>
-        </Paper>
+          </div>
+        </div>
       </div>
     </div>
   );

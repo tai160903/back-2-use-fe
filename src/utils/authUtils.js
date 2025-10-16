@@ -23,7 +23,24 @@ export const isAuthenticated = () => {
 
 export const getUserRole = () => {
     const user = getCurrentUser();
-    return user?.user?.role?.trim().toLowerCase();
+    if (!user) return null;
+    
+    // Nếu role có trong user object
+    if (user.user?.role) {
+        return user.user.role.trim().toLowerCase();
+    }
+    
+    if (user.accessToken) {
+        try {
+            const tokenPayload = JSON.parse(atob(user.accessToken.split('.')[1]));
+            return tokenPayload.role?.trim().toLowerCase();
+        } catch (error) {
+            console.error("Error decoding JWT token:", error);
+            return null;
+        }
+    }
+    
+    return null;
 };
 
 export const getRedirectPath = (role) => {
