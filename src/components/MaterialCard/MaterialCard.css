@@ -1,0 +1,105 @@
+/* Additional styles for MaterialCard component */
+.approve-btn {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.approve-btn:hover {
+  background-color: #bbf7d0;
+  color: #14532d;
+}
+
+.reject-btn {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.reject-btn:hover {
+  background-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* Simple modal styles for reject reason */
+.mc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.mc-modal {
+  background: #fff;
+  width: 100%;
+  max-width: 460px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.mc-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mc-modal-title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.mc-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.mc-modal-body {
+  padding: 16px;
+}
+
+.mc-label {
+  display: block;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.mc-textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.mc-modal-actions {
+  padding: 14px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.mc-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+}
+
+.mc-btn-danger {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  cursor: pointer;
+}

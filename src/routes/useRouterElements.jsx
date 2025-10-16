@@ -35,6 +35,7 @@ import StoreDetail from "../pages/Home/Store/StoreDetail";
 import Rankings from "../pages/Home/Rankings/Rankings";
 import ProductDetail from "../pages/Home/Store/ProductDetail";
 import Users from "../pages/Admin/UserManage/Users";
+import Material from "../pages/Admin/Material";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -214,32 +215,69 @@ export default function useRouterElements() {
       children: [
         {
           index: true,
-          element: <AdminDashboard />,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.ADMIN_USERS,
-          element: <Users />,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Users />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.ADMIN_BUSINESS,
-          element: <Business />,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Business />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.ADMIN_ANALYTICS,
-          element: <Analytics />,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Analytics />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.ADMIN_REPORTS,
-          element: <Reports />,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Reports />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.ADMIN_SETTINGS,
-          element: <Settings />,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Settings />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: PATH.ADMIN_MATERIAL,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Material />
+            </ProtectedRoute>
+          ),
         },
 
         {
           path: PATH.ADMIN_REGISTRATION,
-          element: <Registration />,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Registration />
+            </ProtectedRoute>
+          ),
         },
       ],
     },

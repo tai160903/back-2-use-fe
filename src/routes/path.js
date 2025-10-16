@@ -41,4 +41,5 @@ export const PATH = {
     ADMIN_ANALYTICS: "/admin/analytics",
     ADMIN_SETTINGS: "/admin/settings",
     ADMIN_REPORTS: "/admin/reports",
+    ADMIN_MATERIAL: "/admin/material",
 }
