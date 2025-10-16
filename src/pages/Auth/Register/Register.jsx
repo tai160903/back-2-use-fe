@@ -26,15 +26,14 @@ import useAuth from "../../../hooks/useAuth";
 
 const schema = yup
   .object({
-    name: yup.string().required("Full name is required"),
+    username: yup.string().required("Username is required"),
     email: yup
       .string()
-      .email("Invalid email format")
       .required("Email is required"),
     password: yup.string().required("Password is required"),
     confirmPassword: yup
       .string()
-      .oneOf([yup.ref("password"), null], "Passwords must match")
+      // .oneOf([yup.ref("password"), null], "Passwords must match")
       .required("Confirm password is required"),
   })
   .required();
@@ -64,22 +63,20 @@ export default function Register() {
     setConfirmPassword((prev) => !prev);
   };
 
-  // Step 1: Đăng ký
   const onSubmit = async (data) => {
     try {
       await dispatch(registerApi(data)).unwrap();
-      setIsEmailSent(true); // chuyển qua màn OTP
+      setIsEmailSent(true);
     } catch (error) {
-      toast.error(error.message || "Registration failed");
+      toast.error(error.message );
     }
   };
 
-  // Step 2: Nhập OTP và gửi xuống BE
   const handleVerifyOtp = async () => {
     try {
       await dispatch(
         activeAccountAPI({
-          email: watch("email"), // lấy email user vừa đăng ký
+          email: watch("email"), 
           otp,
         })
       ).unwrap();
@@ -105,20 +102,24 @@ export default function Register() {
                   </Typography>
                   <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
                     <TextField
-                      id="name"
-                      label="Full name"
+                      id="username"
+                      label="Username"
                       variant="standard"
                       sx={{ marginTop: "20px" }}
-                      {...register("name")}
-                      error={!!errors.name}
-                      helperText={errors.name?.message}
+                      {...register("username", {
+                        setValueAs: (v) => (typeof v === "string" ? v.replace(/\s+/g, "") : v),
+                      })}
+                      error={!!errors.username}
+                      helperText={errors.username?.message}
                     />
                     <TextField
                       id="email"
                       label="Email"
                       variant="standard"
                       sx={{ marginTop: "20px" }}
-                      {...register("email")}
+                      {...register("email", {
+                        setValueAs: (v) => (typeof v === "string" ? v.replace(/\s+/g, "").toLowerCase() : v),
+                      })}
                       error={!!errors.email}
                       helperText={errors.email?.message}
                     />
@@ -129,7 +130,9 @@ export default function Register() {
                       variant="standard"
                       sx={{ marginTop: "20px" }}
                       type={showPassword ? "text" : "password"}
-                      {...register("password")}
+                      {...register("password", {
+                        setValueAs: (v) => (typeof v === "string" ? v.trim() : v),
+                      })}
                       error={!!errors.password}
                       helperText={errors.password?.message}
                       InputProps={{
@@ -150,7 +153,9 @@ export default function Register() {
                       variant="standard"
                       sx={{ marginTop: "20px" }}
                       type={showConfirmPassword ? "text" : "password"}
-                      {...register("confirmPassword")}
+                      {...register("confirmPassword", {
+                        setValueAs: (v) => (typeof v === "string" ? v.trim() : v),
+                      })}
                       error={!!errors.confirmPassword}
                       helperText={errors.confirmPassword?.message}
                       InputProps={{
@@ -199,14 +204,7 @@ export default function Register() {
                       />
                       Sign up with Google
                     </Button>
-                    <Button className="auth-social-button facebook">
-                      <img
-                        src={imageFacebook}
-                        className="auth-social-image"
-                        alt="Facebook"
-                      />
-                      Sign up with Facebook
-                    </Button>
+      
                   </div>
                 </>
               ) : (

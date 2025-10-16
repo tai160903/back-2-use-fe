@@ -2,20 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import fetcher from "../../apis/fetcher";
 import toast from "react-hot-toast";
 
-// Helper function để xử lý error message
-const handleErrorMessage = (payload, defaultMessage) => {
-  let errorMessage = defaultMessage;
 
-  if (payload?.message) {
-    if (typeof payload.message === "object" && payload.message.message) {
-      errorMessage = payload.message.message;
-    } else if (typeof payload.message === "string") {
-      errorMessage = payload.message;
-    }
-  }
-
-  toast.error(errorMessage);
-};
 
 const userLocal = JSON.parse(localStorage.getItem("currentUser"));
 
@@ -97,7 +84,7 @@ export const activeAccountAPI = createAsyncThunk(
 // Resend OTP
 export const resendOtpAPI = createAsyncThunk(
   "auth/resendOtpAPI",
-  async (data, { rejectWithValue }) => {  
+  async (data, { rejectWithValue }) => {
     try {
       const response = await fetcher.post("/auth/resend-otp", data);
       return response.data;
@@ -105,7 +92,7 @@ export const resendOtpAPI = createAsyncThunk(
       return rejectWithValue(
         error.response ? error.response.data : error.message
       );
-    } 
+    }
   }
 );
 
@@ -154,14 +141,11 @@ const authSlice = createSlice({
       .addCase(registerApi.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
-        toast.success(
-          "Registration successful! Please check your email to verify your account."
-        );
       })
       .addCase(registerApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        handleErrorMessage(payload, "Registration failed. Please try again.");
+
       })
       .addCase(loginAPI.pending, (state) => {
         state.isLoading = true;
@@ -174,10 +158,7 @@ const authSlice = createSlice({
       .addCase(loginAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        handleErrorMessage(
-          payload,
-          "Login failed. Please check your email and password."
-        );
+
       })
       .addCase(forgotPasswordAPI.pending, (state) => {
         state.isLoading = true;
@@ -190,10 +171,7 @@ const authSlice = createSlice({
       .addCase(forgotPasswordAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        handleErrorMessage(
-          payload,
-          "Failed to send password reset email. Please try again."
-        );
+
       })
       .addCase(resetPasswordAPI.pending, (state) => {
         state.isLoading = true;
@@ -206,10 +184,7 @@ const authSlice = createSlice({
       .addCase(resetPasswordAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        handleErrorMessage(
-          payload,
-          "Password reset failed. Please try again."
-        );
+
       })
       .addCase(activeAccountAPI.pending, (state) => {
         state.isLoading = true;
@@ -224,10 +199,7 @@ const authSlice = createSlice({
       .addCase(activeAccountAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        handleErrorMessage(
-          payload,
-          "Account activation failed. Please try again."
-        );
+
       })
       .addCase(resendOtpAPI.pending, (state) => {
         state.isLoading = true;
@@ -240,10 +212,7 @@ const authSlice = createSlice({
       .addCase(resendOtpAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        handleErrorMessage(
-          payload,
-          "Failed to resend OTP. Please try again."
-        );
+
       });
   },
 });
