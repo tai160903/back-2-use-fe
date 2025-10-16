@@ -36,19 +36,21 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
     setIsRejectPopupOpen(false);
   };
 
-  // logic reject application
-  const handleRejectApplication = () => {
-    setIsRejectPopupOpen(false);
-    dispatch(rejectBusiness(selectedItem._id))
-      .unwrap()
-      .then(() => {
-        toast.success("Business rejected successfully!");
-        dispatch(getAllBusinesses({ page: 1, limit: 10 }));
-        onClose();
-      })
-      .catch((error) => {
-        toast.error("Failed to reject business: " + error);
-      });
+  // logic reject application with note
+  const handleRejectApplication = async (rejectData) => {
+    try {
+      setIsRejectPopupOpen(false);
+      await dispatch(rejectBusiness({ 
+        id: selectedItem._id, 
+        note: rejectData.note 
+      })).unwrap();
+      
+      toast.success("Business application rejected successfully!");
+      dispatch(getAllBusinesses({ page: 1, limit: 10 }));
+      onClose();
+    } catch (error) {
+      toast.error("Failed to reject business application: " + error);
+    }
   };
 
   // logic approve application
@@ -219,7 +221,7 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
               Rejection Reason
             </Typography>
             <Typography className="popUp-info">
-              {selectedItem?.rejectionReason || "No reason provided"}
+              {selectedItem?.rejectNote || "No reason provided"}
             </Typography>
           </Box>
         )}

@@ -62,11 +62,62 @@
   line-height: 20px;
 }
 
+.profile-avatar {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.profile-avatar:hover:not(.loading) {
+  transform: scale(1.05);
+}
+
+.profile-avatar.loading {
+  cursor: not-allowed;
+}
+
 .profile-avatar img {
   border-radius: 20%;
   width: 150px;
   height: 150px;
   object-fit: cover;
+}
+
+.avatar-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.profile-avatar:hover .avatar-overlay {
+  background: rgba(236, 90, 13, 0.9);
+}
+
+.camera-icon {
+  color: white;
+  font-size: 20px;
+}
+
+.avatar-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
 }
 
 .profile-supInfor {
@@ -304,4 +355,60 @@ button.profile-info-btn {
   height: 50px !important;
   margin-right: 20px;
   background: #3b82f6 !important;
+}
+
+/* Avatar Preview Modal */
+.avatar-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.avatar-preview-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.avatar-preview-body {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.avatar-preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  width: 100%;
+  height: auto;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #f3f4f6;
+}
+
+.avatar-preview-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }

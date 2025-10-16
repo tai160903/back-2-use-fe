@@ -66,7 +66,7 @@ export default function Login() {
         console.log("User role from token:", userType); // Debug log
         
         if (userType === "customer") {
-          navigate(PATH.USER_DASHBOARD, { replace: true });
+          navigate(PATH.HOME, { replace: true });
         } else if (userType === "business") {
           navigate(PATH.BUSINESS, { replace: true });
         } else if (userType === "admin" || userType === "administrator") {

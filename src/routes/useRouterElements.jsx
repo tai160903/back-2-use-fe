@@ -1,6 +1,5 @@
 import BussinessLayout from "../layouts/BussinessLayout/BussinessLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
-import Users from "../pages/Admin/Users";
 import Business from "../pages/Admin/Business";
 import Analytics from "../pages/Admin/Analytics";
 import Reports from "../pages/Admin/Reports";
@@ -35,6 +34,7 @@ import PaymentFailed from "../pages/Home/Paymenrt/PaymentFailed";
 import StoreDetail from "../pages/Home/Store/StoreDetail";
 import Rankings from "../pages/Home/Rankings/Rankings";
 import ProductDetail from "../pages/Home/Store/ProductDetail";
+import Users from "../pages/Admin/UserManage/Users";
 
 export default function useRouterElements() {
   const elements = useRoutes([

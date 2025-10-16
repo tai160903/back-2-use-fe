@@ -17,7 +17,6 @@ import { CiMail } from "react-icons/ci";
 import { MdOutlinePhone } from "react-icons/md";
 import { IoLocationOutline } from "react-icons/io5";
 import { TiClipboard } from "react-icons/ti";
-import { GrSchedule } from "react-icons/gr";
 import Button from "@mui/material/Button";
 import ModalRegistration from "../../../components/ModalRegistration/ModalRegistration";
 import Pagination from "@mui/material/Pagination";
@@ -33,18 +32,11 @@ export default function Registration() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const dispatch = useDispatch();
-  const { isLoading, error, businesses, totalPages } = useSelector(
+  const { businesses, totalPages } = useSelector(
     (state) => state.businesses
   );
   useEffect(() => {
     dispatch(getAllBusinesses({ page: currentPage, limit: 10 }))
-      .unwrap()
-      .then((data) => {
-        console.log("Businesses data:", data); // Debug
-      })
-      .catch((error) => {
-        console.error("Error fetching businesses:", error); // Debug
-      });
   }, [dispatch, currentPage]);
 
   const handlePageChange = (event, newPage) => {
@@ -90,7 +82,7 @@ export default function Registration() {
         <div className="registration-container">
           <div className="registration-header">
             <Grid container spacing={2}>
-              <Grid item size={3} className="registration-card">
+              <Grid item size={3} className="registration-card registration-card-0">
                 <div>
                   <Typography className="registration-card-title">
                     Total Applications
@@ -98,14 +90,14 @@ export default function Registration() {
                   </Typography>
                 </div>
                 <div>
-                  <PiClipboardTextBold className=" size-8 text-[#1d8783]" />
+                  <PiClipboardTextBold className=" size-8 text-[#103713]" />
                 </div>
               </Grid>
-              <Grid item size={3} className="registration-card">
+              <Grid item size={3} className="registration-card registration-card-1">
                 <div>
                   <Typography className="registration-card-title">
                     Pending Review
-                    <span className="text-[#f6ba35]">
+                    <span className="text-[#856404]">
                       {" "}
                       {
                         businesses.filter((item) => item.status === "pending")
@@ -115,14 +107,14 @@ export default function Registration() {
                   </Typography>
                 </div>
                 <div>
-                  <CiClock2 className=" size-8 text-[#f6ba35]" />
+                  <CiClock2 className=" size-8 text-[#856404]" />
                 </div>
               </Grid>
-              <Grid item size={3} className="registration-card">
+              <Grid item size={3} className="registration-card registration-card-2">
                 <div>
                   <Typography className="registration-card-title">
                     Approved
-                    <span className="text-[#127300]">
+                    <span className="text-[#155724]">
                       {" "}
                       {
                         businesses.filter((item) => item.status === "approved")
@@ -132,14 +124,14 @@ export default function Registration() {
                   </Typography>
                 </div>
                 <div>
-                  <SiTicktick className=" size-8 text-[#127300]" />
+                  <SiTicktick className=" size-8 text-[#155724]" />
                 </div>
               </Grid>
-              <Grid item size={3} className="registration-card">
+              <Grid item size={3} className="registration-card registration-card-3">
                 <div>
                   <Typography className="registration-card-title">
                     Rejected
-                    <span className="text-[#d3011c]">
+                    <span className="text-[#721c24]">
                       {" "}
                       {
                         businesses.filter((item) => item.status === "rejected")
@@ -149,7 +141,7 @@ export default function Registration() {
                   </Typography>
                 </div>
                 <div>
-                  <BiMessageSquareX className=" size-8 text-[#d3011c]" />
+                  <BiMessageSquareX className=" size-8 text-[#721c24]" />
                 </div>
               </Grid>
             </Grid>
@@ -199,15 +191,18 @@ export default function Registration() {
                     marginBottom: "30px",
                   },
                   "& .MuiTab-root": {
-                    backgroundColor: "#eeeeee",
-                    color: "#000000",
+                    backgroundColor: "#f5f5f5",
+                    color: "#5b6b62",
                     textTransform: "none",
                     fontSize: "16px",
+                    fontWeight: "600",
                     flex: 1,
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    transition: "all 0.3s ease",
                     "&.Mui-selected": {
-                      backgroundColor: "#2E7D32",
+                      backgroundColor: "#103713",
                       color: "#FFFFFF",
+                      boxShadow: "rgba(16, 55, 19, 0.3) 0px 4px 12px",
                     },
                     marginBottom: "30px",
                   },
@@ -245,12 +240,23 @@ export default function Registration() {
                 <Box className="registration-card-item" key={item.id}>
                   <div className="registration-card-content">
                     <div className="registration-card-avt">
-                      {item.businessName?.charAt(0)?.toUpperCase()}
+                      <img 
+                        src={item.businessLogoUrl} 
+                        alt={item.businessName}
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                      <div className="w-full h-full bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-lg" style={{display: 'none'}}>
+                        {item.businessName?.charAt(0)?.toUpperCase()}
+                      </div>
                     </div>
                     <div>
                       <Typography className="registration-card-name">
                         {item.businessName}
-                        <span className="registration-card-status">
+                        <span className={`registration-card-status ${item.status}`}>
                           {item.status}
                         </span>
                       </Typography>
@@ -269,10 +275,6 @@ export default function Registration() {
                       <Typography className="registration-card-info">
                         <TiClipboard className="mr-2" />
                         {item.taxCode}
-                      </Typography>
-                      <Typography className="registration-card-info">
-                        <GrSchedule className="mr-2" />
-                        {item.updatedAt}
                       </Typography>
                     </div>
                   </div>

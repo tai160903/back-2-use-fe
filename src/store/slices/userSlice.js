@@ -7,7 +7,7 @@ export const getProfileApi = createAsyncThunk(
   async (__dirname, { rejectWithValue }) => {
     try {
       const response = await fetcher.get("/users/me");
-      return response.data;
+      return response.data.data;
     } catch (error) {
       return rejectWithValue(
         error.response ? error.response.data : error.message
@@ -31,12 +31,45 @@ export const updateProfileApi = createAsyncThunk(
   }
 );
 
+// upload avatar
+export const uploadAvatarApi = createAsyncThunk(
+  "user/uploadAvatarApi",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/users/edit-avatar", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return response.data;
+    }
+    catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "user",
   initialState: {
     userInfo: [],
   },
-  reducers: {},
+  reducers: {
+    updateAvatarLocally: (state, action) => {
+      console.log('Updating avatar locally:', action.payload);
+      console.log('Current state:', state.userInfo);
+      
+      if (state.userInfo?.data?.user) {
+        state.userInfo.data.user.avatar = action.payload;
+        console.log('Avatar updated in state:', state.userInfo.data.user.avatar);
+      } else {
+        console.log('No user data found in state');
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getProfileApi.pending, (state) => {
@@ -63,7 +96,20 @@ const userSlice = createSlice({
         state.isLoading = null;
         state.error = payload;
       })
+      .addCase(uploadAvatarApi.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(uploadAvatarApi.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.userInfo = payload
+      })
+      .addCase(uploadAvatarApi.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
   },
 });
 
+export const { updateAvatarLocally } = userSlice.actions;
 export default userSlice.reducer;
