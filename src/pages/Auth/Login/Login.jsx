@@ -23,10 +23,9 @@ import useAuth from "../../../hooks/useAuth";
 
 const schema = yup
   .object({
-    email: yup
+    username: yup
       .string()
-      .email("Invalid email format.")
-      .required("Email is required"),
+      .required("Username is required"),
     password: yup.string().required("Password is required"),
   })
   .required();
@@ -74,12 +73,12 @@ export default function Login() {
         } else {
           toast.error("Unknown user role. Please contact support.");
         }
+        toast.success("Login successful!");
       } else {
         toast.error(payload?.message || "Login failed. Please try again.");
       }
-    } catch {
-      // Lỗi đã được xử lý trong authSlice, chỉ cần set error state cho UI
-      setLoginError(" Login failed. Please check your email and password.");
+    } catch (error) {
+      toast.error(error.message );
     }
   };
 
@@ -109,12 +108,12 @@ const handleGoogleLogin = async () => {
                 </Typography>
                 <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
                   <TextField
-                    id="email"
-                    label="Email"
+                    id="username"
+                    label="Username"
                     variant="standard"
-                    {...register("email")}
-                    error={!!errors.email}
-                    helperText={errors.email?.message}
+                    {...register("username")}
+                    error={!!errors.username}
+                    helperText={errors.username?.message}
                   />
                   <Link
                     href="/auth/forgotpassword"
@@ -173,10 +172,7 @@ const handleGoogleLogin = async () => {
                     <img src={imageGoogle} className="auth-social-image" />
                     Sign in with Google
                   </Button>
-                  <Button className="auth-social-button facebook">
-                    <img src={imageFacebook} className="auth-social-image" />
-                    Log in with Facebook
-                  </Button>
+          
                 </div>
               </div>
               <div className="auth-footer">

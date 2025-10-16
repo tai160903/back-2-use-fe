@@ -71,7 +71,7 @@ export default function Header() {
         {/* NAV LINKS */}
         <div className="header-nav">
           <Link to="/liststore">Stores</Link>
-          <Link to="/features">Features</Link>
+          <Link to="/rankings">Ranking</Link>
           <Link to="/pricing">Pricing</Link>
           <Link to="/about">About</Link>
         </div>

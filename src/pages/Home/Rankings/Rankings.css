@@ -1,1 +1,218 @@
+.rankings-page {
+  background: #f7f8fa;
+}
+
+.rankings-banner {
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  height: 500px !important;
+}
+
+.rankings-banner-content {
+  padding: 96px 0 140px 0;
+}
+
+.rankings-title {
+  font-weight: 800;
+}
+
+.rankings-subtitle {
+  opacity: 0.95;
+}
+
+.podium-card {
+  position: relative;
+  overflow: visible;
+  border: 1px solid #eef0f3;
+  border-radius: 16px;
+}
+.top-card {
+  background: #ffffff;
+}
+.top-card .pill {
+  background: #e8f5ec;
+  color: #006c1e;
+  font-weight: 800;
+}
+.pill-large {
+  transform: scale(1.08);
+  padding: 6px 10px;
+}
+.pill {
+  background: #e8f5ec;
+  color: #006c1e;
+  font-weight: 800 !important;
+}
+
+
+.stats-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 0 10px 0;
+  color: #475569;
+}
+
+
+.podium-large .MuiCardContent-root {
+  padding: 28px 28px 16px 28px;
+}
+
+.podium-1 {
+  transform: translateY(-12px);
+  background: linear-gradient(145deg, #fff6d1 0%, #ffe89a 50%, #ffffff 100%);
+  box-shadow: 0 10px 24px rgba(183, 121, 31, 0.2);
+}
+.podium-2 {
+  background: linear-gradient(145deg, #f5f8ff 0%, #dfe9ff 50%, #ffffff 100%);
+  box-shadow: 0 10px 24px rgba(59, 78, 120, 0.18);
+}
+.podium-3 {
+  background: linear-gradient(145deg, #fff1e8 0%, #ffd9bf 50%, #ffffff 100%);
+  box-shadow: 0 10px 24px rgba(183, 97, 31, 0.18);
+}
+
+.podium-ribbon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  font-weight: 700;
+  z-index: 5;
+}
+
+.stat-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.stat-success {
+  background: #eef9f0;
+  border-color: #d6efdb;
+}
+.stat-fail {
+  background: #fff1f1;
+  border-color: #ffd5d5;
+}
+
+.metric-tile {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #eee;
+}
+
+.rankings-table {
+  border: none;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent; /* bỏ nền Paper */
+}
+
+/* Hidden mode: hide ribbons and metric tiles when query ?hidden=1 */
+.rankings-hidden .podium-ribbon,
+.rankings-hidden .metric-tile {
+  display: none;
+}
+
+/* Rank table cosmetics */
+.rank-row:hover {
+  background: #f9fbff;
+}
+
+.rank-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  background: #e5efe8;
+  color: #006c1e;
+}
+
+.rank-top .rank-badge {
+  background: #fff4cc;
+  color: #b7791f;
+}
+
+.stats-icon {
+  color: #8aa2b1;
+}
+.stats-count {
+  font-size: 18px;
+  font-weight: 800;
+}
+.stats-count.success { color: #2e7d32; }
+.stats-count.fail { color: #d32f2f; }
+.stats-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.score-chip {
+  font-weight: 800 !important;
+  letter-spacing: 0.3px;
+}
+
+.score-chip--large {
+  transform: scale(1.05);
+}
+
+/* Card-like rows: spacing + border per row */
+.rankings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* khoảng cách giữa các hàng */
+}
+
+.list-header {
+  display: grid;
+  grid-template-columns: 1fr 150px 140px 160px 140px;
+  gap: 0;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-weight: 700;
+  background: transparent;
+}
+
+.list-row {
+    height: 80px;
+  display: grid;
+  grid-template-columns: 1fr 150px 140px 160px 140px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb; /* viền mỗi hàng */
+  border-radius: 10px;
+  background: transparent; /* không nền */
+  transition: box-shadow 0.2s ease, transform 0.12s ease;
+}
+
+.list-row:hover {
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+}
+.cell-name {
+  gap: 8px;
+}
+.cell-right {
+  justify-content: flex-end;
+}
 

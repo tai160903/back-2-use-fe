@@ -27,7 +27,7 @@ import Registration from "../pages/Admin/Registration/Registration";
 import UserDashborad from "../pages/Home/UserDashborad/UserDashborad";
 import LandingLayout from "../layouts/LandingLayout/LandingLayout"; 
 import ListStore from "../pages/Home/ListStore/ListStore";
-import Features from "../pages/Home/Features/Features";
+// Features page removed per requirement to replace with Rankings
 import Pricing from "../pages/Home/Pricing/Pricing";
 import About from "../pages/Home/About/About";
 import PaymentSuccess from "../pages/Home/Paymenrt/PaymentSuccess";
@@ -55,10 +55,7 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
-        {
-          path: PATH.FEATURES,
-          element: <Features />,
-        },
+        // Features route removed. Rankings route is defined below.
         {
           path: PATH.PRICING,
           element: <Pricing />,
