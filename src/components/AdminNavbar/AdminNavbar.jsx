@@ -42,6 +42,7 @@ const adminSidebarItems = [
   { id: "business", label: "Business", path: PATH.ADMIN_BUSINESS },
   { id: "analytics", label: "Analytics", path: PATH.ADMIN_ANALYTICS },
   { id: "reports", label: "Reports", path: PATH.ADMIN_REPORTS },
+  { id: "material", label: "Material", path: PATH.ADMIN_MATERIAL },
   { id: "settings", label: "Settings", path: PATH.ADMIN_SETTINGS },
   { id: "logout", label: "Logout", path: null },
 ];
@@ -66,6 +67,7 @@ const AdminNavbar = () => {
       business: <Store color="#2e7d32" className="navbar-icon" />,
       analytics: <Assessment color="#f57c00" className="navbar-icon" />,
       reports: <TrendingUp color="#7b1fa2" className="navbar-icon" />,
+      material: <Store color="#2e7d32" className="navbar-icon" />,
       settings: <Settings color="#6a1b9a" className="navbar-icon" />,
       logout: <CiLogout color="#fb4225" className="navbar-icon" />,
     };
