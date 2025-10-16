@@ -2,8 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: url("https://media.istockphoto.com/id/1411289606/vi/anh/b%E1%BB%99-%C4%91%E1%BB%93-%C4%83n-d%C3%B9ng-m%E1%BB%99t-l%E1%BA%A7n-th%C3%A2n-thi%E1%BB%87n-v%E1%BB%9Bi-m%C3%B4i-tr%C6%B0%E1%BB%9Dng-b%E1%BA%B1ng-gi%E1%BA%A5y-v%E1%BB%9Bi-c%C3%A1c-d%E1%BA%A5u-hi%E1%BB%87u-t%C3%A1i-ch%E1%BA%BF-tr%C3%AAn-n%E1%BB%81n-c%E1%BB%A7a.jpg?s=612x612&w=0&k=20&c=MQ3e0zUbZMNoexBtcB4y0Z18fLWuj887iMTQoTZjcAQ=")
-    center/cover no-repeat;
+  background: url("../../../assets/image/banner3.jpg") center/cover no-repeat;
   background-size: 120%;
   background-position: center right top;
   position: relative;
@@ -13,8 +12,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-color: rgba(20, 83, 45, 0.3);
-  backdrop-filter: blur(8px);
+  background: rgba(20, 32, 24, 0.35);
   z-index: 0;
 }
 
@@ -22,150 +20,310 @@
   flex: 1;
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: 40px 20px;
   z-index: 1;
-  margin-top: 150px;
+  min-height: 100vh;
 }
 
-.registerBusiness-formPaper {
+.registerBusiness-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
   width: 100%;
-  max-width: 900px;
-  border-radius: 1rem;
+  max-width: 1200px;
+  height: 80vh;
+  border-radius: 20px;
   overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-  border-radius: 20px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25)
 }
 
-.registerBusiness-formHeader {
-  background-color: rgba(22, 163, 74, 0.3);
-  color: white;
-  padding: 24px;
+/* Left Section - Welcome */
+.registerBusiness-welcome {
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  position: relative;
+}
+
+.registerBusiness-welcome::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  z-index: -1;
+}
+
+.registerBusiness-welcome-content {
   text-align: center;
+  z-index: 1;
+}
+
+.registerBusiness-welcome-title {
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 3rem !important;
+  margin-bottom: 24px !important;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  line-height: 1.2 !important;
+}
+
+.registerBusiness-welcome-description {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Right Section - Form */
+.registerBusiness-form-section {
+  /* background: rgba(0, 0, 0, 0.7); */
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  position: relative;
+}
+
+.registerBusiness-form-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(0, 0, 0, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(34, 139, 34, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.2) 0%, transparent 70%),
+    linear-gradient(135deg, 
+      rgba(0, 0, 0, 0.1) 0%, 
+      rgba(34, 139, 34, 0.05) 25%, 
+      rgba(0, 0, 0, 0.15) 50%, 
+      rgba(0, 0, 0, 0.1) 75%, 
+      rgba(34, 139, 34, 0.05) 100%
+    );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: -1;
+}
+
+.registerBusiness-form-container {
+  width: 100%;
+  max-width: 400px;
+  z-index: 1;
+}
+
+.registerBusiness-form-title {
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 2.5rem !important;
+  margin-bottom: 40px !important;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .registerBusiness-form {
-  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.registerBussiness-info,
-.registerBussiness-bussiness,
-.registerBusiness-sectionTitle {
-  color: white;
-  font-weight: 600 !important;
-}
-
-.registerBusiness-line {
-  border: 1px solid #ccc;
-  margin-top: 10px;
-  width: 100%;
+.registerBusiness-form-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .registerBusinessForm {
   width: 100%;
-  margin-top: 30px !important;
 }
 
+.registerBusinessForm .MuiOutlinedInput-root {
+  color: white;
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+.registerBusinessForm .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-width: 1px;
+}
+
+.registerBusinessForm .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.registerBusinessForm .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(34, 139, 34, 0.8) !important;
+  border-width: 2px !important;
+}
+
+.registerBusinessForm .MuiInputLabel-root {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.registerBusinessForm .MuiInputLabel-root.Mui-focused {
+  color: rgba(34, 139, 34, 0.9) !important;
+}
+
+.registerBusinessForm .MuiFormHelperText-root {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 0.85rem !important;
+  margin-top: 4px !important;
+}
+
+/* File Upload Section */
 .registerBusiness-fileSection {
-  margin-top: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .registerBusiness-fileUpload {
-  border: 2px dashed #ccc;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
   border-radius: 8px;
+  padding: 16px;
   text-align: center;
-  padding: 20px;
   cursor: pointer;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .registerBusiness-fileUpload:hover {
-  border-color: #99dc9d;
+  border-color: rgba(34, 139, 34, 0.6);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .registerBusiness-fileInput {
   display: none;
 }
 
-.registerBusiness-uploadBox {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #fff;
+.registerBusiness-fileLabel {
+  cursor: pointer;
+  display: block;
 }
 
 .registerBusiness-uploadBox p {
-  margin: 8px 0 4px;
+  color: white;
   font-weight: 500;
-  color: #fff;
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
 }
 
-button.registerBusiness-submitBtn {
-  margin-top: 40px;
-  padding: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  transition: transform 0.2s ease, background-color 0.3s ease;
-}
-
-button.registerBusiness-submitBtn:hover {
-  transform: scale(1.02);
-  background-color: #2e7d32;
-}
-
-.registerBusinessForm .MuiOutlinedInput-root {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-radius: 8px;
-}
-
-.registerBusinessForm .MuiFormHelperText-root {
-  background-color: transparent !important;
-  padding: 4px 0; /* tránh dính box */
-}
-
-.registerBusinessForm .MuiInputLabel-root {
+.registerBusiness-uploadBox small {
   color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
 }
 
-.registerBusinessForm .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-  border-color: rgba(255, 255, 255, 0.7);
+.registerBusiness-fileName {
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
-.registerBusinessForm
-  .MuiOutlinedInput-root:hover
-  .MuiOutlinedInput-notchedOutline {
-  border-color: #fff;
-}
-
-.registerBusinessForm
-  .MuiOutlinedInput-root.Mui-focused
-  .MuiOutlinedInput-notchedOutline {
-  border-color: #99dc9d !important;
-}
-
-.registerBusinessForm .MuiInputLabel-root.Mui-focused {
-  color: #99dc9d !important;
-}
-
-/* Style cho thông báo lỗi */
-.registerBusinessForm .MuiFormHelperText-root {
-  color: #fff !important;
-  font-size: 0.9rem !important;
+/* Submit Button */
+.registerBusiness-submitBtn {
+  margin-top: 30px !important;
+  padding: 16px !important;
+  font-size: 16px !important;
   font-weight: 600 !important;
-  background-color: rgba(239, 68, 68, 0.2) !important;
-  border-radius: 4px;
-  border: 1px solid #f87171;
-  width: 100%;
-  margin: 10px 0px !important;
-  padding: 5px;
+  background-color: rgba(34, 139, 34, 0.9) !important;
+  border-radius: 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.3s ease !important;
 }
 
-.registerBusinessForm .MuiInputLabel-root.Mui-error {
-  color: #fff !important;
+.registerBusiness-submitBtn:hover {
+  background-color: rgba(34, 139, 34, 1) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 139, 34, 0.3) !important;
+}
+
+/* Alert */
+.registerBusiness-alert {
+  margin-top: 20px !important;
+  border-radius: 8px !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .registerBusiness-content {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .registerBusiness-welcome {
+    padding: 40px 20px;
+    min-height: 40vh;
+  }
+  
+  .registerBusiness-welcome-title {
+    font-size: 2rem !important;
+  }
+  
+  .registerBusiness-form-section {
+    padding: 40px 20px;
+  }
+  
+  .registerBusiness-form-title {
+    font-size: 2rem !important;
+  }
+  
+  .registerBusiness-form-container {
+    max-width: 100%;
+  }
+  
+  .registerBusiness-form-fields {
+    grid-template-columns: 1fr;
+  }
+  
+  .registerBusiness-fileSection {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .registerBusiness-fileSection {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .registerBusiness-fileUpload:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .registerBusiness-main {
+    padding: 20px 10px;
+  }
+  
+  .registerBusiness-welcome {
+    padding: 30px 15px;
+  }
+  
+  .registerBusiness-form-section {
+    padding: 30px 15px;
+  }
+  
+  .registerBusiness-welcome-title {
+    font-size: 1.8rem !important;
+  }
+  
+  .registerBusiness-form-title {
+    font-size: 1.8rem !important;
+  }
 }

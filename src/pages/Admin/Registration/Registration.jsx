@@ -66,9 +66,9 @@ export default function Registration() {
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
-          item.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.storeMail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.storePhone.includes(searchTerm)
+          item.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.businessMail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.businessPhone.includes(searchTerm)
       );
     }
     return filtered;
@@ -245,26 +245,26 @@ export default function Registration() {
                 <Box className="registration-card-item" key={item.id}>
                   <div className="registration-card-content">
                     <div className="registration-card-avt">
-                      {item.storeName.charAt(0).toUpperCase()}
+                      {item.businessName?.charAt(0)?.toUpperCase()}
                     </div>
                     <div>
                       <Typography className="registration-card-name">
-                        {item.storeName}
+                        {item.businessName}
                         <span className="registration-card-status">
                           {item.status}
                         </span>
                       </Typography>
                       <Typography className="registration-card-info">
                         <CiMail className="mr-2" />
-                        {item.storeMail}
+                        {item.businessMail}
                       </Typography>
                       <Typography className="registration-card-info">
                         <MdOutlinePhone className="mr-2" />
-                        {item.storePhone}
+                        {item.businessPhone}
                       </Typography>
                       <Typography className="registration-card-info">
                         <IoLocationOutline className="mr-2" />
-                        {item.storeAddress}
+                        {item.businessAddress}
                       </Typography>
                       <Typography className="registration-card-info">
                         <TiClipboard className="mr-2" />

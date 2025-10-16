@@ -21,6 +21,7 @@ import {
   getAllBusinesses,
   rejectBusiness,
 } from "../../store/slices/bussinessSlice";
+import { Avatar } from "@mui/material";
 
 const ModalRegistration = ({ open, onClose, selectedItem }) => {
   const [isRejectPopupOpen, setIsRejectPopupOpen] = useState(false);
@@ -87,11 +88,24 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
       }}
     >
       <Box className="popup-header">
-        <Typography className="popup-title">
-          {selectedItem?.storeName?.charAt(0) || ""}
-        </Typography>
+        <Box className="popup-logo-container">
+          {selectedItem?.businessLogoUrl ? (
+            <Avatar 
+              src={selectedItem.businessLogoUrl} 
+              alt="Business Logo" 
+              className="popup-logo"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <Typography className="popup-title" style={{ display: selectedItem?.businessLogoUrl ? 'none' : 'flex' }}>
+            {selectedItem?.businessName?.charAt(0) || ""}
+          </Typography>
+        </Box>
         <Typography className="popup-name">
-          {selectedItem?.storeName || "N/A"}
+          {selectedItem?.businessName || "N/A"}
         </Typography>
         <Typography className="popup-status">
           {selectedItem?.status || "N/A"}
@@ -99,8 +113,7 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
       </Box>
       <Box className="popup-des">
         <Typography>
-          Review all registration details and approve or reject this business
-          application.
+          Review all registration details and approve or reject this business application.
         </Typography>
       </Box>
       <DialogContent>
@@ -112,10 +125,10 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
             <div style={{ border: "1px solid #ccc", marginTop: "8px" }}></div>
             <Typography className="popUp-info">
               <strong className="popUp-info-span">Business Name</strong>{" "}
-              {selectedItem?.storeName || "N/A"}
+              {selectedItem?.businessName || "N/A"}
             </Typography>
             <Typography className="popUp-info">
-              <strong>Address</strong> {selectedItem?.storeAddress || "N/A"}
+              <strong>Address</strong> {selectedItem?.businessAddress || "N/A"}
             </Typography>
             <Typography className="popUp-info">
               <strong>Tax ID</strong> {selectedItem?.taxCode || "N/A"}
@@ -127,10 +140,10 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
             </Typography>
             <div style={{ border: "1px solid #ccc", marginTop: "8px" }}></div>
             <Typography className="popUp-info">
-              <strong>Email</strong> {selectedItem?.storeMail || "N/A"}
+              <strong>Email</strong> {selectedItem?.businessMail || "N/A"}
             </Typography>
             <Typography className="popUp-info">
-              <strong>Phone</strong> {selectedItem?.storePhone || "N/A"}
+              <strong>Phone</strong> {selectedItem?.businessPhone || "N/A"}
             </Typography>
             <Typography className="popUp-info">
               <strong>Application Date</strong>{" "}
@@ -144,26 +157,59 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
             <LuClipboardList className="mr-2 size-5" /> Business Documents
           </Typography>
           <div className="info-section-documents">
-            <Typography className="popUp-info-documents">
-              <strong>Business License</strong>{" "}
-              <a
-                href={selectedItem?.businessLicenseUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {selectedItem?.businessLicenseUrl || "N/A"}
-              </a>
-            </Typography>
-            <Typography className="popUp-info-documents">
-              <strong>Food Safety Certificate:</strong>{" "}
-              <a
-                href={selectedItem?.foodLicenseUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {selectedItem?.foodLicenseUrl || "N/A"}
-              </a>
-            </Typography>
+            <Box className="document-item">
+              <Typography className="popUp-info-documents">
+                <strong>Business License</strong>
+              </Typography>
+              {selectedItem?.businessLicenseUrl ? (
+                <Box className="document-image-container">
+                  <img 
+                    src={selectedItem.businessLicenseUrl} 
+                    alt="Business License" 
+                    className="document-image"
+                    onClick={() => window.open(selectedItem.businessLicenseUrl, '_blank')}
+                  />
+                  <Typography className="document-link">
+                    <a
+                      href={selectedItem.businessLicenseUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Document
+                    </a>
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography className="popUp-info-documents">N/A</Typography>
+              )}
+            </Box>
+            
+            <Box className="document-item">
+              <Typography className="popUp-info-documents">
+                <strong>Food Safety Certificate</strong>
+              </Typography>
+              {selectedItem?.foodSafetyCertUrl ? (
+                <Box className="document-image-container">
+                  <img 
+                    src={selectedItem.foodSafetyCertUrl} 
+                    alt="Food Safety Certificate" 
+                    className="document-image"
+                    onClick={() => window.open(selectedItem.foodSafetyCertUrl, '_blank')}
+                  />
+                  <Typography className="document-link">
+                    <a
+                      href={selectedItem.foodSafetyCertUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Document
+                    </a>
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography className="popUp-info-documents">N/A</Typography>
+              )}
+            </Box>
           </div>
         </Box>
         <div style={{ border: "1px solid #ccc", marginTop: "8px" }}></div>
@@ -205,7 +251,7 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
         open={isRejectPopupOpen}
         onClose={handleRejectPopupClose}
         onReject={handleRejectApplication}
-        businessName={selectedItem?.storeName}
+        businessName={selectedItem?.businessName}
       />
     </Dialog>
   );

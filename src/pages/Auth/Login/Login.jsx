@@ -2,7 +2,6 @@ import Grid from "@mui/material/Grid";
 import "./Login.css";
 import imageAuth from "../../../assets/image/ZRRXzB20OVRZOT67Cgq3GEIwusisOXv9FVHoHmSs.webp";
 import imageGoogle from "../../../assets/image/search.png";
-import imageFacebook from "../../../assets/image/facebook.png";
 import React, { useState, useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
@@ -33,12 +32,9 @@ const schema = yup
 export default function Login() {
   const { dispatch, navigate, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState(null);
-
-
   // Clear error when component mounts
   useEffect(() => {
-    setLoginError(null);
+    // Component mounted
   }, []);
 
   const {
@@ -56,14 +52,19 @@ export default function Login() {
   // Hàm xử lý login thường (email/password)
   const onSubmit = async (data) => {
     try {
-      setLoginError(null); 
       const payload = await dispatch(loginAPI(data)).unwrap();
       
       if (payload && payload.data) {
-        toast.success("Login successful!");
+        // Lưu dữ liệu user vào localStorage
         localStorage.setItem("currentUser", JSON.stringify(payload.data));
 
-        const userType = payload.data.user?.role?.trim().toLowerCase();
+        // Decode JWT token để lấy role
+        const token = payload.data.accessToken;
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const userType = tokenPayload.role?.trim().toLowerCase();
+        
+        console.log("User role from token:", userType); // Debug log
+        
         if (userType === "customer") {
           navigate(PATH.USER_DASHBOARD, { replace: true });
         } else if (userType === "business") {
@@ -87,7 +88,7 @@ const handleGoogleLogin = async () => {
   try {
     // Chuyển hướng đến backend để auth Google
     window.location.href = "http://localhost:8000/auth/google";
-  } catch (error) {
+  } catch {
     toast.error("Sign in with Google failed, please try again.");
   }
 };

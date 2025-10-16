@@ -105,6 +105,7 @@ export const registerBusinessAPI = createAsyncThunk(
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        timeout: 30000, // 30 seconds timeout
       });
       return response.data;
     } catch (error) {
@@ -153,7 +154,7 @@ const authSlice = createSlice({
       .addCase(loginAPI.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.error = null;
-        state.currentUser = payload;
+        state.currentUser = payload.data;
       })
       .addCase(loginAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -213,6 +214,19 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
 
+      })
+      .addCase(registerBusinessAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(registerBusinessAPI.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+        toast.success("Business registration successful! Please wait for approval.");
+      })
+      .addCase(registerBusinessAPI.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "An error occurred during registration. Please try again later.");
       });
   },
 });

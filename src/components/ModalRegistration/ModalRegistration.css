@@ -9,6 +9,21 @@
   color: #6f6f6f;
 }
 
+.popup-logo-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #027d00;
+}
+
 .popup-title {
   width: 50px;
   height: 50px;
@@ -78,7 +93,13 @@
 
 .info-section {
   width: 48%;
-  padding: 10px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
 }
 
 .info-section-documents {
@@ -86,9 +107,60 @@
   padding: 10px;
   display: flex;
   flex-direction: row;
-  gap: 10px;
-  align-items: stretch;
+  gap: 20px;
   justify-content: space-between;
+}
+
+.document-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+  min-height: 250px;
+}
+
+.document-image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.document-image {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.document-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.document-link {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.document-link a {
+  color: #027d00;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.document-link a:hover {
+  text-decoration: underline;
 }
 
 .popUp-info-title,
@@ -104,22 +176,18 @@
 .popUp-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
   color: #333;
   line-height: 1.6;
-  margin-top: 20px !important;
+  margin-top: 15px !important;
+  flex: 1;
 }
 
 .popUp-info-documents {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  text-align: left;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
 }
 
 .popup-actions {
