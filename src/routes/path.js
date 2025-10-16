@@ -9,7 +9,7 @@ export const PATH = {
     FORGOTPASSWORD:"/auth/forgotpassword",
     RESETPASSWORD: "/auth/reset-password",
     ACTIVEACCOUNT: "/active-account",
-    GOOGLECALLBACK:"/auth/google-callback",
+    GOOGLECALLBACK:"/auth/googleCallback",
 
     // USER
     HOME: "/",

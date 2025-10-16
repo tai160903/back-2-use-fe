@@ -16,13 +16,18 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import AddIcon from "@mui/icons-material/Add";
 import CakeIcon from "@mui/icons-material/Cake";
-import { useEffect, useState } from "react";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import CloseIcon from "@mui/icons-material/Close";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useEffect, useState, useRef } from "react";
 import "./Profile.css";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getProfileApi,
   updateProfileApi,
+  uploadAvatarApi,
+  updateAvatarLocally,
 } from "../../../store/slices/userSlice";
 import { useForm, Controller } from "react-hook-form";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -35,7 +40,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 const schema = yup.object().shape({
-  name: yup
+  fullName: yup
     .string()
     .required("Full name is required")
     .min(2, "Full name must be at least 2 characters"),
@@ -53,10 +58,18 @@ const schema = yup.object().shape({
 
 export default function Profile() {
   const dispatch = useDispatch();
-  const { userInfo, isLoading, error } = useSelector((state) => state.user);
-  const user = userInfo?.data?.user;
+  const { userInfo, error } = useSelector((state) => state.user);
+  const user = userInfo;
+
   const wallet = userInfo?.data?.wallet;
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Avatar upload states
+  const [showAvatarPreview, setShowAvatarPreview] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
 
   const {
     register,
@@ -67,7 +80,7 @@ export default function Profile() {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      name: user?.name || "",
+      fullName: user?.fullName || "",
       email: user?.email || "",
       phone: user?.phone || "",
       address: user?.address || "",
@@ -77,12 +90,13 @@ export default function Profile() {
 
   useEffect(() => {
     dispatch(getProfileApi());
+    
   }, [dispatch]);
 
   useEffect(() => {
     if (user) {
       reset({
-        name: user.name || "",
+        fullName: user.fullName || "",
         email: user.email || "",
         phone: user.phone || "",
         address: user.address || "",
@@ -94,12 +108,11 @@ export default function Profile() {
   const onSubmit = async (data) => {
     try {
       const formattedData = {
-        name: data.name,
+        fullName: data.fullName,
         phone: data.phone,
         address: data.address,
         yob: data.yob ? format(data.yob, "yyyy-MM-dd") : "",
       };
-      console.log("data", formattedData);
       await dispatch(updateProfileApi(formattedData)).unwrap();
       toast.success("Update profile success");
       await dispatch(getProfileApi());
@@ -114,9 +127,69 @@ export default function Profile() {
     setIsEditing(false);
   };
 
-  if (isLoading) {
-    return <div>Loading profile...</div>;
-  }
+  // Avatar upload handlers
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Vui lòng chọn file hình ảnh');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Kích thước file không được vượt quá 5MB');
+        return;
+      }
+
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setShowAvatarPreview(true);
+    }
+  };
+
+  const handleConfirmUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploadingAvatar(true);
+    
+    try {
+      // Cập nhật avatar ngay lập tức với preview URL để UX mượt mà
+      dispatch(updateAvatarLocally(previewUrl));
+      
+      const formData = new FormData();
+      formData.append('avatar', selectedFile);
+      
+      const response = await dispatch(uploadAvatarApi(formData)).unwrap();
+      
+
+      
+ 
+      dispatch(getProfileApi());
+      toast.success('Update avatar success');
+      setShowAvatarPreview(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+    } catch (error) {
+      toast.error(error.response ? error.response.data : error.message || 'Failed to update avatar');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleCancelUpload = () => {
+    setShowAvatarPreview(false);
+    setSelectedFile(null);
+    setIsUploadingAvatar(false);
+  };
+
+ 
 
   if (error) {
     return <div>Error: {error.message || error}</div>;
@@ -131,14 +204,30 @@ export default function Profile() {
           <div className="profile-content">
             <div className="profile-info">
               <div className="profile-info-header">
-                <div className="profile-avatar">
+                <div className={`profile-avatar ${isUploadingAvatar ? 'loading' : ''}`} onClick={!isUploadingAvatar ? handleAvatarClick : undefined}>
                   <img
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      user?.name || "User"
+                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      user?.fullName || "User"
                     )}&background=0D8ABC&color=fff&size=128`}
                     alt="Avatar"
                   />
+                  {isUploadingAvatar ? (
+                    <div className="avatar-loading-overlay">
+                      <CircularProgress size={30} sx={{ color: 'white' }} />
+                    </div>
+                  ) : (
+                    <div className="avatar-overlay">
+                      <CameraAltIcon className="camera-icon" />
+                    </div>
+                  )}
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
                 <div className="profile-supInfor">
                   <Typography
                     style={{
@@ -194,16 +283,16 @@ export default function Profile() {
                             <Typography>Full Name</Typography>
                             {isEditing ? (
                               <TextField
-                                {...register("name")}
+                                {...register("fullName")}
                                 variant="outlined"
                                 fullWidth
                                 size="small"
                                 sx={{ marginTop: "8px" }}
-                                error={!!errors.name}
-                                helperText={errors.name?.message}
+                                error={!!errors.fullName}
+                                helperText={errors.fullName?.message}
                               />
                             ) : (
-                              <span>{user?.name || "No name"}</span>
+                              <span>{user?.fullName || "No name"}</span>
                             )}
                           </div>
                         </div>
@@ -667,6 +756,51 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Avatar Preview Modal */}
+      {showAvatarPreview && (
+        <div className="avatar-preview-modal">
+          <div className="avatar-preview-content">
+            <div className="avatar-preview-header">
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                Preview Avatar
+              </Typography>
+              <Button
+                onClick={handleCancelUpload}
+                sx={{ minWidth: 'auto', padding: '8px' }}
+              >
+                <CloseIcon />
+              </Button>
+            </div>
+            <div className="avatar-preview-body">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="avatar-preview-image"
+              />
+            </div>
+            <div className="avatar-preview-footer">
+              <Button
+                variant="outlined"
+                onClick={handleCancelUpload}
+                disabled={isUploadingAvatar}
+                sx={{ marginRight: '10px' }}
+              >
+                Hủy
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleConfirmUpload}
+                disabled={isUploadingAvatar}
+                sx={{ backgroundColor: '#ec5a0d' }}
+                startIcon={isUploadingAvatar ? <CircularProgress size={16} sx={{ color: 'white' }} /> : null}
+              >
+                {isUploadingAvatar ? 'Uploading...' : 'Confirm'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

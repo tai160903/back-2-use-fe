@@ -53,9 +53,11 @@ export const approveBusiness = createAsyncThunk(
 // reject business
 export const rejectBusiness = createAsyncThunk(
   "businesses/rejectBusiness",
-  async (id, { rejectWithValue }) => {
+  async ({ id, note }, { rejectWithValue }) => {
     try {
-      const response = await fetcher.patch(`/admin/businesses/${id}/reject`);
+      const response = await fetcher.patch(`/admin/businesses/${id}/reject`, {
+        note: note
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(
