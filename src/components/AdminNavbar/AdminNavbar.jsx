@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Drawer,
   List,
   ListItem,
   ListItemIcon,
@@ -34,20 +33,26 @@ import { PATH } from "../../routes/path";
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 import logoImage from "../../assets/image/Back2Use-Review 1.png";
+import { MdAppRegistration } from "react-icons/md";
+import { GoPeople } from "react-icons/go";
+import { FiPackage } from "react-icons/fi";
+import { AiOutlinePlusCircle } from "react-icons/ai";
+import { AiOutlineGift } from "react-icons/ai";
+import { LuStore } from "react-icons/lu";
 
 const adminSidebarItems = [
   { id: "admin-dashboard", label: "Dashboard", path: PATH.ADMIN },
   { id: "registration", label: "Registration", path: PATH.ADMIN_REGISTRATION },
   { id: "users", label: "Users", path: PATH.ADMIN_USERS },
   { id: "subscriptions", label: "Subscriptions", path: PATH.ADMIN_SUBSCRIPTIONS },
-  { id: "analytics", label: "Analytics", path: PATH.ADMIN_ANALYTICS },
-  { id: "reports", label: "Reports", path: PATH.ADMIN_REPORTS },
+  { id: "rewards", label: "Rewards", path: PATH.ADMIN_ANALYTICS },
+  { id: "stores", label: "Stores", path: PATH.ADMIN_REPORTS },
   { id: "material", label: "Material", path: PATH.ADMIN_MATERIAL },
   { id: "settings", label: "Settings", path: PATH.ADMIN_SETTINGS },
   { id: "logout", label: "Logout", path: null },
 ];
 
-const AdminNavbar = () => {
+const AdminNavbar = ({ onDrawerToggle }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,15 +64,24 @@ const AdminNavbar = () => {
     navigate(PATH.LOGIN);
   };
 
+  // Handle drawer toggle
+  const handleDrawerToggle = () => {
+    const newOpen = !isOpen;
+    setIsOpen(newOpen);
+    if (onDrawerToggle) {
+      onDrawerToggle(newOpen);
+    }
+  };
+
   const getIconComponent = (iconName) => {
     const icons = {
       "admin-dashboard": <IoHomeOutline color="#dc2626" className="navbar-icon" />,
-      registration: <People color="#1976d2" className="navbar-icon" />,
-      users: <People color="#1976d2" className="navbar-icon" />,
-      subscriptions: <Store color="#3b82f6" className="navbar-icon" />,
-      analytics: <Assessment color="#f57c00" className="navbar-icon" />,
-      reports: <TrendingUp color="#7b1fa2" className="navbar-icon" />,
-      material: <Store color="#2e7d32" className="navbar-icon" />,
+      registration: <MdAppRegistration color="#f6ba35" className="navbar-icon" />,
+      users: <GoPeople color="#6967ac" className="navbar-icon" />,
+      subscriptions: <FiPackage color="#419065" className="navbar-icon" />,
+      rewards: <AiOutlineGift color="#ee8a59" className="navbar-icon" />,
+      stores: <LuStore color="#7b1fa2" className="navbar-icon" />,
+      material: <AiOutlinePlusCircle color="#2e7d32" className="navbar-icon" />,
       settings: <Settings color="#6a1b9a" className="navbar-icon" />,
       logout: <CiLogout color="#fb4225" className="navbar-icon" />,
     };
@@ -75,11 +89,13 @@ const AdminNavbar = () => {
   };
 
   return (
-    <Drawer
-      variant="permanent"
+    <div
       className={`navbar ${isOpen ? "navbar-open" : "navbar-closed"}`}
-      classes={{
-        paper: `navbar-paper ${isOpen ? "navbar-open" : "navbar-closed"}`,
+      style={{
+        height: "auto",
+        background: "#fff",
+        borderRight: "1px solid #ddd",
+        transition: "width 0.3s",
       }}
     >
       <div className="navbar-header">
@@ -91,7 +107,7 @@ const AdminNavbar = () => {
           />
           {isOpen && <span className="navbar-logo-text">Back2Use</span>}
         </div>
-        <IconButton onClick={() => setIsOpen(!isOpen)}>
+        <IconButton onClick={handleDrawerToggle}>
           {isOpen ? <AiOutlineMenuFold /> : <AiOutlineMenuUnfold />}
         </IconButton>
       </div>
@@ -117,7 +133,7 @@ const AdminNavbar = () => {
           </ListItem>
         ))}
       </List>
-    </Drawer>
+    </div>
   );
 };
 

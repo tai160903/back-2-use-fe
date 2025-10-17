@@ -229,7 +229,6 @@
 }
 
 .edit-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
@@ -297,11 +296,35 @@
   padding: 0 40px;
 }
 
-.modal-content .MuiBox-root {
+
+
+/* Combined Plan Information & Settings Layout */
+.plan-info-settings-combined {
   background: white;
   border-radius: 16px;
-  padding: 32px;
+  padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 32px;
+}
+
+.plan-info-settings-combined h6 {
+  margin-bottom: 24px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 18px;
+}
+
+.plan-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.plan-field-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 /* Responsive design */
@@ -329,6 +352,16 @@
   
   .action-btn {
     justify-content: center;
+  }
+  
+  /* Stack columns on mobile */
+  .plan-fields-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .plan-info-settings-combined {
+    padding: 20px;
   }
 }
 

@@ -4,13 +4,6 @@
   white-space: nowrap;
 }
 
-.navbar-paper {
-  border-right: none;
-  top: 64px; /* nếu có header */
-  height: calc(100% - 64px);
-  overflow: hidden !important;
-}
-
 .navbar-open {
   width: 250px !important;
 }
