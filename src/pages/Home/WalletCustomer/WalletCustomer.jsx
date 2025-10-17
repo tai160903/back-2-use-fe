@@ -45,7 +45,7 @@ export default function WalletCustomer() {
 
   const handleOpenAddFunds = () => {
     if (!walletId) {
-      toast.warning("Please refresh the page to get wallet information.");
+      toast.error("Please refresh the page to get wallet information.");
       return;
     }
     setOpenAddFunds(true);

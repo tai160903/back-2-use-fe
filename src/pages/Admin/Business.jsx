@@ -5,9 +5,17 @@ import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import { Store, Business as BusinessIcon, TrendingUp } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { PATH } from "../../routes/path";
 import "./AdminDashboard.css";
 
 export default function Business() {
+  const navigate = useNavigate();
+
+  const handleManageSubscriptions = () => {
+    navigate(PATH.ADMIN_SUBSCRIPTIONS);
+  };
+
   return (
     <div className="adminDashboard">
       {/* banner */}
@@ -23,20 +31,20 @@ export default function Business() {
 
         <div className="banner-content">
           <div className="badge">
-            <span className="badge-text">Business Partners</span>
+            <span className="badge-text">Subscription Management</span>
           </div>
           <Typography className="main-heading">
-            Business
+            Subscription
             <br />
-            <span className="primary-text">Partners</span>
+            <span className="primary-text">Management</span>
           </Typography>
           <p className="subheading">
-            Manage business partnerships and
+            Manage business subscription plans and
             <br />
-            monitor partner performance
+            monitor billing information
           </p>
-          <Button className="cta-button">
-            Add Partner
+          <Button className="cta-button" onClick={handleManageSubscriptions}>
+            Manage Subscriptions
           </Button>
         </div>
       </section>
@@ -53,7 +61,7 @@ export default function Business() {
                     156
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    Active Partners
+                    Active Subscriptions
                   </Typography>
                 </CardContent>
               </Card>
@@ -66,7 +74,7 @@ export default function Business() {
                     23
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    Pending Approval
+                    Expired Plans
                   </Typography>
                 </CardContent>
               </Card>
@@ -79,7 +87,7 @@ export default function Business() {
                     89%
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    Success Rate
+                    Revenue Rate
                   </Typography>
                 </CardContent>
               </Card>

@@ -7,7 +7,7 @@ export const getAllBusinesses = createAsyncThunk(
   async ({ page, limit }, { rejectWithValue }) => {
     try {
       const response = await fetcher.get(
-        `/businesses/form/all?page=${page}&limit=${limit}`
+        `/admin/form/all?page=${page}&limit=${limit}`
       );
       return response.data?.data || [];
     } catch (error) {
@@ -18,12 +18,13 @@ export const getAllBusinesses = createAsyncThunk(
   }
 );
 
+
 // Get business by ID
 export const getBusinessById = createAsyncThunk(
   "businesses/getBusinessById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetcher.get(`/businesses/form/detail/${id}`);
+      const response = await fetcher.get(`/admin/form/detail/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
