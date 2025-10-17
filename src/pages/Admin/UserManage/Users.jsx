@@ -4,10 +4,8 @@ import {
   FaUsers, 
   FaUserSlash, 
   FaCheckCircle, 
-  FaInfoCircle, 
   FaEllipsisV,
   FaSearch,
-  FaFilter,
   FaBan,
   FaUnlock
 } from "react-icons/fa";
@@ -110,196 +108,266 @@ export default function Users() {
     return matchesSearch && matchesStatus;
   });
 
+  const renderUserIcon = () => (
+    <svg 
+      width="32" 
+      height="32" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className="users-title-icon"
+    >
+      <path 
+        d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+      <circle 
+        cx="12" 
+        cy="7" 
+        r="4" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
+  const renderEmptyState = () => (
+    <div className="users-empty">
+      <svg 
+        width="64" 
+        height="64" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+        className="users-empty-icon"
+      >
+        <path 
+          d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        />
+        <circle 
+          cx="12" 
+          cy="7" 
+          r="4" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        />
+      </svg>
+      <h3 className="users-empty-title">No users found</h3>
+      <p className="users-empty-description">
+        {!searchTerm 
+          ? 'No users available at the moment.'
+          : `No users found matching "${searchTerm}". Try changing the search term.`
+        }
+      </p>
+    </div>
+  );
+
   // Tính toán thống kê
   const totalUsers = users.length;
   const blockedUsers = users.filter(user => user.status === "Blocked").length;
   const activeUsers = users.filter(user => user.status === "Active").length;
 
   return (
-    <div className="users">
-      <div className="users-container">
-        {/* Statistics Cards */}
-        <div className="users-header">
-          <div className="stat-card stat-card-0">
-            <div>
-              <div className="stat-title">
-                Tổng người dùng
-                <span> {totalUsers}</span>
-              </div>
-            </div>
-            <div>
-              <FaUsers className="stat-icon" size={32} />
-            </div>
+    <div className="users-management">
+      {/* Header Section */}
+      <div className="users-header">
+        <div className="users-title-section">
+          {renderUserIcon()}
+          <div>
+            <h1 className="users-title">User Management</h1>
+            <p className="users-description">
+              View and manage user information by status
+            </p>
           </div>
-
-          <div className="stat-card stat-card-1">
-            <div>
-              <div className="stat-title">
-                Tài khoản bị khóa
-                <span className="text-[#721c24]"> {blockedUsers}</span>
-              </div>
-            </div>
-            <div>
-              <FaUserSlash className="stat-icon text-[#721c24]" size={32} />
-            </div>
-          </div>
-
-          <div className="stat-card stat-card-2">
-            <div>
-              <div className="stat-title">
-                Tài khoản hoạt động
-                <span className="text-[#155724]"> {activeUsers}</span>
-              </div>
-            </div>
-            <div>
-              <FaCheckCircle className="stat-icon text-[#155724]" size={32} />
-            </div>
-          </div>
-        </div>
-
-        {/* Users Body */}
-        <div className="users-body">
-          <div className="users-body-header">
-            <div className="users-body-header-title">
-              <FaUsers className="mr-2" size={24} />
-              Quản lý người dùng
-            </div>
-            <div className="users-body-text">
-              <FaInfoCircle className="mr-2" size={20} />
-              {blockedUsers} tài khoản bị khóa
-            </div>
-          </div>
-          
-          {/* Search and Filter Section */}
-          <div className="search-filter-section">
-            <div className="search-box">
-              <FaSearch className="search-icon" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm theo tên hoặc email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-            </div>
-            
-            <div className="filter-group">
-              <div className="filter-item">
-   
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="active">Hoạt động</option>
-                  <option value="blocked">Bị khóa</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          
-          <div className="users-body-des">
-            Xem và quản lý thông tin người dùng theo trạng thái
-          </div>
-
-          {/* Table Header */}
-          <div className="table-header-card">
-            <div className="table-header-cell">Họ và tên</div>
-            <div className="table-header-cell">Email</div>
-            <div className="table-header-cell">Trạng thái</div>
-            <div className="table-header-cell">Thao tác</div>
-          </div>
-
-          {/* Users Cards */}
-          <div className="users-cards">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className={`user-card ${openMenuId === user.id ? 'menu-open' : ''}`}>
-                <div className="user-card-cell user-info">
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name}
-                    className="user-avatar"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                  <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-lg" style={{display: 'none'}}>
-                    {user.name?.charAt(0)?.toUpperCase()}
-                  </div>
-                  <div className="user-details">
-                    <div className="user-name">{user.name}</div>
-                  </div>
-                </div>
-                
-                <div className="user-card-cell">
-                  <div className="user-email">{user.email}</div>
-                </div>
-                
-                <div className="user-card-cell">
-                  <div className={`status-indicator ${user.status.toLowerCase()}`}>
-                    <div className={`status-dot ${user.status.toLowerCase()}`}></div>
-                    <span className="status-text">{user.status}</span>
-                  </div>
-                </div>
-                
-                <div className="user-card-cell">
-                  <div className="action-menu-container">
-                    <div 
-                      className="action-menu"
-                      onClick={() => handleMenuToggle(user.id)}
-                    >
-                      <FaEllipsisV size={16} />
-                    </div>
-                    
-                    {openMenuId === user.id && (
-                      <div className="dropdown-menu">
-                        {user.status === "Active" ? (
-                          <div 
-                            className="dropdown-item block"
-                            onClick={() => handleUserAction(user.id, 'block')}
-                          >
-                            <FaBan className="dropdown-icon" />
-                            <span>Khóa tài khoản</span>
-                          </div>
-                        ) : (
-                          <div 
-                            className="dropdown-item unblock"
-                            onClick={() => handleUserAction(user.id, 'unblock')}
-                          >
-                            <FaUnlock className="dropdown-icon" />
-                            <span>Mở khóa tài khoản</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Pagination */}
-          <Stack
-            spacing={2}
-            className="mt-20 mb-10"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handlePageChange}
-              variant="outlined"
-              shape="rounded"
-            />
-          </Stack>
         </div>
       </div>
+
+      {/* Statistics Cards */}
+      <div className="users-stats">
+        <div className="stat-card stat-card-0">
+          <div className="stat-content">
+            <div className="stat-info">
+              <h3 className="stat-title">Total Users</h3>
+              <span className="stat-number">{totalUsers}</span>
+            </div>
+            <FaUsers className="stat-icon" />
+          </div>
+        </div>
+
+        <div className="stat-card stat-card-1">
+          <div className="stat-content">
+            <div className="stat-info">
+              <h3 className="stat-title">Blocked Accounts</h3>
+              <span className="stat-number blocked">{blockedUsers}</span>
+            </div>
+            <FaUserSlash className="stat-icon blocked" />
+          </div>
+        </div>
+
+        <div className="stat-card stat-card-2">
+          <div className="stat-content">
+            <div className="stat-info">
+              <h3 className="stat-title">Active Accounts</h3>
+              <span className="stat-number active">{activeUsers}</span>
+            </div>
+            <FaCheckCircle className="stat-icon active" />
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="users-filters">
+        <div className="search-container">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+        
+        <div className="filter-tabs">
+          <button 
+            className={`filter-tab ${statusFilter === "all" ? "active" : ""}`}
+            onClick={() => setStatusFilter("all")}
+          >
+            <FaUsers />
+            All ({totalUsers})
+          </button>
+          <button 
+            className={`filter-tab ${statusFilter === "active" ? "active" : ""}`}
+            onClick={() => setStatusFilter("active")}
+          >
+            <FaCheckCircle />
+            Active ({activeUsers})
+          </button>
+          <button 
+            className={`filter-tab ${statusFilter === "blocked" ? "active" : ""}`}
+            onClick={() => setStatusFilter("blocked")}
+          >
+            <FaUserSlash />
+            Blocked ({blockedUsers})
+          </button>
+        </div>
+      </div>
+
+      {/* Table Header */}
+      <div className="table-header-card">
+        <div className="table-header-cell">Name</div>
+        <div className="table-header-cell">Email</div>
+        <div className="table-header-cell">Role</div>
+        <div className="table-header-cell">Status</div>
+        <div className="table-header-cell">Actions</div>
+      </div>
+
+      {/* Users Cards */}
+      {filteredUsers.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <div className="users-cards">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className={`user-card ${openMenuId === user.id ? 'menu-open' : ''}`}>
+              <div className="user-card-cell user-info">
+                <img 
+                  src={user.avatar} 
+                  alt={user.name}
+                  className="user-avatar"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-lg" style={{display: 'none'}}>
+                  {user.name?.charAt(0)?.toUpperCase()}
+                </div>
+                <div className="user-details">
+                  <div className="user-name">{user.name}</div>
+                </div>
+              </div>
+              
+              <div className="user-card-cell">
+                <div className="user-email">{user.email}</div>
+              </div>
+              
+              <div className="user-card-cell">
+                <div className="user-role">{user.role}</div>
+              </div>
+              
+              <div className="user-card-cell">
+                <div className={`status-indicator ${user.status.toLowerCase()}`}>
+                  <div className={`status-dot ${user.status.toLowerCase()}`}></div>
+                  <span className="status-text">{user.status}</span>
+                </div>
+              </div>
+              
+              <div className="user-card-cell">
+                <div className="action-menu-container">
+                  <div 
+                    className="action-menu"
+                    onClick={() => handleMenuToggle(user.id)}
+                  >
+                    <FaEllipsisV size={16} />
+                  </div>
+                  
+                  {openMenuId === user.id && (
+                    <div className="dropdown-menu">
+                      {user.status === "Active" ? (
+                        <div 
+                          className="dropdown-item block"
+                          onClick={() => handleUserAction(user.id, 'block')}
+                        >
+                          <FaBan className="dropdown-icon" />
+                          <span>Block Account</span>
+                        </div>
+                      ) : (
+                        <div 
+                          className="dropdown-item unblock"
+                          onClick={() => handleUserAction(user.id, 'unblock')}
+                        >
+                          <FaUnlock className="dropdown-icon" />
+                          <span>Unblock Account</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      <Stack
+        spacing={2}
+        className="mt-20 mb-10"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Pagination
+          count={totalPages}
+          page={currentPage}
+          onChange={handlePageChange}
+          variant="outlined"
+          shape="rounded"
+        />
+      </Stack>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import businessSlice from "./slices/bussinessSlice";
 import userSlice from "./slices/userSlice";
 import walletSlice from "./slices/walletSlice";
 import adminSlice from "./slices/adminSlice";
+import subscriptionSlice from "./slices/subscriptionSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     businesses: businessSlice,
     wallet: walletSlice,
     admin: adminSlice,
+    subscription: subscriptionSlice,
   },
 });
 

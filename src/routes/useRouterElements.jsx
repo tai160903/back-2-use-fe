@@ -1,6 +1,6 @@
 import BussinessLayout from "../layouts/BussinessLayout/BussinessLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
-import Business from "../pages/Admin/Business";
+import Subscriptions from "../pages/Admin/Subscriptions/Subscriptions";
 import Analytics from "../pages/Admin/Analytics";
 import Reports from "../pages/Admin/Reports";
 import Settings from "../pages/Admin/Settings";
@@ -230,10 +230,10 @@ export default function useRouterElements() {
           ),
         },
         {
-          path: PATH.ADMIN_BUSINESS,
+          path: PATH.ADMIN_SUBSCRIPTIONS,
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>
-              <Business />
+              <Subscriptions />
             </ProtectedRoute>
           ),
         },
