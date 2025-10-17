@@ -32,7 +32,7 @@
 .registration-title-icon {
   width: 32px;
   height: 32px;
-  color: #22c55e;
+  color: #12422a;
 }
 
 .registration-description {
@@ -44,8 +44,9 @@
 
 /* Statistics Cards */
 .registration-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
   gap: 24px;
   margin-bottom: 32px;
   width: 100%;
@@ -163,8 +164,8 @@
 }
 
 .search-input:focus {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  border-color: #12422a;
+  box-shadow: 0 0 0 3px rgba(18, 66, 42, 0.1);
 }
 
 .filter-tabs {
@@ -188,13 +189,13 @@
 }
 
 .filter-tab:hover {
-  border-color: #22c55e;
-  color: #22c55e;
+  border-color: #12422a;
+  color: #12422a;
 }
 
 .filter-tab.active {
-  background: #22c55e;
-  border-color: #22c55e;
+  background: #12422a;
+  border-color: #12422a;
   color: white;
 }
 
@@ -237,8 +238,8 @@
 .registration-card-icon {
   width: 24px;
   height: 24px;
-  color: #22c55e;
-  background-color: #dcfce7;
+  color: #12422a;
+  background-color: #e8f5e8;
   padding: 8px;
   border-radius: 8px;
 }
@@ -307,14 +308,14 @@
 .action-btn.primary {
   width: 100%;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(135deg, #12422a 0%, #0d2e1c 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 12px rgba(18, 66, 42, 0.3);
 }
 
 .action-btn.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 6px 20px rgba(18, 66, 42, 0.4);
 }
 
 .action-btn.secondary {
@@ -345,8 +346,8 @@
 }
 
 .status-approved {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: #e8f5e8;
+  color: #12422a;
 }
 
 .status-rejected {
@@ -393,7 +394,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
-  border-top: 4px solid #22c55e;
+  border-top: 4px solid #12422a;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -420,12 +421,12 @@
 }
 
 .registration-pagination .MuiPaginationItem-root.Mui-selected {
-  background-color: #22c55e;
+  background-color: #12422a;
   color: white;
 }
 
 .registration-pagination .MuiPaginationItem-root.Mui-selected:hover {
-  background-color: #16a34a;
+  background-color: #0d2e1c;
 }
 
 /* Responsive design */

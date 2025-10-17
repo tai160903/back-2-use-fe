@@ -273,99 +273,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
 
         <div className="modal-content">
           <Box sx={{ p: 3 }}>
-            {/* Plan Information */}
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#374151' }}>
-                Plan Information
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <TextField
-                  label="Plan Name"
-                  required
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="e.g., Premium Plan, Basic Plan"
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      color: '#374151',
-                    },
-                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#174d31',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: '#174d31',
-                    }
-                  }}
-                />
-                <TextField
-                  label="Price (VND)"
-                  type="number"
-                  required
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', parseInt(e.target.value) || 0)}
-                  placeholder="e.g., 1999"
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      color: '#374151',
-                    },
-                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#174d31',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: '#174d31',
-                    }
-                  }}
-                />
-                <TextField
-                  label="Duration (Days)"
-                  type="number"
-                  required
-                  value={formData.durationInDays}
-                  onChange={(e) => handleInputChange('durationInDays', parseInt(e.target.value) || 30)}
-                  placeholder="e.g., 30"
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      color: '#374151',
-                    },
-                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#174d31',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: '#174d31',
-                    }
-                  }}
-                />
-              </Box>
-            </Box>
-
-            {/* Plan Features */}
+            {/* Plan Features - Full Width */}
             <Box sx={{ mb: 4 }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#374151' }}>
                 Plan Features
@@ -463,56 +371,152 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
               )}
             </Box>
 
-            {/* Plan Settings */}
+            {/* Plan Information & Settings - Combined Section with Two Columns */}
             <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#374151' }}>
-                Plan Settings
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#374151' }}>
+                Plan Information & Settings
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.isActive}
-                      onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                      sx={{
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+                gap: 3
+              }}>
+                {/* Left Column */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <TextField
+                    label="Plan Name"
+                    required
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="e.g., Premium Plan, Basic Plan"
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        color: '#374151',
+                      },
+                      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#174d31',
+                        borderWidth: '2px',
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
                         color: '#174d31',
-                        '&.Mui-checked': {
-                          color: '#174d31',
-                        },
-                        transform: 'scale(1.2)',
+                      }
+                    }}
+                  />
+                  <TextField
+                    label="Price (VND)"
+                    type="number"
+                    required
+                    value={formData.price}
+                    onChange={(e) => handleInputChange('price', parseInt(e.target.value) || 0)}
+                    placeholder="e.g., 1999"
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        color: '#374151',
+                      },
+                      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#174d31',
+                        borderWidth: '2px',
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: '#174d31',
+                      }
+                    }}
+                  />
+                </Box>
+
+                {/* Right Column */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <TextField
+                    label="Duration (Days)"
+                    type="number"
+                    required
+                    value={formData.durationInDays}
+                    onChange={(e) => handleInputChange('durationInDays', parseInt(e.target.value) || 30)}
+                    placeholder="e.g., 30"
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        color: '#374151',
+                      },
+                      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#174d31',
+                        borderWidth: '2px',
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: '#174d31',
+                      }
+                    }}
+                  />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.isActive}
+                          onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                          sx={{
+                            color: '#174d31',
+                            '&.Mui-checked': {
+                              color: '#174d31',
+                            },
+                            transform: 'scale(1.2)',
+                          }}
+                        />
+                      }
+                      label="Active Status"
+                      sx={{
+                        '& .MuiFormControlLabel-label': {
+                          fontWeight: 500,
+                          color: '#374151'
+                        }
                       }}
                     />
-                  }
-                  label="Active Status"
-                  sx={{
-                    '& .MuiFormControlLabel-label': {
-                      fontWeight: 500,
-                      color: '#374151'
-                    }
-                  }}
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.isTrial}
-                      onChange={(e) => handleInputChange('isTrial', e.target.checked)}
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.isTrial}
+                          onChange={(e) => handleInputChange('isTrial', e.target.checked)}
+                          sx={{
+                            color: '#174d31',
+                            '&.Mui-checked': {
+                              color: '#174d31',
+                            },
+                            transform: 'scale(1.2)',
+                          }}
+                        />
+                      }
+                      label="Trial Plan"
                       sx={{
-                        color: '#174d31',
-                        '&.Mui-checked': {
-                          color: '#174d31',
-                        },
-                        transform: 'scale(1.2)',
+                        '& .MuiFormControlLabel-label': {
+                          fontWeight: 500,
+                          color: '#374151'
+                        }
                       }}
                     />
-                  }
-                  label="Trial Plan"
-                  sx={{
-                    '& .MuiFormControlLabel-label': {
-                      fontWeight: 500,
-                      color: '#374151'
-                    }
-                  }}
-                />
+                  </Box>
+                </Box>
               </Box>
             </Box>
           </Box>
