@@ -1,91 +1,107 @@
-import React, { useState } from "react";
+import  {  useEffect } from "react";
 import "./ModalSubscriptions.css";
 import { IoClose } from "react-icons/io5";
 import { MdPayment } from "react-icons/md";
-import { SiTicktick } from "react-icons/si";
 import { 
   TextField, 
   Button, 
   FormControlLabel, 
   Checkbox, 
   Box,
-  Typography,
-  IconButton
+  Typography
 } from "@mui/material";
-import { Add, Remove } from "@mui/icons-material";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { useDispatch, useSelector } from "react-redux";
+import { createSubscription, updateSubscription } from "../../store/slices/subscriptionSlice";
+import toast from "react-hot-toast";
+
+// Yup validation schema
+const subscriptionSchema = yup.object({
+  name: yup
+    .string()
+    .required("Subscription plan name is required")
+    .min(2, "Plan name must be at least 2 characters")
+    .max(50, "Plan name cannot exceed 50 characters"),
+  price: yup
+    .number()
+    .required("Price is required")
+    .min(0, "Price cannot be negative")
+    .integer("Price must be an integer"),
+  durationInDays: yup
+    .number()
+    .required("Duration is required")
+    .min(1, "Duration must be at least 1 day")
+    .max(365, "Duration cannot exceed 365 days")
+    .integer("Duration must be an integer"),
+  isActive: yup.boolean(),
+  isTrial: yup.boolean()
+});
 
 export default function ModalSubscriptions({ open, onClose, selectedItem, mode = "view" }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: [""],
-    price: 0,
-    durationInDays: 30,
-    isActive: true,
-    isTrial: false
+  const dispatch = useDispatch();
+  const { isLoading, error, subscription } = useSelector(state => state.subscription);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: yupResolver(subscriptionSchema),
+    defaultValues: {
+      name: "",
+      price: "",
+      durationInDays: "",
+      isActive: true,
+      isTrial: false
+    }
   });
 
-  // Initialize form data when modal opens or selectedItem changes
-  React.useEffect(() => {
+  // Reset form when modal opens or selectedItem changes
+  useEffect(() => {
     if (mode === "edit" && selectedItem) {
-      setFormData({
+      reset({
         name: selectedItem.name || "",
-        description: selectedItem.description || [""],
-        price: selectedItem.price || 0,
-        durationInDays: selectedItem.durationInDays || 30,
+        price: selectedItem.price || "",
+        durationInDays: selectedItem.durationInDays || "",
         isActive: selectedItem.isActive !== undefined ? selectedItem.isActive : true,
         isTrial: selectedItem.isTrial !== undefined ? selectedItem.isTrial : false
       });
     } else if (mode === "create") {
-      setFormData({
+      reset({
         name: "",
-        description: [""],
-        price: 0,
-        durationInDays: 30,
+        price: "",
+        durationInDays: "",
         isActive: true,
         isTrial: false
       });
     }
-  }, [mode, selectedItem]);
+  }, [mode, selectedItem, reset]);
 
   if (!open) return null;
 
-  const handleAction = (type) => {
-    // Here you would implement the actual action logic
-    console.log(`Action: ${type}`, formData);
-  };
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleDescriptionChange = (index, value) => {
-    const newDescription = [...formData.description];
-    newDescription[index] = value;
-    setFormData(prev => ({
-      ...prev,
-      description: newDescription
-    }));
-  };
-
-  const addDescriptionField = () => {
-    setFormData(prev => ({
-      ...prev,
-      description: [...prev.description, ""]
-    }));
-  };
-
-  const removeDescriptionField = (index) => {
-    if (formData.description.length > 1) {
-      const newDescription = formData.description.filter((_, i) => i !== index);
-      setFormData(prev => ({
-        ...prev,
-        description: newDescription
-      }));
+  const onSubmit = async (data) => {
+    if (mode === "create") {
+      try {
+        await dispatch(createSubscription(data)).unwrap();
+        toast.success("Subscription plan created successfully!");
+        onClose();
+      } catch (error) {
+        toast.error(error.message || "An error occurred while creating the subscription plan");
+      }
+    } else if (mode === "edit") {
+      try {
+        await dispatch(updateSubscription({ id: selectedItem._id, data })).unwrap();
+        toast.success("Subscription plan updated successfully!");
+        onClose();
+      } catch (error) {
+        toast.error(error.message || "An error occurred while updating the subscription plan");
+      }
     }
   };
+
 
   const renderActionButtons = () => {
     if (mode === "create") {
@@ -108,7 +124,8 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
           </Button>
           <Button 
             variant="contained" 
-            onClick={() => handleAction('create')}
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
             sx={{ 
               borderRadius: '12px',
               textTransform: 'none',
@@ -119,10 +136,13 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
               backgroundColor: '#174d31',
               '&:hover': {
                 backgroundColor: '#0f3d26'
+              },
+              '&:disabled': {
+                backgroundColor: '#9ca3af'
               }
             }}
           >
-            Create Subscription
+            {isSubmitting ? 'Creating...' : 'Create Subscription'}
           </Button>
         </Box>
       );
@@ -148,7 +168,8 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
           </Button>
           <Button 
             variant="contained" 
-            onClick={() => handleAction('save')}
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
             sx={{ 
               borderRadius: '12px',
               textTransform: 'none',
@@ -159,90 +180,18 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
               backgroundColor: '#174d31',
               '&:hover': {
                 backgroundColor: '#0f3d26'
+              },
+              '&:disabled': {
+                backgroundColor: '#9ca3af'
               }
             }}
           >
-            Save Changes
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
         </Box>
       );
     }
-
-    // Default view mode
-    const status = selectedItem?.subscriptionStatus || 'active';
-    
-    return (
-      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-        {status === 'active' && (
-          <>
-            <Button 
-              variant="outlined"
-              onClick={() => handleAction('edit')}
-              sx={{ 
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3
-              }}
-            >
-              Edit Plan
-            </Button>
-            <Button 
-              variant="contained"
-              onClick={() => handleAction('cancel')}
-              sx={{ 
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                backgroundColor: '#ef4444',
-                '&:hover': {
-                  backgroundColor: '#dc2626'
-                }
-              }}
-            >
-              Cancel Subscription
-            </Button>
-          </>
-        )}
-        {status === 'expired' && (
-          <Button 
-            variant="contained"
-            onClick={() => handleAction('renew')}
-            sx={{ 
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-              backgroundColor: '#f59e0b',
-              '&:hover': {
-                backgroundColor: '#d97706'
-              }
-            }}
-          >
-            Renew Subscription
-          </Button>
-        )}
-        {status === 'cancelled' && (
-          <Button 
-            variant="contained"
-            onClick={() => handleAction('reactivate')}
-            sx={{ 
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-              backgroundColor: '#22c55e',
-              '&:hover': {
-                backgroundColor: '#16a34a'
-              }
-            }}
-          >
-            Reactivate
-          </Button>
-        )}
-      </Box>
-    );
+   
   };
 
   return (
@@ -273,25 +222,101 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
 
         <div className="modal-content">
           <Box sx={{ p: 3 }}>
-            {/* Plan Features - Full Width */}
+            {/* Plan Information & Settings */}
             <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#374151' }}>
-                Plan Features
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#374151' }}>
+                Plan Information & Settings
               </Typography>
-              {mode === "create" || mode === "edit" ? (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {formData.description.map((desc, index) => (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              
+              {mode === "view" ? (
+                /* View Mode - Display Information */
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+                  gap: 3
+                }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
+                        Plan Name
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+                        {selectedItem?.name || 'N/A'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
+                        Price
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+                        {selectedItem?.price === 0 ? 'Free' : `${selectedItem?.price?.toLocaleString() || 0} VND`}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
+                        Duration
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+                        {selectedItem?.durationInDays || 0} days
+                      </Typography>
+                    </Box>
+                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
+                        Status
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        <Box sx={{ 
+                          px: 2, 
+                          py: 1, 
+                          borderRadius: '20px', 
+                          backgroundColor: selectedItem?.isActive ? '#dcfce7' : '#fee2e2',
+                          color: selectedItem?.isActive ? '#166534' : '#dc2626',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          textTransform: 'uppercase'
+                        }}>
+                          {selectedItem?.isActive ? 'Active' : 'Inactive'}
+                        </Box>
+                        {selectedItem?.isTrial && (
+                          <Box sx={{ 
+                            px: 2, 
+                            py: 1, 
+                            borderRadius: '20px', 
+                            backgroundColor: '#fef3c7',
+                            color: '#92400e',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            textTransform: 'uppercase'
+                          }}>
+                            Trial Plan
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              ) : (
+                /* Create/Edit Mode - Form Fields */
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <Controller
+                    name="name"
+                    control={control}
+                    render={({ field }) => (
                       <TextField
-                        label={`Feature ${index + 1}`}
-                        value={desc}
-                        onChange={(e) => handleDescriptionChange(index, e.target.value)}
-                        placeholder={`Describe feature ${index + 1}...`}
+                        {...field}
+                        label="Plan Name *"
+                        required
+                        placeholder="e.g., Premium Plan, Basic Plan"
                         variant="outlined"
                         fullWidth
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            borderRadius: '12px',
+                            borderRadius: '8px',
                             fontSize: '16px',
                           },
                           '& .MuiInputLabel-root': {
@@ -300,224 +325,157 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                             color: '#374151',
                           },
                           '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#3b82f6',
+                            borderColor: '#174d31',
                             borderWidth: '2px',
                           },
                           '& .MuiInputLabel-root.Mui-focused': {
-                            color: '#3b82f6',
+                            color: '#174d31',
                           }
                         }}
                       />
-                      {formData.description.length > 1 && (
-                        <IconButton
-                          onClick={() => removeDescriptionField(index)}
+                    )}
+                  />
+                  
+                  <Controller
+                    name="price"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Price (VND) *"
+                        type="number"
+                        required
+                        placeholder="e.g., 1999"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.price}
+                        helperText={errors.price?.message}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            color: '#374151',
+                          },
+                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#174d31',
+                            borderWidth: '2px',
+                          },
+                          '& .MuiInputLabel-root.Mui-focused': {
+                            color: '#174d31',
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                  
+                  <Controller
+                    name="durationInDays"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Duration (Days) *"
+                        type="number"
+                        required
+                        placeholder="e.g., 30"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.durationInDays}
+                        helperText={errors.durationInDays?.message}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value === "" ? "" : parseInt(value) || "");
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            color: '#374151',
+                          },
+                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#174d31',
+                            borderWidth: '2px',
+                          },
+                          '& .MuiInputLabel-root.Mui-focused': {
+                            color: '#174d31',
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                  
+                  {/* Checkboxes in same row */}
+                  <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    <Controller
+                      name="isActive"
+                      control={control}
+                      render={({ field }) => (
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              {...field}
+                              checked={field.value}
+                              sx={{
+                                color: '#174d31',
+                                '&.Mui-checked': {
+                                  color: '#174d31',
+                                },
+                                transform: 'scale(1.1)',
+                              }}
+                            />
+                          }
+                          label="Active Status"
                           sx={{
-                            color: '#dc2626',
-                            backgroundColor: '#fee2e2',
-                            '&:hover': {
-                              backgroundColor: '#fecaca',
+                            '& .MuiFormControlLabel-label': {
+                              fontWeight: 500,
+                              color: '#374151',
+                              fontSize: '16px'
                             }
                           }}
-                        >
-                          <Remove />
-                        </IconButton>
+                        />
                       )}
-                    </Box>
-                  ))}
-                  <Button
-                    variant="outlined"
-                    startIcon={<Add />}
-                    onClick={addDescriptionField}
-                    sx={{
-                      borderRadius: '12px',
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      fontSize: '16px',
-                      padding: '12px 24px',
-                      borderStyle: 'dashed',
-                      borderColor: '#174d31',
-                      color: '#174d31',
-                      borderWidth: '2px',
-                      '&:hover': {
-                        borderStyle: 'solid',
-                        backgroundColor: '#f0fdf4',
-                        borderColor: '#0f3d26',
-                        color: '#0f3d26',
-                      }
-                    }}
-                  >
-                    Add Feature
-                  </Button>
-                </Box>
-              ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {(selectedItem?.description || []).map((desc, index) => (
-                    <Box key={index} sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1,
-                      p: 1.5,
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '6px',
-                      borderLeft: '3px solid #22c55e'
-                    }}>
-                      <SiTicktick style={{ color: '#22c55e', fontSize: '16px' }} />
-                      <Typography variant="body2" sx={{ color: '#374151' }}>
-                        {desc}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </Box>
-
-            {/* Plan Information & Settings - Combined Section with Two Columns */}
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#374151' }}>
-                Plan Information & Settings
-              </Typography>
-              <Box sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
-                gap: 3
-              }}>
-                {/* Left Column */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <TextField
-                    label="Plan Name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="e.g., Premium Plan, Basic Plan"
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '12px',
-                        fontSize: '16px',
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        color: '#374151',
-                      },
-                      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#174d31',
-                        borderWidth: '2px',
-                      },
-                      '& .MuiInputLabel-root.Mui-focused': {
-                        color: '#174d31',
-                      }
-                    }}
-                  />
-                  <TextField
-                    label="Price (VND)"
-                    type="number"
-                    required
-                    value={formData.price}
-                    onChange={(e) => handleInputChange('price', parseInt(e.target.value) || 0)}
-                    placeholder="e.g., 1999"
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '12px',
-                        fontSize: '16px',
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        color: '#374151',
-                      },
-                      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#174d31',
-                        borderWidth: '2px',
-                      },
-                      '& .MuiInputLabel-root.Mui-focused': {
-                        color: '#174d31',
-                      }
-                    }}
-                  />
-                </Box>
-
-                {/* Right Column */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <TextField
-                    label="Duration (Days)"
-                    type="number"
-                    required
-                    value={formData.durationInDays}
-                    onChange={(e) => handleInputChange('durationInDays', parseInt(e.target.value) || 30)}
-                    placeholder="e.g., 30"
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '12px',
-                        fontSize: '16px',
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        color: '#374151',
-                      },
-                      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#174d31',
-                        borderWidth: '2px',
-                      },
-                      '& .MuiInputLabel-root.Mui-focused': {
-                        color: '#174d31',
-                      }
-                    }}
-                  />
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.isActive}
-                          onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                          sx={{
-                            color: '#174d31',
-                            '&.Mui-checked': {
-                              color: '#174d31',
-                            },
-                            transform: 'scale(1.2)',
-                          }}
-                        />
-                      }
-                      label="Active Status"
-                      sx={{
-                        '& .MuiFormControlLabel-label': {
-                          fontWeight: 500,
-                          color: '#374151'
-                        }
-                      }}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.isTrial}
-                          onChange={(e) => handleInputChange('isTrial', e.target.checked)}
+                    <Controller
+                      name="isTrial"
+                      control={control}
+                      render={({ field }) => (
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              {...field}
+                              checked={field.value}
+                              sx={{
+                                color: '#174d31',
+                                '&.Mui-checked': {
+                                  color: '#174d31',
+                                },
+                                transform: 'scale(1.1)',
+                              }}
+                            />
+                          }
+                          label="Trial Plan"
                           sx={{
-                            color: '#174d31',
-                            '&.Mui-checked': {
-                              color: '#174d31',
-                            },
-                            transform: 'scale(1.2)',
+                            '& .MuiFormControlLabel-label': {
+                              fontWeight: 500,
+                              color: '#374151',
+                              fontSize: '16px'
+                            }
                           }}
                         />
-                      }
-                      label="Trial Plan"
-                      sx={{
-                        '& .MuiFormControlLabel-label': {
-                          fontWeight: 500,
-                          color: '#374151'
-                        }
-                      }}
+                      )}
                     />
                   </Box>
                 </Box>
-              </Box>
+              )}
             </Box>
           </Box>
         </div>

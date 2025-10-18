@@ -7,6 +7,7 @@ import { IoIosSearch } from "react-icons/io";
 import "./StorePage.css";
 import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
+import MenuItem from "@mui/material/MenuItem";
 import MapView from "../../../components/MapView/MapView";
 import { useNavigate } from "react-router-dom";
 import { PATH } from "../../../routes/path";
@@ -20,6 +21,7 @@ const mockStores = [
     coords: [10.8565, 106.7709],
     products: ["cup", "container", "bottle"],
     daily: "9AM - 8PM",
+    rating: 4.8,
   },
   {
     id: 2,
@@ -28,6 +30,7 @@ const mockStores = [
     coords: [10.768, 106.673],
     products: ["cup"],
     daily: "9AM - 8PM",
+    rating: 4.5,
   },
 ];
 
@@ -54,6 +57,8 @@ export default function StorePage() {
   const [filteredStores, setFilteredStores] = useState(mockStores);
   const [selectedStore, setSelectedStore] = useState(null);
   const [directionTo, setDirectionTo] = useState(null);
+  const [maxDistanceOpt, setMaxDistanceOpt] = useState("Any");
+  const [ratingFilter, setRatingFilter] = useState("Any");
 
 const handleStoreSelect = (store) => {
   console.log("Navigating to:", `${PATH.STOREDETAIL}/${store.id}`); // Debug
@@ -86,9 +91,10 @@ const handleStoreSelect = (store) => {
         (store) =>
           store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           store.address.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      )
+      .filter((store) => (ratingFilter === "Any" ? true : store.rating >= parseFloat(ratingFilter)));
     setFilteredStores(stores);
-  }, [searchQuery, distanceFilter, userLocation]);
+  }, [searchQuery, distanceFilter, ratingFilter, userLocation]);
 
   return (
     <div className="store">
@@ -104,49 +110,7 @@ const handleStoreSelect = (store) => {
           </span>
         </div>
 
-        {/* Search bar */}
-        <div className="store-search">
-          <TextField
-            placeholder="Search for location or store name..."
-            variant="outlined"
-            fullWidth
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <IoIosSearch size={20} color="#666" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </div>
 
-        {/* Filter buttons */}
-        <div
-          className="filter-buttons"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "10px",
-            margin: "20px 0",
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={() => setDistanceFilter(Infinity)}
-          >
-            Tất cả
-          </Button>
-          <Button variant="contained" onClick={() => setDistanceFilter(1)}>
-            Dưới 1km
-          </Button>
-          <Button variant="contained" onClick={() => setDistanceFilter(2)}>
-            Dưới 2km
-          </Button>
-          <Button variant="contained" onClick={() => setDistanceFilter(5)}>
-            Dưới 5km
-          </Button>
-        </div>
 
         {/* Content */}
         <div className="store-content">
@@ -172,6 +136,65 @@ const handleStoreSelect = (store) => {
                 </Typography>
                 <span>Click on map markers to view details</span>
               </div>
+              
+              {/* Filter controls */}
+              <div className="nearby-controls">
+                <div className="filter-bar inside">
+                  <div className="filters-left">
+                    <TextField
+                      className="filter-select"
+                      select
+                      label="Rating"
+                      value={ratingFilter}
+                      onChange={(e) => setRatingFilter(e.target.value)}
+                      size="small"
+                    >
+                      {['Any','3','4','4.5','5'].map((opt) => (
+                        <MenuItem key={opt} value={opt}>{opt === 'Any' ? 'Any rating' : `${opt}+ stars`}</MenuItem>
+                      ))}
+                    </TextField>
+
+                    <TextField
+                      className="filter-select"
+                      select
+                      label="Max Distance"
+                      value={maxDistanceOpt}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setMaxDistanceOpt(v);
+                        if (v === 'Any') setDistanceFilter(Infinity);
+                        else if (v === '1 km') setDistanceFilter(1);
+                        else if (v === '2 km') setDistanceFilter(2);
+                        else if (v === '5 km') setDistanceFilter(5);
+                      }}
+                      size="small"
+                    >
+                      {['Any','1 km','2 km','5 km'].map((opt) => (
+                        <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                      ))}
+                    </TextField>
+                  </div>
+                </div>
+
+                {/* Search bar */}
+                <div className="nearby-search">
+                  <TextField
+                    placeholder="Search for location or store name..."
+                    variant="outlined"
+                    fullWidth
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <IoIosSearch size={20} color="#666" />
+                        </InputAdornment>
+                      ),
+                      size: 'small'
+                    }}
+                  />
+                </div>
+              </div>
+              
               <div className="store-nearby-list">
                 {filteredStores.map((store) => {
                   const visibleProducts = store.products.slice(0, 2);

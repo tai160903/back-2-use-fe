@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -13,23 +13,29 @@ import {
   Paper,
   Link as MuiLink
 } from '@mui/material';
-import {
-  CheckCircleOutline,
-  FlashOn,
-  EventNote,
-  CardGiftcard,
-  Archive,
-  WorkspacePremium,
-  Star,
-  ArrowForward,
-  Park
-} from '@mui/icons-material';
+import { 
+  MdCheckCircle, 
+  MdFlashOn, 
+  MdEventNote, 
+  MdCardGiftcard, 
+  MdArchive, 
+  MdWorkspacePremium, 
+  MdStar, 
+  MdArrowForward, 
+  MdPark,
+  MdAccessTime,
+  MdSpeed,
+  MdAllInclusive,
+  MdAnalytics,
+  MdExpandMore,
+  MdEmail
+} from 'react-icons/md';
 import './Pricing.css';
 
 const pricingPlans = [
   {
-    headerColor: '#4CAF50', // Green
-    icon: <CardGiftcard sx={{ color: 'white' }} />,
+    headerColor: '#0f3713', // Primary Green
+    icon: <MdCardGiftcard style={{ color: 'white', fontSize: '2rem' }} />,
     title: 'Free Trial',
     price: 'FREE',
     duration: '7 days',
@@ -43,11 +49,11 @@ const pricingPlans = [
       'POS system integration',
     ],
     buttonText: 'Start Free Trial',
-    buttonColor: '#4CAF50',
+    buttonColor: '#0f3713',
   },
   {
-    headerColor: '#2196F3', // Blue
-    icon: <Archive sx={{ color: 'white' }} />,
+    headerColor: '#1a7f42', // Secondary Green
+    icon: <MdArchive style={{ color: 'white', fontSize: '2rem' }} />,
     title: '3 Month Package',
     price: '$15',
     duration: '3 months',
@@ -61,11 +67,11 @@ const pricingPlans = [
       'POS system integration',
     ],
     buttonText: 'Get Started',
-    buttonColor: '#4CAF50',
+    buttonColor: '#1a7f42',
   },
   {
-    headerColor: '#9C27B0', // Purple
-    icon: <WorkspacePremium sx={{ color: 'white' }} />,
+    headerColor: '#0f3713', // Primary Green
+    icon: <MdWorkspacePremium style={{ color: 'white', fontSize: '2rem' }} />,
     title: '6 Month Package',
     price: '$27',
     duration: '6 months',
@@ -79,11 +85,11 @@ const pricingPlans = [
       'POS system integration',
     ],
     buttonText: 'Get Started',
-    buttonColor: '#9C27B0',
+    buttonColor: '#0f3713',
   },
   {
-    headerColor: '#FF9800', // Orange
-    icon: <Star sx={{ color: 'white' }} />,
+    headerColor: '#1a7f42', // Secondary Green
+    icon: <MdStar style={{ color: 'white', fontSize: '2rem' }} />,
     title: '12 Month Package',
     price: '$51',
     duration: '12 months',
@@ -97,25 +103,25 @@ const pricingPlans = [
       'POS system integration',
     ],
     buttonText: 'Get Started',
-    buttonColor: '#4CAF50',
+    buttonColor: '#1a7f42',
   },
 ];
 
 const includedFeatures = [
   {
-    icon: <FlashOn sx={{ color: '#4CAF50', fontSize: 40 }} />,
-    title: 'Instant Activation',
-    description: 'Payment success immediately activates your business account with full platform access.',
+    icon: <MdAccessTime style={{ color: '#0f3713', fontSize: '3rem' }} />,
+    title: 'Free 7-Day Access',
+    description: 'Start using the platform for free right after your business is approved. Enjoy full access to all features during the trial period.',
   },
   {
-    icon: <CheckCircleOutline sx={{ color: '#2196F3', fontSize: 40 }} />,
-    title: 'No Approval Needed',
-    description: 'Skip the waiting - start managing your sustainable packaging immediately after payment.',
+    icon: <MdSpeed style={{ color: '#1a7f42', fontSize: '3rem' }} />,
+    title: 'Quick Approval Process',
+    description: 'Register your business and get approved fast. No hidden steps, no long waiting times.',
   },
   {
-    icon: <EventNote sx={{ color: '#9C27B0', fontSize: 40 }} />,
-    title: 'Flexible Terms',
-    description: 'Choose the package duration that fits your business planning and budget cycles.',
+    icon: <MdAllInclusive style={{ color: '#0f3713', fontSize: '3rem' }} />,
+    title: 'Full Feature Experience',
+    description: 'Access every feature without restrictions during your trial. Discover how the platform supports your business operations.',
   },
 ];
 
@@ -139,60 +145,73 @@ const faqs = [
 ];
 
 const Pricing = () => {
+  const [expandedFAQ, setExpandedFAQ] = useState(0); 
+
+  const handleFAQToggle = (index) => {
+    setExpandedFAQ(expandedFAQ === index ? -1 : index);
+  };
+
   return (
     <Box className="pricing-page">
       {/* Header Section */}
-      <Container maxWidth="md" sx={{ py: 20, textAlign: 'center' }}>
-        <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          Choose Your <Box component="span" sx={{ color: '#4CAF50' }}>Package Duration</Box>
-        </Typography>
-        <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto' }}>
-          All packages include the same comprehensive features. Choose the duration that
-          works best for your business. Payment success automatically activates your
-          business account - no admin approval needed.
-        </Typography>
-      </Container>
+      <Box className="pricing-header-section">
+        <Container maxWidth="md" sx={{ py: 20, textAlign: 'center', position: 'relative', zIndex: 2 }}>
+          <Box className="good-morning-bubble">
+            <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
+              Good morning
+            </Typography>
+          </Box>
+           <Typography variant="h3" component="h1" className="pricing-main-title" gutterBottom>
+             Choose Your <Box component="span" sx={{ color: '#197f43' }}>Package Duration</Box>
+           </Typography>
+          <Typography variant="h6" className="pricing-subtitle">
+            All packages include the same comprehensive features. Choose the duration that
+            works best for your business. Payment success automatically activates your
+            business account - no admin approval needed.
+          </Typography>
+        </Container>
+      </Box>
 
       {/* Pricing Cards */}
-      <Container maxWidth="lg" sx={{ pb: 8 }}>
+      <Box className="pricing-cards-section">
         <div className="pricing-cards-grid-container">
           {pricingPlans.map((plan, index) => (
             <Card key={index} className="pricing-card" elevation={3}>
-              <Box sx={{ bgcolor: plan.headerColor, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Box className="pricing-card-header" sx={{ bgcolor: plan.headerColor }}>
                 {plan.icon}
               </Box>
-              <CardContent sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                <Typography variant="h5" component="h3" sx={{ fontWeight: 'bold', mt: 2, mb: 1 }}>
+              <CardContent className="pricing-card-content">
+                <Typography variant="h5" component="h3" className="pricing-card-title">
                   {plan.title}
                 </Typography>
-                <Typography variant="h4" component="p" sx={{ fontWeight: 'bold', color: '#333', mb: 1 }}>
+                <Typography variant="h4" component="p" className="pricing-card-price">
                   {plan.price}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography variant="body2" className="pricing-card-duration">
                   {plan.duration}
                 </Typography>
-                <Typography variant="body1" color="text.secondary" paragraph>
+                <Typography variant="body1" className="pricing-card-description">
                   {plan.description}
                 </Typography>
-                <List dense sx={{ flexGrow: 1 }}>
+                <List className="pricing-features-list">
                   {plan.features.map((feature, idx) => (
-                    <ListItem key={idx} sx={{ py: 0.5, px: 0 }}>
-                      <ListItemIcon sx={{ minWidth: 30 }}>
-                        <CheckCircleOutline sx={{ color: '#4CAF50', fontSize: 18 }} />
-                      </ListItemIcon>
-                      <ListItemText primary={feature} />
+                    <ListItem key={idx} className="pricing-feature-item">
+                       <ListItemIcon className="pricing-feature-icon">
+                         <MdCheckCircle style={{ color: '#0f3713', fontSize: '1.2rem' }} />
+                       </ListItemIcon>
+                      <ListItemText primary={feature} className="pricing-feature-text" />
                     </ListItem>
                   ))}
-                  <ListItem sx={{ py: 0.5, px: 0 }}>
-                    <MuiLink href="#" underline="hover" sx={{ color: '#4CAF50', fontWeight: 'bold' }}>
+                  <ListItem className="pricing-feature-item">
+                    <MuiLink href="#" underline="hover" className="pricing-more-features">
                       +5 more features
                     </MuiLink>
                   </ListItem>
                 </List>
                 <Button
                   variant="contained"
+                  className="pricing-card-button"
                   sx={{
-                    mt: 3,
                     bgcolor: plan.buttonColor,
                     '&:hover': {
                       bgcolor: plan.buttonColor,
@@ -210,104 +229,115 @@ const Pricing = () => {
             </Card>
           ))}
         </div>
-      </Container>
+      </Box>
 
       {/* Everything Included Section */}
-      <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h3" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
-          Everything Included
-        </Typography>
-        <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto', mb: 6 }}>
-          All packages include our complete sustainable packaging management
-          platform with no feature restrictions.
-        </Typography>
-        <div className="included-features-grid-container">
-          {includedFeatures.map((feature, index) => (
-            <Card key={index} className="included-feature-card" elevation={2}>
-              <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', p: 4 }}>
-                <Box sx={{ mb: 2 }}>{feature.icon}</Box>
-                <Typography variant="h5" component="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {feature.title}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {feature.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </Container>
+      <Box className="everything-included-section">
+        <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+          <Typography variant="h3" component="h2" className="everything-included-title" gutterBottom>
+            Everything Included
+          </Typography>
+          <Typography variant="h6" className="everything-included-subtitle">
+            All packages include our complete sustainable packaging management
+            platform with no feature restrictions.
+          </Typography>
+          <div className="included-features-grid-container">
+            {includedFeatures.map((feature, index) => (
+              <Card key={index} className="included-feature-card" elevation={0}>
+                <CardContent className="included-feature-content">
+                  <Box className="included-feature-icon-container">
+                    {feature.icon}
+                  </Box>
+                  <Typography variant="h5" component="h3" className="included-feature-title">
+                    {feature.title}
+                  </Typography>
+                  <Typography variant="body1" className="included-feature-description">
+                    {feature.description}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </Container>
+      </Box>
 
       {/* Frequently Asked Questions Section */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Typography variant="h3" component="h2" textAlign="center" gutterBottom sx={{ fontWeight: 'bold', mb: 6 }}>
-          Frequently Asked Questions
-        </Typography>
-        <div className="faq-grid-container">
-          {faqs.map((faq, index) => (
-            <Paper key={index} className="faq-item" elevation={1} sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="h6" component="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
-                {faq.question}
+      <Box className="faq-section">
+        <Container maxWidth="xl" sx={{ py: 8 }}>
+          <div className="faq-container">
+            {/* Left Column */}
+            <div className="faq-left-column">
+              <Box className="faq-category-label">
+                <MdAnalytics style={{ color: '#0f3713', fontSize: '1.2rem' }} />
+                <Typography variant="body2" className="faq-category-text">
+                  Discovery Best SaaS analytics
+                </Typography>
+              </Box>
+              <Typography variant="h3" component="h2" className="faq-main-title">
+                Frequently asked questions
               </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {faq.answer}
-              </Typography>
-            </Paper>
-          ))}
-        </div>
-      </Container>
+              <Card className="faq-contact-card" elevation={0}>
+                <CardContent className="faq-contact-content">
+                  <Typography variant="h6" className="faq-contact-title">
+                    Still have questions?
+                  </Typography>
+                  <Typography variant="body1" className="faq-contact-description">
+                    Can't find the answer you're looking for? Please chat to our friendly team.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<MdEmail style={{ fontSize: '1.2rem' }} />}
+                    className="faq-contact-button"
+                    sx={{
+                      bgcolor: '#0f3713',
+                      '&:hover': {
+                        bgcolor: '#1a7f42',
+                      },
+                      color: 'white',
+                      fontWeight: 'bold',
+                      borderRadius: 8,
+                      py: 1.5,
+                      px: 3,
+                    }}
+                  >
+                    Send email
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
 
-      {/* CTA Section */}
-      <Paper className="cta-section" elevation={0}>
-        <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
-          <Box sx={{ mb: 3 }}>
-            <Park sx={{ color: 'white', fontSize: 60 }} />
-          </Box>
-          <Typography variant="h3" component="h2" sx={{ color: 'white', fontWeight: 'bold', mb: 2 }}>
-            Ready to Start Your Sustainable Journey?
-          </Typography>
-          <Typography variant="h6" sx={{ color: 'white', maxWidth: '700px', mx: 'auto', mb: 4 }}>
-            Choose your package duration and get instant access to our complete
-            sustainable packaging platform.
-          </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              endIcon={<ArrowForward />}
-              sx={{
-                bgcolor: 'white',
-                color: '#4CAF50',
-                fontWeight: 'bold',
-                borderRadius: 8,
-                py: 1.5,
-                px: 3,
-                '&:hover': {
-                  bgcolor: '#f0f0f0',
-                },
-              }}
-            >
-              Choose Your Package
-            </Button>
-            <Button
-              variant="outlined"
-              sx={{
-                borderColor: 'white',
-                color: 'white',
-                fontWeight: 'bold',
-                borderRadius: 8,
-                py: 1.5,
-                px: 3,
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  borderColor: 'white',
-                },
-              }}
-            >
-              Contact Sales
-            </Button>
-          </Box>
+            {/* Right Column */}
+            <div className="faq-right-column">
+              {faqs.map((faq, index) => {
+                const isExpanded = expandedFAQ === index;
+                return (
+                  <Card 
+                    key={index} 
+                    className={`faq-item-card ${isExpanded ? 'expanded' : ''}`} 
+                    elevation={0}
+                    onClick={() => handleFAQToggle(index)}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <CardContent className="faq-item-content">
+                      <Box className="faq-question-container">
+                        <Typography variant="h6" className="faq-question">
+                          {faq.question}
+                        </Typography>
+                        <MdExpandMore className={`faq-expand-icon ${isExpanded ? 'expanded' : ''}`} />
+                      </Box>
+                      {isExpanded && (
+                        <Typography variant="body1" className="faq-answer">
+                          {faq.answer}
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
         </Container>
-      </Paper>
+      </Box>
     </Box>
   );
 };
