@@ -206,6 +206,46 @@ button.leaflet-popup-btn-details:hover{
 .leaflet-routing-container {
   display: none !important;
 }
+.nearby-controls {
+  margin: 15px 0;
+}
+
+.filter-bar.inside {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.filters-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.filter-select {
+  min-width: 120px;
+}
+
+.filter-select .MuiOutlinedInput-root {
+  background-color: #fff;
+}
+
+.filter-select .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #4caf50 !important;
+}
+
+.nearby-search {
+  margin-top: 10px;
+}
+
+.nearby-search .MuiOutlinedInput-root {
+  background-color: #fff;
+}
+
+.nearby-search .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #4caf50 !important;
+}
+
 .filter-buttons button {
   background-color: #4caf50;
   color: white;

@@ -3,12 +3,16 @@ import Typography from "@mui/material/Typography";
 import { FaWallet } from "react-icons/fa6";
 import { IoMdNotificationsOutline } from "react-icons/io";
 import { IoIosLogOut } from "react-icons/io";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { PATH } from "../../routes/path";
 import { logout } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
+import Avatar from "@mui/material/Avatar";
 export default function HeaderLog() {
   const dispatch = useDispatch();
+  const { userInfo } = useSelector((state) => state.user);
+
+  console.log("userInfo", userInfo);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -22,24 +26,26 @@ export default function HeaderLog() {
         <div className="header-log-container">
           <div className="header-log-left">
             <div className="header-log-info">
-              <Typography
-                className="header-log-atv"
-                variant="h6"
-                noWrap
-                component="div"
+              <Avatar
+                src={userInfo?.avatar || ""}
+                alt={userInfo?.data?.user?.name || "User"}
+                sx={{
+                  marginRight: 2,
+                  cursor: "pointer",
+                }}
               >
-                A
-              </Typography>
+         
+              </Avatar>
               <div>
                 <Typography className="header-log-name" variant="h6" noWrap>
-                  Welcome, Sarah Wilson
+                  Welcome, {userInfo?.fullName || "User"} 
                 </Typography>
-                <Typography className="header-log-role" variant="body2" noWrap>
-                  Green Café Downtown - Business
-                  <span className="header-log-balance">
-                    <FaWallet className="mr-2" /> $2,500.00
-                  </span>
-                </Typography>
+            
+                  
+                <Typography className="header-log-balance">
+                      <FaWallet className="mr-2" /> {userInfo?.wallet?.balance  || 0 } {"VND"}
+                    </Typography>
+                 
               </div>
             </div>
           </div>

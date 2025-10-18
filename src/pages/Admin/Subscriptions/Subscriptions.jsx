@@ -16,18 +16,24 @@ import {
   BiLayer 
 } from "react-icons/bi";
 import ModalSubscriptions from "../../../components/ModalSubscriptions/ModalSubscriptions";
+import DeleteConfirmModal from "../../../components/DeleteConfirmModal/DeleteConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
-import { getALLSubscriptions } from "../../../store/slices/subscriptionSlice";
+import { deleteSubscription, getALLSubscriptions } from "../../../store/slices/subscriptionSlice";
+import toast from "react-hot-toast";
+
 
 export default function Subscriptions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [modalMode, setModalMode] = useState("view"); 
+  const [modalMode, setModalMode] = useState("view");
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const dispatch = useDispatch();
   const { subscription } = useSelector(state => state.subscription);
 
-const dataSubscriptions = subscription.data;
+const dataSubscriptions = subscription.data?.subscriptions || [];
+const featuresList = subscription.data?.description || [];
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
@@ -39,6 +45,8 @@ const dataSubscriptions = subscription.data;
     setOpenPopup(true);
   };
 
+
+  // modal create subscription
   const handleCreateClick = () => {
     setSelectedItem(null);
     setModalMode("create");
@@ -53,12 +61,28 @@ const dataSubscriptions = subscription.data;
     setOpenPopup(true);
   };
 
-  // const handleDeleteClick = (item) => {
-  //   if (window.confirm(`Bạn có chắc chắn muốn xóa subscription "${item.name}"?`)) {
-  //     console.log('Delete subscription:', item);
-  //     // TODO: Implement delete logic
-  //   }
-  // };
+  const handleDeleteClick = (item) => {
+    setItemToDelete(item);
+    setOpenDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (itemToDelete) {
+      try {
+        await dispatch(deleteSubscription(itemToDelete._id)).unwrap();
+        toast.success("Subscription deleted successfully!");
+      } catch (error) {
+        toast.error(error.message || "An error occurred while deleting the subscription");
+      }
+      setOpenDeleteModal(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setOpenDeleteModal(false);
+    setItemToDelete(null);
+  };
 
   const handleClosePopup = () => {
     setOpenPopup(false);
@@ -72,6 +96,7 @@ const dataSubscriptions = subscription.data;
       className="subscriptions-title-icon"
     />
   );
+
 
   const renderEmptyState = () => (
     <div className="subscriptions-empty">
@@ -151,13 +176,13 @@ const dataSubscriptions = subscription.data;
                   >
                     <MdEdit />
                   </button>
-                  {/* <button 
+                  <button 
                     className="action-btn-icon delete-btn"
                     onClick={() => handleDeleteClick(item)}
                     title="Delete"
                   >
                     <MdDelete />
-                  </button> */}
+                  </button>
                 </div>
               </div>
               
@@ -183,7 +208,9 @@ const dataSubscriptions = subscription.data;
                     <MdDescription />
                     Features
                   </span>
-                  <span className="subscriptions-detail-value">{item.description.length} features</span>
+                  <span className="subscriptions-detail-value">
+                    {featuresList.length} features
+                  </span>
                 </div>
                 <div className="subscriptions-detail-item">
                   <span className="subscriptions-detail-label">
@@ -203,6 +230,7 @@ const dataSubscriptions = subscription.data;
                   </span>
                 </div>
               </div>
+
               
               <div className="subscriptions-card-actions">
                 <button 
@@ -222,6 +250,14 @@ const dataSubscriptions = subscription.data;
         onClose={handleClosePopup}
         selectedItem={selectedItem}
         mode={modalMode}
+      />
+
+      <DeleteConfirmModal
+        open={openDeleteModal}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete?.name}
+        itemType="subscription plan"
       />
     </div>
   );

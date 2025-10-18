@@ -58,13 +58,10 @@ const userSlice = createSlice({
     userInfo: [],
   },
   reducers: {
-    updateAvatarLocally: (state, action) => {
-      console.log('Updating avatar locally:', action.payload);
-      console.log('Current state:', state.userInfo);
-      
+    updateAvatarLocally: (state, action) => { 
       if (state.userInfo?.data?.user) {
         state.userInfo.data.user.avatar = action.payload;
-        console.log('Avatar updated in state:', state.userInfo.data.user.avatar);
+        
       } else {
         console.log('No user data found in state');
       }

@@ -54,15 +54,15 @@
 }
 
 .header-log-balance {
+  font-size: 14px;
   color: white !important;
   background: #007c00;
   display: flex;
   align-items: center;
-  font-size: 14px;
+  justify-content: center;
   color: black;
   margin-left: 10px;
   border-radius: 10px;
-  padding: 0px 5px;
 }
 
 .header-log-actions {
