@@ -59,9 +59,10 @@ const schema = yup.object().shape({
 export default function Profile() {
   const dispatch = useDispatch();
   const { userInfo, error } = useSelector((state) => state.user);
+  console.log("userInfo", userInfo);
   const user = userInfo;
 
-  const wallet = userInfo?.data?.wallet;
+  const wallet = userInfo?.wallet;
   const [isEditing, setIsEditing] = useState(false);
   
   // Avatar upload states
@@ -512,9 +513,9 @@ export default function Profile() {
                         fontWeight: "600",
                       }}
                     >
-                      ${wallet?.balance || 0}.00
+                      {(wallet?.balance || 0).toLocaleString('vi-VN')} VNĐ
                     </Typography>
-                    <span>USD</span>
+               
                   </div>
                 </div>
                 <div className="profile-wallet-content">
@@ -557,9 +558,9 @@ export default function Profile() {
                         fontWeight: "600",
                       }}
                     >
-                      $0.00
+                      {(0).toLocaleString('vi-VN')} VNĐ
                     </Typography>
-                    <span>USD</span>
+                   
                   </div>
                 </div>
               </div>

@@ -4,7 +4,7 @@ import Subscriptions from "../pages/Admin/Subscriptions/Subscriptions";
 import Analytics from "../pages/Admin/Analytics";
 import Reports from "../pages/Admin/Reports";
 import Settings from "../pages/Admin/Settings";
-import BusinessDashboard from "../pages/Bussiness/BussinessDashbord";
+import BusinessDashboard from "../pages/Bussiness/BusinessDashboard/BussinessDashbord";
 import AdminLayout from "../layouts/AdminLayout/AdminLayout";
 import Login from "../pages/Auth/Login/Login";
 import Register from "../pages/Auth/Register/Register";
@@ -37,6 +37,12 @@ import ProductDetail from "../pages/Home/Store/ProductDetail";
 import Users from "../pages/Admin/UserManage/Users";
 import Material from "../pages/Admin/Material";
 import Voucher from "../pages/Home/Voucher/Voucher";
+import Inventory from "../pages/Bussiness/Inventory/Inventory";
+import RedemVoucher from "../pages/Bussiness/RedeemVoucher/RedemVoucher";
+import Subscription from "../pages/Bussiness/Subscription/Subscription";
+import Transactions from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
+import WalletBusiness from "../pages/Bussiness/WalletBusiness/WalletBusiness";
+import BusinessTransaction from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -210,6 +216,49 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATH.BUSINESS_INVENTORY,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <Inventory />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_SUBSCRIPTIONS,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <Subscription />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_REEDEM_REWARDS,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <RedemVoucher />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: PATH.BUSINESS_WALLET,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <WalletBusiness />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_TRANSACTION,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <BusinessTransaction />
+            </ProtectedRoute>
+          ),
+        }
+      
+        
       ],
     },
 

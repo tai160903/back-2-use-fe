@@ -57,7 +57,7 @@ export default function ModalWallet({
             required
             inputProps={{ min: 10000, step: "1000" }}
             disabled={loading || !walletId}
-            helperText={!walletId ? "Loading wallet information..." : "Minimum 10,000 VND"}
+            helperText={!walletId ? "Đang tải thông tin ví..." : "Tối thiểu 10.000 VNĐ"}
           />
           <Box sx={{ mt: 2, display: "flex", gap: 1, mb: 2 }}>
             {[10000, 50000, 100000].map((value) => (
@@ -72,7 +72,7 @@ export default function ModalWallet({
                   "&:hover": { backgroundColor: "#54b7aa" },
                 }}
               >
-                {value} VND
+                {value.toLocaleString('vi-VN')} VNĐ
               </Button>
             ))}
           </Box>
@@ -89,7 +89,7 @@ export default function ModalWallet({
               sx={{ mt: 2, py: 1.5, borderRadius: 1, textTransform: "none" }}
               disabled={!isValidAmount || loading || !walletId}
             >
-              {`${action === "withdraw" ? "Withdraw: " : "Deposit: "} ${currency} ${amount || "0"}`}
+              {`${action === "withdraw" ? "Rút tiền: " : "Nạp tiền: "} ${amount ? parseFloat(amount).toLocaleString('vi-VN') : "0"} VNĐ`}
             </Button>
           )}
         </form>
