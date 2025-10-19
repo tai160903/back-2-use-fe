@@ -77,7 +77,7 @@ export default function WalletCustomer() {
       date: "05/01/2024",
       type: "Wallet Balance",
       description: "Premium Subscription Extension",
-      amount: "-$29.99",
+      amount: "-29.990 VNĐ",
       status: "completed",
       duration: "1 month",
     },
@@ -86,7 +86,7 @@ export default function WalletCustomer() {
       date: "10/01/2024",
       type: "Bank Account",
       description: "Wallet Withdrawal to Bank",
-      amount: "-$50.00",
+      amount: "-50.000 VNĐ",
       status: "processing",
     },
     {
@@ -94,7 +94,7 @@ export default function WalletCustomer() {
       date: "05/01/2024",
       type: "Wallet Balance",
       description: "Basic Plan Extension",
-      amount: "-$15.99",
+      amount: "-15.990 VNĐ",
       status: "completed",
       duration: "1 month",
     },
@@ -106,7 +106,7 @@ export default function WalletCustomer() {
       date: "20/01/2024",
       type: "Visa ****1234",
       description: "Add Funds via Credit Card",
-      amount: "+$100.00",
+      amount: "+100.000 VNĐ",
       status: "completed",
     },
     {
@@ -114,7 +114,7 @@ export default function WalletCustomer() {
       date: "05/01/2024",
       type: "PayPal",
       description: "Add Funds via PayPal",
-      amount: "+$75.00",
+      amount: "+75.000 VNĐ",
       status: "completed",
     },
   ];
@@ -169,7 +169,7 @@ export default function WalletCustomer() {
                     fontWeight: "bold",
                   }}
                 >
-                  ${balance.toFixed(2)}
+                  {balance.toLocaleString('vi-VN')} VNĐ
                 </Typography>
                 <span>Available Balance</span>
               </div>

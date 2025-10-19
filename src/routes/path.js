@@ -32,6 +32,11 @@ export const PATH = {
 
     // BUSINESS
     BUSINESS: "/business",
+    BUSINESS_INVENTORY:"/business/inventory",
+    BUSINESS_TRANSACTION:"/business/transaction",
+    BUSINESS_SUBSCRIPTIONS:"/business/subscriptions",
+    BUSINESS_REEDEM_REWARDS:"/business/reedem-rewards",
+    BUSINESS_WALLET:"/business/wallet",
 
     // ADMIN
     ADMIN: "/admin",

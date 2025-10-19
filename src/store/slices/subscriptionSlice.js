@@ -8,6 +8,7 @@ export const getALLSubscriptions = createAsyncThunk(
   async (__dirname, { rejectWithValue }) => {
     try {
       const response = await fetcher.get("/subscriptions")
+      console.log("duy", response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
