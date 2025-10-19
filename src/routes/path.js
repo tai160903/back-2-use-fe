@@ -21,7 +21,7 @@ export const PATH = {
     LISTSTORE:"/liststore",
     STOREDETAIL:"/storeDetail/:id",
     PRODUCT_DETAIL:"/product/:storeId/:productId",
-    // FEATURES removed
+    VOUCHERS:"/vouchers",
     PRICING:"/pricing",
     ABOUT:"/about",
     RANKINGS: "/rankings",
