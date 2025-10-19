@@ -282,9 +282,9 @@ export default function HomePage() {
               <button className="voucher-cta">Collect now</button>
             </div>
             <div className="promo-right">
-              <div className="voucher-list">
+              <div className="voucher-lists">
                 {vouchers.slice(0, 2).map((v) => (
-                  <div key={v.id} className="voucher-card">
+                  <div key={v.id} className="voucher-cards">
                     <div className="voucher-left">
                       <div className="voucher-off">{v.off}</div>
                       <div className="voucher-note">{v.note}</div>

@@ -1075,14 +1075,14 @@
 }
 
 /* Voucher cards */
-.voucher-list {
+.voucher-lists {
   display: flex;
   flex-direction: column;
   gap: 14px;
   width: 100%;
 }
 
-.voucher-card {
+.voucher-cards {
   display: grid;
   grid-template-columns: 160px 1fr;
   background: rgba(255,255,255,0.9);
