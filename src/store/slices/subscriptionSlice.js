@@ -78,12 +78,60 @@ export const updateSubscription = createAsyncThunk(
   }
 )
 
+// get all subscription features
+export const getSubscriptionFeatures = createAsyncThunk(
+  "subscription/getSubscriptionFeatures",
+  async (__, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/subscriptions/features")
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
+// update subscription features
+export const updateSubscriptionFeatures = createAsyncThunk(
+  "subscription/updateSubscriptionFeatures",
+  async (features, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await fetcher.put("/subscriptions/features", { features })
+      dispatch(getSubscriptionFeatures());
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
+// delete subscription feature
+export const deleteSubscriptionFeature = createAsyncThunk(
+  "subscription/deleteSubscriptionFeature",
+  async (feature, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await fetcher.delete(`/subscriptions/features/${feature}`)
+      dispatch(getSubscriptionFeatures());
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
 
 const subscriptionSlice = createSlice({
   name: "subscription",
   initialState: {
     subscription: [],
     subscriptionDetails: null, // Thêm state để lưu chi tiết subscription
+    features: [], // Thêm state để lưu danh sách features
     isLoading: false,
     error: null,
   },
@@ -151,6 +199,46 @@ const subscriptionSlice = createSlice({
         state.subscriptionDetails = payload; // Lưu chi tiết vào state riêng
       })
       .addCase(getSubscriptionById.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      // Features reducers
+      .addCase(getSubscriptionFeatures.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getSubscriptionFeatures.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.features = payload.data || [];
+      })
+      .addCase(getSubscriptionFeatures.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(updateSubscriptionFeatures.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateSubscriptionFeatures.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.features = payload.data || [];
+      })
+      .addCase(updateSubscriptionFeatures.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(deleteSubscriptionFeature.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteSubscriptionFeature.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.features = payload.data || [];
+      })
+      .addCase(deleteSubscriptionFeature.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })

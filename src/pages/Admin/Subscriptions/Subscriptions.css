@@ -13,6 +13,12 @@
   margin-bottom: 28px;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .subscriptions-title-section {
   display: flex;
   align-items: center;
@@ -42,7 +48,28 @@
   margin-bottom: 0;
 }
 
-/* Create Button */
+/* Header Buttons */
+.manage-features-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.manage-features-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
 .create-btn {
   display: flex;
   align-items: center;
@@ -66,6 +93,85 @@
 
 .create-btn:active {
   transform: translateY(0);
+}
+
+/* Current Features Section */
+.current-features-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.features-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.features-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.subscriptions-card-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+}
+
+.features-count {
+  background: linear-gradient(135deg, #12422a 0%, #0d2e1c 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.features-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feature-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.feature-bullet {
+  color: #12422a;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.feature-text {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.feature-more {
+  font-size: 14px;
+  color: #6b7280;
+  font-style: italic;
+  padding: 8px 0;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 8px;
 }
 
 /* Search and Filter Section */
@@ -341,6 +447,9 @@
 
 /* Status badges */
 .status-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -457,11 +566,18 @@
     align-items: stretch;
   }
   
+  .header-actions {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
   .subscriptions-title {
     font-size: 24px;
   }
   
-  .create-btn {
+  .create-btn,
+  .manage-features-btn {
     align-self: center;
   }
   
@@ -497,8 +613,23 @@
     font-size: 20px;
   }
   
-  .create-btn {
+  .create-btn,
+  .manage-features-btn {
     padding: 10px 20px;
     font-size: 14px;
+  }
+  
+  .current-features-section {
+    padding: 16px;
+  }
+  
+  .features-section-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .features-count {
+    align-self: flex-end;
   }
 }

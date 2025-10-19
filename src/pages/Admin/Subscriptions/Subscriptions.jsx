@@ -9,6 +9,7 @@ import {
   MdEdit, 
   MdDelete,
   MdAdd,
+  MdSettings,
 } from "react-icons/md";
 
 import { IoIosSearch } from "react-icons/io";
@@ -16,9 +17,14 @@ import {
   BiLayer 
 } from "react-icons/bi";
 import ModalSubscriptions from "../../../components/ModalSubscriptions/ModalSubscriptions";
+import ModalFeatures from "../../../components/ModalFeatures/ModalFeatures";
 import DeleteConfirmModal from "../../../components/DeleteConfirmModal/DeleteConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteSubscription, getALLSubscriptions, getSubscriptionById } from "../../../store/slices/subscriptionSlice";
+import { 
+  deleteSubscription, 
+  getALLSubscriptions, 
+  getSubscriptionById
+} from "../../../store/slices/subscriptionSlice";
 import toast from "react-hot-toast";
 
 
@@ -29,6 +35,7 @@ export default function Subscriptions() {
   const [modalMode, setModalMode] = useState("view");
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [openFeaturesModal, setOpenFeaturesModal] = useState(false);
   const dispatch = useDispatch();
   const { subscription } = useSelector(state => state.subscription);
 
@@ -37,6 +44,7 @@ const featuresList = subscription.data?.description || [];
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
+    // Không cần gọi getSubscriptionFeatures riêng vì features đã có trong getALLSubscriptions
   }, [dispatch]);
 
   // get subscription by id
@@ -99,6 +107,14 @@ const featuresList = subscription.data?.description || [];
     setModalMode("view");
   };
 
+  const handleManageFeatures = () => {
+    setOpenFeaturesModal(true);
+  };
+
+  const handleCloseFeaturesModal = () => {
+    setOpenFeaturesModal(false);
+  };
+
   const renderSubscriptionIcon = () => (
     <BiLayer 
       size={32}
@@ -137,12 +153,22 @@ const featuresList = subscription.data?.description || [];
             </p>
           </div>
         </div>
-        <button className="create-btn" onClick={handleCreateClick}>
-          <MdAdd size={20} />
-          Create Subscription
-        </button>
+        <div className="header-actions">
+          <button className="manage-features-btn" onClick={handleManageFeatures}>
+            <MdSettings size={20} />
+            Manage Features
+          </button>
+          <button className="create-btn" onClick={handleCreateClick}>
+            <MdAdd size={20} />
+            Create Subscription
+          </button>
+        </div>
       </div>
 
+
+
+
+  
 
       {/* Search Section */}
       <div className="subscriptions-filters">
@@ -267,6 +293,11 @@ const featuresList = subscription.data?.description || [];
         onConfirm={handleConfirmDelete}
         itemName={itemToDelete?.name}
         itemType="subscription plan"
+      />
+
+      <ModalFeatures
+        open={openFeaturesModal}
+        onClose={handleCloseFeaturesModal}
       />
     </div>
   );
