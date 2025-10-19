@@ -36,6 +36,7 @@ import Rankings from "../pages/Home/Rankings/Rankings";
 import ProductDetail from "../pages/Home/Store/ProductDetail";
 import Users from "../pages/Admin/UserManage/Users";
 import Material from "../pages/Admin/Material";
+import Voucher from "../pages/Home/Voucher/Voucher";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -84,6 +85,10 @@ export default function useRouterElements() {
         {
           path: PATH.PRODUCT_DETAIL,
           element: <ProductDetail />,
+        },
+        {
+          path: PATH.VOUCHERS,
+          element: <Voucher />,
         },
       ],
     },

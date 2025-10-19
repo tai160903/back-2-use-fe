@@ -85,6 +85,7 @@ export default function Header() {
           <Link to="/liststore">Stores</Link>
           <Link to="/rankings">Ranking</Link>
           <Link to="/pricing">Pricing</Link>
+          <Link to="/vouchers">Vouchers</Link>
           <Link to="/about">About</Link>
         </div>
 
