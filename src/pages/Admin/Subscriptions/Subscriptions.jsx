@@ -18,7 +18,7 @@ import {
 import ModalSubscriptions from "../../../components/ModalSubscriptions/ModalSubscriptions";
 import DeleteConfirmModal from "../../../components/DeleteConfirmModal/DeleteConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteSubscription, getALLSubscriptions } from "../../../store/slices/subscriptionSlice";
+import { deleteSubscription, getALLSubscriptions, getSubscriptionById } from "../../../store/slices/subscriptionSlice";
 import toast from "react-hot-toast";
 
 
@@ -38,6 +38,13 @@ const featuresList = subscription.data?.description || [];
   useEffect(() => {
     dispatch(getALLSubscriptions());
   }, [dispatch]);
+
+  // get subscription by id
+  useEffect(() => {
+    if (selectedItem) {
+      dispatch(getSubscriptionById(selectedItem._id));
+    }
+  }, [dispatch, selectedItem]);
 
   const handleActionClick = (item) => {
     setSelectedItem(item);
@@ -66,6 +73,8 @@ const featuresList = subscription.data?.description || [];
     setOpenDeleteModal(true);
   };
 
+
+  // delete subscription
   const handleConfirmDelete = async () => {
     if (itemToDelete) {
       try {

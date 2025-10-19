@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import "./Header.css";
 import Button from "@mui/material/Button";
@@ -9,12 +9,24 @@ import { useState } from "react";
 import logoImage from "../../assets/image/cup6.png";
 import useAuth from "../../hooks/useAuth"; 
 import { logout } from "../../store/slices/authSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { getProfileApi } from "../../store/slices/userSlice";
 
 export default function Header() {
   const location = useLocation();
   const { currentUser, dispatch, navigate } = useAuth();
+  const reduxDispatch = useDispatch();
+  const {userInfo} = useSelector(state => state.user);
+  console.log("userInfo", userInfo);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+
+  // Gọi API get profile khi component mount và có currentUser
+  useEffect(() => {
+    if (currentUser && !userInfo?.data) {
+      dispatch(getProfileApi());
+    }
+  }, [currentUser, userInfo?.data, dispatch]);
 
   // Danh sách trang auth
   const isAuthPage = [
@@ -81,18 +93,18 @@ export default function Header() {
           {currentUser ? (
             <>
               <Avatar
-                src={currentUser?.user?.avatar || ""}
-                alt={currentUser?.user?.name || "User"}
+                src={userInfo?.avatar || ""}
+                alt={userInfo?.fullName || "User"}
                 onClick={handleMenuOpen}
                 sx={{
                   cursor: "pointer",
-                  bgcolor: "#2e7d32",
+                  boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)",
                   width: 40,
                   height: 40,
                 }}
               >
-                {currentUser?.user?.name
-                  ? currentUser.user.name.charAt(0).toUpperCase()
+                {userInfo?.fullName
+                  ? userInfo.fullName.charAt(0).toUpperCase()
                   : "U"}
               </Avatar>
 

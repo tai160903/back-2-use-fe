@@ -71,7 +71,7 @@ export const activeAccountAPI = createAsyncThunk(
   "auth/activeAccountAPI",
   async (data, { rejectWithValue }) => {
     try {
-      const response = await fetcher.post("/auth/active-account", data);
+      const response = await fetcher.patch("/auth/active-account", data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
