@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -11,7 +11,9 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
-  Link as MuiLink
+  Link as MuiLink,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { 
   MdCheckCircle, 
@@ -30,81 +32,18 @@ import {
   MdExpandMore,
   MdEmail
 } from 'react-icons/md';
+import { useDispatch, useSelector } from 'react-redux';
+import { getALLSubscriptions } from '../../../store/slices/subscriptionSlice';
 import './Pricing.css';
 
-const pricingPlans = [
-  {
-    headerColor: '#0f3713', // Primary Green
-    icon: <MdCardGiftcard style={{ color: 'white', fontSize: '2rem' }} />,
-    title: 'Free Trial',
-    price: 'FREE',
-    duration: '7 days',
-    description: 'Try our sustainable packaging solution risk-free',
-    features: [
-      'Complete QR tracking system',
-      'Customer mobile app',
-      'Business dashboard',
-      'Real-time analytics',
-      'Return point network access',
-      'POS system integration',
-    ],
-    buttonText: 'Start Free Trial',
-    buttonColor: '#0f3713',
-  },
-  {
-    headerColor: '#1a7f42', // Secondary Green
-    icon: <MdArchive style={{ color: 'white', fontSize: '2rem' }} />,
-    title: '3 Month Package',
-    price: '$15',
-    duration: '3 months',
-    description: 'Perfect for trying out our sustainable packaging solution',
-    features: [
-      'Complete QR tracking system',
-      'Customer mobile app',
-      'Business dashboard',
-      'Real-time analytics',
-      'Return point network access',
-      'POS system integration',
-    ],
-    buttonText: 'Get Started',
-    buttonColor: '#1a7f42',
-  },
-  {
-    headerColor: '#0f3713', // Primary Green
-    icon: <MdWorkspacePremium style={{ color: 'white', fontSize: '2rem' }} />,
-    title: '6 Month Package',
-    price: '$27',
-    duration: '6 months',
-    description: 'Great value for established businesses',
-    features: [
-      'Complete QR tracking system',
-      'Customer mobile app',
-      'Business dashboard',
-      'Real-time analytics',
-      'Return point network access',
-      'POS system integration',
-    ],
-    buttonText: 'Get Started',
-    buttonColor: '#0f3713',
-  },
-  {
-    headerColor: '#1a7f42', // Secondary Green
-    icon: <MdStar style={{ color: 'white', fontSize: '2rem' }} />,
-    title: '12 Month Package',
-    price: '$51',
-    duration: '12 months',
-    description: 'Best value for long-term commitment',
-    features: [
-      'Complete QR tracking system',
-      'Customer mobile app',
-      'Business dashboard',
-      'Real-time analytics',
-      'Return point network access',
-      'POS system integration',
-    ],
-    buttonText: 'Get Started',
-    buttonColor: '#1a7f42',
-  },
+// Fallback features cho trường hợp không có dữ liệu từ API
+const DEFAULT_FEATURES = [
+  'Complete QR tracking system',
+  'Customer mobile app',
+  'Business dashboard',
+  'Real-time analytics',
+  'Return point network access',
+  'POS system integration'
 ];
 
 const includedFeatures = [
@@ -145,11 +84,91 @@ const faqs = [
 ];
 
 const Pricing = () => {
-  const [expandedFAQ, setExpandedFAQ] = useState(0); 
+  const [expandedFAQ, setExpandedFAQ] = useState(0);
+  const dispatch = useDispatch();
+  const { subscription, isLoading, error } = useSelector(state => state.subscription);
+
+  const dataSubscriptions = subscription?.data?.subscriptions || [];
+  const featuresList = subscription?.data?.description || [];
+
+  useEffect(() => {
+    dispatch(getALLSubscriptions());
+  }, [dispatch]);
 
   const handleFAQToggle = (index) => {
     setExpandedFAQ(expandedFAQ === index ? -1 : index);
   };
+
+  // Hàm để lấy icon dựa trên loại subscription
+  const getSubscriptionIcon = (subscription) => {
+    if (subscription.isTrial) {
+      return <MdCardGiftcard style={{ color: 'white', fontSize: '2rem' }} />;
+    }
+    
+    const duration = subscription.durationInDays;
+    if (duration <= 30) {
+      return <MdArchive style={{ color: 'white', fontSize: '2rem' }} />;
+    } else if (duration <= 180) {
+      return <MdWorkspacePremium style={{ color: 'white', fontSize: '2rem' }} />;
+    } else {
+      return <MdStar style={{ color: 'white', fontSize: '2rem' }} />;
+    }
+  };
+
+  // Hàm để lấy màu header dựa trên loại subscription
+  const getHeaderColor = (subscription, index) => {
+    if (subscription.isTrial) {
+      return '#0f3713';
+    }
+    
+    const colors = ['#0f3713', '#1a7f42', '#0f3713', '#1a7f42'];
+    return colors[index % colors.length];
+  };
+
+  // Hàm để format giá tiền
+  const formatPrice = (price) => {
+    if (price === 0) {
+      return 'FREE';
+    }
+    return `$${price}`;
+  };
+
+  // Hàm để format duration
+  const formatDuration = (durationInDays) => {
+    if (durationInDays === 7) {
+      return '7 days';
+    } else if (durationInDays === 30) {
+      return '1 month';
+    } else if (durationInDays === 90) {
+      return '3 months';
+    } else if (durationInDays === 180) {
+      return '6 months';
+    } else if (durationInDays === 365) {
+      return '12 months';
+    } else {
+      return `${durationInDays} days`;
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Box className="pricing-page" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress size={60} sx={{ color: '#0f3713' }} />
+      </Box>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box className="pricing-page" sx={{ p: 4 }}>
+        <Alert severity="error" sx={{ maxWidth: 600, mx: 'auto' }}>
+          Có lỗi xảy ra khi tải dữ liệu gói subscription: {error.message || 'Unknown error'}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box className="pricing-page">
@@ -175,59 +194,75 @@ const Pricing = () => {
       {/* Pricing Cards */}
       <Box className="pricing-cards-section">
         <div className="pricing-cards-grid-container">
-          {pricingPlans.map((plan, index) => (
-            <Card key={index} className="pricing-card" elevation={3}>
-              <Box className="pricing-card-header" sx={{ bgcolor: plan.headerColor }}>
-                {plan.icon}
-              </Box>
-              <CardContent className="pricing-card-content">
-                <Typography variant="h5" component="h3" className="pricing-card-title">
-                  {plan.title}
-                </Typography>
-                <Typography variant="h4" component="p" className="pricing-card-price">
-                  {plan.price}
-                </Typography>
-                <Typography variant="body2" className="pricing-card-duration">
-                  {plan.duration}
-                </Typography>
-                <Typography variant="body1" className="pricing-card-description">
-                  {plan.description}
-                </Typography>
-                <List className="pricing-features-list">
-                  {plan.features.map((feature, idx) => (
-                    <ListItem key={idx} className="pricing-feature-item">
-                       <ListItemIcon className="pricing-feature-icon">
-                         <MdCheckCircle style={{ color: '#0f3713', fontSize: '1.2rem' }} />
-                       </ListItemIcon>
-                      <ListItemText primary={feature} className="pricing-feature-text" />
-                    </ListItem>
-                  ))}
-                  <ListItem className="pricing-feature-item">
-                    <MuiLink href="#" underline="hover" className="pricing-more-features">
-                      +5 more features
-                    </MuiLink>
-                  </ListItem>
-                </List>
-                <Button
-                  variant="contained"
-                  className="pricing-card-button"
-                  sx={{
-                    bgcolor: plan.buttonColor,
-                    '&:hover': {
-                      bgcolor: plan.buttonColor,
-                      opacity: 0.9,
-                    },
-                    color: 'white',
-                    fontWeight: 'bold',
-                    borderRadius: 8,
-                    py: 1.5,
-                  }}
-                >
-                  {plan.buttonText}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          {dataSubscriptions.length > 0 ? (
+            dataSubscriptions.map((subscription, index) => (
+              <Card key={subscription._id} className="pricing-card" elevation={3}>
+                <Box className="pricing-card-header" sx={{ bgcolor: getHeaderColor(subscription, index) }}>
+                  {getSubscriptionIcon(subscription)}
+                </Box>
+                <CardContent className="pricing-card-content">
+                  <Typography variant="h5" component="h3" className="pricing-card-title">
+                    {subscription.name}
+                  </Typography>
+                  <Typography variant="h4" component="p" className="pricing-card-price">
+                    {formatPrice(subscription.price)}
+                  </Typography>
+                  <Typography variant="body2" className="pricing-card-duration">
+                    {formatDuration(subscription.durationInDays)}
+                  </Typography>
+                  <Typography variant="body1" className="pricing-card-description">
+                    {subscription.description || 'Perfect for your business needs'}
+                  </Typography>
+                  <List className="pricing-features-list">
+                    {/* Hiển thị features từ API */}
+                    {featuresList.length > 0 ? (
+                      featuresList.map((feature, idx) => (
+                        <ListItem key={idx} className="pricing-feature-item">
+                          <ListItemIcon className="pricing-feature-icon">
+                            <MdCheckCircle style={{ color: '#0f3713', fontSize: '1.2rem' }} />
+                          </ListItemIcon>
+                          <ListItemText primary={feature} className="pricing-feature-text" />
+                        </ListItem>
+                      ))
+                    ) : (
+                      // Fallback features nếu không có features từ API
+                      DEFAULT_FEATURES.map((feature, idx) => (
+                        <ListItem key={idx} className="pricing-feature-item">
+                          <ListItemIcon className="pricing-feature-icon">
+                            <MdCheckCircle style={{ color: '#0f3713', fontSize: '1.2rem' }} />
+                          </ListItemIcon>
+                          <ListItemText primary={feature} className="pricing-feature-text" />
+                        </ListItem>
+                      ))
+                    )}
+                  </List>
+                  <Button
+                    variant="contained"
+                    className="pricing-card-button"
+                    sx={{
+                      bgcolor: getHeaderColor(subscription, index),
+                      '&:hover': {
+                        bgcolor: getHeaderColor(subscription, index),
+                        opacity: 0.9,
+                      },
+                      color: 'white',
+                      fontWeight: 'bold',
+                      borderRadius: 8,
+                      py: 1.5,
+                    }}
+                  >
+                    {subscription.isTrial ? 'Start Free Trial' : 'Get Started'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="text.secondary">
+                Không có gói subscription nào được tìm thấy
+              </Typography>
+            </Box>
+          )}
         </div>
       </Box>
 

@@ -44,7 +44,6 @@ const featuresList = subscription.data?.description || [];
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
-    // Không cần gọi getSubscriptionFeatures riêng vì features đã có trong getALLSubscriptions
   }, [dispatch]);
 
   // get subscription by id

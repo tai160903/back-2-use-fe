@@ -130,8 +130,8 @@ const subscriptionSlice = createSlice({
   name: "subscription",
   initialState: {
     subscription: [],
-    subscriptionDetails: null, // Thêm state để lưu chi tiết subscription
-    features: [], // Thêm state để lưu danh sách features
+    subscriptionDetails: null, 
+    features: [],
     isLoading: false,
     error: null,
   },
