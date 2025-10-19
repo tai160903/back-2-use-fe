@@ -12,8 +12,8 @@ export const useUserInfo = () => {
     }
   }, [dispatch, userInfo]);
 
-  const walletId = userInfo?.data?.wallet?._id || null;
-  const balance = userInfo?.data?.wallet?.balance || 0;
+  const walletId = userInfo?.wallet?._id || null;
+  const balance = userInfo?.wallet?.balance || 0;
 
   return {
     walletId,
