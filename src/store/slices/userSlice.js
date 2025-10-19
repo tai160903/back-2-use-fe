@@ -21,7 +21,7 @@ export const updateProfileApi = createAsyncThunk(
   "user/updateProfileApi",
   async (data, { rejectWithValue }) => {
     try {
-      const response = await fetcher.post("/users/edit-profile", data);
+      const response = await fetcher.put("/users/edit-profile", data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -36,7 +36,7 @@ export const uploadAvatarApi = createAsyncThunk(
   "user/uploadAvatarApi",
   async (data, { rejectWithValue }) => {
     try {
-      const response = await fetcher.post("/users/edit-avatar", data, {
+      const response = await fetcher.put("/users/edit-avatar", data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -55,7 +55,9 @@ export const uploadAvatarApi = createAsyncThunk(
 const userSlice = createSlice({
   name: "user",
   initialState: {
-    userInfo: [],
+    userInfo: null,
+    isLoading: false,
+    error: null,
   },
   reducers: {
     updateAvatarLocally: (state, action) => { 
@@ -90,7 +92,7 @@ const userSlice = createSlice({
         state.userInfo = payload
       })
       .addCase(updateProfileApi.rejected, (state, {payload}) => {
-        state.isLoading = null;
+        state.isLoading = false;
         state.error = payload;
       })
       .addCase(uploadAvatarApi.pending, (state) => {

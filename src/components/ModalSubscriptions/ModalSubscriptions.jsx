@@ -41,7 +41,7 @@ const subscriptionSchema = yup.object({
 
 export default function ModalSubscriptions({ open, onClose, selectedItem, mode = "view" }) {
   const dispatch = useDispatch();
-  const { isLoading, error, subscription } = useSelector(state => state.subscription);
+  const { subscriptionDetails } = useSelector(state => state.subscription);
   const {
     control,
     handleSubmit,
@@ -82,6 +82,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
   if (!open) return null;
 
 
+  // function submit form
   const onSubmit = async (data) => {
     if (mode === "create") {
       try {
@@ -211,7 +212,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
               <p className="modal-subtitle">
                 {mode === "create" ? "Add a new subscription plan" : 
                  mode === "edit" ? `Edit: ${selectedItem?.name || "Subscription Plan"}` :
-                 selectedItem?.name || "Subscription Plan"}
+                 subscriptionDetails?.data?._doc?.name || selectedItem?.name || "Subscription Plan"}
               </p>
             </div>
           </div>
@@ -229,7 +230,8 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
               </Typography>
               
               {mode === "view" ? (
-                /* View Mode - Display Information */
+                <>
+                {/* View Mode - Display Information */}
                 <Box sx={{ 
                   display: 'grid', 
                   gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
@@ -241,7 +243,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                         Plan Name
                       </Typography>
                       <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
-                        {selectedItem?.name || 'N/A'}
+                        {subscriptionDetails?.data?._doc?.name || selectedItem?.name || 'N/A'}
                       </Typography>
                     </Box>
                     <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
@@ -249,7 +251,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                         Price
                       </Typography>
                       <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
-                        {selectedItem?.price === 0 ? 'Free' : `${selectedItem?.price?.toLocaleString() || 0} VND`}
+                        {(subscriptionDetails?.data?._doc?.price || selectedItem?.price) === 0 ? 'Free' : `${(subscriptionDetails?.data?._doc?.price || selectedItem?.price)?.toLocaleString() || 0} VND`}
                       </Typography>
                     </Box>
                   </Box>
@@ -260,7 +262,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                         Duration
                       </Typography>
                       <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
-                        {selectedItem?.durationInDays || 0} days
+                        {subscriptionDetails?.data?._doc?.durationInDays || selectedItem?.durationInDays || 0} days
                       </Typography>
                     </Box>
                     <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
@@ -272,15 +274,15 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                           px: 2, 
                           py: 1, 
                           borderRadius: '20px', 
-                          backgroundColor: selectedItem?.isActive ? '#dcfce7' : '#fee2e2',
-                          color: selectedItem?.isActive ? '#166534' : '#dc2626',
+                          backgroundColor: (subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? '#dcfce7' : '#fee2e2',
+                          color: (subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? '#166534' : '#dc2626',
                           fontSize: '12px',
                           fontWeight: 600,
                           textTransform: 'uppercase'
                         }}>
-                          {selectedItem?.isActive ? 'Active' : 'Inactive'}
+                          {(subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? 'Active' : 'Inactive'}
                         </Box>
-                        {selectedItem?.isTrial && (
+                        {(subscriptionDetails?.data?._doc?.isTrial !== undefined ? subscriptionDetails?.data?._doc?.isTrial : selectedItem?.isTrial) && (
                           <Box sx={{ 
                             px: 2, 
                             py: 1, 
@@ -298,6 +300,44 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                     </Box>
                   </Box>
                 </Box>
+                
+                {/* Features Section */}
+                {subscriptionDetails?.data?.description && (
+                  <Box sx={{ mt: 4 }}>
+                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#374151' }}>
+                      Tính năng
+                    </Typography>
+                    <Box sx={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: { xs: '1fr', md: '1fr' }, 
+                      gap: 2
+                    }}>
+                      {subscriptionDetails.data.description.map((feature, index) => (
+                        <Box key={index} sx={{ 
+                          p: 2, 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '12px', 
+                          border: '1px solid #e5e7eb',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2
+                        }}>
+                          <Box sx={{ 
+                            width: 8, 
+                            height: 8, 
+                            borderRadius: '50%', 
+                            backgroundColor: '#174d31',
+                            flexShrink: 0
+                          }} />
+                          <Typography variant="body1" sx={{ color: '#1a1a1a', lineHeight: 1.6 }}>
+                            {feature}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+                </>
               ) : (
                 /* Create/Edit Mode - Form Fields */
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

@@ -11,8 +11,6 @@ import Avatar from "@mui/material/Avatar";
 export default function HeaderLog() {
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.user);
-
-  console.log("userInfo", userInfo);
   const navigate = useNavigate();
 
   const handleLogout = () => {

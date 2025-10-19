@@ -17,6 +17,20 @@ export const getALLSubscriptions = createAsyncThunk(
   }
 )
 
+
+// get subscription by id
+export const getSubscriptionById = createAsyncThunk(
+  "subscription/getSubscriptionById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/subscriptions/${id}`)
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+)
+
 // create subscription
 export const createSubscription = createAsyncThunk(
   "subscription/createSubscription",
@@ -69,6 +83,7 @@ const subscriptionSlice = createSlice({
   name: "subscription",
   initialState: {
     subscription: [],
+    subscriptionDetails: null, // Thêm state để lưu chi tiết subscription
     isLoading: false,
     error: null,
   },
@@ -123,6 +138,19 @@ const subscriptionSlice = createSlice({
         state.subscription = payload;
       })
       .addCase(updateSubscription.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(getSubscriptionById.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getSubscriptionById.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.subscriptionDetails = payload; // Lưu chi tiết vào state riêng
+      })
+      .addCase(getSubscriptionById.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })
