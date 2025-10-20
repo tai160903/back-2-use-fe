@@ -113,7 +113,7 @@ export default function ProfileBusiness() {
             {userInfo?.businessLogo ? (
               <img src={userInfo?.businessLogo} alt="Business Logo" />
             ) : (
-              <div className="avatar-placeholder">
+              <div >
                 <span>{userInfo?.businessName?.charAt(0)}</span>
               </div>
             )}
