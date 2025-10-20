@@ -216,3 +216,347 @@ button.btn-upgarde {
     border: 1px solid#e4ece5;
     margin-left: 20px;
 }
+
+.subscriptionBusiness-available{
+    margin-top: 40px;
+ padding: 30px;
+ box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+.subscriptionBusiness-available-title {
+    display: flex;
+    font-size: 25px !important;
+    align-items: center;
+    text-align: center;
+}
+
+.subscriptionBusiness-available-des {
+    color: #7f7f7f !important;
+}
+
+/* Subscription Packages Grid */
+.subscription-packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.subscription-package-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.subscription-package-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-color: #4caf50;
+}
+
+.subscription-package-card.trial-package {
+    border-color: #ff9800;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
+}
+
+.package-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.package-icon {
+    background-color: #e8f5e8;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+.trial-package .package-icon {
+    background-color: #fff3e0;
+}
+
+.package-icon .gift-icon {
+    color: #ff9800;
+    font-size: 24px;
+}
+
+.package-icon .crown-icon {
+    color: #4caf50;
+    font-size: 24px;
+}
+
+.package-badge {
+    background-color: #4caf50;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.trial-package .package-badge {
+    background-color: #ff9800;
+}
+
+.package-content {
+    margin-bottom: 20px;
+}
+
+.package-name {
+    font-size: 24px !important;
+    font-weight: bold !important;
+    color: #333333 !important;
+    margin: 0 0 8px 0 !important;
+}
+
+.package-duration {
+    font-size: 16px !important;
+    color: #666666 !important;
+    margin: 0 0 12px 0 !important;
+}
+
+.package-price {
+    font-size: 32px !important;
+    font-weight: bold !important;
+    color: #4caf50 !important;
+    margin: 0 0 16px 0 !important;
+}
+
+.trial-package .package-price {
+    color: #ff9800 !important;
+}
+
+.package-features {
+    margin-top: 16px;
+}
+
+.feature-item {
+    font-size: 14px !important;
+    color: #555555 !important;
+    margin: 6px 0 !important;
+    display: flex;
+    align-items: center;
+}
+
+.package-footer {
+    margin-top: auto;
+}
+
+button.btn-select {
+    width: 100%;
+    padding: 12px 24px;
+    background-color: #017b05;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-select:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.btn-trial {
+    width: 100%;
+    padding: 12px 24px;
+    background-color: #cccccc;
+    color: #666666;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .subscription-packages-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .subscription-package-card {
+        padding: 20px;
+    }
+    
+    .package-name {
+        font-size: 20px !important;
+    }
+    
+    .package-price {
+        font-size: 28px !important;
+    }
+}
+
+/* Billing History Styles */
+.subscriptionBusiness-billing {
+    margin-top: 40px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.billing-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.billing-header-icon {
+    color: #333333;
+    font-size: 24px;
+}
+
+.billing-header-title {
+    font-size: 24px !important;
+    font-weight: bold !important;
+    color: #333333 !important;
+    margin: 0 !important;
+}
+
+.billing-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.billing-card {
+    display: flex;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.2s ease;
+}
+
+.billing-card:last-child {
+    border-bottom: none;
+}
+
+.billing-card:hover {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 -20px;
+}
+
+.billing-card-left {
+    margin-right: 16px;
+}
+
+.billing-icon {
+    background-color: #e8f5e8;
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+.credit-card-icon {
+    color: #4caf50;
+    font-size: 20px;
+}
+
+.billing-card-middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.billing-package-name {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #333333 !important;
+    margin: 0 !important;
+}
+
+.billing-date {
+    font-size: 14px !important;
+    color: #666666 !important;
+    margin: 0 !important;
+}
+
+.billing-card-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.billing-status {
+    background-color: #e8f5e8;
+    border-radius: 20px;
+    padding: 6px 12px;
+}
+
+.billing-status-text {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #4caf50 !important;
+    margin: 0 !important;
+    text-transform: uppercase;
+}
+
+.billing-amount {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: #333333 !important;
+    margin: 0 !important;
+}
+
+.billing-pagination {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Responsive Design for Billing */
+@media (max-width: 768px) {
+    .subscriptionBusiness-billing {
+        padding: 20px;
+    }
+    
+    .billing-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 0;
+    }
+    
+    .billing-card-left {
+        margin-right: 0;
+    }
+    
+    .billing-card-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .billing-package-name {
+        font-size: 16px !important;
+    }
+    
+    .billing-amount {
+        font-size: 16px !important;
+    }
+}
