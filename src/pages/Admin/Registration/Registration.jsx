@@ -13,22 +13,33 @@ import ModalRegistration from "../../../components/ModalRegistration/ModalRegist
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllBusinesses } from "../../../store/slices/bussinessSlice";
+import { getAllBusinesses, getAllBusinessesForStats } from "../../../store/slices/bussinessSlice";
 
 export default function Registration() {
-  const [filter, setFilter] = useState("Pending");
+  const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const dispatch = useDispatch();
-  const { businesses, totalPages } = useSelector(
+  const { businesses, allBusinesses, totalPages, total, isLoading } = useSelector(
     (state) => state.businesses
   );
   useEffect(() => {
-    dispatch(getAllBusinesses({ page: currentPage, limit: 10 }))
+    dispatch(getAllBusinesses({ page: currentPage, limit: 10 }));
+    dispatch(getAllBusinessesForStats());
   }, [dispatch, currentPage]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Businesses data:", businesses);
+    console.log("All Businesses:", allBusinesses);
+    console.log("Total:", total);
+    console.log("Total Pages:", totalPages);
+    console.log("Current Page:", currentPage);
+    console.log("Is Loading:", isLoading);
+  }, [businesses, allBusinesses, total, totalPages, currentPage, isLoading]);
 
   const handlePageChange = (event, newPage) => {
     setCurrentPage(newPage);
@@ -155,7 +166,7 @@ export default function Registration() {
           <div className="stat-content">
             <div className="stat-info">
               <h3 className="stat-title">Total Applications</h3>
-              <span className="stat-number">{businesses.length}</span>
+              <span className="stat-number">{allBusinesses.length}</span>
             </div>
             <PiClipboardTextBold className="stat-icon" />
           </div>
@@ -166,7 +177,7 @@ export default function Registration() {
             <div className="stat-info">
               <h3 className="stat-title">Pending Review</h3>
               <span className="stat-number pending">
-                {businesses.filter((item) => item.status === "pending").length}
+                {allBusinesses.filter((item) => item.status === "pending").length}
               </span>
             </div>
             <CiClock2 className="stat-icon pending" />
@@ -178,7 +189,7 @@ export default function Registration() {
             <div className="stat-info">
               <h3 className="stat-title">Approved</h3>
               <span className="stat-number approved">
-                {businesses.filter((item) => item.status === "approved").length}
+                {allBusinesses.filter((item) => item.status === "approved").length}
               </span>
             </div>
             <SiTicktick className="stat-icon approved" />
@@ -190,7 +201,7 @@ export default function Registration() {
             <div className="stat-info">
               <h3 className="stat-title">Rejected</h3>
               <span className="stat-number rejected">
-                {businesses.filter((item) => item.status === "rejected").length}
+                {allBusinesses.filter((item) => item.status === "rejected").length}
               </span>
             </div>
             <BiMessageSquareX className="stat-icon rejected" />
@@ -213,31 +224,40 @@ export default function Registration() {
         
         <div className="filter-tabs">
           <button 
+            className={`filter-tab ${filter === "All" ? "active" : ""}`}
+            onClick={() => handleFilterChange(null, "All")}
+          >
+            <PiClipboardTextBold />
+            All ({allBusinesses.length})
+          </button>
+          <button 
             className={`filter-tab ${filter === "pending" ? "active" : ""}`}
             onClick={() => handleFilterChange(null, "pending")}
           >
             <CiClock2 />
-            Pending ({businesses.filter((item) => item.status === "pending").length})
+            Pending ({allBusinesses.filter((item) => item.status === "pending").length})
           </button>
           <button 
             className={`filter-tab ${filter === "approved" ? "active" : ""}`}
             onClick={() => handleFilterChange(null, "approved")}
           >
             <SiTicktick />
-            Approved ({businesses.filter((item) => item.status === "approved").length})
+            Approved ({allBusinesses.filter((item) => item.status === "approved").length})
           </button>
           <button 
             className={`filter-tab ${filter === "rejected" ? "active" : ""}`}
             onClick={() => handleFilterChange(null, "rejected")}
           >
             <BiMessageSquareX />
-            Rejected ({businesses.filter((item) => item.status === "rejected").length})
+            Rejected ({allBusinesses.filter((item) => item.status === "rejected").length})
           </button>
         </div>
       </div>
 
       {/* Business Cards */}
-      {getFilteredData(businesses).length === 0 ? (
+      {isLoading ? (
+        renderLoadingState()
+      ) : getFilteredData(businesses).length === 0 ? (
         renderEmptyState()
       ) : (
         <div className="registration-grid">
@@ -303,23 +323,25 @@ export default function Registration() {
       )}
 
       {/* Pagination */}
-      <Stack
-        spacing={2}
-        className="mt-5 mb-5"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Pagination
-          count={totalPages}
-          page={currentPage}
-          onChange={handlePageChange}
-          variant="outlined"
-          shape="rounded"
-        />
-      </Stack>
+      {!isLoading && totalPages > 1 && (
+        <Stack
+          spacing={2}
+          className="mt-5 mb-5"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            variant="outlined"
+            shape="rounded"
+          />
+        </Stack>
+      )}
 
       <ModalRegistration
         open={openPopup}

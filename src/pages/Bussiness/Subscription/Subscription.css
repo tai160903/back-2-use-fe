@@ -1,0 +1,218 @@
+.subscriptionBusiness {
+    max-width: 1600px;
+    padding: 20px;
+}
+
+.subscriptionBusiness-notification {
+    background-color: #e6f9f5;
+    border-radius: 10px;
+    padding: 30px;
+    width: 100% !important;
+    color: black;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.subscriptionBusiness-notification-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 25px !important; 
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.free-trial-status {
+    padding: 20px 0px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.free-trial-icon {
+    margin-top: 2%;
+    background-color: #b8e6e6;
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+}
+
+.gift-icon {
+    color: #00695c;
+    font-size: 24px;
+}
+
+.free-trial-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.free-trial-title {
+    font-size: 22px !important;
+    font-weight: bold !important;
+    color: #333333 !important;
+    margin: 0 !important;
+}
+
+.free-trial-description {
+    font-size: 20px !important;
+    color: #666666 !important;
+    margin: 0 !important;
+    line-height: 1.4;
+}
+
+.free-trial-warning {
+    font-size: 20px !important;
+    color: #ff6b35 !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+}
+
+.subscriptionBusiness-subscription-current {
+    margin-top: 40px;
+    background-color: #f0f7f0;
+    border-radius: 10px;
+    padding: 30px;
+    width: 100% !important;
+    color: black;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+
+}
+
+.subscriptionBusiness-subscription-current-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 25px !important; 
+    font-weight: 700 !important;
+    margin-bottom: 20px;
+}
+
+.subscriptionBusiness-subscription-current-description {
+    font-size: 20px !important;
+    color: #666666 !important;
+    margin: 0 !important;
+    line-height: 2 !important;
+}
+
+/* Subscription Package Detail Styles */
+.subscription-package-detail {
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subscription-package-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.subscription-package-icon {
+    background-color: #d9ecd7;
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+}
+
+.crown-icon {
+    color: #8e24aa;
+    font-size: 24px;
+}
+
+.subscription-package-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.subscription-package-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subscription-package-name {
+    font-size: 25px !important;
+    font-weight: bold !important;
+    color: #333333 !important;
+    margin: 0 !important;
+}
+
+.subscription-package-badge {
+    background-color: #d3ead8;
+    border-radius: 12px;
+    padding: 4px 12px;
+}
+
+.subscription-package-badge-text {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #007c00 !important;
+    margin: 0 !important;
+}
+
+.subscription-package-price {
+    font-size: 20px !important;
+    color: #666666 !important;
+    margin: 0 !important;
+}
+
+.subscription-package-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.subscription-package-billing-label {
+    font-size: 18px !important;
+    color: #666666 !important;
+    margin: 0 !important;
+}
+
+.subscription-package-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calendar-icon {
+    color: #333333;
+    font-size: 16px;
+}
+
+.subscription-package-date-text {
+    font-size: 20px !important;
+    font-weight: bold !important;
+    color: #333333 !important;
+    margin: 0 !important;
+}
+
+button.btn-renew {
+    padding: 10px;
+    background: #017b01;
+    color: white;
+    border-radius: 10px;
+}
+
+button.btn-upgarde {
+    padding: 10px;
+    background-color: transparent;
+    color: black;
+    border: 1px solid#e4ece5;
+    margin-left: 20px;
+}

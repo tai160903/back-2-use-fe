@@ -7,7 +7,7 @@ export const useUserInfo = () => {
   const { userInfo, isLoading, error } = useSelector((state) => state.user);
 
   useEffect(() => {
-    if (!userInfo || userInfo.length === 0) {
+    if (!userInfo) {
       dispatch(getProfileApi());
     }
   }, [dispatch, userInfo]);

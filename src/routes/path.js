@@ -37,6 +37,7 @@ export const PATH = {
     BUSINESS_SUBSCRIPTIONS:"/business/subscriptions",
     BUSINESS_REEDEM_REWARDS:"/business/reedem-rewards",
     BUSINESS_WALLET:"/business/wallet",
+    BUSINESS_PROFILE:"/business/profile",
 
     // ADMIN
     ADMIN: "/admin",

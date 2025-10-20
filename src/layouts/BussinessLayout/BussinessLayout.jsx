@@ -1,11 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import HeaderLog from "../../components/HeaderLog/HeaderLog";
 import BusinessNavbar from "../../components/BusinessNavbar/BusinessNavbar";
+import { useDispatch, useSelector } from "react-redux";
+import { getProfileApi } from "../../store/slices/userSlice";
 
 export default function BussinessLayout() {
   const [isOpen, setIsOpen] = useState(false); // Trạng thái sidebar
+  const dispatch = useDispatch();
+  const { userInfo } = useSelector((state) => state.user);
 
+  // Load user profile data khi vào business layout (chỉ khi chưa có dữ liệu)
+  useEffect(() => {
+    if (!userInfo) {
+      dispatch(getProfileApi());
+    }
+  }, [dispatch, userInfo]);
 
 
   return (

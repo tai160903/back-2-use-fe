@@ -8,15 +8,44 @@ import { PATH } from "../../routes/path";
 import { logout } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
+import { getUserRole } from "../../utils/authUtils";
 export default function HeaderLog() {
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const userRole = getUserRole();
 
   const handleLogout = () => {
     dispatch(logout());
     navigate(PATH.LOGIN);
   };
+
+  // Render thông tin cho customer
+  const renderCustomerInfo = () => (
+    <>
+      <Typography className="header-log-name" variant="h6" noWrap>
+        Welcome, {userInfo?.fullName || "User"} 
+      </Typography>
+      <Typography className="header-log-balance">
+        <FaWallet className="mr-2" /> {userInfo?.wallet?.balance || 0} {"VND"}
+      </Typography>
+    </>
+  );
+
+  // Render thông tin cho business
+  const renderBusinessInfo = () => (
+    <>
+      <Typography className="header-log-name" variant="h6" noWrap>
+        Welcome, {userInfo?.businessName || "Business"} 
+      </Typography>
+      <Typography className="header-log-balance">
+        <FaWallet className="mr-2" /> {userInfo?.wallet?.balance || 0} {"VND"}
+      </Typography>
+      {/* <Typography className="header-log-business-type" variant="body2" noWrap>
+        {userInfo?.businessType || ""}
+      </Typography> */}
+    </>
+  );
 
   return (
     <>
@@ -25,8 +54,8 @@ export default function HeaderLog() {
           <div className="header-log-left">
             <div className="header-log-info">
               <Avatar
-                src={userInfo?.avatar || ""}
-                alt={userInfo?.data?.user?.name || "User"}
+                src={userRole === "business" ? (userInfo?.businessLogo || userInfo?.avatar || "") : (userInfo?.avatar || "")}
+                alt={userRole === "business" ? (userInfo?.businessName || "Business") : (userInfo?.fullName || "User")}
                 sx={{
                   marginRight: 2,
                   cursor: "pointer",
@@ -35,15 +64,7 @@ export default function HeaderLog() {
          
               </Avatar>
               <div>
-                <Typography className="header-log-name" variant="h6" noWrap>
-                  Welcome, {userInfo?.fullName || "User"} 
-                </Typography>
-            
-                  
-                <Typography className="header-log-balance">
-                      <FaWallet className="mr-2" /> {userInfo?.wallet?.balance  || 0 } {"VND"}
-                    </Typography>
-                 
+                {userRole === "business" ? renderBusinessInfo() : renderCustomerInfo()}
               </div>
             </div>
           </div>
