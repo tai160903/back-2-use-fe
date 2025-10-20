@@ -15,11 +15,12 @@ import CircularProgress from "@mui/material/CircularProgress"; // Import Circula
 
 import "./ModalRegistration.css";
 import RejectPopup from "../RejectPopup/RejectPopup";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   approveBusiness,
   getAllBusinesses,
   rejectBusiness,
+  getAllBusinessesForStats,
 } from "../../store/slices/bussinessSlice";
 import { Avatar } from "@mui/material";
 
@@ -27,6 +28,7 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
   const [isRejectPopupOpen, setIsRejectPopupOpen] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const dispatch = useDispatch();
+  const { currentPage } = useSelector((state) => state.businesses);
 
   const handleRejectClick = () => {
     setIsRejectPopupOpen(true);
@@ -46,7 +48,8 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
       })).unwrap();
       
       toast.success("Business application rejected successfully!");
-      dispatch(getAllBusinesses({ page: 1, limit: 10 }));
+      dispatch(getAllBusinesses({ page: currentPage, limit: 10 }));
+      dispatch(getAllBusinessesForStats());
       onClose();
     } catch (error) {
       toast.error("Failed to reject business application: " + error);
@@ -61,7 +64,8 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
       .unwrap()
       .then(() => {
         toast.success("Business approved successfully!");
-        dispatch(getAllBusinesses({ page: 1, limit: 10 }));
+        dispatch(getAllBusinesses({ page: currentPage, limit: 10 }));
+        dispatch(getAllBusinessesForStats());
         onClose();
       })
       .catch((error) => {

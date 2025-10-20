@@ -43,6 +43,7 @@ import Subscription from "../pages/Bussiness/Subscription/Subscription";
 import Transactions from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
 import WalletBusiness from "../pages/Bussiness/WalletBusiness/WalletBusiness";
 import BusinessTransaction from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
+import ProfileBusiness from "../pages/Bussiness/ProfileBusiness/ProfileBusiness";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -256,7 +257,16 @@ export default function useRouterElements() {
               <BusinessTransaction />
             </ProtectedRoute>
           ),
-        }
+        },
+        {
+          path: PATH.BUSINESS_PROFILE,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <ProfileBusiness />
+            </ProtectedRoute>
+          ),
+        },
+        
       
         
       ],
