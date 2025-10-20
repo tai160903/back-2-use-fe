@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Users.css";
 import { 
   FaUsers, 
@@ -7,74 +7,29 @@ import {
   FaEllipsisV,
   FaSearch,
   FaBan,
-  FaUnlock
+  FaUnlock,
+  FaUser
 } from "react-icons/fa";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserPaginationApi, getAllUserApi } from "../../../store/slices/manageUserSlice";
+import Loading from "../../../components/Loading/Loading";
 
 export default function Users() {
+  const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages] = useState(3); // Giả định có 3 trang
-  
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      email: "nguyenvana@email.com",
-      role: "Customer",
-      status: "Active",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face"
-    },
-    {
-      id: 2,
-      name: "Trần Thị B",
-      email: "tranthib@email.com",
-      role: "Business Owner",
-      status: "Active",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face"
-    },
-    {
-      id: 3,
-      name: "Lê Văn C",
-      email: "levanc@email.com",
-      role: "Customer",
-      status: "Blocked",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face"
-    },
-    {
-      id: 4,
-      name: "Phạm Thị D",
-      email: "phamthid@email.com",
-      role: "Business Owner",
-      status: "Active",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face"
-    },
-    {
-      id: 5,
-      name: "Hoàng Văn E",
-      email: "hoangvane@email.com",
-      role: "Customer",
-      status: "Blocked",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop&crop=face"
-    }
-  ]);
+  const [limit] = useState(10);
 
-  // Handle click outside to close menu
+  const { manageUser, totalPages, total, currentPage, isLoading, allUsers } = useSelector((state) => state.manageUser);
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const isClickInsideMenu = event.target.closest('.action-menu-container');
-      if (!isClickInsideMenu) {
-        setOpenMenuId(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (!manageUser || manageUser.length === 0) {
+      dispatch(getUserPaginationApi({ page: 1, limit }));
+    }
+    dispatch(getAllUserApi());
   }, []);
 
   // Handle menu toggle
@@ -84,85 +39,30 @@ export default function Users() {
 
   // Handle page change
   const handlePageChange = (event, newPage) => {
-    setCurrentPage(newPage);
+    dispatch(getUserPaginationApi({ page: newPage, limit }));
   };
 
-  // Handle block/unblock user
-  const handleUserAction = (userId, action) => {
-    setUsers(prevUsers => 
-      prevUsers.map(user => 
-        user.id === userId 
-          ? { ...user, status: action === 'block' ? 'Blocked' : 'Active' }
-          : user
-      )
-    );
+  // logic block/unblock user
+  const handleUserAction = () => {
     setOpenMenuId(null);
   };
 
-  // Filter users based on search and filters
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || user.status.toLowerCase() === statusFilter;
-    
+  // Filter users based on search and filters (dùng trực tiếp dữ liệu từ API)
+  const filteredUsers = (manageUser || []).filter((user) => {
+    const name = (user.fullName || user.name || user.email || "").toLowerCase();
+    const matchesSearch = name.includes(searchTerm.toLowerCase());
+    const status = user.isBlocked ? "blocked" : (user.isActive ? "active" : "blocked");
+    const matchesStatus = statusFilter === "all" || status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const renderUserIcon = () => (
-    <svg 
-      width="32" 
-      height="32" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-      className="users-title-icon"
-    >
-      <path 
-        d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-      />
-      <circle 
-        cx="12" 
-        cy="7" 
-        r="4" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-      />
-    </svg>
+    <FaUser className="users-title-icon" size={32} />
   );
 
   const renderEmptyState = () => (
     <div className="users-empty">
-      <svg 
-        width="64" 
-        height="64" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        className="users-empty-icon"
-      >
-        <path 
-          d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-        <circle 
-          cx="12" 
-          cy="7" 
-          r="4" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-      </svg>
+      <FaUser className="users-empty-icon" size={64} />
       <h3 className="users-empty-title">No users found</h3>
       <p className="users-empty-description">
         {!searchTerm 
@@ -173,13 +73,13 @@ export default function Users() {
     </div>
   );
 
-  // Tính toán thống kê
-  const totalUsers = users.length;
-  const blockedUsers = users.filter(user => user.status === "Blocked").length;
-  const activeUsers = users.filter(user => user.status === "Active").length;
+  // Card thống kê sử dụng allUsers để không bị thay đổi theo trang
+  const totalUsers = (allUsers?.length) ?? total ?? 0;
+  const blockedUsers = (allUsers || []).filter(user => user.isBlocked || !user.isActive).length;
+  const activeUsers = (allUsers || []).filter(user => !user.isBlocked && user.isActive).length;
 
   return (
-    <div className="users-management">
+    <div className="users-management" >
       {/* Header Section */}
       <div className="users-header">
         <div className="users-title-section">
@@ -274,42 +174,48 @@ export default function Users() {
       </div>
 
       {/* Users Cards */}
-      {filteredUsers.length === 0 ? (
+      {isLoading ? (
+        <div className="flex w-full justify-center py-10"><Loading /></div>
+      ) : filteredUsers.length === 0 ? (
         renderEmptyState()
       ) : (
         <div className="users-cards">
-          {filteredUsers.map((user) => (
-            <div key={user.id} className={`user-card ${openMenuId === user.id ? 'menu-open' : ''}`}>
+          {filteredUsers.map((user) => {
+            const id = user._id || user.userId;
+            const name = user.fullName || user.name || (user.email ? user.email.split("@")[0] : "Unknown");
+            const email = user.email;
+            const role = (user.role || "customer");
+            const status = user.isBlocked ? "Blocked" : (user.isActive ? "Active" : "Blocked");
+            const avatar = user.avatar;
+            return (
+            <div key={id} className={`user-card ${openMenuId === id ? 'menu-open' : ''}`}>
               <div className="user-card-cell user-info">
                 <img 
-                  src={user.avatar} 
-                  alt={user.name}
+                  src={avatar} 
+                  alt={name}
                   className="user-avatar"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
+           
                 />
                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-lg" style={{display: 'none'}}>
-                  {user.name?.charAt(0)?.toUpperCase()}
+                  {name?.charAt(0)?.toUpperCase()}
                 </div>
                 <div className="user-details">
-                  <div className="user-name">{user.name}</div>
+                  <div className="user-name">{name}</div>
                 </div>
               </div>
               
               <div className="user-card-cell">
-                <div className="user-email">{user.email}</div>
+                <div className="user-email">{email}</div>
               </div>
               
               <div className="user-card-cell">
-                <div className="user-role">{user.role}</div>
+                <div className="user-role">{role}</div>
               </div>
               
               <div className="user-card-cell">
-                <div className={`status-indicator ${user.status.toLowerCase()}`}>
-                  <div className={`status-dot ${user.status.toLowerCase()}`}></div>
-                  <span className="status-text">{user.status}</span>
+                <div className={`status-indicator ${status.toLowerCase()}`}>
+                  <div className={`status-dot ${status.toLowerCase()}`}></div>
+                  <span className="status-text">{status}</span>
                 </div>
               </div>
               
@@ -317,17 +223,17 @@ export default function Users() {
                 <div className="action-menu-container">
                   <div 
                     className="action-menu"
-                    onClick={() => handleMenuToggle(user.id)}
+                    onClick={() => handleMenuToggle(id)}
                   >
                     <FaEllipsisV size={16} />
                   </div>
                   
-                  {openMenuId === user.id && (
+                  {openMenuId === id && (
                     <div className="dropdown-menu">
-                      {user.status === "Active" ? (
+                      {status === "Active" ? (
                         <div 
                           className="dropdown-item block"
-                          onClick={() => handleUserAction(user.id, 'block')}
+                          onClick={() => handleUserAction(id, 'block')}
                         >
                           <FaBan className="dropdown-icon" />
                           <span>Block Account</span>
@@ -335,7 +241,7 @@ export default function Users() {
                       ) : (
                         <div 
                           className="dropdown-item unblock"
-                          onClick={() => handleUserAction(user.id, 'unblock')}
+                          onClick={() => handleUserAction(id, 'unblock')}
                         >
                           <FaUnlock className="dropdown-icon" />
                           <span>Unblock Account</span>
@@ -346,7 +252,7 @@ export default function Users() {
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
