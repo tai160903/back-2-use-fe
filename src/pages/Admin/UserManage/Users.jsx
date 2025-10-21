@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./Users.css";
 import { 
   FaUsers, 
@@ -13,8 +13,10 @@ import {
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import { useDispatch, useSelector } from "react-redux";
-import { getUserPaginationApi, getAllUserApi } from "../../../store/slices/manageUserSlice";
+import { getUserPaginationApi, getAllUserApi, updateUserBlockStatusApi } from "../../../store/slices/manageUserSlice";
 import Loading from "../../../components/Loading/Loading";
+import BlockUserModal from "../../../components/BlockUserModal/BlockUserModal";
+import toast from "react-hot-toast";
 
 export default function Users() {
   const dispatch = useDispatch();
@@ -22,15 +24,20 @@ export default function Users() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [limit] = useState(10);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [modalAction, setModalAction] = useState('block'); // 'block' or 'unblock'
 
-  const { manageUser, totalPages, total, currentPage, isLoading, allUsers } = useSelector((state) => state.manageUser);
+  const { manageUser, totalPages, total, currentPage, isLoading, allUsers, isUpdating } = useSelector((state) => state.manageUser);
 
   useEffect(() => {
     if (!manageUser || manageUser.length === 0) {
       dispatch(getUserPaginationApi({ page: 1, limit }));
     }
     dispatch(getAllUserApi());
-  }, []);
+  }, [dispatch, limit, manageUser]);
 
   // Handle menu toggle
   const handleMenuToggle = (userId) => {
@@ -43,11 +50,45 @@ export default function Users() {
   };
 
   // logic block/unblock user
-  const handleUserAction = () => {
+  const handleUserAction = (userId, action) => {
+    const user = filteredUsers.find(u => (u._id || u.userId) === userId);
+    if (user) {
+      setSelectedUser(user);
+      setModalAction(action);
+      setIsModalOpen(true);
+    }
     setOpenMenuId(null);
   };
 
-  // Filter users based on search and filters (dùng trực tiếp dữ liệu từ API)
+  // Handle modal close
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+    setModalAction('block');
+  };
+
+  // Handle form submission
+  const handleModalSubmit = async (data) => {
+    try {
+      await dispatch(updateUserBlockStatusApi({
+        id: selectedUser.userId,
+        isBlocked: data.isBlocked,
+        reason: data.reason
+      })).unwrap();
+      
+      // Close modal and refresh data
+      handleModalClose();
+      dispatch(getUserPaginationApi({ page: currentPage, limit }));
+      dispatch(getAllUserApi());
+      
+      // Show success message
+      toast.success(`Account ${modalAction === 'block' ? 'blocked' : 'unblocked'} successfully!`);
+      
+    } catch (error) {
+      toast.error(error.message || 'An error occurred while updating account status');
+    }
+  };
+
   const filteredUsers = (manageUser || []).filter((user) => {
     const name = (user.fullName || user.name || user.email || "").toLowerCase();
     const matchesSearch = name.includes(searchTerm.toLowerCase());
@@ -274,6 +315,16 @@ export default function Users() {
           shape="rounded"
         />
       </Stack>
+
+      {/* Block/Unblock Modal */}
+      <BlockUserModal
+        open={isModalOpen}
+        onClose={handleModalClose}
+        user={selectedUser}
+        action={modalAction}
+        onSubmit={handleModalSubmit}
+        isLoading={isUpdating}
+      />
     </div>
   );
 }
