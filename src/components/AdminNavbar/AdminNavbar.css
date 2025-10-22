@@ -1,7 +1,15 @@
 .navbar {
+  position: fixed !important;
+  top: 84px; /* Bắt đầu từ dưới header */
+  left: 0;
+  height: calc(100vh - 84px) !important; /* Trừ đi chiều cao header */
+  z-index: 1000;
   transition: width 0.3s;
-  overflow: hidden !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   white-space: nowrap;
+  background: #fff;
+  border-right: 1px solid #ddd;
 }
 
 .navbar-open {
