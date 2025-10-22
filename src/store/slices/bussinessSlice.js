@@ -83,6 +83,51 @@ export const rejectBusiness = createAsyncThunk(
   }
 );
 
+// Create material
+export const createMaterial = createAsyncThunk(
+  "businesses/createMaterial",
+  async (materialData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/materials", materialData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get approved materials
+export const getApprovedMaterials = createAsyncThunk(
+  "businesses/getApprovedMaterials",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/materials/approved");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get my materials (business's own materials)
+export const getMyMaterials = createAsyncThunk(
+  "businesses/getMyMaterials",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/materials/my");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const businessSlice = createSlice({
   name: "businesses",
   initialState: {
@@ -94,6 +139,12 @@ const businessSlice = createSlice({
     currentPage: 1,
     isLoading: false,
     error: null,
+    // Material related state
+    materials: [],
+    approvedMaterials: [],
+    myMaterials: [],
+    materialLoading: false,
+    materialError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -165,6 +216,46 @@ const businessSlice = createSlice({
       .addCase(rejectBusiness.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+      })
+      // Material reducers
+      .addCase(createMaterial.pending, (state) => {
+        state.materialLoading = true;
+        state.materialError = null;
+      })
+      .addCase(createMaterial.fulfilled, (state, { payload }) => {
+        state.materialLoading = false;
+        state.materials.push(payload);
+        state.materialError = null;
+      })
+      .addCase(createMaterial.rejected, (state, { payload }) => {
+        state.materialLoading = false;
+        state.materialError = payload;
+      })
+      .addCase(getApprovedMaterials.pending, (state) => {
+        state.materialLoading = true;
+        state.materialError = null;
+      })
+      .addCase(getApprovedMaterials.fulfilled, (state, { payload }) => {
+        state.materialLoading = false;
+        state.approvedMaterials = payload.data || [];
+        state.materialError = null;
+      })
+      .addCase(getApprovedMaterials.rejected, (state, { payload }) => {
+        state.materialLoading = false;
+        state.materialError = payload;
+      })
+      .addCase(getMyMaterials.pending, (state) => {
+        state.materialLoading = true;
+        state.materialError = null;
+      })
+      .addCase(getMyMaterials.fulfilled, (state, { payload }) => {
+        state.materialLoading = false;
+        state.myMaterials = payload.data || [];
+        state.materialError = null;
+      })
+      .addCase(getMyMaterials.rejected, (state, { payload }) => {
+        state.materialLoading = false;
+        state.materialError = payload;
       });
   },
 });
