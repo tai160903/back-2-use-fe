@@ -7,6 +7,9 @@ import { logout } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import { getUserRole } from "../../utils/authUtils";
+
+import { IoMdNotificationsOutline } from "react-icons/io";
+import { IoIosLogOut } from "react-icons/io";
 export default function HeaderLog() {
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.user);
@@ -49,20 +52,29 @@ export default function HeaderLog() {
     <>
       <div className="header-log">
         <div className="header-log-container">
-          <div className="header-log-info">
-            <Avatar
-              src={userRole === "business" ? (userInfo?.businessLogo || userInfo?.avatar || "") : (userInfo?.avatar || "")}
-              alt={userRole === "business" ? (userInfo?.businessName || "Business") : (userInfo?.fullName || "User")}
-              sx={{
-                marginRight: 2,
-                cursor: "pointer",
-              }}
-            >
-       
-            </Avatar>
-            <div>
-              {userRole === "business" ? renderBusinessInfo() : renderCustomerInfo()}
+          <div className="header-log-left">
+            <div className="header-log-info">
+              <Avatar
+                src={userRole === "business" ? (userInfo?.businessLogo || userInfo?.avatar || "") : (userInfo?.avatar || "")}
+                alt={userRole === "business" ? (userInfo?.businessName || "Business") : (userInfo?.fullName || "User")}
+                sx={{
+                  marginRight: 2,
+                  cursor: "pointer",
+                }}
+              >
+         
+              </Avatar>
+              <div>
+                {userRole === "business" ? renderBusinessInfo() : renderCustomerInfo()}
+              </div>
             </div>
+          </div>
+          <div className="header-log-actions">
+            <div className="header-log-icon-notificate">
+              <IoMdNotificationsOutline />
+              <span className="notification-badge">3</span>
+            </div>
+            <IoIosLogOut className="header-log-icon" onClick={handleLogout} />
           </div>
         </div>
       </div>
