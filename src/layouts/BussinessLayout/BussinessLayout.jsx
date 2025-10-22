@@ -35,31 +35,7 @@ export default function BussinessLayout() {
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {/* Header cố định trên cùng với logo và toggle button */}
-      <div style={{ 
-        position: "fixed", 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        zIndex: 1201,
-        background: "#fff",
-        borderBottom: "1px solid #e0e0e0",
-        height: "84px", // 64px + 20px margin
-        display: "flex",
-        alignItems: "center",
-        padding: "0 20px"
-      }}>
-image.png        {/* Logo, ví và tên bên trái */}
-        <Box style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <IconButton onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <AiOutlineMenuFold /> : <AiOutlineMenuUnfold />}
-          </IconButton>
-          <img 
-            src={logoImage} 
-            alt="Back2Use Logo" 
-            style={{ height: "30px", width: "auto" }}
-          />
-          {isOpen && <span style={{ fontSize: "16px", fontWeight: "600", color: "#006c1d" }}>Back2Use</span>}
-        </Box>
+      <div >       
         
         {/* Thông tin user (avatar, tên, ví) ở giữa */}
         <div style={{ marginLeft: "20px" }}>
@@ -67,36 +43,13 @@ image.png        {/* Logo, ví và tên bên trái */}
         </div>
         
         {/* Nút thông báo và logout bên phải */}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "25px" }}>
-          <div style={{ position: "relative", display: "inline-block" }}>
-            <IoMdNotificationsOutline style={{ fontSize: "25px", cursor: "pointer" }} />
-            <span style={{
-              position: "absolute",
-              top: "-5px",
-              right: "-9px",
-              backgroundColor: "red",
-              color: "white",
-              borderRadius: "50%",
-              width: "16px",
-              height: "16px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              fontSize: "10px",
-              fontWeight: "bold"
-            }}>3</span>
-          </div>
-          <IoIosLogOut 
-            style={{ fontSize: "25px", cursor: "pointer" }} 
-            onClick={handleLogout}
-          />
-        </div>
+      
       </div>
 
-      <div style={{ display: "flex", flex: 1, position: "relative", marginTop: "84px" }}>
+      <div style={{ display: "flex", flex: 1 }}>
         {/* BusinessNavbar bên trái - cố định */}
         <BusinessNavbar
-          isOpen={isOpen}
+         onDrawerToggle={setIsOpen}
         />
 
         {/* Nội dung chính bên phải */}
@@ -106,8 +59,7 @@ image.png        {/* Logo, ví và tên bên trái */}
             marginLeft: isOpen ? "250px" : "70px",
             transition: "margin-left 0.3s",
             padding: "20px",
-            minHeight: "calc(100vh - 84px)", // Trừ đi chiều cao header
-            overflowY: "auto", // Cho phép scroll nội dung
+         
           }}
         >
           <Outlet />
