@@ -25,7 +25,15 @@ export default function ModalWallet({
     setAmount(value.toString());
   };
 
-  const isValidAmount = amount && parseFloat(amount) >= 10000; 
+  const isValidAmount = amount && parseFloat(amount) >= 10000;
+
+  const handleSubmitWithAmount = (e) => {
+    // Lưu số tiền nạp vào localStorage trước khi submit
+    if (action === "deposit" && amount) {
+      localStorage.setItem("depositAmount", amount);
+    }
+    handleSubmit(e);
+  }; 
 
   return (
     <Modal open={open} onClose={handleClose}>
@@ -46,7 +54,7 @@ export default function ModalWallet({
             </Alert>
           )}
         </div>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmitWithAmount}>
           <TextField
             label={`Amount (${currency})`}
             type="number"

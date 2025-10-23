@@ -2,12 +2,25 @@ import { Box, Container, Typography, Button, Paper, Divider } from "@mui/materia
 import { FaCheckCircle, FaHome, FaReceipt } from "react-icons/fa";
 import { MdAccountBalanceWallet } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getUserRole } from "../../../utils/authUtils";
+import { PATH } from "../../../routes/path";
 import "./CheckoutPayment.css";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
+  const [depositAmount, setDepositAmount] = useState("500,000");
+  
+  useEffect(() => {
+    const savedAmount = localStorage.getItem("depositAmount");
+    if (savedAmount) {
+      setDepositAmount(parseFloat(savedAmount).toLocaleString('vi-VN'));
+      localStorage.removeItem("depositAmount");
+    }
+  }, []);
+
   const transactionData = {
-    amount: "500,000",
+    amount: depositAmount,
     transactionId: "WLT20250109123456",
     date: "01/09/2025",
     time: "14:30:25",
@@ -15,6 +28,25 @@ export default function PaymentSuccess() {
     accountNumber: "**** **** **** 4532",
     transactionType: "Wallet Top-Up",
     walletBalance: "1,250,000",
+  };
+
+  const getWalletRoute = () => {
+    const userRole = getUserRole();
+    if (userRole === "business") {
+      return "/business/wallet";
+    }
+    return "/walllet_customer";
+  };
+
+
+  const getHomeRoute = () => {
+    const userRole = getUserRole();
+    console.log("Home route for role:", userRole); 
+    
+    if (userRole === "business") {
+      return "/business";
+    }
+    return "/";
   };
 
   return (
@@ -50,7 +82,7 @@ export default function PaymentSuccess() {
               </Typography>
             </Box>
 
-            <Box className="checkoutPayment-details-box">
+            {/* <Box className="checkoutPayment-details-box">
               <Box className="checkoutPayment-detail-row">
                 <Typography className="checkoutPayment-detail-label">
                   Current Wallet Balance
@@ -117,7 +149,7 @@ export default function PaymentSuccess() {
                   {transactionData.method}
                 </Typography>
               </Box>
-            </Box>
+            </Box> */}
 
             <Box
               sx={{ mt: 5, display: "flex", flexDirection: "row", gap: 2.5 }}
@@ -127,18 +159,18 @@ export default function PaymentSuccess() {
                 fullWidth
                 startIcon={<FaHome />}
                 className="checkoutPayment-button checkoutPayment-button-text"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(getHomeRoute())}
               >
-                Về trang chủ
+                Back to Home
               </Button>
               <Button
                 variant="outlined"
                 fullWidth
                 startIcon={<FaReceipt />}
                 className="checkoutPayment-button checkoutPayment-button-outlined checkoutPayment-button-outlined-success"
-                onClick={() => navigate("/transaction_history")}
+                onClick={() => navigate(getWalletRoute())}
               >
-                Xem lịch sử giao dịch
+                View Transaction History
               </Button>
             </Box>
           </Box>

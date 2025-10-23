@@ -50,8 +50,9 @@ export default function Registration() {
     setCurrentPage(1);
   };
 
-  const getFilteredData = (businesses) => {
-    let filtered = [...businesses];
+  // Hàm để lấy dữ liệu đã filter từ tất cả businesses
+  const getAllFilteredData = () => {
+    let filtered = [...allBusinesses];
     if (filter !== "All") {
       filtered = filtered.filter(
         (item) => item.status.toLowerCase() === filter.toLowerCase()
@@ -217,7 +218,10 @@ export default function Registration() {
             type="text"
             placeholder="Search by Business Name, Email, Phone Number"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="search-input"
           />
         </div>
@@ -257,11 +261,15 @@ export default function Registration() {
       {/* Business Cards */}
       {isLoading ? (
         renderLoadingState()
-      ) : getFilteredData(businesses).length === 0 ? (
+      ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
         <div className="registration-grid">
-          {getFilteredData(businesses).map((item) => (
+          {(() => {
+            const filteredData = getAllFilteredData();
+            const startIndex = (currentPage - 1) * 10;
+            const endIndex = startIndex + 10;
+            return filteredData.slice(startIndex, endIndex).map((item) => (
             <div key={item.id} className="registration-card">
               <div className="registration-card-header">
                 <div className="registration-card-info">
@@ -318,30 +326,35 @@ export default function Registration() {
                 </button>
               </div>
             </div>
-          ))}
+            ));
+          })()}
         </div>
       )}
 
       {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
-        <Stack
-          spacing={2}
-          className="mt-5 mb-5"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Pagination
-            count={totalPages}
-            page={currentPage}
-            onChange={handlePageChange}
-            variant="outlined"
-            shape="rounded"
-          />
-        </Stack>
-      )}
+      {!isLoading && (() => {
+        const filteredData = getAllFilteredData();
+        const filteredTotalPages = Math.ceil(filteredData.length / 10);
+        return filteredTotalPages > 1 && (
+          <Stack
+            spacing={2}
+            className="mt-5 mb-5"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Pagination
+              count={filteredTotalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              variant="outlined"
+              shape="rounded"
+            />
+          </Stack>
+        );
+      })()}
 
       <ModalRegistration
         open={openPopup}

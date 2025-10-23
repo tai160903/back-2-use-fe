@@ -11,12 +11,27 @@ import { MdError, MdRefresh } from "react-icons/md";
 import { FaHome, FaHeadset } from "react-icons/fa";
 import { IoMdInformationCircle } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getUserRole } from "../../../utils/authUtils";
+import { PATH } from "../../../routes/path";
 import "./CheckoutPayment.css";
 
 export default function PaymentFailure() {
   const navigate = useNavigate();
+  const [depositAmount, setDepositAmount] = useState("500,000");
+  
+  useEffect(() => {
+    // Lấy số tiền nạp từ localStorage
+    const savedAmount = localStorage.getItem("depositAmount");
+    if (savedAmount) {
+      setDepositAmount(parseFloat(savedAmount).toLocaleString('vi-VN'));
+      // Xóa số tiền đã lưu sau khi sử dụng
+      localStorage.removeItem("depositAmount");
+    }
+  }, []);
+
   const transactionData = {
-    amount: "500,000",
+    amount: depositAmount,
     transactionId: "WLT20250109123456",
     date: "01/09/2025",
     time: "14:30:25",
@@ -25,6 +40,26 @@ export default function PaymentFailure() {
     transactionType: "Wallet Top-Up",
     errorCode: "ERR_PAYMENT_DECLINED",
     errorMessage: "Transaction declined by the bank",
+  };
+
+  // Xác định trang hiện tại để điều hướng đúng
+  const getWalletRoute = () => {
+    const userRole = getUserRole();
+
+    
+    if (userRole === "business" || userRole === "bussiness") {
+      return "/wallet_business";
+    }
+    return "/wallet_customer";
+  };
+
+  // Xác định trang chủ theo role
+  const getHomeRoute = () => {
+    const userRole = getUserRole();
+    if (userRole === "business" || userRole === "bussiness") {
+      return PATH.BUSINESS;
+    }
+    return PATH.HOME;
   };
 
   return (
@@ -145,7 +180,7 @@ export default function PaymentFailure() {
                 fullWidth
                 startIcon={<MdRefresh />}
                 className="checkoutPayment-button checkoutPayment-button-failure"
-                onClick={() => navigate("/wallet_customer")}
+                onClick={() => navigate(getWalletRoute())}
               >
                 Thử nạp lại
               </Button>
@@ -155,7 +190,7 @@ export default function PaymentFailure() {
                 fullWidth
                 startIcon={<FaHome />}
                 className="checkoutPayment-button checkoutPayment-button-text"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(getHomeRoute())}
               >
                 Về trang chủ
               </Button>

@@ -12,30 +12,6 @@
   position: relative;
 }
 
-.circle-bg {
-  position: absolute;
-  top: 5rem;
-  right: 0;
-  width: 24rem;
-  height: 24rem;
-  background: linear-gradient(to bottom right, #a78bfa, #ec4899);
-  border-radius: 9999px;
-  opacity: 0.2;
-  transform: translateX(12rem) translateY(-6rem);
-}
-
-.circle-bg-2 {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 20rem;
-  height: 20rem;
-  background: linear-gradient(to top right, #fb923c, #ec4899);
-  border-radius: 9999px;
-  opacity: 0.2;
-  transform: translateX(-8rem) translateY(8rem);
-}
-
 .profile-content {
   display: flex;
   justify-content: center;
