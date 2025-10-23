@@ -4,7 +4,7 @@ import "../../Home/WalletCustomer/WalletCustomer.css";
 import { LuWallet } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
 import { FaMinus } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { MdAttachMoney } from "react-icons/md";
 import { Tabs, Tab, Box, Chip, Button } from "@mui/material";
@@ -15,10 +15,22 @@ import useWithdraw from "../../../hooks/useWithdraw";
 import { useUserInfo } from "../../../hooks/useUserInfo";
 import TabPanelRecent from "../../../components/TabPanelRecent/TabPanelRecent";
 import ModalWallet from "../../../components/ModalWallet/ModalWallet";
+import { useDispatch, useSelector } from "react-redux";
+import { getBusinessTransactionHistoryApi } from "../../../store/slices/walletSlice";
+import Pagination from "@mui/material/Pagination";
+import Stack from "@mui/material/Stack";
 
 
 export default function WalletBusiness() {
+  const dispatch = useDispatch();
   const { walletId, balance, isLoading: profileLoading } = useUserInfo();
+  
+  // Redux state for transaction history
+  const { 
+    transactionHistory, 
+    transactionTotalPages, 
+    isLoading: transactionLoading 
+  } = useSelector((state) => state.wallet);
 
   // hook
   const {
@@ -43,6 +55,8 @@ export default function WalletBusiness() {
   const [openAddFunds, setOpenAddFunds] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
   const [filter, setFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 3;
 
   const handleOpenAddFunds = () => {
     if (!walletId) {
@@ -71,55 +85,40 @@ export default function WalletBusiness() {
     setFilter(newFilter);
   };
 
-  // Fake data
-  const subscriptionsData = [
-    {
-      id: "TXN-SUB-001",
-      date: "05/01/2024",
-      type: "Wallet Balance",
-      description: "Premium Subscription Extension",
-      amount: "-29.990 VNĐ",
-      status: "completed",
-      duration: "1 month",
-    },
-    {
-      id: "TXN-WITH-001",
-      date: "10/01/2024",
-      type: "Bank Account",
-      description: "Wallet Withdrawal to Bank",
-      amount: "-50.000 VNĐ",
-      status: "processing",
-    },
-    {
-      id: "TXN-SUB-002",
-      date: "05/01/2024",
-      type: "Wallet Balance",
-      description: "Basic Plan Extension",
-      amount: "-15.990 VNĐ",
-      status: "completed",
-      duration: "1 month",
-    },
-  ];
+  // Load transaction history
+  useEffect(() => {
+    if (walletId) {
+      dispatch(getBusinessTransactionHistoryApi({ 
+        page: currentPage, 
+        limit
+      }));
+    }
+  }, [dispatch, walletId, currentPage, limit]);
 
-  const depositsData = [
-    {
-      id: "TXN-ADD-001",
-      date: "20/01/2024",
-      type: "Visa ****1234",
-      description: "Add Funds via Credit Card",
-      amount: "+100.000 VNĐ",
-      status: "completed",
-    },
-    {
-      id: "TXN-ADD-002",
-      date: "05/01/2024",
-      type: "PayPal",
-      description: "Add Funds via PayPal",
-      amount: "+75.000 VNĐ",
-      status: "completed",
-    },
-  ];
+  // Handle page change
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+  };
 
+  // Format transaction data
+  const formatTransactionData = (transactions) => {
+    return transactions.map(transaction => ({
+      id: transaction._id,
+      date: new Date(transaction.createdAt).toLocaleDateString('vi-VN'),
+      type: transaction.transactionType === 'deposit' ? 'VNPay' : 'Bank Account',
+      description: transaction.description,
+      amount: transaction.direction === 'in' 
+        ? `+${transaction.amount.toLocaleString('vi-VN')} VNĐ`
+        : `-${transaction.amount.toLocaleString('vi-VN')} VNĐ`,
+      status: transaction.status,
+      direction: transaction.direction,
+      transactionType: transaction.transactionType
+    }));
+  };
+
+  // Get real transaction data
+  const realTransactionData = transactionHistory ? formatTransactionData(transactionHistory) : [];
+  
   // Filter logic
   const getFilteredData = (data) => {
     if (filter === "All") return data;
@@ -233,40 +232,72 @@ export default function WalletBusiness() {
               >
                 <Button>{/* Placeholder for filter button if needed */}</Button>
               </div>
-              {getFilteredData(subscriptionsData).map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    p: 2,
-                    mb: 1,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "8px",
-                    backgroundColor:
-                      item.status === "completed" ? "#f5f5f5" : "#fff",
-                  }}
-                >
-                  <Box>
-                    <Typography variant="body1">{item.description}</Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {item.date} {item.type}{" "}
-                      {item.status === "completed" && "completed"}
-                      {item.duration && ` - Duration: ${item.duration}`}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      ID: {item.id}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    variant="body1"
-                    color={item.amount.startsWith("-") ? "error" : "success"}
-                  >
-                    {item.amount}
-                  </Typography>
-                </Box>
-              ))}
+              {transactionLoading ? (
+                <div style={{ textAlign: "center", padding: "20px" }}>
+                  <Typography>Loading transactions...</Typography>
+                </div>
+              ) : (
+                <>
+                  {getFilteredData(realTransactionData).map((item) => (
+                    <Box
+                      key={item.id}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        p: 2,
+                        mb: 1,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        backgroundColor:
+                          item.status === "completed" ? "#f5f5f5" : "#fff",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body1">{item.description}</Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          {item.date} {item.type}{" "}
+                          {item.status === "completed" && "completed"}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          ID: {item.id}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="body1"
+                        color={item.direction === "out" ? "error" : "success"}
+                        sx={{ 
+                          fontWeight: "bold",
+                          color: item.direction === "out" ? "#d32f2f" : "#2e7d32"
+                        }}
+                      >
+                        {item.amount}
+                      </Typography>
+                    </Box>
+                  ))}
+                  
+                  {/* Pagination */}
+                  {transactionTotalPages > 1 && (
+                    <Stack
+                      spacing={2}
+                      className="mt-4"
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Pagination
+                        count={transactionTotalPages}
+                        page={currentPage}
+                        onChange={handlePageChange}
+                        variant="outlined"
+                        shape="rounded"
+                      />
+                    </Stack>
+                  )}
+                </>
+              )}
             </TabPanelRecent>
             <TabPanelRecent value={value} index={1}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -289,39 +320,72 @@ export default function WalletBusiness() {
                   sx={{ cursor: "pointer" }}
                 />
               </Box>
-              {getFilteredData(depositsData).map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    p: 2,
-                    mb: 1,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "8px",
-                    backgroundColor:
-                      item.status === "completed" ? "#f5f5f5" : "#fff",
-                  }}
-                >
-                  <Box>
-                    <Typography variant="body1">{item.description}</Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {item.date} {item.type}{" "}
-                      {item.status === "completed" && "completed"}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      ID: {item.id}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    variant="body1"
-                    color={item.amount.startsWith("-") ? "error" : "success"}
-                  >
-                    {item.amount}
-                  </Typography>
-                </Box>
-              ))}
+              {transactionLoading ? (
+                <div style={{ textAlign: "center", padding: "20px" }}>
+                  <Typography>Loading transactions...</Typography>
+                </div>
+              ) : (
+                <>
+                  {getFilteredData(realTransactionData).map((item) => (
+                    <Box
+                      key={item.id}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        p: 2,
+                        mb: 1,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        backgroundColor:
+                          item.status === "completed" ? "#f5f5f5" : "#fff",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body1">{item.description}</Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          {item.date} {item.type}{" "}
+                          {item.status === "completed" && "completed"}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          ID: {item.id}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="body1"
+                        color={item.direction === "out" ? "error" : "success"}
+                        sx={{ 
+                          fontWeight: "bold",
+                          color: item.direction === "out" ? "#d32f2f" : "#2e7d32"
+                        }}
+                      >
+                        {item.amount}
+                      </Typography>
+                    </Box>
+                  ))}
+                  
+                  {/* Pagination */}
+                  {transactionTotalPages > 1 && (
+                    <Stack
+                      spacing={2}
+                      className="mt-4"
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Pagination
+                        count={transactionTotalPages}
+                        page={currentPage}
+                        onChange={handlePageChange}
+                        variant="outlined"
+                        shape="rounded"
+                      />
+                    </Stack>
+                  )}
+                </>
+              )}
             </TabPanelRecent>
           </div>
         </div>

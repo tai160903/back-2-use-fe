@@ -32,13 +32,46 @@ export const withdrawMoneyApi = createAsyncThunk(
   }
 );
 
+// get transaction history
+export const getTransactionHistoryApi = createAsyncThunk(
+  "wallet/getTransactionHistoryApi",
+  async({page,limit,typeGroup = "personal"}, {rejectWithValue}) => {
+    try {
+      const response = await fetcher.get(`/wallet-transactions/my?typeGroup=${typeGroup}&page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+)
+
+// get business transaction history
+export const getBusinessTransactionHistoryApi = createAsyncThunk(
+  "wallet/getBusinessTransactionHistoryApi",
+  async({page,limit}, {rejectWithValue}) => {
+    try {
+      const response = await fetcher.get(`/wallet-transactions/my?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+)
+
 const walletSlice = createSlice({
   name: "wallet",
   initialState: {
     wallet: null,
     isLoading: false,
     error: null,
+    totalPages: 0,
+    total: 0,
+    currentPage: 1,
     depositResult: null,
+    transactionHistory: [],
+    transactionTotalPages: 0,
+    transactionTotal: 0,
+    transactionCurrentPage: 1,
   },
   reducers: {
     clearDepositResult: (state) => {
@@ -73,6 +106,38 @@ const walletSlice = createSlice({
       .addCase(withdrawMoneyApi.rejected, (state, {payload}) => {
         state.isLoading = false;
         state.error = payload
+      })
+      .addCase(getTransactionHistoryApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getTransactionHistoryApi.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.transactionHistory = payload.data;
+        state.transactionTotalPages = payload.totalPages;
+        state.transactionTotal = payload.total;
+        state.transactionCurrentPage = payload.currentPage;
+      })
+      .addCase(getTransactionHistoryApi.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(getBusinessTransactionHistoryApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessTransactionHistoryApi.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.transactionHistory = payload.data;
+        state.transactionTotalPages = payload.totalPages;
+        state.transactionTotal = payload.total;
+        state.transactionCurrentPage = payload.currentPage;
+      })
+      .addCase(getBusinessTransactionHistoryApi.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload;
       })
   },
 });

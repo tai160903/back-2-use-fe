@@ -4,7 +4,7 @@ import "./WalletCustomer.css";
 import { LuWallet } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
 import { FaMinus } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { MdAttachMoney } from "react-icons/md";
 import { Tabs, Tab, Box, Chip, Button } from "@mui/material";
@@ -14,10 +14,24 @@ import { useUserInfo } from "../../../hooks/useUserInfo";
 import useDeposit from "../../../hooks/useDeposit";
 import useWithdraw from "../../../hooks/useWithdraw";
 import TabPanelRecent from "../../../components/TabPanelRecent/TabPanelRecent";
-import ModalWallet from "../../../components/ModalWallet/ModalWallet"
+import ModalWallet from "../../../components/ModalWallet/ModalWallet";
+import { useDispatch, useSelector } from "react-redux";
+import { getTransactionHistoryApi } from "../../../store/slices/walletSlice";
+import Pagination from "@mui/material/Pagination";
+import Stack from "@mui/material/Stack";
 
 export default function WalletCustomer() {
+  const dispatch = useDispatch();
   const { walletId, balance, isLoading: profileLoading } = useUserInfo();
+  
+  // Redux state for transaction history
+  const { 
+    transactionHistory, 
+    transactionTotalPages, 
+    transactionTotal, 
+    transactionCurrentPage,
+    isLoading: transactionLoading 
+  } = useSelector((state) => state.wallet);
 
   // hook
   const {
@@ -42,6 +56,8 @@ export default function WalletCustomer() {
   const [openAddFunds, setOpenAddFunds] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
   const [filter, setFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 3;
 
   const handleOpenAddFunds = () => {
     if (!walletId) {
@@ -68,6 +84,38 @@ export default function WalletCustomer() {
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
+  };
+
+  // Load transaction history
+  useEffect(() => {
+    if (walletId) {
+      dispatch(getTransactionHistoryApi({ 
+        page: currentPage, 
+        limit, 
+        typeGroup: "personal" 
+      }));
+    }
+  }, [dispatch, walletId, currentPage, limit]);
+
+  // Handle page change
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  // Format transaction data
+  const formatTransactionData = (transactions) => {
+    return transactions.map(transaction => ({
+      id: transaction._id,
+      date: new Date(transaction.createdAt).toLocaleDateString('vi-VN'),
+      type: transaction.transactionType === 'deposit' ? 'VNPay' : 'Bank Account',
+      description: transaction.description,
+      amount: transaction.direction === 'in' 
+        ? `+${transaction.amount.toLocaleString('vi-VN')} VNĐ`
+        : `-${transaction.amount.toLocaleString('vi-VN')} VNĐ`,
+      status: transaction.status,
+      direction: transaction.direction,
+      transactionType: transaction.transactionType
+    }));
   };
 
   // Fake data
@@ -119,6 +167,9 @@ export default function WalletCustomer() {
     },
   ];
 
+  // Get real transaction data
+  const realTransactionData = transactionHistory ? formatTransactionData(transactionHistory) : [];
+  
   // Filter logic
   const getFilteredData = (data) => {
     if (filter === "All") return data;
@@ -232,40 +283,72 @@ export default function WalletCustomer() {
               >
                 <Button>{/* Placeholder for filter button if needed */}</Button>
               </div>
-              {getFilteredData(subscriptionsData).map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    p: 2,
-                    mb: 1,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "8px",
-                    backgroundColor:
-                      item.status === "completed" ? "#f5f5f5" : "#fff",
-                  }}
-                >
-                  <Box>
-                    <Typography variant="body1">{item.description}</Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {item.date} {item.type}{" "}
-                      {item.status === "completed" && "completed"}
-                      {item.duration && ` - Duration: ${item.duration}`}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      ID: {item.id}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    variant="body1"
-                    color={item.amount.startsWith("-") ? "error" : "success"}
-                  >
-                    {item.amount}
-                  </Typography>
-                </Box>
-              ))}
+              {transactionLoading ? (
+                <div style={{ textAlign: "center", padding: "20px" }}>
+                  <Typography>Loading transactions...</Typography>
+                </div>
+              ) : (
+                <>
+                  {getFilteredData(realTransactionData).map((item) => (
+                    <Box
+                      key={item.id}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        p: 2,
+                        mb: 1,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        backgroundColor:
+                          item.status === "completed" ? "#f5f5f5" : "#fff",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body1">{item.description}</Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          {item.date} {item.type}{" "}
+                          {item.status === "completed" && "completed"}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          ID: {item.id}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="body1"
+                        color={item.direction === "out" ? "error" : "success"}
+                        sx={{ 
+                          fontWeight: "bold",
+                          color: item.direction === "out" ? "#d32f2f" : "#2e7d32"
+                        }}
+                      >
+                        {item.amount}
+                      </Typography>
+                    </Box>
+                  ))}
+                  
+                  {/* Pagination */}
+                  {transactionTotalPages > 1 && (
+                    <Stack
+                      spacing={2}
+                      className="mt-4"
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Pagination
+                        count={transactionTotalPages}
+                        page={currentPage}
+                        onChange={handlePageChange}
+                        variant="outlined"
+                        shape="rounded"
+                      />
+                    </Stack>
+                  )}
+                </>
+              )}
             </TabPanelRecent>
             <TabPanelRecent value={value} index={1}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>

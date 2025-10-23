@@ -28,6 +28,8 @@ const schema = yup
       .required("Phone number is required."),
     businessType: yup.string().required("Business type is required."),
     taxCode: yup.string().required("Tax code is required."),
+    openTime: yup.string().required("Opening time is required."),
+    closeTime: yup.string().required("Closing time is required."),
   })
   .required();
 
@@ -93,6 +95,8 @@ function RegisterBussiness() {
       formData.append("businessAddress", selectedAddress); // Use address from map
       formData.append("businessPhone", data.businessPhone);
       formData.append("taxCode", data.taxCode);
+      formData.append("openTime", data.openTime);
+      formData.append("closeTime", data.closeTime);
       
       // Add coordinates if available (only from map, not from dropdown)
       if (selectedCoordinates) {
@@ -132,7 +136,7 @@ function RegisterBussiness() {
                     Registration Successful
                   </Typography>
                   <Typography variant="body1" className="registerBusiness-welcome-description">
-                    Đăng ký thành công chờ hệ thống phê duyệt
+                   Register successfully, please wait for system approval
                   </Typography>
                 </>
               ) : (
@@ -217,6 +221,34 @@ function RegisterBussiness() {
                       {...register("taxCode")}
                       error={!!errors.taxCode}
                       helperText={errors.taxCode?.message}
+                    />
+                    
+                    <TextField
+                      className="registerBusinessForm"
+                      id="openTime"
+                      label="Opening Time *"
+                      variant="outlined"
+                      type="time"
+                      {...register("openTime")}
+                      error={!!errors.openTime}
+                      helperText={errors.openTime?.message}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                    />
+                    
+                    <TextField
+                      className="registerBusinessForm"
+                      id="closeTime"
+                      label="Closing Time *"
+                      variant="outlined"
+                      type="time"
+                      {...register("closeTime")}
+                      error={!!errors.closeTime}
+                      helperText={errors.closeTime?.message}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
                     />
                   </div>
                 </div>
