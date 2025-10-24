@@ -8,9 +8,11 @@ import MapView from "../../../components/MapView/MapView";
 import { useNavigate } from "react-router-dom"; 
 import { PATH } from "../../../routes/path";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllStoreApi } from "../../../store/slices/storeSilce";
+import { getAllStoreApi, getNearbyStores } from "../../../store/slices/storeSilce";
+import { FormControl, InputLabel, Select, MenuItem, Box, Pagination, Stack, TextField } from "@mui/material";
 
-// Hàm chuyển đổi dữ liệu từ API sang format phù hợp
+
+// render store data
 const transformStoreData = (apiStores) => {
   return apiStores.map(store => ({
     id: store._id,
@@ -44,17 +46,17 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 export default function ListStore() {
   const dispatch = useDispatch();
-  const { stores, isLoading, error } = useSelector((state) => state.store);
-  
-  useEffect(() => {
-    dispatch(getAllStoreApi());
-  }, [dispatch]);
-  
+  const { allStores: storeAllStores, nearbyStores: storeNearbyStores, isLoadingNearby, error } = useSelector((state) => state.store);
   const navigate = useNavigate();
-  const [userLocation, setUserLocation] = useState([10.762621, 106.660172]);
-  const [filteredStores, setFilteredStores] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [allStores, setAllStores] = useState([]); 
+  const [nearbyStores, setNearbyStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [directionTo, setDirectionTo] = useState(null);
+  const [selectedRadius, setSelectedRadius] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const itemsPerPage = 3; 
   
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -68,20 +70,53 @@ export default function ListStore() {
   navigate(PATH.STOREDETAIL.replace(":id", store.id));
 };
 
+  // Load tất cả stores cho map
+  useEffect(() => {
+    dispatch(getAllStoreApi());
+  }, [dispatch]);
+
   // Lấy vị trí user
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-      (err) => console.error(err)
+      (pos) => {
+        const newLocation = [pos.coords.latitude, pos.coords.longitude];
+        setUserLocation(newLocation);
+      },
+      () => {
+        // Xử lý lỗi geolocation nếu cần
+      }
     );
   }, []);
 
-  // Cập nhật stores với khoảng cách
+  // Load nearby stores khi có vị trí và khoảng cách
   useEffect(() => {
-    if (!stores || !stores.length) return;
+    if (!userLocation) {
+      return;
+    }
     
-    const transformedStores = transformStoreData(stores);
+    const radiusInMeters = selectedRadius * 1000; // Chuyển từ km sang mét
+    
+    dispatch(getNearbyStores({
+      latitude: userLocation[0],
+      longitude: userLocation[1],
+      radius: radiusInMeters, // Gửi bằng mét
+      page: 1,
+      limit: 50
+    }));
+  }, [dispatch, userLocation, selectedRadius]);
+
+  // Cập nhật allStores cho map
+  useEffect(() => {
+    if (!storeAllStores || !storeAllStores.length) return;
+    
+    const transformedStores = transformStoreData(storeAllStores);
+    
+    // Nếu chưa có vị trí user, chỉ set stores không có distance
+    if (!userLocation) {
+      setAllStores(transformedStores);
+      return;
+    }
     
     let storesWithDistance = transformedStores.map((store) => ({
       ...store,
@@ -93,8 +128,88 @@ export default function ListStore() {
       ),
     }));
     
-    setFilteredStores(storesWithDistance);
-  }, [userLocation, stores]);
+    setAllStores(storesWithDistance);
+  }, [storeAllStores, userLocation]);
+
+  // Cập nhật nearbyStores cho danh sách
+  useEffect(() => {
+    if (!storeNearbyStores || !storeNearbyStores.length) {
+      setNearbyStores([]); // Set empty array khi không có stores từ API
+      return;
+    }
+    
+    const transformedStores = transformStoreData(storeNearbyStores);
+    
+    // Nếu chưa có vị trí user, chỉ set stores không có distance
+    if (!userLocation) {
+      setNearbyStores(transformedStores);
+      return;
+    }
+    
+    let storesWithDistance = transformedStores.map((store) => ({
+      ...store,
+      distance: calculateDistance(
+        userLocation[0],
+        userLocation[1],
+        store.coords[0],
+        store.coords[1]
+      ),
+    }));
+    
+    setNearbyStores(storesWithDistance);
+  }, [storeNearbyStores, userLocation, selectedRadius]);
+
+  // Hàm xử lý khi người dùng thay đổi khoảng cách
+  const handleRadiusChange = (event) => {
+    const newRadius = event.target.value;
+    setSelectedRadius(newRadius);
+    setCurrentPage(1); 
+    setNearbyStores([]); 
+  };
+
+  // Hàm xử lý khi người dùng search
+  const handleSearchChange = (event) => {
+    const newSearchTerm = event.target.value;
+    setSearchTerm(newSearchTerm);
+    setCurrentPage(1); 
+  };
+
+  // Logic filter stores theo search term
+  const getFilteredStores = () => {
+    if (!searchTerm.trim()) {
+      return nearbyStores; // Không có search term, trả về nearby stores theo khoảng cách
+    }
+    
+    // Khi có search term, search trong tất cả stores (không áp dụng filter khoảng cách)
+    return allStores.filter(store => 
+      store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      store.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      store.businessType?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  // Logic phân trang
+  const getPaginatedStores = () => {
+    const filteredStores = getFilteredStores();
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredStores.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(getFilteredStores().length / itemsPerPage);
+
+  // Hàm xử lý chuyển trang
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  // Xác định stores nào để hiển thị trên map
+  const getStoresForMap = () => {
+    if (searchTerm.trim()) {
+      return getFilteredStores();
+    }
+    return nearbyStores.length > 0 ? nearbyStores : allStores;
+  };
 
   return (
     <>
@@ -126,8 +241,8 @@ export default function ListStore() {
             {/* Map */}
             <div className="store-map">
               <MapView
-                userLocation={userLocation}
-                stores={filteredStores}
+                userLocation={userLocation || [10.762621, 106.660172]} 
+                stores={getStoresForMap()}
                 selectedStore={selectedStore}
                 setSelectedStore={setSelectedStore}
                 directionTo={directionTo}
@@ -144,21 +259,59 @@ export default function ListStore() {
                   </Typography>
                   <span>Click on map markers to view details</span>
                 </div>
+                
+                {/* Distance Selector và Search */}
+                <Box sx={{ 
+                  marginBottom: "16px", 
+                  marginTop: "12px",
+                  display: "flex",
+                  gap: 2,
+                  alignItems: "center"
+                }}>
+                  <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <InputLabel>Khoảng cách</InputLabel>
+                    <Select
+                      value={selectedRadius}
+                      label="Khoảng cách" 
+                      onChange={handleRadiusChange}
+                    >
+                      <MenuItem value={1}>1 km</MenuItem>
+                      <MenuItem value={3}>3 km</MenuItem>
+                      <MenuItem value={5}>5 km</MenuItem>
+                      <MenuItem value={10}>10 km</MenuItem>
+                      <MenuItem value={15}>15 km</MenuItem>
+                      <MenuItem value={20}>20 km</MenuItem>
+                    </Select>
+                  </FormControl>
+                  
+                  <TextField
+                    size="small"
+                    placeholder="Tìm kiếm store..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    sx={{ minWidth: 250 }}
+                  />
+                </Box>
                 <div className="store-nearby-list">
-                  {isLoading ? (
+                  {isLoadingNearby ? (
                     <div style={{ textAlign: 'center', padding: '20px' }}>
-                      <Typography>Loading...</Typography>
+                      <Typography>Loading nearby stores...</Typography>
                     </div>
                   ) : error ? (
                     <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
                       <Typography>Error when loading data: {error}</Typography>
                     </div>
-                  ) : filteredStores.length === 0 ? (
+                  ) : getFilteredStores().length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '20px' }}>
-                      <Typography>No store found</Typography>
+                      <Typography>
+                        {searchTerm.trim() 
+                          ? `Không tìm thấy store nào với từ khóa "${searchTerm}"` 
+                          : `No store found within ${selectedRadius}km`
+                        }
+                      </Typography>
                     </div>
                   ) : (
-                    filteredStores.map((store) => {
+                    getPaginatedStores().map((store) => {
                     const visibleProducts = store.products.slice(0, 2);
                     const extraCount =
                       store.products.length > 2 ? store.products.length - 2 : 0;
@@ -208,7 +361,7 @@ export default function ListStore() {
                                 padding: "2px 8px",
                               }}
                             >
-                              {store.distance?.toFixed(1)} km
+                              {store.distance ? `${store.distance.toFixed(1)} km` : "N/A"}
                             </div>
                           </div>
                           <span
@@ -259,6 +412,28 @@ export default function ListStore() {
                   })
                   )}
                 </div>
+                
+                {/* Pagination */}
+                {getFilteredStores().length > 0 && totalPages > 1 && (
+                  <Stack
+                    spacing={2}
+                    className="mt-3 mb-3"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={handlePageChange}
+                      variant="outlined"
+                      shape="rounded"
+                      size="small"
+                    />
+                  </Stack>
+                )}
               </div>
 
               {/* Legend */}

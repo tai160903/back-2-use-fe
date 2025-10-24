@@ -7,6 +7,22 @@ import Button from "@mui/material/Button";
 import { IoEyeOutline } from "react-icons/io5";
 import Typography from "@mui/material/Typography";
 import "leaflet-routing-machine";
+import { RiPinDistanceFill } from "react-icons/ri";
+
+// Hàm tính khoảng cách Haversine
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; 
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 const defaultIcon = new L.Icon({
   iconUrl: "https://vectorified.com/images/google-maps-marker-icon-38.png",
@@ -110,6 +126,24 @@ export default function MapView({
               <Typography className="leaflet-popup-content-address">
                 {store.address}
               </Typography>
+              {userLocation && (
+                <Typography className="leaflet-popup-content-distance" style={{ 
+                  fontSize: "14px", 
+                  color: "#666", 
+                  marginBottom: "20px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                
+                }}>
+                  <RiPinDistanceFill style={{ marginRight: "10px", fontSize: "20px" }}/> Distance: {calculateDistance(
+                    userLocation[0], 
+                    userLocation[1], 
+                    store.coords[0], 
+                    store.coords[1]
+                  ).toFixed(1)} km
+                </Typography>
+              )}
               <Typography className="leaflet-popup-content-daily">
                 <GoClock style={{ marginRight: "10px" }} />
                 Daily: {store.daily}
