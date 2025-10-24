@@ -1,0 +1,95 @@
+.subscription-confirm-modal {
+  .MuiDialog-paper {
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.modal-title {
+  background: linear-gradient(135deg, #008000, #00a000);
+  color: white;
+  padding: 20px 24px;
+  margin: 0;
+  
+  .crown-icon {
+    color: #ffd700;
+    font-size: 1.5rem;
+  }
+}
+
+.modal-content {
+  padding: 24px;
+  
+  .subscription-info {
+    text-align: center;
+    margin-bottom: 20px;
+    
+    .package-name {
+      color: #008000;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .package-duration {
+      color: #666;
+      margin-bottom: 12px;
+    }
+    
+    .package-price {
+      color: #008000;
+      font-weight: bold;
+    }
+  }
+  
+  .divider {
+    margin: 20px 0;
+    border-color: #e0e0e0;
+  }
+  
+  .balance-check {
+    .wallet-icon {
+      color: #008000;
+      font-size: 1.2rem;
+    }
+    
+    .insufficient-balance {
+      margin-top: 12px;
+      padding: 12px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      
+      .warning-icon {
+        color: #f39c12;
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+.modal-actions {
+  padding: 16px 24px;
+  gap: 12px;
+  
+  .confirm-button {
+    background-color: #008000;
+    color: white;
+    
+    &:hover {
+      background-color: #006600;
+    }
+    
+    &:disabled {
+      background-color: #ccc;
+    }
+  }
+  
+  .go-to-wallet-button {
+    background-color: #f39c12;
+    color: white;
+    
+    &:hover {
+      background-color: #e67e22;
+    }
+  }
+}
