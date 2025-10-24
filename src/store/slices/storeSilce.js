@@ -23,19 +23,6 @@ export const getNearbyStores = createAsyncThunk(
     "store/getNearbyStores",
     async({ latitude, longitude, radius, page, limit}, {rejectWithValue}) => {
         try {
-            // Bước 1: Lấy vị trí hiện tại của user
-            const position = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => resolve(pos),
-                    (err) => reject(err),
-                    {
-                        enableHighAccuracy: true, 
-                        timeout: 10000,           
-                        maximumAge: 60000         
-                    }
-                );
-            });
-            const {latitude, longitude} = position.coords;
             const response = await fetcher.get(`/businesses/nearby?longitude=${longitude}&latitude=${latitude}&radius=${radius}&page=${page}&limit=${limit}`)
             return response.data;
         } catch (error) {
@@ -50,11 +37,13 @@ export const getNearbyStores = createAsyncThunk(
 const storeSlice = createSlice({
 name: "store",
 initialState: {
-    stores: [],
+    allStores: [], // Tất cả stores từ getAllStoreApi
+    nearbyStores: [], // Stores gần đây từ getNearbyStores
     totalPages: 0,
     total: 0,
     currentPage: 1,
     isLoading: false,
+    isLoadingNearby: false, // Loading riêng cho nearby stores
     error: null,
 },
 reducers: {
@@ -68,7 +57,7 @@ extraReducers: (builder) => {
     .addCase(getAllStoreApi.fulfilled, (state, {payload}) => {
         state.isLoading = false;
         state.error = null;
-        state.stores = payload.data;
+        state.allStores = payload.data;
         state.totalPages = payload.totalPages;
         state.total = payload.total;
         state.currentPage = payload.currentPage;
@@ -78,18 +67,18 @@ extraReducers: (builder) => {
         state.error = payload;
     })
     .addCase(getNearbyStores.pending, (state) => {
-        state.isLoading = true;
+        state.isLoadingNearby = true;
         state.error = null;
     })
     .addCase(getNearbyStores.fulfilled, (state, {payload}) => {
-        state.isLoading = false;
-        state.stores = payload.data;
+        state.isLoadingNearby = false;
+        state.nearbyStores = payload.data;
         state.totalPages = payload.totalPages || 0;
         state.total = payload.total || 0;
         state.currentPage = payload.currentPage || 1;
     })
     .addCase(getNearbyStores.rejected, (state, {payload}) => {
-        state.isLoading = false;
+        state.isLoadingNearby = false;
         state.error = payload;
     })
 }
