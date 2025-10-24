@@ -133,7 +133,7 @@ const businessSlice = createSlice({
   initialState: {
     businessesConfirmation: [],
     businesses: [],
-    allBusinesses: [], // Tất cả business để tính thống kê
+    allBusinesses: [], 
     totalPages: 0,
     total: 0,
     currentPage: 1,

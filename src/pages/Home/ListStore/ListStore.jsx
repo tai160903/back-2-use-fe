@@ -2,51 +2,30 @@
 import Typography from "@mui/material/Typography";
 import "./ListStore.css";
 
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import { IoIosSearch } from "react-icons/io";
-import MenuItem from "@mui/material/MenuItem";
 import storeImg1 from "../../../assets/image/item1.jpg";
-import storeImg2 from "../../../assets/image/item2.jpg";
-import storeImg3 from "../../../assets/image/item3.png";
 import { useEffect, useState } from "react";
 import MapView from "../../../components/MapView/MapView";
 import { useNavigate } from "react-router-dom"; 
 import { PATH } from "../../../routes/path";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllStoreApi } from "../../../store/slices/storeSilce";
 
-// Mock data chung
-const mockStores = [
-  {
-    id: 1,
-    name: "Green Café Downtown",
-    address: "1262 Kha Vạn Cân, Thủ Đức, TP.HCM",
-    coords: [10.8565, 106.7709],
-    products: ["cup", "container", "bottle"],
-    daily: "9AM - 8PM",
-    image: storeImg1,
-    rating: 4.8,
-  },
-  {
-    id: 2,
-    name: "Eco Coffee Shop",
-    address: "456 River Rd, Uptown, City 67890",
-    coords: [10.768, 106.673],
-    products: ["cup"],
-    daily: "9AM - 8PM",
-    image: storeImg2,
-    rating: 4.5,
-  },
-  {
-    id: 3,
-    name: "Urban Reuse Hub",
-    address: "33 Nguyen Hue Blvd, District 1, HCMC",
-    coords: [10.775, 106.702],
-    products: ["container", "bottle"],
-    daily: "8AM - 9PM",
-    image: storeImg3,
-    rating: 4.9,
-  },
-];
+// Hàm chuyển đổi dữ liệu từ API sang format phù hợp
+const transformStoreData = (apiStores) => {
+  return apiStores.map(store => ({
+    id: store._id,
+    name: store.businessName,
+    address: store.businessAddress,
+    coords: store.location?.coordinates ? [store.location.coordinates[1], store.location.coordinates[0]] : [10.762621, 106.660172], // [lat, lng]
+    products: ["cup", "container", "bottle"], // Default products
+    daily: `${store.openTime || '08:00'} - ${store.closeTime || '22:00'}`,
+    image: store.businessLogoUrl || storeImg1,
+    rating: 4.5, // Default rating
+    businessType: store.businessType,
+    phone: store.businessPhone,
+    isActive: store.isActive
+  }));
+};
 
 // Hàm tính khoảng cách Haversine
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -64,15 +43,19 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 export default function ListStore() {
+  const dispatch = useDispatch();
+  const { stores, isLoading, error } = useSelector((state) => state.store);
+  
+  useEffect(() => {
+    dispatch(getAllStoreApi());
+  }, [dispatch]);
+  
   const navigate = useNavigate();
   const [userLocation, setUserLocation] = useState([10.762621, 106.660172]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [distanceFilter, setDistanceFilter] = useState(Infinity);
-  const [filteredStores, setFilteredStores] = useState(mockStores);
+  const [filteredStores, setFilteredStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [directionTo, setDirectionTo] = useState(null);
-  const [maxDistanceOpt, setMaxDistanceOpt] = useState("Any");
-  const [ratingFilter, setRatingFilter] = useState("Any");
+  
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -94,27 +77,24 @@ export default function ListStore() {
     );
   }, []);
 
-  // Cập nhật filteredStores
+  // Cập nhật stores với khoảng cách
   useEffect(() => {
-    let stores = mockStores
-      .map((store) => ({
-        ...store,
-        distance: calculateDistance(
-          userLocation[0],
-          userLocation[1],
-          store.coords[0],
-          store.coords[1]
-        ),
-      }))
-      .filter((store) => store.distance < distanceFilter)
-      .filter(
-        (store) =>
-          store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          store.address.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .filter((store) => (ratingFilter === "Any" ? true : store.rating >= parseFloat(ratingFilter)));
-    setFilteredStores(stores);
-  }, [searchQuery, distanceFilter, ratingFilter, userLocation]);
+    if (!stores || !stores.length) return;
+    
+    const transformedStores = transformStoreData(stores);
+    
+    let storesWithDistance = transformedStores.map((store) => ({
+      ...store,
+      distance: calculateDistance(
+        userLocation[0],
+        userLocation[1],
+        store.coords[0],
+        store.coords[1]
+      ),
+    }));
+    
+    setFilteredStores(storesWithDistance);
+  }, [userLocation, stores]);
 
   return (
     <>
@@ -164,64 +144,21 @@ export default function ListStore() {
                   </Typography>
                   <span>Click on map markers to view details</span>
                 </div>
-                {/* Filters and search inside Nearby box */}
-                <div className="nearby-controls">
-                  <div className="filter-bar inside">
-                    <div className="filters-left">
-                      <TextField
-                        className="filter-select"
-                        select
-                        label="Rating"
-                        value={ratingFilter}
-                        onChange={(e) => setRatingFilter(e.target.value)}
-                        size="small"
-                      >
-                        {['Any','3','4','4.5','5'].map((opt) => (
-                          <MenuItem key={opt} value={opt}>{opt === 'Any' ? 'Any rating' : `${opt}+ stars`}</MenuItem>
-                        ))}
-                      </TextField>
-
-                      <TextField
-                        className="filter-select"
-                        select
-                        label="Max Distance"
-                        value={maxDistanceOpt}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setMaxDistanceOpt(v);
-                          if (v === 'Any') setDistanceFilter(Infinity);
-                          else if (v === '1 km') setDistanceFilter(1);
-                          else if (v === '2 km') setDistanceFilter(2);
-                          else if (v === '5 km') setDistanceFilter(5);
-                        }}
-                        size="small"
-                      >
-                        {['Any','1 km','2 km','5 km'].map((opt) => (
-                          <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                        ))}
-                      </TextField>
-                    </div>
-                  </div>
-
-                  <div className="nearby-search">
-                    <TextField
-                      placeholder="Search for location or store name..."
-                      variant="outlined"
-                      fullWidth
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <IoIosSearch size={20} color="#666" />
-                          </InputAdornment>
-                        ),
-                        size: 'small'
-                      }}
-                    />
-                  </div>
-                </div>
                 <div className="store-nearby-list">
-                  {filteredStores.map((store) => {
+                  {isLoading ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                      <Typography>Loading...</Typography>
+                    </div>
+                  ) : error ? (
+                    <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
+                      <Typography>Error when loading data: {error}</Typography>
+                    </div>
+                  ) : filteredStores.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                      <Typography>No store found</Typography>
+                    </div>
+                  ) : (
+                    filteredStores.map((store) => {
                     const visibleProducts = store.products.slice(0, 2);
                     const extraCount =
                       store.products.length > 2 ? store.products.length - 2 : 0;
@@ -319,7 +256,8 @@ export default function ListStore() {
                         </div>
                       </div>
                     );
-                  })}
+                  })
+                  )}
                 </div>
               </div>
 

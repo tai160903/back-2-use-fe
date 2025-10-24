@@ -126,6 +126,21 @@ export const deleteSubscriptionFeature = createAsyncThunk(
   }
 )
 
+// buy subscription
+export const buySubscription = createAsyncThunk(
+  "subscription/buySubscription",
+  async (data, {rejectWithValue}) => {
+    try {
+      const response = await fetcher.post("/businesses/buy-subscription", data)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
 
 const subscriptionSlice = createSlice({
   name: "subscription",
@@ -240,6 +255,19 @@ const subscriptionSlice = createSlice({
         state.features = payload.data || [];
       })
       .addCase(deleteSubscriptionFeature.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(buySubscription.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(buySubscription.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.subscription = payload;
+      })
+      .addCase(buySubscription.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })

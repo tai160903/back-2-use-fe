@@ -7,16 +7,27 @@ import { FaCalendarAlt, FaCreditCard } from "react-icons/fa";
 import Button from '@mui/material/Button';
 import { BsStars } from "react-icons/bs";
 import { useSelector, useDispatch } from 'react-redux';
-import { getALLSubscriptions } from '../../../store/slices/subscriptionSlice';
+import { getALLSubscriptions, buySubscription } from '../../../store/slices/subscriptionSlice';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
+import { useNavigate } from 'react-router-dom';
+import { PATH } from '../../../routes/path';
+import { useUserInfo } from '../../../hooks/useUserInfo';
+import SubscriptionConfirmModal from '../../../components/SubscriptionConfirmModal/SubscriptionConfirmModal';
+import toast from 'react-hot-toast';
 export default function Subscription() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { subscription, isLoading, error } = useSelector((state) => state.subscription);
+  const { balance, refetch } = useUserInfo();
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
+  
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
@@ -76,6 +87,53 @@ export default function Subscription() {
 
   const handlePageChange = (event, page) => {
     setCurrentPage(page);
+  };
+
+  // Handle select subscription
+  const handleSelectSubscription = (pkg) => {
+    setSelectedSubscription(pkg);
+    setModalOpen(true);
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedSubscription(null);
+  };
+
+  // Handle confirm purchase
+  const handleConfirmPurchase = async () => {
+    if (!selectedSubscription) return;
+
+    const hasEnoughBalance = balance >= selectedSubscription.price;
+
+    if (!hasEnoughBalance) {
+      // Navigate to wallet page
+      navigate(PATH.BUSINESS_WALLET);
+      handleModalClose();
+      toast.error(error?.message || 'Insufficient balance. Please deposit money into your wallet.');
+      return;
+    }
+
+    try {
+      // Call API to buy subscription
+      const result = await dispatch(buySubscription({
+        subscriptionId: selectedSubscription._id
+      }));
+
+      if (buySubscription.fulfilled.match(result)) {
+        toast.success('Subscription purchase successful!');
+        handleModalClose();
+        // Refresh subscription data
+        dispatch(getALLSubscriptions());
+        // Refresh user profile to update wallet balance
+        refetch();
+      } else {
+        toast.error(result.payload?.message || 'An error occurred while purchasing the subscription');
+      }
+    } catch {
+      toast.error('An error occurred while purchasing the subscription');
+    }
   };
 
   const formatPrice = (priceInVND) => {
@@ -229,7 +287,10 @@ export default function Subscription() {
                           Already Used
                         </Button>
                       ) : (
-                        <Button className='btn-select'>
+                        <Button 
+                          className='btn-select'
+                          onClick={() => handleSelectSubscription(pkg)}
+                        >
                           Select Plan
                         </Button>
                       )}
@@ -298,6 +359,16 @@ export default function Subscription() {
         </div>
 
       </div>
+
+      {/* Subscription Confirm Modal */}
+      <SubscriptionConfirmModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        subscription={selectedSubscription}
+        userBalance={balance}
+        onConfirm={handleConfirmPurchase}
+        isLoading={isLoading}
+      />
     </>
   )
 }
