@@ -52,7 +52,13 @@ export default function Login() {
   // Hàm xử lý login thường (email/password)
   const onSubmit = async (data) => {
     try {
-      const payload = await dispatch(loginAPI(data)).unwrap();
+      // Xóa khoảng trắng từ username và password
+      const trimmedData = {
+        username: data.username?.trim(),
+        password: data.password?.trim()
+      };
+      
+      const payload = await dispatch(loginAPI(trimmedData)).unwrap();
       
       if (payload && payload.data) {
         // Lưu dữ liệu user vào localStorage
@@ -63,17 +69,19 @@ export default function Login() {
         const tokenPayload = JSON.parse(atob(token.split('.')[1]));
         const userType = tokenPayload.role?.trim().toLowerCase();
         
-        console.log("User role from token:", userType); // Debug log
         
-        if (userType === "customer") {
-          navigate(PATH.HOME, { replace: true });
-        } else if (userType === "business") {
-          navigate(PATH.BUSINESS, { replace: true });
-        } else if (userType === "admin" || userType === "administrator") {
-          navigate(PATH.ADMIN, { replace: true });
-        } else {
-          toast.error("Unknown user role. Please contact support.");
-        }
+        setTimeout(() => {
+          if (userType === "customer") {
+            navigate(PATH.HOME, { replace: true });
+          } else if (userType === "business") {
+            navigate(PATH.BUSINESS, { replace: true });
+          } else if (userType === "admin" || userType === "administrator") {
+            navigate(PATH.ADMIN, { replace: true });
+          } else {
+            toast.error("Unknown user role. Please contact support.");
+          }
+        }, 100); 
+        
         toast.success("Login successful!");
       } else {
         toast.error(payload?.message || "Login failed. Please try again.");

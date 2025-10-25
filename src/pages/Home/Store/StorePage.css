@@ -7,7 +7,7 @@
   padding: 30px;
   border: 1px solid #e8e8e8;
   border-radius: 10px;
-  height: 100vh;
+  height: auto !important;
 }
 
 .store-header {
@@ -40,7 +40,7 @@
   width: 100%;
   gap: 30px;
   align-items: stretch;
-  /* height: 140vh; */
+  height: auto !important;
   margin-top: 50px;
 }
 

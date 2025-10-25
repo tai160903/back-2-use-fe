@@ -18,9 +18,10 @@ export default function BussinessLayout() {
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.user);
 
-  // Load user profile data khi vào business layout (chỉ khi chưa có dữ liệu)
   useEffect(() => {
-    if (!userInfo) {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    
+    if (!userInfo && currentUser?.accessToken) {
       dispatch(getProfileApi());
     }
   }, [dispatch, userInfo]);

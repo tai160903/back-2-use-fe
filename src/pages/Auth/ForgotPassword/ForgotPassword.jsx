@@ -18,6 +18,7 @@ const schema = yup
   .object({
     email: yup
       .string()
+      .transform((value) => value?.trim())
       .email("Invalid email format.")
       .required("Email is required."),
   })
