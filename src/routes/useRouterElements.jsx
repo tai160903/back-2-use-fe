@@ -2,7 +2,7 @@ import BussinessLayout from "../layouts/BussinessLayout/BussinessLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import Subscriptions from "../pages/Admin/Subscriptions/Subscriptions";
 import Analytics from "../pages/Admin/Analytics";
-import Reports from "../pages/Admin/Reports";
+import Store from "../pages/Admin/Store";
 import Settings from "../pages/Admin/Settings";
 import BusinessDashboard from "../pages/Bussiness/BusinessDashboard/BussinessDashbord";
 import AdminLayout from "../layouts/AdminLayout/AdminLayout";
@@ -310,10 +310,10 @@ export default function useRouterElements() {
           ),
         },
         {
-          path: PATH.ADMIN_REPORTS,
+          path: PATH.ADMIN_STORE,
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>
-              <Reports />
+              <Store />
             </ProtectedRoute>
           ),
         },
