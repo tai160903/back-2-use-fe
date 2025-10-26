@@ -138,13 +138,13 @@ export default function Profile() {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast.error('Vui lòng chọn file hình ảnh');
+        toast.error('Please select an image file');
         return;
       }
       
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Kích thước file không được vượt quá 5MB');
+        toast.error('File size must be less than 5MB');
         return;
       }
 

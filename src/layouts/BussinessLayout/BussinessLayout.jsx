@@ -57,7 +57,7 @@ export default function BussinessLayout() {
         <div
           style={{
             flexGrow: 1,
-            marginLeft: isOpen ? "250px" : "70px",
+            marginLeft: isOpen ? "" : "70px",
             transition: "margin-left 0.3s",
             padding: "20px",
          
