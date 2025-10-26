@@ -58,7 +58,10 @@ export default function ProfileBusiness() {
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const dispatch = useDispatch()
-  const { userInfo } = useSelector((state) => state.user)
+  const { userInfo: userInfoFromState } = useSelector((state) => state.user)
+  
+  // Get business info from userInfo
+  const userInfo = userInfoFromState || {}
 
 
   

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import './Subscription.css'
 import Typography from '@mui/material/Typography'
-import { FaRegClock, FaGift, FaCrown } from "react-icons/fa6";
+import { FaRegClock, FaGift, FaCrown, FaCircleCheck, FaCircleXmark, FaPlay, FaStop, FaClock } from "react-icons/fa6";
 import { IoMdCard } from "react-icons/io";
-import { FaCalendarAlt, FaCreditCard } from "react-icons/fa";
+import { FaCalendarAlt, FaCreditCard, FaReceipt } from "react-icons/fa";
 import Button from '@mui/material/Button';
 import { BsStars } from "react-icons/bs";
 import { useSelector, useDispatch } from 'react-redux';
@@ -15,11 +15,12 @@ import { PATH } from '../../../routes/path';
 import { useUserInfo } from '../../../hooks/useUserInfo';
 import SubscriptionConfirmModal from '../../../components/SubscriptionConfirmModal/SubscriptionConfirmModal';
 import toast from 'react-hot-toast';
+
 export default function Subscription() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { subscription, isLoading, error } = useSelector((state) => state.subscription);
-  const { balance, refetch } = useUserInfo();
+  const { balance, refetch, userInfo } = useUserInfo();
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,51 +34,79 @@ export default function Subscription() {
     dispatch(getALLSubscriptions());
   }, [dispatch]);
 
-  // Mock billing history data (replace with real API call later)
-  const billingHistory = [
-    {
-      id: 1,
-      packageName: "6 Month Package",
-      date: "15/1/2024",
-      status: "PAID",
-      amount: 599000
-    },
-    {
-      id: 2,
-      packageName: "6 Month Package", 
-      date: "15/7/2023",
-      status: "PAID",
-      amount: 599000
-    },
-    {
-      id: 3,
-      packageName: "3 Month Package",
-      date: "15/1/2023", 
-      status: "PAID",
-      amount: 299000
-    },
-    {
-      id: 4,
-      packageName: "1 Month Package",
-      date: "15/12/2022",
-      status: "PAID", 
-      amount: 299000
-    },
-    {
-      id: 5,
-      packageName: "6 Month Package",
-      date: "15/6/2022",
-      status: "PAID",
-      amount: 599000
-    },
-    {
-      id: 6,
-      packageName: "3 Month Package",
-      date: "15/3/2022",
-      status: "PAID",
-      amount: 299000
+  // Get all active subscriptions
+  const getAllActiveSubscriptions = () => {
+    if (!userInfo?.businessSubscriptions || userInfo.businessSubscriptions.length === 0) {
+      return [];
     }
-  ];
+    
+    const now = new Date();
+    const startedSubscriptions = userInfo.businessSubscriptions.filter(
+      sub => {
+        const startDate = new Date(sub.startDate);
+        const endDate = new Date(sub.endDate);
+        return sub.isActive && startDate <= now && endDate > now;
+      }
+    );
+    if (startedSubscriptions.length > 0) {
+      startedSubscriptions.sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
+      return startedSubscriptions;
+    }
+    
+
+    
+
+    
+    return [];
+  };
+
+  // Get current active subscription (the newest one)
+  const getCurrentSubscription = () => {
+    const activeSubscriptions = getAllActiveSubscriptions();
+    return activeSubscriptions.length > 0 ? activeSubscriptions[0] : null;
+  };
+
+  // Get billing history from user subscriptions
+  const getBillingHistory = () => {
+    if (!userInfo?.businessSubscriptions) return [];
+    
+    return userInfo.businessSubscriptions
+      .map(sub => {
+        const startDate = new Date(sub.startDate);
+        const endDate = new Date(sub.endDate);
+        const now = new Date();
+        
+        const isPending = startDate > now;
+        const isExpired = endDate < now; 
+        const isCurrentlyActive = sub.isActive && startDate <= now && endDate > now; 
+        
+        let status;
+        if (isExpired) {
+          status = 'Expired';
+        } else if (isPending) {
+          status = 'Pending';
+        } else {
+          status = 'Active';
+        }
+        
+        return {
+          id: sub._id,
+          packageName: sub.subscriptionId?.name || 'N/A',
+          date: new Date(sub.createdAt).toLocaleDateString('en-US'),
+          startDate: new Date(sub.startDate).toLocaleDateString('en-US'),
+          endDate: endDate.toLocaleDateString('en-US'),
+          status,
+          amount: sub.subscriptionId?.price || 0,
+          isActive: isCurrentlyActive
+        };
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date)); 
+  };
+
+  // Get billing history from API
+  const billingHistory = getBillingHistory();
+  const currentSubscription = getCurrentSubscription();
+  const allActiveSubscriptions = getAllActiveSubscriptions();
 
   // Pagination logic
   const totalPages = Math.ceil(billingHistory.length / itemsPerPage);
@@ -111,7 +140,7 @@ export default function Subscription() {
       // Navigate to wallet page
       navigate(PATH.BUSINESS_WALLET);
       handleModalClose();
-      toast.error(error?.message || 'Insufficient balance. Please deposit money into your wallet.');
+      toast.error('Insufficient balance. Please deposit money into your wallet.');
       return;
     }
 
@@ -124,9 +153,7 @@ export default function Subscription() {
       if (buySubscription.fulfilled.match(result)) {
         toast.success('Subscription purchase successful!');
         handleModalClose();
-        // Refresh subscription data
         dispatch(getALLSubscriptions());
-        // Refresh user profile to update wallet balance
         refetch();
       } else {
         toast.error(result.payload?.message || 'An error occurred while purchasing the subscription');
@@ -156,29 +183,70 @@ export default function Subscription() {
   return (
     <>
       <div className='subscriptionBusiness'>
-        <div className='subscriptionBusiness-notification'>
-          <Typography variant='h6' fontWeight='bold' className='subscriptionBusiness-notification-title'>
-            <FaRegClock style={{ color: '#008000' }} />
-            Free Trial Status
-          </Typography>
+        {/* check user using trial */}
+        {(() => {
+          const hasTrialSubscription = userInfo?.businessSubscriptions?.some(sub => 
+            sub.subscriptionId?.isTrial || 
+            sub.subscriptionId?.name === "Free Trial" || 
+            (sub.subscriptionId?.name?.toLowerCase().includes("trial") && sub.subscriptionId?.durationInDays === 7)
+          ) || false;
+          
+          if (!hasTrialSubscription) return null;
+          
+          const currentTrialSub = userInfo?.businessSubscriptions?.find(sub => 
+            (sub.subscriptionId?.isTrial || 
+             sub.subscriptionId?.name === "Free Trial" || 
+             (sub.subscriptionId?.name?.toLowerCase().includes("trial") && sub.subscriptionId?.durationInDays === 7)) &&
+            sub.isActive
+          );
+          
+          const now = new Date();
+          const isCurrentlyUsingTrial = currentTrialSub && 
+            new Date(currentTrialSub.startDate) <= now && 
+            new Date(currentTrialSub.endDate) > now;
+          
+          return (
+            <div className='subscriptionBusiness-notification'>
+              <Typography variant='h6' fontWeight='bold' className='subscriptionBusiness-notification-title'>
+                <FaRegClock style={{ color: isCurrentlyUsingTrial ? '#28a745' : '#008000' }} />
+                Free Trial Status
+              </Typography>
 
-          <div className='free-trial-status'>
-            <div className='free-trial-icon'>
-              <FaGift className='gift-icon' />
+              <div className='free-trial-status'>
+                <div className='free-trial-icon'>
+                  <FaGift className='gift-icon' />
+                </div>
+                <div className='free-trial-content'>
+                  {isCurrentlyUsingTrial ? (
+                    <>
+                      <Typography variant='h6' className='free-trial-title' style={{ color: '#28a745' }}>
+                        Currently Using Free Trial
+                      </Typography>
+                      <Typography variant='body1' className='free-trial-description'>
+                        You are in your free trial period. Package will expire on: {new Date(currentTrialSub.endDate).toLocaleDateString('en-US')}
+                      </Typography>
+                      <Typography variant='body2' style={{ color: '#ff9800', fontWeight: '500' }}>
+                        ⏰ {Math.max(0, Math.ceil((new Date(currentTrialSub.endDate) - now) / (1000 * 60 * 60 * 24)))} days remaining
+                      </Typography>
+                    </>
+                  ) : (
+                    <>
+                      <Typography variant='h6' className='free-trial-title'>
+                        Free Trial Already Used
+                      </Typography>
+                      <Typography variant='body1' className='free-trial-description'>
+                        Your business account has already used the free trial package
+                      </Typography>
+                      <Typography variant='body1' className='free-trial-warning'>
+                        Free trial packages are no longer available for selection
+                      </Typography>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className='free-trial-content'>
-              <Typography variant='h6' className='free-trial-title'>
-                Free Trial Already Used
-              </Typography>
-              <Typography variant='body1' className='free-trial-description'>
-                Your business account has already utilized the 7-day free trial period
-              </Typography>
-              <Typography variant='body1' className='free-trial-warning'>
-                Free trial packages are not available for selection
-              </Typography>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
         <div className='subscriptionBusiness-subscription-current'>
           <Typography className='subscriptionBusiness-subscription-current-title'>
             <IoMdCard style={{ color: '#008000' }} /> Current Subscription
@@ -187,54 +255,115 @@ export default function Subscription() {
             Manage your business subscription and billing
           </Typography>
 
-          <div className='subscription-package-detail'>
-            <div className='subscription-package-left'>
-              <div className='subscription-package-icon'>
-                <FaCrown className='crown-icon' />
-              </div>
-              <div className='subscription-package-info'>
-                <div className='subscription-package-header'>
-                  <Typography className='subscription-package-name'>
-                    6 Month Package
-                  </Typography>
-                  <div className='subscription-package-badge'>
-                    <Typography className='subscription-package-badge-text'>
-                      Active
+          {currentSubscription ? (
+            <>
+              {(() => {
+                const now = new Date();
+                const startDate = new Date(currentSubscription.startDate);
+                const endDate = new Date(currentSubscription.endDate);
+                const isUpcoming = startDate > now;
+                const isCurrentlyActive = startDate <= now && endDate > now;
+                
+                return (
+                  <>
+                    {isUpcoming && (
+                      <div style={{ 
+                        background: '#e3f2fd', 
+                        border: '1px solid #2196f3', 
+                        borderRadius: '8px', 
+                        padding: '12px', 
+                        marginBottom: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <FaClock style={{ color: '#2196f3', fontSize: '20px' }} />
+                        <Typography variant='body2' style={{ color: '#1565c0', fontWeight: '500' }}>
+                          This subscription will start on: <strong>{startDate.toLocaleDateString('en-US')}</strong>
+                        </Typography>
+                      </div>
+                    )}
+                    
+                    {allActiveSubscriptions.length > 1 && (
+                      <div style={{ 
+                        background: '#fff3cd', 
+                        border: '1px solid #ffc107', 
+                        borderRadius: '8px', 
+                        padding: '12px', 
+                        marginBottom: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <FaCrown style={{ color: '#ffc107', fontSize: '20px' }} />
+                        <Typography variant='body2' style={{ color: '#856404', fontWeight: '500' }}>
+                          You currently have <strong>{allActiveSubscriptions.length} subscriptions</strong> active
+                        </Typography>
+                      </div>
+                    )}
+                    
+                    <div className='subscription-package-detail'>
+                      <div className='subscription-package-left'>
+                        <div className='subscription-package-icon'>
+                          <FaCrown className='crown-icon' />
+                        </div>
+                        <div className='subscription-package-info'>
+                          <div className='subscription-package-header'>
+                            <Typography className='subscription-package-name'>
+                              {currentSubscription.subscriptionId?.name || 'N/A'}
+                            </Typography>
+                            <div className='subscription-package-badge'>
+                              <Typography className='subscription-package-badge-text'>
+                                {isUpcoming ? 'Upcoming' : isCurrentlyActive ? 'Active' : 'Expired'}
+                              </Typography>
+                            </div>
+                          </div>
+                    <Typography className='subscription-package-price'>
+                      {formatPrice(currentSubscription.subscriptionId?.price || 0)}
                     </Typography>
                   </div>
                 </div>
-                <Typography className='subscription-package-price'>
-                  $27/total
-                </Typography>
-              </div>
-            </div>
 
-            <div className='subscription-package-right'>
-              <Typography className='subscription-package-billing-label'>
-                Next billing date
-              </Typography>
-              <div className='subscription-package-date'>
-                <FaCalendarAlt className='calendar-icon' />
-                <Typography className='subscription-package-date-text'>
-                  11/20/2025
-                </Typography>
+                <div className='subscription-package-right'>
+                  <Typography className='subscription-package-billing-label'>
+                    End Date
+                  </Typography>
+                  <div className='subscription-package-date'>
+                    <FaCalendarAlt className='calendar-icon' />
+                    <Typography className='subscription-package-date-text'>
+                      {new Date(currentSubscription.endDate).toLocaleDateString('en-US')}
+                    </Typography>
+                  </div>
+                </div>
               </div>
+              {/* <Button className='btn-renew' onClick={() => setModalOpen(true)}>
+                <BsStars style={{ marginRight: "20px" }} /> Renew Subscription
+              </Button> */}
+              {/* <Button className='btn-upgarde' onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                <FaCrown style={{ marginRight: "20px" }} />Upgrade Plan
+              </Button> */}
+                  </>
+                );
+              })()}
+            </>
+          ) : (
+            <div className='no-subscription'>
+              <Typography variant='h6' style={{ color: '#666', marginTop: '20px' }}>
+                No Subscription Yet
+              </Typography>
+              <Typography variant='body2' style={{ color: '#999', marginTop: '10px' }}>
+                Please select a suitable package from the available options below
+              </Typography>
             </div>
-          </div>
-          <Button className='btn-renew'>
-            <BsStars style={{ marginRight: "20px" }} /> Renew subscription
-          </Button>
-          <Button className='btn-upgarde'>
-            <FaCrown style={{ marginRight: "20px" }} />Upgrade plan
-          </Button>
+          )}
         </div>
 
-        <div className='subscriptionBusiness-available'>
+          <div className='subscriptionBusiness-available'>
           <Typography className='subscriptionBusiness-available-title'>
           <FaCrown style={{marginRight:"10px"}}/>  Available Plans
           </Typography>
           <Typography className='subscriptionBusiness-available-des'>
-          Choose the plan that best fits your business needs
+          Select a package that best fits your business needs
           </Typography>
           <div className='subscription-packages-grid'>
             {isLoading ? (
@@ -243,7 +372,18 @@ export default function Subscription() {
               <Typography color="error">Error occurred: {error}</Typography>
             ) : subscription?.data?.subscriptions ? (
               subscription.data.subscriptions
-                .filter(pkg => !pkg.isDeleted && pkg.isActive) 
+                .filter(pkg => {
+                  // Filter out trial packages if user has used trial
+                  const hasUsedOrUsingTrial = userInfo?.businessSubscriptions?.some(sub => 
+                    sub.subscriptionId?.isTrial || 
+                    sub.subscriptionId?.name === "Free Trial" || 
+                    (sub.subscriptionId?.name?.toLowerCase().includes("trial") && sub.subscriptionId?.durationInDays === 7)
+                  ) || false;
+                  
+                  if (hasUsedOrUsingTrial && (pkg.isTrial || pkg.name === "Free Trial")) return false;
+                  // Filter out deleted and inactive packages
+                  return !pkg.isDeleted && pkg.isActive;
+                })
                 .map((pkg) => (
                   <div key={pkg._id} className={`subscription-package-card ${pkg.isTrial ? 'trial-package' : ''}`}>
                     <div className='package-header'>
@@ -324,14 +464,35 @@ export default function Subscription() {
                   <Typography className='billing-package-name'>
                     {billing.packageName}
                   </Typography>
-                  <Typography className='billing-date'>
-                    {billing.date}
+                  <Typography className='billing-date' style={{ fontSize: '14px', color: '#666', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaReceipt style={{ fontSize: '16px' }} />
+                    Purchased: {billing.date}
+                  </Typography>
+                  <Typography style={{ fontSize: '13px', color: '#999', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaPlay style={{ fontSize: '14px' }} />
+                    Start: {billing.startDate}
+                  </Typography>
+                  <Typography style={{ fontSize: '13px', color: '#999', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaStop style={{ fontSize: '14px' }} />
+                    End: {billing.endDate}
                   </Typography>
                 </div>
                 
                 <div className='billing-card-right'>
                   <div className='billing-status'>
-                    <Typography className='billing-status-text'>
+                    <Typography 
+                      className='billing-status-text' 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        color: billing.status === 'Active' ? '#28a745' : 
+                               billing.status === 'Pending' ? '#ff9800' : '#dc3545'
+                      }}
+                    >
+                      {billing.status === 'Active' && <FaCircleCheck style={{ fontSize: '18px' }} />}
+                      {billing.status === 'Pending' && <FaClock style={{ fontSize: '18px' }} />}
+                      {billing.status === 'Expired' && <FaCircleXmark style={{ fontSize: '18px' }} />}
                       {billing.status}
                     </Typography>
                   </div>

@@ -20,6 +20,7 @@ export const useUserInfo = () => {
     balance,
     isLoading,
     error,
+    userInfo,
     refetch: () => dispatch(getProfileApi()),
   };
 };

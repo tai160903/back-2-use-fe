@@ -511,7 +511,7 @@ button.btn-select {
 .billing-status-text {
     font-size: 12px !important;
     font-weight: 600 !important;
-    color: #4caf50 !important;
+    color: #000000 !important;
     margin: 0 !important;
     text-transform: uppercase;
 }
