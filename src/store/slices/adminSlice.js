@@ -100,14 +100,78 @@ export const reviewMaterialApi = createAsyncThunk(
   }
 );
 
+// Get All Businesses API
+export const getAllBusinessesApi = createAsyncThunk(
+  "admin/getAllBusinessesApi",
+  async ({ page = 1, limit = 10, isBlocked }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/business?page=${page}&limit=${limit}`;
+      
+      // Append filters
+      if (isBlocked !== undefined && isBlocked !== null) {
+        url += `&isBlocked=${isBlocked}`;
+      }
+      
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Business by ID API
+export const getBusinessByIdApi = createAsyncThunk(
+  "admin/getBusinessByIdApi",
+  async (businessId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/admin/business/${businessId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Block/Unblock Business API
+export const updateBusinessBlockStatusApi = createAsyncThunk(
+  "admin/updateBusinessBlockStatusApi",
+  async ({ businessId, blockData }, { rejectWithValue }) => {
+    try {
+      console.log('API call - userId:', businessId, 'blockData:', blockData);
+      const response = await fetcher.patch(`/admin/business/${businessId}/block-status`, blockData);
+      console.log('API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API error:', error);
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
     materials: [],
     currentMaterial: null,
+    businesses: [],
+    currentBusiness: null,
     isLoading: false,
     error: null,
     pagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
+    },
+    businessPagination: {
       page: 1,
       limit: 10,
       total: 0,
@@ -118,6 +182,9 @@ const adminSlice = createSlice({
       status: 'all', // 'all', 'pending', 'approved', 'rejected'
       materialName: '',
     },
+    businessFilters: {
+      isBlocked: null, // null = all, true = blocked, false = unblocked
+    },
   },
   reducers: {
     clearError: (state) => {
@@ -125,6 +192,9 @@ const adminSlice = createSlice({
     },
     clearCurrentMaterial: (state) => {
       state.currentMaterial = null;
+    },
+    clearCurrentBusiness: (state) => {
+      state.currentBusiness = null;
     },
     setStatusFilter: (state, { payload }) => {
       state.filters.status = payload;
@@ -139,6 +209,17 @@ const adminSlice = createSlice({
       state.filters = {
         status: 'all',
         materialName: '',
+      };
+    },
+    setBusinessBlockedFilter: (state, { payload }) => {
+      state.businessFilters.isBlocked = payload;
+    },
+    setBusinessPagination: (state, { payload }) => {
+      state.businessPagination = { ...state.businessPagination, ...payload };
+    },
+    resetBusinessFilters: (state) => {
+      state.businessFilters = {
+        isBlocked: null,
       };
     },
   },
@@ -307,6 +388,95 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to review material");
+      })
+      
+      // Get All Businesses
+      .addCase(getAllBusinessesApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getAllBusinessesApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.businesses = payload.data || [];
+        // Update business pagination with response data
+        state.businessPagination = {
+          ...state.businessPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getAllBusinessesApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch businesses");
+      })
+      
+      // Get Business by ID
+      .addCase(getBusinessByIdApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessByIdApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentBusiness = payload.data;
+      })
+      .addCase(getBusinessByIdApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch business details");
+      })
+      
+      // Update Business Block Status
+      .addCase(updateBusinessBlockStatusApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateBusinessBlockStatusApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+
+        const updated = payload?.data || payload || {};
+        const updatedId = updated._id || updated.id;
+        const updatedIsBlocked = updated.isBlocked;
+
+        if (updatedId) {
+          // Update the business in the list
+          const index = state.businesses.findIndex(
+            (business) => business._id === updatedId || business.id === updatedId
+          );
+          if (index !== -1) {
+            state.businesses[index].isBlocked = updatedIsBlocked;
+            if (updated.reason !== undefined) {
+              state.businesses[index].blockReason = updated.reason;
+            }
+          }
+
+          // Update current business if it matches
+          if (
+            (state.currentBusiness?._id && state.currentBusiness._id === updatedId) ||
+            (state.currentBusiness?.id && state.currentBusiness.id === updatedId)
+          ) {
+            state.currentBusiness.isBlocked = updatedIsBlocked;
+            if (updated.reason !== undefined) {
+              state.currentBusiness.blockReason = updated.reason;
+            }
+          }
+        }
+
+        // Show appropriate success message
+        if (updatedIsBlocked) {
+          toast.success(payload?.message || "Business blocked successfully!");
+        } else {
+          toast.success(payload?.message || "Business unblocked successfully!");
+        }
+      })
+      .addCase(updateBusinessBlockStatusApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to update business block status");
       });
   },
 });
@@ -314,9 +484,13 @@ const adminSlice = createSlice({
 export const { 
   clearError, 
   clearCurrentMaterial, 
+  clearCurrentBusiness,
   setStatusFilter, 
   setMaterialNameFilter,
   setPagination, 
-  resetFilters 
+  resetFilters,
+  setBusinessBlockedFilter,
+  setBusinessPagination,
+  resetBusinessFilters
 } = adminSlice.actions;
 export default adminSlice.reducer;

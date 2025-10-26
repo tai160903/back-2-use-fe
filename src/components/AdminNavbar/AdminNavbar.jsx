@@ -46,7 +46,7 @@ const adminSidebarItems = [
   { id: "users", label: "Users", path: PATH.ADMIN_USERS },
   { id: "subscriptions", label: "Subscriptions", path: PATH.ADMIN_SUBSCRIPTIONS },
   { id: "rewards", label: "Rewards", path: PATH.ADMIN_ANALYTICS },
-  { id: "stores", label: "Stores", path: PATH.ADMIN_REPORTS },
+  { id: "stores", label: "Stores", path: PATH.ADMIN_STORE },
   { id: "material", label: "Material", path: PATH.ADMIN_MATERIAL },
   { id: "settings", label: "Settings", path: PATH.ADMIN_SETTINGS },
   { id: "logout", label: "Logout", path: null },

@@ -46,6 +46,6 @@ export const PATH = {
     ADMIN_SUBSCRIPTIONS: "/admin/subscriptions",
     ADMIN_ANALYTICS: "/admin/analytics",
     ADMIN_SETTINGS: "/admin/settings",
-    ADMIN_REPORTS: "/admin/reports",
+    ADMIN_STORE: "/admin/store",
     ADMIN_MATERIAL: "/admin/material",
 }
