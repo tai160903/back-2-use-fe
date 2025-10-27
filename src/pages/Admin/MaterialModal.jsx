@@ -1,4 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Box,
+  Typography,
+  IconButton,
+  InputAdornment,
+  Grid,
+  Divider,
+} from '@mui/material';
+import {
+  Recycling as EcoIcon,
+  Category as CategoryIcon,
+  Replay as ReplayIcon,
+  Description as DescriptionIcon,
+  Close as CloseIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+} from '@mui/icons-material';
 import './MaterialModal.css';
 
 const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
@@ -86,96 +109,325 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
     onClose();
   };
 
-  if (!isOpen) return null;
+  const editMode = !!material;
 
   return (
-    <div className="material-modal-overlay" onClick={handleClose}>
-      <div className="material-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="material-modal-header">
-          <h2 className="material-modal-title">
-            {material ? 'Edit Material' : 'Add New Material'}
-          </h2>
-          <button className="material-modal-close" onClick={handleClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
-            </svg>
-          </button>
-        </div>
+    <Dialog 
+      open={isOpen} 
+      onClose={handleClose} 
+      maxWidth="md" 
+      fullWidth
+      TransitionProps={{
+        timeout: 400,
+      }}
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
+          overflow: 'hidden',
+          background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
+          maxHeight: '90vh'
+        }
+      }}
+    >
+      <DialogTitle 
+        sx={{ 
+          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+          color: 'white',
+          py: 2,
+          px: 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <EcoIcon sx={{ fontSize: 28 }} />
+          <Box>
+            <Typography variant="h6" component="div" fontWeight="bold">
+              {editMode ? 'Edit Material' : 'Add New Material'}
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
+              {editMode ? 'Update recyclable material details' : 'Add a new recyclable material to the platform'}
+            </Typography>
+          </Box>
+        </Box>
+        <IconButton 
+          onClick={handleClose}
+          size="small"
+          sx={{ 
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.2)'
+            }
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
-        <form className="material-modal-form" onSubmit={handleSubmit}>
-          <div className="material-form-group">
-            <label htmlFor="materialName" className="material-form-label">
-              Material Name *
-            </label>
-            <input
-              type="text"
-              id="materialName"
-              name="materialName"
-              value={formData.materialName}
-              onChange={handleInputChange}
-              className={`material-form-input ${errors.materialName ? 'error' : ''}`}
-              placeholder="e.g., Plastic, Glass, Aluminum"
-            />
-            {errors.materialName && (
-              <span className="material-form-error">{errors.materialName}</span>
-            )}
-          </div>
+      <form onSubmit={handleSubmit}>
+        <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+          <Grid container spacing={2.5}>
+            {/* Material Name Field */}
+            <Grid item xs={12} md={7}>
+              <Box sx={{ mb: 0.5 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: '#16a34a', 
+                    fontWeight: 600,
+                    mb: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}
+                >
+                  <CategoryIcon sx={{ fontSize: 16 }} />
+                  Material Name <span style={{ color: '#f44336' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                placeholder="e.g., Plastic, Glass, Aluminum"
+                name="materialName"
+                value={formData.materialName}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+                error={!!errors.materialName}
+                helperText={errors.materialName || 'Enter a clear and descriptive name'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CategoryIcon sx={{ color: '#22c55e' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#22c55e',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#22c55e',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
 
-          <div className="material-form-group">
-            <label htmlFor="maximumReuse" className="material-form-label">
-              Maximum Reuse Count *
-            </label>
-            <input
-              type="number"
-              id="maximumReuse"
-              name="maximumReuse"
-              value={formData.maximumReuse}
-              onChange={handleInputChange}
-              className={`material-form-input ${errors.maximumReuse ? 'error' : ''}`}
-              placeholder="e.g., 100"
-              min="1"
-            />
-            {errors.maximumReuse && (
-              <span className="material-form-error">{errors.maximumReuse}</span>
-            )}
-          </div>
+            {/* Maximum Reuse Field */}
+            <Grid item xs={12} md={5}>
+              <Box sx={{ mb: 0.5 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: '#16a34a', 
+                    fontWeight: 600,
+                    mb: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}
+                >
+                  <ReplayIcon sx={{ fontSize: 16 }} />
+                  Reuse Count <span style={{ color: '#f44336' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                placeholder="100"
+                name="maximumReuse"
+                type="number"
+                value={formData.maximumReuse}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+                inputProps={{ min: 1 }}
+                error={!!errors.maximumReuse}
+                helperText={errors.maximumReuse || 'Number of reuses'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <ReplayIcon sx={{ color: '#22c55e' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
+                        times
+                      </Typography>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#22c55e',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#22c55e',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
 
-          <div className="material-form-group">
-            <label htmlFor="description" className="material-form-label">
-              Description *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              className={`material-form-textarea ${errors.description ? 'error' : ''}`}
-              placeholder="Describe the material properties and characteristics..."
-              rows="4"
-            />
-            {errors.description && (
-              <span className="material-form-error">{errors.description}</span>
-            )}
-          </div>
+            {/* Description Field */}
+            <Grid item xs={12}>
+              <Box sx={{ mb: 0.5 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: '#16a34a', 
+                    fontWeight: 600,
+                    mb: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}
+                >
+                  <DescriptionIcon sx={{ fontSize: 16 }} />
+                  Description <span style={{ color: '#f44336' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                placeholder="Describe the material properties and characteristics..."
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                multiline
+                rows={3}
+                variant="outlined"
+                error={!!errors.description}
+                helperText={errors.description || 'Provide detailed information about this material'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
+                      <DescriptionIcon sx={{ color: '#22c55e', fontSize: 18 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#22c55e',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#22c55e',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
 
-          <div className="material-modal-actions">
-            <button 
-              type="button" 
-              className="material-modal-cancel"
-              onClick={handleClose}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="material-modal-submit"
-            >
-              {material ? 'Update Material' : 'Create Material'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            {/* Info Box */}
+            <Grid item xs={12}>
+              <Box 
+                sx={{ 
+                  p: 2, 
+                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%)',
+                  borderRadius: 2,
+                  border: '2px solid rgba(34, 197, 94, 0.3)',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1.5,
+                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.1)'
+                }}
+              >
+                <Box 
+                  sx={{ 
+                    backgroundColor: '#22c55e',
+                    borderRadius: '50%',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: '36px',
+                    height: '36px'
+                  }}
+                >
+                  <EcoIcon sx={{ color: 'white', fontSize: 20 }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 700, mb: 0.5 }}>
+                    ♻️ Recyclable Material
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#15803d', lineHeight: 1.5, display: 'block' }}>
+                    By adding recyclable materials, you're helping reduce waste and promote sustainability.
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions 
+          sx={{ 
+            px: 3, 
+            py: 2, 
+            gap: 2,
+            backgroundColor: 'rgba(34, 197, 94, 0.02)',
+            display: 'flex',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Button 
+            onClick={handleClose}
+            variant="outlined"
+            startIcon={<CloseIcon fontSize="small" />}
+            sx={{
+              color: '#666',
+              borderColor: '#ccc',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              borderWidth: 1.5,
+              fontWeight: 500,
+              '&:hover': {
+                borderColor: '#999',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                borderWidth: 1.5,
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            variant="contained"
+            startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
+            sx={{
+              backgroundColor: '#22c55e',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: '#16a34a',
+                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            {editMode ? 'Update Material' : 'Create Material'}
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
 };
 

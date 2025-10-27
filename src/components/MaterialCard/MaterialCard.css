@@ -1,5 +1,20 @@
 /* Additional styles for MaterialCard component */
 
+.material-card-actions-top {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  align-items: flex-end !important;
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.material-card-actions-row {
+  display: flex !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+
 .material-card-actions {
   display: flex !important;
   gap: 8px !important;
@@ -15,6 +30,7 @@
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Ensure SVG icons are visible */
@@ -53,23 +69,124 @@
   color: #b91c1c !important;
 }
 .approve-btn {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
 }
 
 .approve-btn:hover {
-  background-color: #bbf7d0;
-  color: #14532d;
+  background-color: #bbf7d0 !important;
+  color: #14532d !important;
 }
 
 .reject-btn {
-  background-color: #fee2e2;
-  color: #dc2626;
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
 }
 
 .reject-btn:hover {
-  background-color: #fecaca;
-  color: #b91c1c;
+  background-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
+/* Adjust header spacing */
+.material-card-header {
+  margin-bottom: 16px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+}
+
+.material-card-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.material-card-icon {
+  width: 24px !important;
+  height: 24px !important;
+  color: #22c55e !important;
+  background-color: #dcfce7 !important;
+  padding: 8px !important;
+  border-radius: 8px !important;
+}
+
+.material-card-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #1a1a1a !important;
+  margin: 0 !important;
+}
+
+.material-card-subtitle {
+  font-size: 14px !important;
+  color: #6b7280 !important;
+  margin: 4px 0 0 0 !important;
+}
+
+/* Card details section */
+.material-card-details {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.material-detail-item {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.material-detail-label {
+  font-size: 14px !important;
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+}
+
+.material-detail-value {
+  font-size: 14px !important;
+  color: #1a1a1a !important;
+  font-weight: 600 !important;
+}
+
+.maximum-reuse-badge {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.created-date {
+  color: #6b7280 !important;
+  font-size: 14px !important;
+}
+
+/* Status badges */
+.status-badge {
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.status-pending {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.status-approved {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.status-rejected {
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
 }
 
 /* Simple modal styles for reject reason */
