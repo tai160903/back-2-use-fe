@@ -222,79 +222,45 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
         </div>
 
         <div className="modal-content">
-          <Box sx={{ p: 3 }}>
-            {/* Plan Information & Settings */}
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#374151' }}>
-                Plan Information & Settings
-              </Typography>
-              
-              {mode === "view" ? (
-                <>
+          <Box sx={{ p: 2 }}>
+            {mode === "view" ? (
+              <>
                 {/* View Mode - Display Information */}
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
-                  gap: 3
-                }}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
-                        Plan Name
-                      </Typography>
-                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+                <Box className="plan-info-container">
+                  <Typography variant="h6" className="section-header">
+                    Plan Information & Settings
+                  </Typography>
+                  
+                  <Box className="info-cards-grid">
+                    <Box className="info-card">
+                      <Typography className="info-card-label">Plan Name</Typography>
+                      <Typography className="info-card-value">
                         {subscriptionDetails?.data?._doc?.name || selectedItem?.name || 'N/A'}
                       </Typography>
                     </Box>
-                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
-                        Price
-                      </Typography>
-                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
-                        {(subscriptionDetails?.data?._doc?.price || selectedItem?.price) === 0 ? 'Free' : `${(subscriptionDetails?.data?._doc?.price || selectedItem?.price)?.toLocaleString() || 0} VND`}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
-                        Duration
-                      </Typography>
-                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+
+                    <Box className="info-card">
+                      <Typography className="info-card-label">Duration</Typography>
+                      <Typography className="info-card-value">
                         {subscriptionDetails?.data?._doc?.durationInDays || selectedItem?.durationInDays || 0} days
                       </Typography>
                     </Box>
-                    <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                      <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500, mb: 1 }}>
-                        Status
+
+                    <Box className="info-card">
+                      <Typography className="info-card-label">Price</Typography>
+                      <Typography className="info-card-value price-value">
+                        {(subscriptionDetails?.data?._doc?.price || selectedItem?.price) === 0 ? 'Free' : `${(subscriptionDetails?.data?._doc?.price || selectedItem?.price)?.toLocaleString() || 0} VND`}
                       </Typography>
-                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                        <Box sx={{ 
-                          px: 2, 
-                          py: 1, 
-                          borderRadius: '20px', 
-                          backgroundColor: (subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? '#dcfce7' : '#fee2e2',
-                          color: (subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? '#166534' : '#dc2626',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          textTransform: 'uppercase'
-                        }}>
-                          {(subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? 'Active' : 'Inactive'}
-                        </Box>
+                    </Box>
+
+                    <Box className="info-card">
+                      <Typography className="info-card-label">Status</Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <span className={`status-pill ${(subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? 'active' : 'inactive'}`}>
+                          {(subscriptionDetails?.data?._doc?.isActive !== undefined ? subscriptionDetails?.data?._doc?.isActive : selectedItem?.isActive) ? 'ACTIVE' : 'INACTIVE'}
+                        </span>
                         {(subscriptionDetails?.data?._doc?.isTrial !== undefined ? subscriptionDetails?.data?._doc?.isTrial : selectedItem?.isTrial) && (
-                          <Box sx={{ 
-                            px: 2, 
-                            py: 1, 
-                            borderRadius: '20px', 
-                            backgroundColor: '#fef3c7',
-                            color: '#92400e',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            textTransform: 'uppercase'
-                          }}>
-                            Trial Plan
-                          </Box>
+                          <span className="status-pill trial">TRIAL PLAN</span>
                         )}
                       </Box>
                     </Box>
@@ -302,43 +268,23 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                 </Box>
                 
                 {/* Features Section */}
-                {subscriptionDetails?.data?.description && (
-                  <Box sx={{ mt: 4 }}>
-                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#374151' }}>
+                {subscriptionDetails?.data?.description && subscriptionDetails.data.description.length > 0 && (
+                  <Box className="features-container">
+                    <Typography variant="h6" className="section-header">
                       Tính năng
                     </Typography>
-                    <Box sx={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: { xs: '1fr', md: '1fr' }, 
-                      gap: 2
-                    }}>
+                    <Box className="features-list">
                       {subscriptionDetails.data.description.map((feature, index) => (
-                        <Box key={index} sx={{ 
-                          p: 2, 
-                          backgroundColor: '#f8f9fa', 
-                          borderRadius: '12px', 
-                          border: '1px solid #e5e7eb',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2
-                        }}>
-                          <Box sx={{ 
-                            width: 8, 
-                            height: 8, 
-                            borderRadius: '50%', 
-                            backgroundColor: '#174d31',
-                            flexShrink: 0
-                          }} />
-                          <Typography variant="body1" sx={{ color: '#1a1a1a', lineHeight: 1.6 }}>
-                            {feature}
-                          </Typography>
+                        <Box key={index} className="feature-item">
+                          <Box className="feature-bullet" />
+                          <Typography className="feature-text">{feature}</Typography>
                         </Box>
                       ))}
                     </Box>
                   </Box>
                 )}
-                </>
-              ) : (
+              </>
+            ) : (
                 /* Create/Edit Mode - Form Fields */
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <Controller
@@ -516,7 +462,6 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                   </Box>
                 </Box>
               )}
-            </Box>
           </Box>
         </div>
 

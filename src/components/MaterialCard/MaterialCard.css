@@ -1,4 +1,57 @@
 /* Additional styles for MaterialCard component */
+
+.material-card-actions {
+  display: flex !important;
+  gap: 8px !important;
+}
+
+.action-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Ensure SVG icons are visible */
+.action-btn svg {
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
+  fill: currentColor !important;
+  color: currentColor !important;
+  flex-shrink: 0 !important;
+}
+
+/* Specific styling for react-icons */
+.action-btn .react-icons {
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+.edit-btn {
+  background-color: #f3f4f6 !important;
+  color: #6b7280 !important;
+}
+
+.edit-btn:hover {
+  background-color: #e5e7eb !important;
+  color: #374151 !important;
+}
+
+.delete-btn {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+.delete-btn:hover {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+}
 .approve-btn {
   background-color: #dcfce7;
   color: #166534;

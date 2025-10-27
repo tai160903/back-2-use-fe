@@ -4,7 +4,15 @@ import {
   deleteMaterialApi, 
   reviewMaterialApi 
 } from '../../store/slices/adminSlice';
+import { 
+  FaRegEdit, 
+  FaCheck, 
+  FaTimes, 
+  FaRecycle 
+} from 'react-icons/fa';
+import { MdDeleteOutline } from 'react-icons/md';
 import './MaterialCard.css';
+import { CiEdit } from "react-icons/ci";
 
 const MaterialCard = ({ material, onEdit }) => {
   const dispatch = useDispatch();
@@ -75,21 +83,7 @@ const MaterialCard = ({ material, onEdit }) => {
   };
 
   const getRecycleIcon = () => {
-    return (
-      <svg 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        className="material-card-icon"
-      >
-        <path 
-          d="M9 3V4H4V6H5V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V6H20V4H15V3H9ZM7 6H17V19H7V6ZM9 8V17H11V8H9ZM13 8V17H15V8H13Z" 
-          fill="currentColor"
-        />
-      </svg>
-    );
+    return <FaRecycle className="material-card-icon" />;
   };
 
   return (
@@ -111,18 +105,14 @@ const MaterialCard = ({ material, onEdit }) => {
                 onClick={handleApprove}
                 title="Approve"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
-                </svg>
+                <FaCheck size={16} />
               </button>
               <button 
                 className="action-btn reject-btn" 
                 onClick={handleReject}
                 title="Reject"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
-                </svg>
+                <FaTimes size={16} />
               </button>
             </>
           )}
@@ -132,9 +122,7 @@ const MaterialCard = ({ material, onEdit }) => {
             onClick={handleEdit}
             title="Edit"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
-            </svg>
+            <CiEdit size={16} />
           </button>
           
           <button 
@@ -142,9 +130,7 @@ const MaterialCard = ({ material, onEdit }) => {
             onClick={handleDelete}
             title="Delete"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/>
-            </svg>
+            <MdDeleteOutline size={16} />
           </button>
         </div>
       </div>

@@ -37,7 +37,7 @@ import ProductDetail from "../pages/Home/Store/ProductDetail";
 import Users from "../pages/Admin/UserManage/Users";
 import Material from "../pages/Admin/Material";
 import Voucher from "../pages/Home/Voucher/Voucher";
-import Inventory from "../pages/Bussiness/Inventory/Inventory";
+import Materials from "../pages/Bussiness/Materials/Materials";
 import RedemVoucher from "../pages/Bussiness/RedeemVoucher/RedemVoucher";
 import Subscription from "../pages/Bussiness/Subscription/Subscription";
 import Transactions from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
@@ -218,10 +218,10 @@ export default function useRouterElements() {
           ),
         },
         {
-          path: PATH.BUSINESS_INVENTORY,
+          path: PATH.BUSINESS_MATERIALS,
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
-              <Inventory />
+              <Materials />
             </ProtectedRoute>
           ),
         },

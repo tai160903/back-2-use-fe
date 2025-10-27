@@ -32,10 +32,12 @@ const Store = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [isUnblockModalOpen, setIsUnblockModalOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [blockReason, setBlockReason] = useState('');
+  const [unblockReason, setUnblockReason] = useState('');
 
   useEffect(() => {
     dispatch(getAllBusinessesApi({
@@ -95,7 +97,8 @@ const Store = () => {
         setIsBlockModalOpen(true);
         setBlockReason('');
       } else if (action === 'unblock') {
-        handleUnblockStore(store);
+        setIsUnblockModalOpen(true);
+        setUnblockReason('');
       }
     }
     setOpenMenuId(null);
@@ -110,6 +113,12 @@ const Store = () => {
     setIsBlockModalOpen(false);
     setSelectedStore(null);
     setBlockReason('');
+  };
+
+  const handleCloseUnblockModal = () => {
+    setIsUnblockModalOpen(false);
+    setSelectedStore(null);
+    setUnblockReason('');
   };
 
   const handleConfirmBlock = async () => {
@@ -139,19 +148,25 @@ const Store = () => {
     }
   };
 
-  const handleUnblockStore = async (store) => {
-    console.log('Unblocking store:', store._id, 'userId:', store.userId);
+  const handleConfirmUnblock = async () => {
+    if (!unblockReason.trim()) {
+      alert('Please provide a reason for unblocking this store.');
+      return;
+    }
+    
+    console.log('Unblocking store:', selectedStore._id, 'userId:', selectedStore.userId, 'with reason:', unblockReason.trim());
     
     try {
       const result = await dispatch(updateBusinessBlockStatusApi({
-        businessId: store.userId,
+        businessId: selectedStore.userId,
         blockData: {
           isBlocked: false,
-          reason: ''
+          reason: unblockReason.trim()
         }
       })).unwrap();
       
       console.log('Unblock result:', result);
+      handleCloseUnblockModal();
       // Refresh the page after successful unblock
       window.location.reload();
     } catch (error) {
@@ -390,7 +405,7 @@ const Store = () => {
         onClose={handleCloseDetailModal}
         store={selectedStore}
         onBlock={() => {}}
-        onUnblock={handleUnblockStore}
+        onUnblock={() => {}}
       />
 
       {/* Block Store Modal */}
@@ -442,6 +457,61 @@ const Store = () => {
                 onClick={handleConfirmBlock}
               >
                 Block Store
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unblock Store Modal */}
+      {isUnblockModalOpen && selectedStore && (
+        <div className="modal-overlay" onClick={handleCloseUnblockModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Unblock Store</h2>
+              <button className="modal-close-btn" onClick={handleCloseUnblockModal}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="store-info">
+                <h3 className="store-name">{selectedStore.businessName}</h3>
+                <p className="store-type">{selectedStore.businessType}</p>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="unblock-reason" className="form-label">
+                  Reason for unblocking *
+                </label>
+                <textarea
+                  id="unblock-reason"
+                  value={unblockReason}
+                  onChange={(e) => setUnblockReason(e.target.value)}
+                  placeholder="Please provide a reason for unblocking this store..."
+                  className="form-textarea"
+                  rows="4"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-cancel" 
+                onClick={handleCloseUnblockModal}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="btn btn-confirm-unblock"
+                onClick={handleConfirmUnblock}
+              >
+                Unblock Store
               </button>
             </div>
           </div>

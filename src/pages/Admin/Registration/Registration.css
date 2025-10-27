@@ -215,6 +215,8 @@
   border: 1px solid #e5e7eb;
   transition: all 0.3s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .registration-card:hover {
@@ -292,7 +294,10 @@
 
 .registration-card-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: stretch;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 4px;
 }
 
 .action-btn {
@@ -303,10 +308,11 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  flex: 1;
+  width: 100%;
 }
 
 .action-btn.primary {
-  width: 100%;
   padding: 10px 20px;
   background: linear-gradient(135deg, #12422a 0%, #0d2e1c 100%);
   color: white;
@@ -319,7 +325,6 @@
 }
 
 .action-btn.secondary {
-  width: 100%;
   padding: 10px 20px;
   background: #f3f4f6;
   color: #6b7280;

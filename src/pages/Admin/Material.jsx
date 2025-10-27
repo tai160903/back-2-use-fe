@@ -9,6 +9,7 @@ import {
 import MaterialCard from '../../components/MaterialCard/MaterialCard';
 import MaterialModal from './MaterialModal';
 import { updateMaterialApi } from '../../store/slices/adminSlice';
+import { FaRecycle, FaPlus } from 'react-icons/fa';
 import './Material.css';
 
 const Material = () => {
@@ -57,34 +58,11 @@ const Material = () => {
   };
 
   const renderRecycleIcon = () => (
-    <svg 
-      width="32" 
-      height="32" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-      className="material-title-icon"
-    >
-      <path 
-        d="M9 3V4H4V6H5V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V6H20V4H15V3H9ZM7 6H17V19H7V6ZM9 8V17H11V8H9ZM13 8V17H15V8H13Z" 
-        fill="currentColor"
-      />
-    </svg>
+    <FaRecycle className="material-title-icon" />
   );
 
   const renderAddIcon = () => (
-    <svg 
-      width="20" 
-      height="20" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path 
-        d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" 
-        fill="currentColor"
-      />
-    </svg>
+    <FaPlus size={20} />
   );
 
   const renderEmptyState = () => (

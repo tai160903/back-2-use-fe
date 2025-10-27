@@ -41,7 +41,7 @@ import {
   getMyMaterials,
 } from '../../../store/slices/bussinessSlice';
 
-export default function Material() {
+export default function Materials() {
   const dispatch = useDispatch();
   const { myMaterials, approvedMaterials, materialLoading, materialError } = useSelector(
     (state) => state.businesses
@@ -49,7 +49,11 @@ export default function Material() {
 
   const [activeTab, setActiveTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openViewDialog, setOpenViewDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     materialName: '',
     maximumReuse: '',
@@ -67,17 +71,63 @@ export default function Material() {
   };
 
   const handleOpenDialog = () => {
+    setEditMode(false);
+    setSelectedMaterial(null);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setEditMode(false);
+    setSelectedMaterial(null);
     setFormData({
       materialName: '',
       maximumReuse: '',
       description: '',
     });
     setFormErrors({});
+  };
+
+  // Handle View Material
+  const handleViewMaterial = (material) => {
+    setSelectedMaterial(material);
+    setOpenViewDialog(true);
+  };
+
+  const handleCloseViewDialog = () => {
+    setOpenViewDialog(false);
+    setSelectedMaterial(null);
+  };
+
+  // Handle Edit Material
+  const handleEditMaterial = (material) => {
+    setSelectedMaterial(material);
+    setEditMode(true);
+    setFormData({
+      materialName: material.materialName,
+      maximumReuse: material.maximumReuse,
+      description: material.description,
+    });
+    setOpenDialog(true);
+  };
+
+  // Handle Delete Material
+  const handleDeleteMaterial = (material) => {
+    setSelectedMaterial(material);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setSelectedMaterial(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    // TODO: Implement delete API call
+    console.log('Deleting material:', selectedMaterial);
+    // await dispatch(deleteMaterial(selectedMaterial._id)).unwrap();
+    // dispatch(getMyMaterials());
+    handleCloseDeleteDialog();
   };
 
   const handleInputChange = (e) => {
@@ -133,12 +183,19 @@ export default function Material() {
         maximumReuse: parseInt(formData.maximumReuse, 10)
       };
       
-      await dispatch(createMaterial(materialData)).unwrap();
+      if (editMode && selectedMaterial) {
+        // TODO: Implement update API call
+        console.log('Updating material:', selectedMaterial._id, materialData);
+        // await dispatch(updateMaterial({ id: selectedMaterial._id, data: materialData })).unwrap();
+      } else {
+        await dispatch(createMaterial(materialData)).unwrap();
+      }
+      
       handleCloseDialog();
       // Refresh materials list
       dispatch(getMyMaterials());
     } catch (error) {
-      console.error('Error creating material:', error);
+      console.error('Error saving material:', error);
     }
   };
 
@@ -191,17 +248,31 @@ export default function Material() {
               {showActions && (
                 <TableCell>
                   <Tooltip title="View Details">
-                    <IconButton size="small">
+                    <IconButton 
+                      size="small" 
+                      onClick={() => handleViewMaterial(material)}
+                      sx={{ color: '#12422a' }}
+                    >
                       <ViewIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Edit">
-                    <IconButton size="small">
+                    <IconButton 
+                      size="small" 
+                      onClick={() => handleEditMaterial(material)}
+                      sx={{ color: '#1976d2' }}
+                      disabled={material.status === 'approved'}
+                    >
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete">
-                    <IconButton size="small" color="error">
+                    <IconButton 
+                      size="small" 
+                      color="error"
+                      onClick={() => handleDeleteMaterial(material)}
+                      disabled={material.status === 'approved'}
+                    >
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
@@ -219,7 +290,7 @@ export default function Material() {
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
-          Material Management
+          Materials Management
         </Typography>
         <Button
           variant="contained"
@@ -304,9 +375,9 @@ export default function Material() {
         )}
       </Box>
 
-      {/* Create Material Dialog */}
+      {/* Create/Edit Material Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Material</DialogTitle>
+        <DialogTitle>{editMode ? 'Edit Material' : 'Create New Material'}</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
             <Grid container spacing={2}>
@@ -358,11 +429,94 @@ export default function Material() {
           <DialogActions>
             <Button onClick={handleCloseDialog}>Cancel</Button>
             <Button type="submit" variant="contained">
-              Create Material
+              {editMode ? 'Update Material' : 'Create Material'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
+
+      {/* View Material Dialog */}
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Material Details</DialogTitle>
+        <DialogContent>
+          {selectedMaterial && (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Material Name
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
+                  {selectedMaterial.materialName}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Maximum Reuse
+                </Typography>
+                <Typography variant="body1">
+                  {selectedMaterial.maximumReuse} times
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Description
+                </Typography>
+                <Typography variant="body1">
+                  {selectedMaterial.description}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Status
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  {getStatusChip(selectedMaterial.status || 'pending')}
+                </Box>
+              </Grid>
+              {selectedMaterial.rejectReason && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Rejection Reason
+                  </Typography>
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    {selectedMaterial.rejectReason}
+                  </Alert>
+                </Grid>
+              )}
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseViewDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Material</DialogTitle>
+        <DialogContent>
+          {selectedMaterial && (
+            <Box>
+              <Typography variant="body1" gutterBottom>
+                Are you sure you want to delete this material?
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                <strong>Material:</strong> {selectedMaterial.materialName}
+              </Typography>
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                This action cannot be undone.
+              </Alert>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} variant="contained" color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
+
