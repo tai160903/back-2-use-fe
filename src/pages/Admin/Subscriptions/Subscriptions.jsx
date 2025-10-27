@@ -26,6 +26,7 @@ import {
   getSubscriptionById
 } from "../../../store/slices/subscriptionSlice";
 import toast from "react-hot-toast";
+import { Button } from "@mui/material";
 
 
 export default function Subscriptions() {
@@ -203,20 +204,20 @@ const featuresList = subscription.data?.description || [];
                   </div>
                 </div>
                 <div className="action-buttons-row">
-                  <button 
+                  <Button 
                     className="action-btn-icon edit-btn"
                     onClick={() => handleEditClick(item)}
                     title="Edit"
                   >
                     <MdModeEdit size={20} />
-                  </button>
-                  <button 
+                  </Button>
+                  <Button 
                     className="action-btn-icon delete-btn"
                     onClick={() => handleDeleteClick(item)}
                     title="Delete"
                   >
                     <MdDelete size={20} />
-                  </button>
+                  </Button>
                 </div>
               </div>
               

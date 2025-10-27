@@ -221,7 +221,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
           </button>
         </div>
 
-        <div className="modal-content">
+        <div className="modal-content-subscriptions">
           <Box sx={{ p: 2 }}>
             {mode === "view" ? (
               <>

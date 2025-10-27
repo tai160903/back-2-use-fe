@@ -44,6 +44,7 @@ import Transactions from "../pages/Bussiness/BusinessTransaction/BusinessTransac
 import WalletBusiness from "../pages/Bussiness/WalletBusiness/WalletBusiness";
 import BusinessTransaction from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
 import ProfileBusiness from "../pages/Bussiness/ProfileBusiness/ProfileBusiness";
+import Rewards from "../pages/Home/Rewards/Rewards";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -190,6 +191,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["customer"]}>
               <WalletCustomer />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.REWARDS,
+          element: (
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <Rewards />
             </ProtectedRoute>
           ),
         },

@@ -82,8 +82,10 @@
   transform: scale(1.05);
 }
 
-.modal-content {
+.modal-content-subscriptions {
+  height: auto;
   padding: 0 24px;
+
 }
 
 .subscription-info {
