@@ -43,7 +43,7 @@ import { LuStore } from "react-icons/lu";
 const businessSidebarItems = [
   { id: "business-dashboard", label: "Dashboard", path: PATH.BUSINESS },
   { id: "profile", label: "Profile", path: PATH.BUSINESS_PROFILE },
-  { id: "inventory", label: "Inventory", path: PATH.BUSINESS_INVENTORY },
+  { id: "materials", label: "Materials", path: PATH.BUSINESS_MATERIALS },
   { id: "transaction", label: "Transaction", path: PATH.BUSINESS_TRANSACTION },
   { id: "subscriptions", label: "Subscriptions", path: PATH.BUSINESS_SUBSCRIPTIONS },
   { id: "reedem-rewards", label: "Reedem Rewards", path: PATH.BUSINESS_REEDEM_REWARDS },
@@ -76,7 +76,7 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
     const icons = {
       "business-dashboard": <IoHomeOutline color="#dc2626" className="navbar-icon" />,
       profile: <IoPersonOutline color="#f6ba35" className="navbar-icon" />,
-      inventory: <FiPackage color="#f6ba35" className="navbar-icon" />,
+      materials: <FiPackage color="#f6ba35" className="navbar-icon" />,
       transaction: <GoHistory color="#6967ac" className="navbar-icon" />,
       subscriptions: <FiPackage color="#419065" className="navbar-icon" />,
       "reedem-rewards": <AiOutlineGift color="#ee8a59" className="navbar-icon" />,

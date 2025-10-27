@@ -6,7 +6,7 @@ import {
   MdDescription, 
   MdPayment, 
   MdDateRange, 
-  MdEdit, 
+  MdModeEdit, 
   MdDelete,
   MdAdd,
   MdSettings,
@@ -208,14 +208,14 @@ const featuresList = subscription.data?.description || [];
                     onClick={() => handleEditClick(item)}
                     title="Edit"
                   >
-                    <MdEdit />
+                    <MdModeEdit size={20} />
                   </button>
                   <button 
                     className="action-btn-icon delete-btn"
                     onClick={() => handleDeleteClick(item)}
                     title="Delete"
                   >
-                    <MdDelete />
+                    <MdDelete size={20} />
                   </button>
                 </div>
               </div>
