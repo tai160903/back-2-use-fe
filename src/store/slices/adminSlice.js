@@ -100,6 +100,31 @@ export const reviewMaterialApi = createAsyncThunk(
   }
 );
 
+// Get Business Statistics API
+export const getBusinessStatsApi = createAsyncThunk(
+  "admin/getBusinessStatsApi",
+  async (_, { rejectWithValue }) => {
+    try {
+      // Fetch counts for different statuses in parallel
+      const [allResponse, activeResponse, blockedResponse] = await Promise.all([
+        fetcher.get(`/admin/business?page=1&limit=1`),
+        fetcher.get(`/admin/business?page=1&limit=1&isBlocked=false`),
+        fetcher.get(`/admin/business?page=1&limit=1&isBlocked=true`)
+      ]);
+      
+      return {
+        total: allResponse.data.total || 0,
+        active: activeResponse.data.total || 0,
+        blocked: blockedResponse.data.total || 0
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // Get All Businesses API
 export const getAllBusinessesApi = createAsyncThunk(
   "admin/getAllBusinessesApi",
@@ -177,6 +202,11 @@ const adminSlice = createSlice({
       total: 0,
       currentPage: 1,
       totalPages: 0,
+    },
+    businessStats: {
+      total: 0,
+      active: 0,
+      blocked: 0,
     },
     filters: {
       status: 'all', // 'all', 'pending', 'approved', 'rejected'
@@ -388,6 +418,22 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to review material");
+      })
+      
+      // Get Business Statistics
+      .addCase(getBusinessStatsApi.pending, (state) => {
+        // Don't set loading state for stats fetch
+      })
+      .addCase(getBusinessStatsApi.fulfilled, (state, { payload }) => {
+        state.businessStats = {
+          total: payload.total || 0,
+          active: payload.active || 0,
+          blocked: payload.blocked || 0,
+        };
+      })
+      .addCase(getBusinessStatsApi.rejected, (state, { payload }) => {
+        // Silently fail for stats
+        console.error("Failed to fetch business stats:", payload);
       })
       
       // Get All Businesses
