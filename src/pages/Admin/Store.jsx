@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   getAllBusinessesApi, 
+  getBusinessStatsApi,
   setBusinessBlockedFilter, 
   updateBusinessBlockStatusApi
 } from '../../store/slices/adminSlice';
@@ -23,7 +24,8 @@ const Store = () => {
     businesses, 
     isLoading, 
     businessPagination, 
-    businessFilters 
+    businessFilters,
+    businessStats 
   } = useSelector(state => state.admin);
   
   const [filter, setFilter] = useState("All");
@@ -44,6 +46,11 @@ const Store = () => {
       isBlocked: businessFilters.isBlocked
     }));
   }, [dispatch, currentPage, businessFilters.isBlocked]);
+
+  // Fetch business statistics on component mount
+  useEffect(() => {
+    dispatch(getBusinessStatsApi());
+  }, [dispatch]);
 
   const handlePageChange = (event, newPage) => {
     setCurrentPage(newPage);
@@ -138,8 +145,14 @@ const Store = () => {
       
       console.log('Block result:', result);
       handleCloseBlockModal();
-      // Refresh the page after successful block
-      window.location.reload();
+      
+      // Refresh statistics and business list
+      await dispatch(getBusinessStatsApi());
+      await dispatch(getAllBusinessesApi({
+        page: currentPage,
+        limit: 10,
+        isBlocked: businessFilters.isBlocked
+      }));
     } catch (error) {
       console.error('Block error:', error);
       alert(`Error blocking store: ${error.message || 'Unknown error'}`);
@@ -165,8 +178,14 @@ const Store = () => {
       
       console.log('Unblock result:', result);
       handleCloseUnblockModal();
-      // Refresh the page after successful unblock
-      window.location.reload();
+      
+      // Refresh statistics and business list
+      await dispatch(getBusinessStatsApi());
+      await dispatch(getAllBusinessesApi({
+        page: currentPage,
+        limit: 10,
+        isBlocked: businessFilters.isBlocked
+      }));
     } catch (error) {
       console.error('Unblock error:', error);
       alert(`Error unblocking store: ${error.message || 'Unknown error'}`);
@@ -191,9 +210,9 @@ const Store = () => {
   );
 
   const filteredData = getAllFilteredData();
-  const totalStores = businessPagination.total || 0;
-  const activeStores = businesses.filter(b => b.isActive && !b.isBlocked).length;
-  const blockedStores = businesses.filter(b => b.isBlocked).length;
+  const totalStores = businessStats.total || 0;
+  const activeStores = businessStats.active || 0;
+  const blockedStores = businessStats.blocked || 0;
 
   return (
     <div className="admin-store-management">
