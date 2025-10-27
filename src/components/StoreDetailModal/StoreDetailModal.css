@@ -12,7 +12,8 @@
   padding: 20px;
 }
 
-.modal-content {
+.modal-content-detail {
+  height: auto;
   background: white;
   border-radius: 16px;
   width: 100%;

@@ -56,7 +56,7 @@ const SubscriptionConfirmModal = ({
         </Box>
       </DialogTitle>
 
-      <DialogContent className="modal-content">
+      <DialogContent className="modal-content-subscription-confirm">
         {subscription && (
           <>
             {/* Subscription Info */}

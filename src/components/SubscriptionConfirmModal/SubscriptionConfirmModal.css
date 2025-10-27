@@ -6,7 +6,7 @@
 }
 
 .modal-title {
-  background: linear-gradient(135deg, #008000, #00a000);
+ 
   color: white;
   padding: 20px 24px;
   margin: 0;
@@ -17,7 +17,7 @@
   }
 }
 
-.modal-content {
+.modal-content-subscription-confirm {
   padding: 24px;
   
   .subscription-info {

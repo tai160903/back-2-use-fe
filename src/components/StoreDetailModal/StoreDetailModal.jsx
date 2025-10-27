@@ -31,7 +31,7 @@ const StoreDetailModal = ({ isOpen, onClose, store, onUnblock }) => {
 
   return (
     <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content-detail" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">Store Details</h2>
           <button className="modal-close-btn" onClick={handleClose}>

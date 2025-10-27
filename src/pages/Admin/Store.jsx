@@ -3,8 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { 
   getAllBusinessesApi, 
   setBusinessBlockedFilter, 
-  setBusinessPagination,
-  resetBusinessFilters,
   updateBusinessBlockStatusApi
 } from '../../store/slices/adminSlice';
 import StoreDetailModal from '../../components/StoreDetailModal/StoreDetailModal';
@@ -176,14 +174,14 @@ const Store = () => {
   };
 
   const renderStoreIcon = () => (
-    <LuStore className="store-title-icon" size={32} />
+    <LuStore className="admin-store-title-icon" size={32} />
   );
 
   const renderEmptyState = () => (
-    <div className="store-empty">
-      <LuStore className="store-empty-icon" size={64} />
-      <h3 className="store-empty-title">No stores found</h3>
-      <p className="store-empty-description">
+    <div className="admin-store-empty">
+      <LuStore className="admin-store-empty-icon" size={64} />
+      <h3 className="admin-store-empty-title">No stores found</h3>
+      <p className="admin-store-empty-description">
         {!searchTerm 
           ? 'No stores available at the moment.'
           : `No stores found matching "${searchTerm}". Try changing the search term.`
@@ -198,14 +196,14 @@ const Store = () => {
   const blockedStores = businesses.filter(b => b.isBlocked).length;
 
   return (
-    <div className="store-management">
+    <div className="admin-store-management">
       {/* Header Section */}
-      <div className="store-header">
-        <div className="store-title-section">
+      <div className="admin-store-header">
+        <div className="admin-store-title-section">
           {renderStoreIcon()}
           <div>
-            <h1 className="store-title">Store Management</h1>
-            <p className="store-description">
+            <h1 className="admin-store-title">Store Management</h1>
+            <p className="admin-store-description">
               View and manage business stores and their status
             </p>
           </div>
@@ -213,42 +211,42 @@ const Store = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="store-stats">
-        <div className="stat-card stat-card-0">
-          <div className="stat-content">
-            <div className="stat-info">
-              <h3 className="stat-title">Total Stores</h3>
-              <span className="stat-number">{totalStores}</span>
+      <div className="admin-store-stats">
+        <div className="admin-stat-card admin-stat-card-0">
+          <div className="admin-stat-content">
+            <div className="admin-stat-info">
+              <h3 className="admin-stat-title">Total Stores</h3>
+              <span className="admin-stat-number">{totalStores}</span>
             </div>
-            <FaStore className="stat-icon" />
+            <FaStore className="admin-stat-icon" />
           </div>
         </div>
 
-        <div className="stat-card stat-card-1">
-          <div className="stat-content">
-            <div className="stat-info">
-              <h3 className="stat-title">Active Stores</h3>
-              <span className="stat-number active">{activeStores}</span>
+        <div className="admin-stat-card admin-stat-card-1">
+          <div className="admin-stat-content">
+            <div className="admin-stat-info">
+              <h3 className="admin-stat-title">Active Stores</h3>
+              <span className="admin-stat-number active">{activeStores}</span>
             </div>
-            <FaCheckCircle className="stat-icon active" />
+            <FaCheckCircle className="admin-stat-icon active" />
           </div>
         </div>
 
-        <div className="stat-card stat-card-2">
-          <div className="stat-content">
-            <div className="stat-info">
-              <h3 className="stat-title">Blocked Stores</h3>
-              <span className="stat-number blocked">{blockedStores}</span>
+        <div className="admin-stat-card admin-stat-card-2">
+          <div className="admin-stat-content">
+            <div className="admin-stat-info">
+              <h3 className="admin-stat-title">Blocked Stores</h3>
+              <span className="admin-stat-number blocked">{blockedStores}</span>
             </div>
-            <BiMessageSquareX className="stat-icon blocked" />
+            <BiMessageSquareX className="admin-stat-icon blocked" />
           </div>
         </div>
       </div>
 
       {/* Search and Filter Section */}
-      <div className="store-filters">
-        <div className="search-container">
-          <IoIosSearch className="search-icon" />
+      <div className="admin-store-filters">
+        <div className="admin-search-container">
+          <IoIosSearch className="admin-search-icon" />
           <input
             type="text"
             placeholder="Search by Store Name, Address, Phone Number..."
@@ -257,27 +255,27 @@ const Store = () => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="search-input"
+            className="admin-search-input"
           />
         </div>
         
-        <div className="filter-tabs">
+        <div className="admin-filter-tabs">
           <button 
-            className={`filter-tab ${filter === "All" ? "active" : ""}`}
+            className={`admin-filter-tab ${filter === "All" ? "active" : ""}`}
             onClick={() => handleFilterChange("All")}
           >
             <FaStore />
             All ({totalStores})
           </button>
           <button 
-            className={`filter-tab ${filter === "Active" ? "active" : ""}`}
+            className={`admin-filter-tab ${filter === "Active" ? "active" : ""}`}
             onClick={() => handleFilterChange("Active")}
           >
             <FaCheckCircle />
             Active ({activeStores})
           </button>
           <button 
-            className={`filter-tab ${filter === "Blocked" ? "active" : ""}`}
+            className={`admin-filter-tab ${filter === "Blocked" ? "active" : ""}`}
             onClick={() => handleFilterChange("Blocked")}
           >
             <BiMessageSquareX />
@@ -287,11 +285,11 @@ const Store = () => {
       </div>
 
       {/* Table Header */}
-      <div className="table-header-card">
-        <div className="table-header-cell">Store Name</div>
-        <div className="table-header-cell">Address</div>
-        <div className="table-header-cell">Status</div>
-        <div className="table-header-cell">Actions</div>
+      <div className="admin-table-header-card">
+        <div className="admin-table-header-cell">Store Name</div>
+        <div className="admin-table-header-cell">Address</div>
+        <div className="admin-table-header-cell">Status</div>
+        <div className="admin-table-header-cell">Actions</div>
       </div>
 
       {/* Store Cards */}
@@ -300,74 +298,74 @@ const Store = () => {
       ) : filteredData.length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className="stores-cards">
+        <div className="admin-stores-cards">
           {filteredData.map((store) => {
             const status = store.isBlocked ? "Blocked" : (store.isActive ? "Active" : "Blocked");
             return (
-            <div key={store._id} className={`store-card ${openMenuId === store._id ? 'menu-open' : ''}`}>
-              <div className="store-card-cell store-info">
-                <div className="store-logo-container">
+            <div key={store._id} className={`admin-store-card ${openMenuId === store._id ? 'admin-menu-open' : ''}`}>
+              <div className="admin-store-card-cell admin-store-info">
+                <div className="admin-store-logo-container">
                   {store.businessLogoUrl ? (
                     <img 
                       src={store.businessLogoUrl} 
                       alt={store.businessName}
-                      className="store-logo-avatar"
+                      className="admin-store-logo-avatar"
                     />
                   ) : (
-                    <div className="store-logo-placeholder-avatar">
+                    <div className="admin-store-logo-placeholder-avatar">
                       <FaStore size={20} />
                     </div>
                   )}
                 </div>
-                <div className="store-details">
-                  <div className="store-name">{store.businessName}</div>
-                  <div className="store-type">{store.businessType}</div>
+                <div className="admin-store-details">
+                  <div className="admin-store-name">{store.businessName}</div>
+                  <div className="admin-store-type">{store.businessType}</div>
                 </div>
               </div>
               
-              <div className="store-card-cell">
-                <div className="store-address">{store.businessAddress}</div>
+              <div className="admin-store-card-cell">
+                <div className="admin-store-address">{store.businessAddress}</div>
               </div>
               
-              <div className="store-card-cell">
-                <div className={`status-indicator ${status.toLowerCase()}`}>
-                  <div className={`status-dot ${status.toLowerCase()}`}></div>
-                  <span className="status-text">{status}</span>
+              <div className="admin-store-card-cell">
+                <div className={`admin-status-indicator ${status.toLowerCase()}`}>
+                  <div className={`admin-status-dot ${status.toLowerCase()}`}></div>
+                  <span className="admin-status-text">{status}</span>
                 </div>
               </div>
               
-              <div className="store-card-cell">
-                <div className="action-menu-container">
+              <div className="admin-store-card-cell">
+                <div className="admin-action-menu-container">
                   <div 
-                    className="action-menu"
+                    className="admin-action-menu"
                     onClick={() => handleMenuToggle(store._id)}
                   >
                     <FaEllipsisV size={16} />
                   </div>
                   
                   {openMenuId === store._id && (
-                    <div className="dropdown-menu">
+                    <div className="admin-dropdown-menu">
                       <div 
-                        className="dropdown-item view"
+                        className="admin-dropdown-item admin-view"
                         onClick={() => handleStoreAction(store._id, 'view')}
                       >
-                        <FaEye className="dropdown-icon" />
+                        <FaEye className="admin-dropdown-icon" />
                         <span>View Detail</span>
                       </div>
                       {status === "Active" ? (
                         <div 
-                          className="dropdown-item block"
+                          className="admin-dropdown-item admin-block"
                           onClick={() => handleStoreAction(store._id, 'block')}
                         >
-                          <FaBan className="dropdown-icon" />
+                          <FaBan className="admin-dropdown-icon" />
                           <span>Block Store</span>
                         </div>
                       ) : (
                         <div 
-                          className="dropdown-item unblock"
+                          className="admin-dropdown-item admin-unblock"
                           onClick={() => handleStoreAction(store._id, 'unblock')}
                         >
-                          <FaUnlock className="dropdown-icon" />
+                          <FaUnlock className="admin-dropdown-icon" />
                           <span>Unblock Store</span>
                         </div>
                       )}
@@ -410,25 +408,25 @@ const Store = () => {
 
       {/* Block Store Modal */}
       {isBlockModalOpen && selectedStore && (
-        <div className="modal-overlay" onClick={handleCloseBlockModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">Block Store</h2>
-              <button className="modal-close-btn" onClick={handleCloseBlockModal}>
+        <div className="admin-modal-overlay" onClick={handleCloseBlockModal}>
+          <div className="admin-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h2 className="admin-modal-title">Block Store</h2>
+              <button className="admin-modal-close-btn" onClick={handleCloseBlockModal}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
             </div>
 
-            <div className="modal-body">
-              <div className="store-info">
-                <h3 className="store-name">{selectedStore.businessName}</h3>
-                <p className="store-type">{selectedStore.businessType}</p>
+            <div className="admin-modal-body">
+              <div className="admin-store-info-block">
+                <h3 className="admin-store-name-block">{selectedStore.businessName}</h3>
+                <p className="admin-store-type-block">{selectedStore.businessType}</p>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="reason" className="form-label">
+              <div className="admin-form-group">
+                <label htmlFor="reason" className="admin-form-label">
                   Reason for blocking *
                 </label>
                 <textarea
@@ -436,24 +434,24 @@ const Store = () => {
                   value={blockReason}
                   onChange={(e) => setBlockReason(e.target.value)}
                   placeholder="Please provide a reason for blocking this store..."
-                  className="form-textarea"
+                  className="admin-form-textarea"
                   rows="4"
                   required
                 />
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="admin-modal-footer">
               <button 
                 type="button" 
-                className="btn btn-cancel" 
+                className="admin-btn admin-btn-cancel" 
                 onClick={handleCloseBlockModal}
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className="btn btn-confirm-block"
+                className="admin-btn admin-btn-confirm-block"
                 onClick={handleConfirmBlock}
               >
                 Block Store
