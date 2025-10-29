@@ -268,8 +268,8 @@ const Material = () => {
         <div className="material-grid">
           {(() => {
             const filteredData = getAllFilteredData();
-            const startIndex = (currentPage - 1) * 9;
-            const endIndex = startIndex + 9;
+            const startIndex = (currentPage - 1) * 6;
+            const endIndex = startIndex + 6;
             return filteredData.slice(startIndex, endIndex).map((material) => (
               <MaterialCard 
                 key={material._id} 
@@ -282,10 +282,10 @@ const Material = () => {
       )}
 
       {/* Pagination */}
-      {!isLoading && (() => {
+      {!isLoading && materials.length > 0 && (() => {
         const filteredData = getAllFilteredData();
-        const filteredTotalPages = Math.ceil(filteredData.length / 9);
-        return filteredTotalPages > 1 && (
+        const filteredTotalPages = Math.ceil(filteredData.length / 6);
+        return (
           <Stack
             spacing={2}
             className="mt-5 mb-5"
@@ -296,7 +296,7 @@ const Material = () => {
             }}
           >
             <Pagination
-              count={filteredTotalPages}
+              count={filteredTotalPages > 0 ? filteredTotalPages : 1}
               page={currentPage}
               onChange={handlePageChange}
               variant="outlined"

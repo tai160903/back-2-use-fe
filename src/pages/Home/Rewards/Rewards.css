@@ -1,0 +1,621 @@
+.rewards-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* Reward Points Header */
+.reward-points-header {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+.reward-icon {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.reward-points-info {
+  flex: 1;
+}
+
+.reward-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 8px 0;
+}
+
+.reward-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.points-display {
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  padding: 20px 40px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.points-number {
+  font-size: 48px;
+  font-weight: 700;
+  color: #f59e0b;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.points-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Sections */
+.vouchers-section,
+.my-vouchers-section,
+.points-history-section {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.section-icon {
+  font-size: 28px;
+  color: #fbbf24;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 16px;
+}
+
+.filter-tab {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-tab:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.filter-tab.active {
+  background: #10b981;
+  color: white;
+}
+
+.tab-count {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Vouchers Grid */
+.vouchers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.voucher-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.voucher-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.voucher-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.voucher-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.voucher-info {
+  flex: 1;
+}
+
+.voucher-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+}
+
+.voucher-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.voucher-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.detail-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.code-value {
+  font-family: 'Courier New', monospace;
+  background: #e5e7eb;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.voucher-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.points-required {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f59e0b;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.points-icon {
+  font-size: 16px;
+}
+
+.voucher-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-view-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-view-detail:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.btn-redeem {
+  padding: 8px 16px;
+  border: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-redeem:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-redeem.disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-redeem.disabled:hover {
+  box-shadow: none;
+  transform: none;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+/* My Vouchers Section */
+.my-vouchers-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.my-voucher-tab {
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-voucher-tab:hover {
+  color: #1f2937;
+}
+
+.my-voucher-tab.active {
+  color: #10b981;
+  border-bottom-color: #10b981;
+}
+
+.tab-badge {
+  background: #e5e7eb;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.my-voucher-tab.active .tab-badge {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.my-vouchers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.my-voucher-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.my-voucher-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.my-voucher-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.my-voucher-info {
+  flex: 1;
+}
+
+.my-voucher-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+}
+
+.my-voucher-code {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 4px 0;
+}
+
+.my-voucher-code strong {
+  font-family: 'Courier New', monospace;
+  color: #1f2937;
+}
+
+.my-voucher-expiry {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.voucher-status {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.voucher-status.used {
+  background: #10b981;
+  color: white;
+}
+
+.voucher-status.expired {
+  background: #ef4444;
+  color: white;
+}
+
+/* Points History */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.history-item:hover {
+  background: #f3f4f6;
+}
+
+.history-info {
+  flex: 1;
+}
+
+.history-action {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+}
+
+.history-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.clock-icon {
+  font-size: 12px;
+}
+
+.history-points {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.history-points.positive {
+  color: #10b981;
+}
+
+.history-points.negative {
+  color: #ef4444;
+}
+
+/* Pagination */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.pagination-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.btn-next {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-next:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .vouchers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .rewards-page {
+    padding: 16px;
+  }
+
+  .reward-points-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .reward-points-info {
+    text-align: center;
+  }
+
+  .points-display {
+    width: 100%;
+  }
+
+  .vouchers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .voucher-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .voucher-actions {
+    width: 100%;
+  }
+
+  .btn-view-detail,
+  .btn-redeem {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .reward-title {
+    font-size: 22px;
+  }
+
+  .points-number {
+    font-size: 36px;
+  }
+
+  .section-title {
+    font-size: 20px;
+  }
+}
+

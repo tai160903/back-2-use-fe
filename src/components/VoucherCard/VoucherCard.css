@@ -1,6 +1,6 @@
-/* Additional styles for MaterialCard component */
+/* Additional styles for VoucherCard component */
 
-.material-card-actions-top {
+.voucher-card-actions-top {
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
@@ -9,13 +9,13 @@
   flex-shrink: 0 !important;
 }
 
-.material-card-actions-row {
+.voucher-card-actions-row {
   display: flex !important;
   gap: 6px !important;
   align-items: center !important;
 }
 
-.material-card-actions {
+.voucher-card-actions {
   display: flex !important;
   gap: 8px !important;
 }
@@ -68,6 +68,7 @@
   background-color: #fee2e2 !important;
   color: #b91c1c !important;
 }
+
 .approve-btn {
   background-color: #e8f5e8 !important;
   color: #12422a !important;
@@ -89,7 +90,7 @@
 }
 
 /* Adjust header spacing */
-.material-card-header {
+.voucher-card-header {
   margin-bottom: 16px !important;
   display: flex !important;
   justify-content: space-between !important;
@@ -97,13 +98,13 @@
   gap: 12px !important;
 }
 
-.material-card-info {
+.voucher-card-info {
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
 }
 
-.material-card-icon {
+.voucher-card-icon {
   width: 24px !important;
   height: 24px !important;
   color: #12422a !important;
@@ -112,45 +113,47 @@
   border-radius: 8px !important;
 }
 
-.material-card-title {
+.voucher-card-title {
   font-size: 20px !important;
   font-weight: 700 !important;
   color: #1a1a1a !important;
   margin: 0 !important;
 }
 
-.material-card-subtitle {
+.voucher-card-subtitle {
   font-size: 14px !important;
   color: #6b7280 !important;
   margin: 4px 0 0 0 !important;
 }
 
 /* Card details section */
-.material-card-details {
+.voucher-card-details {
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
 }
 
-.material-detail-item {
+.voucher-detail-item {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
 }
 
-.material-detail-label {
+.voucher-detail-label {
   font-size: 14px !important;
   color: #6b7280 !important;
   font-weight: 500 !important;
 }
 
-.material-detail-value {
+.voucher-detail-value {
   font-size: 14px !important;
   color: #1a1a1a !important;
   font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
-.maximum-reuse-badge {
+.discount-badge {
   background-color: #e8f5e8 !important;
   color: #12422a !important;
   padding: 4px 12px !important;
@@ -159,7 +162,13 @@
   font-weight: 600 !important;
 }
 
-.created-date {
+.points-cost {
+  color: #f59e0b !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.expiry-date {
   color: #6b7280 !important;
   font-size: 14px !important;
 }
@@ -179,18 +188,49 @@
   color: #92400e !important;
 }
 
-.status-approved {
+.status-active {
   background-color: #e8f5e8 !important;
   color: #12422a !important;
 }
 
-.status-rejected {
+.status-expired {
   background-color: #fee2e2 !important;
   color: #dc2626 !important;
 }
 
+/* Voucher card base */
+.voucher-card {
+  background: white !important;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.voucher-card:hover {
+  background: #164e31 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.voucher-card:hover .voucher-card-title,
+.voucher-card:hover .voucher-card-subtitle,
+.voucher-card:hover .voucher-detail-label,
+.voucher-card:hover .voucher-detail-value,
+.voucher-card:hover .status-badge,
+.voucher-card:hover .points-cost,
+.voucher-card:hover .discount-badge,
+.voucher-card:hover .expiry-date {
+  color: #ffffff !important;
+}
+
 /* Simple modal styles for reject reason */
-.mc-modal-overlay {
+.vc-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.4);
@@ -200,7 +240,7 @@
   z-index: 1000;
 }
 
-.mc-modal {
+.vc-modal {
   background: #fff;
   width: 100%;
   max-width: 460px;
@@ -209,7 +249,7 @@
   overflow: hidden;
 }
 
-.mc-modal-header {
+.vc-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -217,30 +257,30 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.mc-modal-title {
+.vc-modal-title {
   margin: 0;
   font-size: 18px;
 }
 
-.mc-modal-close {
+.vc-modal-close {
   background: none;
   border: none;
   font-size: 20px;
   cursor: pointer;
 }
 
-.mc-modal-body {
+.vc-modal-body {
   padding: 16px;
 }
 
-.mc-label {
+.vc-label {
   display: block;
   font-size: 14px;
   color: #374151;
   margin-bottom: 6px;
 }
 
-.mc-textarea {
+.vc-textarea {
   width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -249,7 +289,7 @@
   resize: vertical;
 }
 
-.mc-modal-actions {
+.vc-modal-actions {
   padding: 14px 16px;
   display: flex;
   justify-content: flex-end;
@@ -257,7 +297,7 @@
   border-top: 1px solid #e5e7eb;
 }
 
-.mc-btn {
+.vc-btn {
   padding: 8px 14px;
   border-radius: 8px;
   background: #f3f4f6;
@@ -265,7 +305,7 @@
   cursor: pointer;
 }
 
-.mc-btn-danger {
+.vc-btn-danger {
   padding: 8px 14px;
   border-radius: 8px;
   background: #fee2e2;

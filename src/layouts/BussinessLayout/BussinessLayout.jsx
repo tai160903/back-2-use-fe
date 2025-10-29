@@ -7,10 +7,7 @@ import { getProfileApi } from "../../store/slices/userSlice";
 import { logout } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { PATH } from "../../routes/path";
-import { IconButton, Box } from "@mui/material";
-import { AiOutlineMenuFold, AiOutlineMenuUnfold } from "react-icons/ai";
-import { IoMdNotificationsOutline, IoIosLogOut } from "react-icons/io";
-import logoImage from "../../assets/image/Back2Use-Review 1.png";
+import "./BussinessLayout.css";
 
 export default function BussinessLayout() {
   const [isOpen, setIsOpen] = useState(false); // Trạng thái sidebar
@@ -32,16 +29,19 @@ export default function BussinessLayout() {
     navigate(PATH.LOGIN);
   };
 
+  const handleDrawerToggle = (open) => {
+    setIsOpen(open);
+  };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      {/* Sidebar bên trái - 100vh */}
-      <BusinessNavbar onDrawerToggle={setIsOpen} />
+    <div className="business-layout-container">
+      {/* Sidebar bên trái - Fixed */}
+      <BusinessNavbar onDrawerToggle={handleDrawerToggle} />
 
       {/* Cột nội dung bên phải gồm Header + Content */}
-      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <div className={`business-content-wrapper ${isOpen ? 'sidebar-open' : ''}`}>
         <HeaderLog />
-        <div style={{ flex: 1, padding: "20px" }}>
+        <div className="business-page-content">
           <Outlet />
         </div>
       </div>

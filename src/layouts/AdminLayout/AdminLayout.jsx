@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import HeaderLog from "../../components/HeaderLog/HeaderLog";
 import AdminNavbar from "../../components/AdminNavbar/AdminNavbar";
+import "./AdminLayout.css";
 
 export default function AdminLayout() {
   const [activeTab, setActiveTab] = useState("admin");
@@ -13,14 +14,14 @@ export default function AdminLayout() {
   const location = useLocation();
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      {/* Sidebar bên trái */}
+    <div className="admin-layout-container">
+      {/* Sidebar bên trái - Fixed */}
       <AdminNavbar onDrawerToggle={handleDrawerToggle} />
 
       {/* Cột nội dung bên phải gồm Header + Content */}
-      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <div className={`admin-content-wrapper ${isOpen ? 'sidebar-open' : ''}`}>
         <HeaderLog />
-        <div style={{ flex: 1, padding: "20px" }}>
+        <div className="admin-main-content">
           <Outlet />
         </div>
       </div>

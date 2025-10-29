@@ -4,6 +4,7 @@ import HeaderLog from "../../components/HeaderLog/HeaderLog";
 import Navbar from "../../components/Navbar/Navbar";
 import { useDispatch, useSelector } from "react-redux";
 import { getProfileApi } from "../../store/slices/userSlice";
+import "./MainLayout.css";
 
 export default function MainLayout() {
   const [activeTab, setActiveTab] = useState("home");
@@ -19,19 +20,23 @@ export default function MainLayout() {
     }
   }, [dispatch, userInfo]);
 
+  const handleDrawerToggle = (open) => {
+    setIsOpen(open);
+  };
+
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      {/* Sidebar bên trái */}
+    <div className="main-layout-container">
+      {/* Sidebar bên trái - Fixed */}
       <Navbar
         activeTab={location.pathname}
         onTabChange={setActiveTab}
-        onDrawerToggle={setIsOpen}
+        onDrawerToggle={handleDrawerToggle}
       />
 
       {/* Cột nội dung bên phải gồm Header + Content */}
-      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <div className={`main-content-wrapper ${isOpen ? 'sidebar-open' : ''}`}>
         <HeaderLog />
-        <div style={{ flex: 1, padding: "20px" }}>
+        <div className="main-page-content">
           <Outlet />
         </div>
       </div>

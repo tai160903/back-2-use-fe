@@ -125,6 +125,7 @@
 .search-container {
   position: relative;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .search-icon {
@@ -145,6 +146,10 @@
   background: white;
   transition: all 0.3s ease;
   outline: none;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
 }
 
 .search-input:focus {

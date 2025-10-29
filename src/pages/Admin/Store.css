@@ -53,6 +53,8 @@
 }
 
 .admin-stat-card {
+  flex: 1;
+  max-width: 100%;
   background: white;
   border-radius: 16px;
   padding: 24px;
@@ -434,7 +436,7 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: #ffffff;
+  background: #ffffff !important;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -467,6 +469,7 @@
   font-weight: 500;
   position: relative;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  color: #374151;
 }
 
 .admin-dropdown-item:last-child {
@@ -476,6 +479,19 @@
 .admin-dropdown-item:hover {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   transform: translateX(4px);
+}
+
+.admin-dropdown-item.admin-view {
+  color: #0284c7;
+}
+
+.admin-dropdown-item.admin-view:hover {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #075985;
+}
+
+.admin-dropdown-item.admin-view:hover .admin-dropdown-icon {
+  transform: scale(1.1);
 }
 
 .admin-dropdown-item.admin-block {
@@ -508,6 +524,27 @@
   font-size: 16px;
   transition: all 0.2s ease;
   flex-shrink: 0;
+}
+
+/* Ensure dropdown menu is not affected by card hover */
+.admin-store-card:hover .admin-dropdown-menu {
+  background: #ffffff !important;
+}
+
+.admin-store-card:hover .admin-dropdown-item {
+  color: #374151 !important;
+}
+
+.admin-store-card:hover .admin-dropdown-item.admin-view {
+  color: #0284c7 !important;
+}
+
+.admin-store-card:hover .admin-dropdown-item.admin-block {
+  color: #dc3545 !important;
+}
+
+.admin-store-card:hover .admin-dropdown-item.admin-unblock {
+  color: #28a745 !important;
 }
 
 /* Empty state */

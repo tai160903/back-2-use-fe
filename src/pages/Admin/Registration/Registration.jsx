@@ -29,7 +29,7 @@ export default function Registration() {
     (state) => state.businesses
   );
   useEffect(() => {
-    dispatch(getAllBusinesses({ page: currentPage, limit: 10 }));
+    dispatch(getAllBusinesses({ page: currentPage, limit: 5 }));
     dispatch(getAllBusinessesForStats());
   }, [dispatch, currentPage]);
 
@@ -72,6 +72,14 @@ export default function Registration() {
           item.businessPhone.includes(searchTerm)
       );
     }
+    
+    // Sort by newest first (createdAt descending)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA; // Newest first
+    });
+    
     return filtered;
   };
 
@@ -281,8 +289,8 @@ export default function Registration() {
           <div className="registration-cards">
             {(() => {
               const filteredData = getAllFilteredData();
-              const startIndex = (currentPage - 1) * 10;
-              const endIndex = startIndex + 10;
+              const startIndex = (currentPage - 1) * 5;
+              const endIndex = startIndex + 5;
               return filteredData.slice(startIndex, endIndex).map((item) => {
                 const id = item.id || item._id || item.businessId;
                 const status = item.status; // pending | approved | rejected
@@ -344,7 +352,7 @@ export default function Registration() {
       {/* Pagination */}
       {!isLoading && (() => {
         const filteredData = getAllFilteredData();
-        const filteredTotalPages = Math.ceil(filteredData.length / 10);
+        const filteredTotalPages = Math.ceil(filteredData.length / 5);
         return filteredTotalPages > 1 && (
           <Stack
             spacing={2}

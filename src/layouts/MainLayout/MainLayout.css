@@ -1,0 +1,53 @@
+/* Main Layout (User) - Fixed Sidebar */
+.main-layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Fixed navbar for main layout only */
+.main-layout-container .navbar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 100;
+}
+
+/* Custom scrollbar for main navbar */
+.main-layout-container .navbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.main-layout-container .navbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-layout-container .navbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.main-layout-container .navbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Content wrapper */
+.main-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-left: 70px; /* Default width when sidebar is closed */
+  transition: margin-left 0.3s ease;
+}
+
+.main-content-wrapper.sidebar-open {
+  margin-left: 250px; /* Width when sidebar is open */
+}
+
+.main-page-content {
+  flex: 1;
+  padding: 20px;
+}
+

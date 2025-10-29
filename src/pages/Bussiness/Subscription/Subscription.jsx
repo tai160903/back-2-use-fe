@@ -24,7 +24,7 @@ export default function Subscription() {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 5;
   
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);

@@ -1,0 +1,8 @@
+/* Business Navbar - Uses same styles as AdminNavbar but scoped to business-layout-container */
+/* This file ensures BusinessNavbar doesn't conflict with other navbars */
+
+/* Note: The actual styling is inherited from the base .navbar class in Navbar.css */
+/* The fixed positioning is controlled by BussinessLayout.css with .business-layout-container scope */
+
+/* Any business-specific navbar overrides can go here */
+

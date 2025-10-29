@@ -100,6 +100,105 @@ export const reviewMaterialApi = createAsyncThunk(
   }
 );
 
+// ============ VOUCHER APIs ============
+
+// Create Voucher API
+export const createVoucherApi = createAsyncThunk(
+  "admin/createVoucherApi",
+  async (voucherData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/admin/vouchers", voucherData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get All Vouchers API
+export const getAllVouchersApi = createAsyncThunk(
+  "admin/getAllVouchersApi",
+  async ({ page = 1, limit = 10, status, name }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/vouchers?page=${page}&limit=${limit}`;
+      
+      // Append filters
+      if (status && status !== 'all') url += `&status=${status}`;
+      if (name && name.trim()) url += `&name=${encodeURIComponent(name.trim())}`;
+      
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Voucher by ID API
+export const getVoucherByIdApi = createAsyncThunk(
+  "admin/getVoucherByIdApi",
+  async (voucherId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/admin/vouchers/${voucherId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Update Voucher API
+export const updateVoucherApi = createAsyncThunk(
+  "admin/updateVoucherApi",
+  async ({ voucherId, voucherData }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.put(`/admin/vouchers/${voucherId}`, voucherData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Delete Voucher API
+export const deleteVoucherApi = createAsyncThunk(
+  "admin/deleteVoucherApi",
+  async (voucherId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.delete(`/admin/vouchers/${voucherId}`);
+      const payload = response?.data || {};
+      return { ...payload, id: voucherId };
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Review Voucher API (Approve/Reject)
+export const reviewVoucherApi = createAsyncThunk(
+  "admin/reviewVoucherApi",
+  async ({ voucherId, reviewData }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(`/admin/vouchers/${voucherId}/review`, reviewData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // Get Business Statistics API
 export const getBusinessStatsApi = createAsyncThunk(
   "admin/getBusinessStatsApi",
@@ -187,6 +286,8 @@ const adminSlice = createSlice({
     currentMaterial: null,
     businesses: [],
     currentBusiness: null,
+    vouchers: [],
+    currentVoucher: null,
     isLoading: false,
     error: null,
     pagination: {
@@ -197,6 +298,13 @@ const adminSlice = createSlice({
       totalPages: 0,
     },
     businessPagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
+    },
+    voucherPagination: {
       page: 1,
       limit: 10,
       total: 0,
@@ -215,6 +323,10 @@ const adminSlice = createSlice({
     businessFilters: {
       isBlocked: null, // null = all, true = blocked, false = unblocked
     },
+    voucherFilters: {
+      status: 'all', // 'all', 'pending', 'active', 'expired'
+      name: '',
+    },
   },
   reducers: {
     clearError: (state) => {
@@ -225,6 +337,9 @@ const adminSlice = createSlice({
     },
     clearCurrentBusiness: (state) => {
       state.currentBusiness = null;
+    },
+    clearCurrentVoucher: (state) => {
+      state.currentVoucher = null;
     },
     setStatusFilter: (state, { payload }) => {
       state.filters.status = payload;
@@ -250,6 +365,21 @@ const adminSlice = createSlice({
     resetBusinessFilters: (state) => {
       state.businessFilters = {
         isBlocked: null,
+      };
+    },
+    setVoucherStatusFilter: (state, { payload }) => {
+      state.voucherFilters.status = payload;
+    },
+    setVoucherNameFilter: (state, { payload }) => {
+      state.voucherFilters.name = payload;
+    },
+    setVoucherPagination: (state, { payload }) => {
+      state.voucherPagination = { ...state.voucherPagination, ...payload };
+    },
+    resetVoucherFilters: (state) => {
+      state.voucherFilters = {
+        status: 'all',
+        name: '',
       };
     },
   },
@@ -523,6 +653,173 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to update business block status");
+      })
+      
+      // ============ VOUCHER EXTRA REDUCERS ============
+      
+      // Create Voucher
+      .addCase(createVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Add the new voucher to the beginning of the list
+        state.vouchers.unshift(payload.data);
+        toast.success(payload.message || "Voucher created successfully!");
+      })
+      .addCase(createVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create voucher");
+      })
+      
+      // Get All Vouchers
+      .addCase(getAllVouchersApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getAllVouchersApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.vouchers = payload.data || [];
+        // Update pagination with response data
+        state.voucherPagination = {
+          ...state.voucherPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getAllVouchersApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch vouchers");
+      })
+      
+      // Get Voucher by ID
+      .addCase(getVoucherByIdApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getVoucherByIdApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentVoucher = payload.data;
+      })
+      .addCase(getVoucherByIdApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch voucher");
+      })
+      
+      // Update Voucher
+      .addCase(updateVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update the voucher in the list
+        const updatedId = payload?.data?._id || payload?.data?.id;
+        const index = state.vouchers.findIndex(
+          (voucher) => voucher._id === updatedId || voucher.id === updatedId
+        );
+        if (index !== -1) {
+          state.vouchers[index] = payload.data;
+        }
+        if (
+          (state.currentVoucher?._id && state.currentVoucher._id === updatedId) ||
+          (state.currentVoucher?.id && state.currentVoucher.id === updatedId)
+        ) {
+          state.currentVoucher = payload.data;
+        }
+        toast.success(payload.message || "Voucher updated successfully!");
+      })
+      .addCase(updateVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to update voucher");
+      })
+      
+      // Delete Voucher
+      .addCase(deleteVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Remove the voucher from the list
+        const deletedId = payload?.data?._id || payload?.data?.id || payload?.id;
+        state.vouchers = state.vouchers.filter(
+          (voucher) => voucher._id !== deletedId && voucher.id !== deletedId
+        );
+        if (
+          (state.currentVoucher?._id && state.currentVoucher._id === deletedId) ||
+          (state.currentVoucher?.id && state.currentVoucher.id === deletedId)
+        ) {
+          state.currentVoucher = null;
+        }
+        toast.success(payload.message || "Voucher deleted successfully!");
+      })
+      .addCase(deleteVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to delete voucher");
+      })
+      
+      // Review Voucher (Approve/Reject)
+      .addCase(reviewVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(reviewVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+
+        const updated = payload?.data || payload || {};
+        const updatedId = updated._id || updated.id;
+        const updatedStatus = updated.status;
+
+        if (updatedId) {
+          // Update the voucher status in the list
+          const index = state.vouchers.findIndex(
+            (voucher) => voucher._id === updatedId || voucher.id === updatedId
+          );
+          if (index !== -1) {
+            state.vouchers[index].status = updatedStatus || state.vouchers[index].status;
+            if (updated.rejectReason !== undefined) {
+              state.vouchers[index].rejectReason = updated.rejectReason;
+            }
+          }
+
+          if (
+            (state.currentVoucher?._id && state.currentVoucher._id === updatedId) ||
+            (state.currentVoucher?.id && state.currentVoucher.id === updatedId)
+          ) {
+            if (updatedStatus) state.currentVoucher.status = updatedStatus;
+            if (updated.rejectReason !== undefined) {
+              state.currentVoucher.rejectReason = updated.rejectReason;
+            }
+          }
+        }
+
+        // Show appropriate success message
+        if (updatedStatus === 'approved' || updatedStatus === 'active') {
+          toast.success(payload?.message || "Voucher approved successfully!");
+        } else if (updatedStatus === 'rejected' || updatedStatus === 'expired') {
+          toast.success(payload?.message || "Voucher rejected successfully!");
+        } else {
+          toast.success(payload?.message || "Voucher review updated successfully!");
+        }
+      })
+      .addCase(reviewVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to review voucher");
       });
   },
 });
@@ -531,12 +828,17 @@ export const {
   clearError, 
   clearCurrentMaterial, 
   clearCurrentBusiness,
+  clearCurrentVoucher,
   setStatusFilter, 
   setMaterialNameFilter,
   setPagination, 
   resetFilters,
   setBusinessBlockedFilter,
   setBusinessPagination,
-  resetBusinessFilters
+  resetBusinessFilters,
+  setVoucherStatusFilter,
+  setVoucherNameFilter,
+  setVoucherPagination,
+  resetVoucherFilters
 } = adminSlice.actions;
 export default adminSlice.reducer;
