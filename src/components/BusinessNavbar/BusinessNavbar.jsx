@@ -74,14 +74,14 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
 
   const getIconComponent = (iconName) => {
     const icons = {
-      "business-dashboard": <IoHomeOutline color="#dc2626" className="navbar-icon" />,
-      profile: <IoPersonOutline color="#f6ba35" className="navbar-icon" />,
-      materials: <FiPackage color="#f6ba35" className="navbar-icon" />,
-      transaction: <GoHistory color="#6967ac" className="navbar-icon" />,
-      subscriptions: <FiPackage color="#419065" className="navbar-icon" />,
-      "reedem-rewards": <AiOutlineGift color="#ee8a59" className="navbar-icon" />,
-      wallet: <MdOutlineAccountBalanceWallet color="#7b1fa2" className="navbar-icon" />,
-      logout: <CiLogout color="#fb4225" className="navbar-icon" />,
+      "business-dashboard": <IoHomeOutline className="navbar-icon" />,
+      profile: <IoPersonOutline className="navbar-icon" />,
+      materials: <FiPackage className="navbar-icon" />,
+      transaction: <GoHistory className="navbar-icon" />,
+      subscriptions: <FiPackage className="navbar-icon" />,
+      "reedem-rewards": <AiOutlineGift className="navbar-icon" />,
+      wallet: <MdOutlineAccountBalanceWallet className="navbar-icon" />,
+      logout: <CiLogout className="navbar-icon" />,
     };
     return icons[iconName];
   };
@@ -90,9 +90,7 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
     <div
       className={`navbar ${isOpen ? "navbar-open" : "navbar-closed"}`}
       style={{
-        height: "auto",
-        background: "#fff",
-        borderRight: "1px solid #ddd",
+        borderRight: "none",
         transition: "width 0.3s",
       }}
     >

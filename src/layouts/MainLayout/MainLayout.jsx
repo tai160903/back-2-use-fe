@@ -20,27 +20,18 @@ export default function MainLayout() {
   }, [dispatch, userInfo]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* Header cố định trên cùng */}
-      <HeaderLog />
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      {/* Sidebar bên trái */}
+      <Navbar
+        activeTab={location.pathname}
+        onTabChange={setActiveTab}
+        onDrawerToggle={setIsOpen}
+      />
 
-      <div style={{ display: "flex", flex: 1 }}>
-        {/* Navbar bên trái */}
-        <Navbar
-          activeTab={location.pathname}
-          onTabChange={setActiveTab}
-          onDrawerToggle={setIsOpen}
-        />
-
-        {/* Nội dung chính bên phải */}
-        <div
-          style={{
-            flexGrow: 1,
-            marginLeft: isOpen ? "" : "70px",
-            transition: "margin-left 0.3s",
-            padding: "20px",
-          }}
-        >
+      {/* Cột nội dung bên phải gồm Header + Content */}
+      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+        <HeaderLog />
+        <div style={{ flex: 1, padding: "20px" }}>
           <Outlet />
         </div>
       </div>

@@ -1,10 +1,14 @@
 .navbar {
   display: flex;
   flex-direction: column;
-  height: 200vh;
+  height: 100vh;
   transition: width 0.3s;
   overflow: hidden !important;
-  white-space: nowrap;
+  white-space: normal;
+  background: #007c00 !important; 
+  color: #ffffff;
+  border: none !important;
+  flex-shrink: 0;
 }
 
 .navbar-paper {
@@ -23,29 +27,61 @@
 
 .navbar-content {
   line-height: 38px !important;
-  padding: 10px !important;
+  padding: 10px 0px 10px 10px !important;
 }
 
 .navbar-header {
   display: flex;
-  justify-content: flex-end;
-  padding: 8px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-logo-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.navbar-logo-text {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .navbar-item {
-  margin-top: 20px;
+  margin-top: 16px;
+  color: #ffffff;
+  padding: 15px !important;
+  position: relative;
+  overflow: visible;
+  padding: 10px 18px;
 }
 
 .navbar-item:hover {
-  border-radius: 10px;
-  background: #e7f3e7 !important;
-  font-weight: bold;
+  padding: 15px !important;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  background: #ffffff !important;
+  color: #007c00 !important;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
 
 .navbar-item .MuiListItemText-primary {
   font-weight: 400;
   transition: font-weight 0.2s ease-in-out;
+  color: inherit;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .navbar-item:hover .MuiListItemText-primary {
@@ -53,15 +89,18 @@
 }
 
 .navbar-item.active {
-  border-radius: 10px;
-  background: #007c00;
-  color: white;
+  border-top-left-radius: 20px !important;
+  border-bottom-left-radius: 20px !important;
+  background: #ffffff;
+  color: #007c00;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  padding: 15px !important;
 }
-
+  
 .navbar-item.active:hover {
-  border-radius: 10px;
-  background: #007c00 !important;
-  color: white;
+  padding: 15px !important;
+  background: #ffffff !important;
+  color: #007c00;
   cursor: pointer;
 }
 
@@ -69,11 +108,12 @@
   font-weight: 100 !important;
 }
 
-.navbar-item.active .navbar-icon {
-  color: white !important;
-}
+.navbar-item.active .navbar-icon { color: #007c00 !important; }
 
 .navbar-icon {
   text-align: center;
   font-size: 22px;
+  color: #ffffff !important;
 }
+
+.navbar-item:hover .navbar-icon { color: #007c00 !important; }

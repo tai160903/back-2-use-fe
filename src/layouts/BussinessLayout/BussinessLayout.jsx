@@ -34,35 +34,14 @@ export default function BussinessLayout() {
 
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* Header cố định trên cùng với logo và toggle button */}
-      <div >       
-        
-        {/* Thông tin user (avatar, tên, ví) ở giữa */}
-        <div style={{ marginLeft: "20px" }}>
-          <HeaderLog />
-        </div>
-        
-        {/* Nút thông báo và logout bên phải */}
-      
-      </div>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      {/* Sidebar bên trái - 100vh */}
+      <BusinessNavbar onDrawerToggle={setIsOpen} />
 
-      <div style={{ display: "flex", flex: 1 }}>
-        {/* BusinessNavbar bên trái - cố định */}
-        <BusinessNavbar
-         onDrawerToggle={setIsOpen}
-        />
-
-        {/* Nội dung chính bên phải */}
-        <div
-          style={{
-            flexGrow: 1,
-            marginLeft: isOpen ? "" : "70px",
-            transition: "margin-left 0.3s",
-            padding: "20px",
-         
-          }}
-        >
+      {/* Cột nội dung bên phải gồm Header + Content */}
+      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+        <HeaderLog />
+        <div style={{ flex: 1, padding: "20px" }}>
           <Outlet />
         </div>
       </div>
