@@ -508,3 +508,318 @@
     padding: 12px;
   }
 }
+
+/* Table Header (giống trang Users) */
+.table-header-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 80px;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.table-header-cell {
+  font-weight: 800;
+  color: #12422a;
+  font-size: 16px;
+}
+
+/* Danh sách thẻ (giống Users) */
+.registration-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: visible;
+}
+
+.registration-row {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 80px;
+  gap: 20px;
+  align-items: center;
+  position: relative;
+  overflow: visible;
+}
+
+.registration-row:hover {
+  background: #164e31;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Đảm bảo chữ và icon bên trong chuyển trắng khi hover */
+.registration-row:hover .registration-name,
+.registration-row:hover .registration-subtitle,
+.registration-row:hover .registration-email,
+.registration-row:hover .registration-phone {
+  color: #ffffff !important;
+}
+
+.registration-row:hover .registration-avatar {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+/* Badge trạng thái khi hover trên nền tối */
+.registration-row:hover .status-indicator {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+.registration-row:hover .status-dot {
+  background-color: #ffffff;
+  box-shadow: none;
+}
+
+/* Nút menu hành động trên nền tối */
+.registration-row:hover .action-menu {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.registration-row.menu-open {
+  z-index: 1000;
+  position: relative;
+}
+
+.registration-cell {
+  display: flex;
+  align-items: center;
+}
+
+.registration-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.registration-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #e8f5e8;
+  color: #12422a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.registration-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.registration-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.registration-subtitle {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.registration-email,
+.registration-phone {
+  color: #5b6b62;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Status Indicator (điều chỉnh cho pending/approved/rejected) */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid;
+  transition: all 0.3s ease;
+}
+
+.status-indicator.pending {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: none !important;
+}
+
+.status-indicator.approved {
+  background: #e8f5e8 !important;
+  color: #12422a !important;
+  border: none !important;
+}
+
+.status-indicator.rejected {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border: none !important;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.status-text {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Action Menu (đồng bộ với Users) */
+.action-menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.action-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.3s ease;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.action-menu:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+  transform: scale(1.05);
+}
+
+.action-menu:active {
+  transform: scale(0.95);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  z-index: 9999;
+  min-width: 200px;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  transform: translateX(4px);
+}
+
+.dropdown-item.unblock {
+  color: #28a745;
+}
+
+.dropdown-item.unblock:hover {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .table-header-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .table-header-cell {
+    display: none;
+  }
+
+  .registration-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 20px;
+  }
+
+  .registration-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .registration-info {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .action-menu-container {
+    align-self: flex-end;
+    justify-content: flex-end;
+  }
+
+  .dropdown-menu {
+    right: -8px;
+    min-width: 180px;
+    top: calc(100% + 12px);
+  }
+
+  .action-menu {
+    width: 40px;
+    height: 40px;
+  }
+}

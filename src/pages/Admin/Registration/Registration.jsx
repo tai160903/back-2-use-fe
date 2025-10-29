@@ -9,6 +9,7 @@ import { CiMail } from "react-icons/ci";
 import { MdOutlinePhone } from "react-icons/md";
 import { IoLocationOutline } from "react-icons/io5";
 import { TiClipboard } from "react-icons/ti";
+import { FaEllipsisV } from "react-icons/fa";
 import ModalRegistration from "../../../components/ModalRegistration/ModalRegistration";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
@@ -21,6 +22,7 @@ export default function Registration() {
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   const dispatch = useDispatch();
   const { businesses, allBusinesses, totalPages, total, isLoading } = useSelector(
@@ -48,6 +50,10 @@ export default function Registration() {
   const handleFilterChange = (event, newFilter) => {
     setFilter(newFilter);
     setCurrentPage(1);
+  };
+
+  const handleMenuToggle = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
   };
 
   // Hàm để lấy dữ liệu đã filter từ tất cả businesses
@@ -258,77 +264,81 @@ export default function Registration() {
         </div>
       </div>
 
-      {/* Business Cards */}
+      {/* Business List (Users-like layout) */}
       {isLoading ? (
         renderLoadingState()
       ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className="registration-grid">
-          {(() => {
-            const filteredData = getAllFilteredData();
-            const startIndex = (currentPage - 1) * 10;
-            const endIndex = startIndex + 10;
-            return filteredData.slice(startIndex, endIndex).map((item) => (
-            <div key={item.id} className="registration-card">
-              <div className="registration-card-header">
-                <div className="registration-card-info">
-                  <div className="registration-card-icon">
-                    <PiClipboardTextBold />
+        <>
+          <div className="table-header-card">
+            <div className="table-header-cell">Business</div>
+            <div className="table-header-cell">Email</div>
+            <div className="table-header-cell">Phone</div>
+            <div className="table-header-cell">Status</div>
+            <div className="table-header-cell">Actions</div>
+          </div>
+          <div className="registration-cards">
+            {(() => {
+              const filteredData = getAllFilteredData();
+              const startIndex = (currentPage - 1) * 10;
+              const endIndex = startIndex + 10;
+              return filteredData.slice(startIndex, endIndex).map((item) => {
+                const id = item.id || item._id || item.businessId;
+                const status = item.status; // pending | approved | rejected
+                return (
+                  <div key={id} className={`registration-row ${openMenuId === id ? 'menu-open' : ''}`}>
+                    <div className="registration-cell registration-info">
+                      <div className="registration-avatar">
+                        <PiClipboardTextBold />
+                      </div>
+                      <div className="registration-details">
+                        <div className="registration-name">{item.businessName}</div>
+                        <div className="registration-subtitle">Business Application</div>
+                      </div>
+                    </div>
+
+                    <div className="registration-cell">
+                      <div className="registration-email">{item.businessMail}</div>
+                    </div>
+
+                    <div className="registration-cell">
+                      <div className="registration-phone">{item.businessPhone}</div>
+                    </div>
+
+                    <div className="registration-cell">
+                      <div className={`status-indicator ${status}`}>
+                        <div className={`status-dot ${status}`}></div>
+                        <span className="status-text">{status}</span>
+                      </div>
+                    </div>
+
+                    <div className="registration-cell">
+                      <div className="action-menu-container">
+                        <div 
+                          className="action-menu"
+                          onClick={() => handleMenuToggle(id)}
+                        >
+                          <FaEllipsisV size={16} />
+                        </div>
+                        {openMenuId === id && (
+                          <div className="dropdown-menu">
+                            <div 
+                              className="dropdown-item unblock"
+                              onClick={() => { setOpenMenuId(null); handleActionClick(item); }}
+                            >
+                              <span>Manage Application</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="registration-card-title">{item.businessName}</h3>
-                    <p className="registration-card-subtitle">Business Application</p>
-                  </div>
-                </div>
-                <span className={`status-badge status-${item.status}`}>
-                  {item.status}
-                </span>
-              </div>
-              
-              <div className="registration-card-details">
-                <div className="registration-detail-item">
-                  <span className="registration-detail-label">
-                    <CiMail />
-                    Email
-                  </span>
-                  <span className="registration-detail-value">{item.businessMail}</span>
-                </div>
-                <div className="registration-detail-item">
-                  <span className="registration-detail-label">
-                    <MdOutlinePhone />
-                    Phone
-                  </span>
-                  <span className="registration-detail-value">{item.businessPhone}</span>
-                </div>
-                <div className="registration-detail-item">
-                  <span className="registration-detail-label">
-                    <IoLocationOutline />
-                    Address
-                  </span>
-                  <span className="registration-detail-value">{item.businessAddress}</span>
-                </div>
-                <div className="registration-detail-item">
-                  <span className="registration-detail-label">
-                    <TiClipboard />
-                    Tax Code
-                  </span>
-                  <span className="registration-detail-value">{item.taxCode}</span>
-                </div>
-              </div>
-              
-              <div className="registration-card-actions">
-                <button 
-                  className={`action-btn ${item.status === "pending" ? "primary" : "secondary"}`}
-                  onClick={() => handleActionClick(item)}
-                >
-                  {item.status === "pending" ? "Await Approval" : "View Details"}
-                </button>
-              </div>
-            </div>
-            ));
-          })()}
-        </div>
+                );
+              });
+            })()}
+          </div>
+        </>
       )}
 
       {/* Pagination */}
