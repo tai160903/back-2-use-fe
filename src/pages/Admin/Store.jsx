@@ -42,7 +42,7 @@ const Store = () => {
   useEffect(() => {
     dispatch(getAllBusinessesApi({
       page: currentPage,
-      limit: 10,
+      limit: 5,
       isBlocked: businessFilters.isBlocked
     }));
   }, [dispatch, currentPage, businessFilters.isBlocked]);
@@ -150,7 +150,7 @@ const Store = () => {
       await dispatch(getBusinessStatsApi());
       await dispatch(getAllBusinessesApi({
         page: currentPage,
-        limit: 10,
+        limit: 5,
         isBlocked: businessFilters.isBlocked
       }));
     } catch (error) {
@@ -183,7 +183,7 @@ const Store = () => {
       await dispatch(getBusinessStatsApi());
       await dispatch(getAllBusinessesApi({
         page: currentPage,
-        limit: 10,
+        limit: 5,
         isBlocked: businessFilters.isBlocked
       }));
     } catch (error) {

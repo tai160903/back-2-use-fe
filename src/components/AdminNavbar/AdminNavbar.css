@@ -1,1 +1,28 @@
+/* Admin Navbar - Fixed Sidebar - Only apply to admin layout */
+.admin-layout-container .navbar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 100;
+}
 
+/* Custom scrollbar for admin navbar - Only in admin layout */
+.admin-layout-container .navbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-layout-container .navbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-layout-container .navbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.admin-layout-container .navbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}

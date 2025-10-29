@@ -1,11 +1,11 @@
-.material-management {
+.voucher-management {
   padding: 16px 30px 30px;
   margin-top: -12px;
   background-color: #f8f9fa;
   min-height: 100vh;
 }
 
-.material-header {
+.voucher-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -13,13 +13,13 @@
   margin-bottom: 28px;
 }
 
-.material-title-section {
+.voucher-title-section {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.material-title {
+.voucher-title {
   font-size: 32px;
   font-weight: 700;
   color: #1a1a1a;
@@ -29,20 +29,20 @@
   gap: 12px;
 }
 
-.material-title-icon {
+.voucher-title-icon {
   width: 32px;
   height: 32px;
   color: #12422a;
 }
 
-.material-description {
+.voucher-description {
   font-size: 16px;
   color: #6b7280;
   margin-top: 8px;
   margin-bottom: 0;
 }
 
-.add-material-btn {
+.add-voucher-btn {
   background: linear-gradient(135deg, #12422a 0%, #0d2e1c 100%);
   color: white;
   border: none;
@@ -58,13 +58,13 @@
   box-shadow: 0 4px 12px rgba(18, 66, 42, 0.3);
 }
 
-.add-material-btn:hover {
+.add-voucher-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(18, 66, 42, 0.4);
 }
 
 /* Statistics Cards */
-.material-stats {
+.voucher-stats {
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -123,11 +123,11 @@
   color: #f59e0b;
 }
 
-.stat-number.approved {
+.stat-number.active {
   color: #12422a;
 }
 
-.stat-number.rejected {
+.stat-number.expired {
   color: #ef4444;
 }
 
@@ -146,25 +146,27 @@
   background-color: #fef3c7;
 }
 
-.stat-icon.approved {
+.stat-icon.active {
   color: #12422a;
   background-color: #e8f5e8;
 }
 
-.stat-icon.rejected {
+.stat-icon.expired {
   color: #ef4444;
   background-color: #fee2e2;
 }
 
 /* Search and Filter Section */
-.material-filters {
+.voucher-filters {
   margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .search-container {
   position: relative;
   margin-bottom: 20px;
-  width: 100%;
 }
 
 .search-icon {
@@ -198,27 +200,29 @@
 
 .filter-tabs {
   display: flex;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .filter-tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  gap: 6px;
+  padding: 10px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   background: white;
-  color: #6b7280;
+  color: #4b5563;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .filter-tab:hover {
   border-color: #12422a;
-  color: #12422a;
+  background-color: #f9fafb;
 }
 
 .filter-tab.active {
@@ -227,70 +231,47 @@
   color: white;
 }
 
-/* Material Cards Grid */
-.material-grid {
+.filter-tab svg {
+  font-size: 16px;
+}
+
+/* Voucher Cards Grid */
+.voucher-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-bottom: 32px;
 }
 
-/* Material Cards - Use existing MaterialCard.css styles */
-.material-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
-  transition: all 0.3s ease;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.material-card:hover {
-  background: #164e31;
-  color: #ffffff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
-.material-card:hover .material-name,
-.material-card:hover .material-description,
-.material-card:hover .detail-label,
-.material-card:hover .detail-value {
-  color: #ffffff !important;
-}
-
 /* Empty state */
-.material-empty {
+.voucher-empty {
   text-align: center;
   padding: 60px 20px;
   color: #6b7280;
 }
 
-.material-empty-icon {
+.voucher-empty-icon {
   width: 64px;
   height: 64px;
   color: #d1d5db;
   margin: 0 auto 16px;
 }
 
-.material-empty-title {
+.voucher-empty-title {
   font-size: 20px;
   font-weight: 600;
   color: #374151;
   margin-bottom: 8px;
 }
 
-.material-empty-description {
+.voucher-empty-description {
   font-size: 16px;
   color: #6b7280;
   margin-bottom: 24px;
 }
 
 /* Loading state */
-.material-loading {
+.voucher-loading {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -312,82 +293,70 @@
 }
 
 /* Pagination */
-.material-pagination {
+.voucher-pagination {
   margin-top: 32px;
 }
 
-.material-pagination .MuiPagination-root {
+.voucher-pagination .MuiPagination-root {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.material-pagination .MuiPaginationItem-root {
+.voucher-pagination .MuiPaginationItem-root {
   border-radius: 8px;
   font-weight: 600;
 }
 
-.material-pagination .MuiPaginationItem-root.Mui-selected {
+.voucher-pagination .MuiPaginationItem-root.Mui-selected {
   background-color: #12422a;
   color: white;
 }
 
-.material-pagination .MuiPaginationItem-root.Mui-selected:hover {
+.voucher-pagination .MuiPaginationItem-root.Mui-selected:hover {
   background-color: #0d2e1c;
 }
 
 /* Responsive design */
 @media (max-width: 1200px) {
-  .material-stats {
+  .voucher-stats {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
 }
 
 @media (max-width: 768px) {
-  .material-management {
+  .voucher-management {
     padding: 20px;
   }
   
-  .material-header {
+  .voucher-header {
     flex-direction: column;
     gap: 20px;
     align-items: stretch;
   }
   
-  .material-title {
+  .voucher-title {
     font-size: 24px;
   }
   
-  .material-stats {
+  .voucher-stats {
     grid-template-columns: 1fr;
     gap: 16px;
   }
   
-  .material-grid {
+  .voucher-grid {
     grid-template-columns: 1fr;
     gap: 16px;
-  }
-  
-  .material-card {
-    padding: 20px;
-  }
-  
-  .filter-tabs {
-    flex-direction: column;
-  }
-  
-  .filter-tab {
-    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .material-management {
+  .voucher-management {
     padding: 16px;
   }
   
-  .material-title {
+  .voucher-title {
     font-size: 20px;
   }
   

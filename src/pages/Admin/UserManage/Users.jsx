@@ -23,7 +23,7 @@ export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState(null);
-  const [limit] = useState(10);
+  const [limit] = useState(5);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);

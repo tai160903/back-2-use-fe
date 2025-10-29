@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   List,
   ListItem,
@@ -27,7 +27,7 @@ import {
   TrendingUp,
   Security,
 } from "@mui/icons-material";
-import "../../components/AdminNavbar/AdminNavbar.css";
+import "./BusinessNavbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PATH } from "../../routes/path";
 import { useDispatch } from "react-redux";
@@ -57,6 +57,13 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Notify parent when drawer toggles
+  useEffect(() => {
+    if (onDrawerToggle) {
+      onDrawerToggle(isOpen);
+    }
+  }, [isOpen, onDrawerToggle]);
+
   // LOGOUT
   const handleLogout = () => {
     dispatch(logout());
@@ -65,11 +72,7 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
 
   // Handle drawer toggle
   const handleDrawerToggle = () => {
-    const newOpen = !isOpen;
-    setIsOpen(newOpen);
-    if (onDrawerToggle) {
-      onDrawerToggle(newOpen);
-    }
+    setIsOpen(!isOpen);
   };
 
   const getIconComponent = (iconName) => {

@@ -101,7 +101,7 @@
 }
 
 .stat-number.approved {
-  color: #22c55e;
+  color: #12422a;
 }
 
 .stat-number.rejected {
@@ -124,8 +124,8 @@
 }
 
 .stat-icon.approved {
-  color: #22c55e;
-  background-color: #dcfce7;
+  color: #12422a;
+  background-color: #e8f5e8;
 }
 
 .stat-icon.rejected {
@@ -141,6 +141,7 @@
 .search-container {
   position: relative;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .search-icon {
@@ -161,6 +162,10 @@
   background: white;
   transition: all 0.3s ease;
   outline: none;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
 }
 
 .search-input:focus {
@@ -220,8 +225,18 @@
 }
 
 .registration-card:hover {
-  transform: translateY(-4px);
+  background: #164e31;
+  color: #ffffff !important;
+  transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.registration-card:hover .registration-card-title,
+.registration-card:hover .registration-card-subtitle,
+.registration-card:hover .registration-detail-label,
+.registration-card:hover .registration-detail-value,
+.registration-card:hover .status-badge {
+  color: #ffffff !important;
 }
 
 .registration-card-header {

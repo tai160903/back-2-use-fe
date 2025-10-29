@@ -319,6 +319,14 @@ export default function useRouterElements() {
           ),
         },
         {
+          path: PATH.ADMIN_VOUCHER,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Analytics />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: PATH.ADMIN_STORE,
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>

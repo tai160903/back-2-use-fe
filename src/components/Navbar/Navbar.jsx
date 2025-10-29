@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Drawer,
   List,
@@ -37,11 +37,18 @@ const sidebarItems = [
   { id: "logout", label: "Logout", path: null },
 ];
 
-const Navbar = () => {
+const Navbar = ({ onDrawerToggle }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
+
+  // Notify parent when drawer toggles
+  useEffect(() => {
+    if (onDrawerToggle) {
+      onDrawerToggle(isOpen);
+    }
+  }, [isOpen, onDrawerToggle]);
 
   // LOGOUT
   const handleLogout = () => {

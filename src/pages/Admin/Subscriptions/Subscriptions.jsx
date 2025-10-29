@@ -27,6 +27,8 @@ import {
 } from "../../../store/slices/subscriptionSlice";
 import toast from "react-hot-toast";
 import { Button } from "@mui/material";
+import Pagination from "@mui/material/Pagination";
+import Stack from "@mui/material/Stack";
 
 
 export default function Subscriptions() {
@@ -37,6 +39,8 @@ export default function Subscriptions() {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [openFeaturesModal, setOpenFeaturesModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
   const dispatch = useDispatch();
   const { subscription } = useSelector(state => state.subscription);
 
@@ -115,6 +119,23 @@ const featuresList = subscription.data?.description || [];
     setOpenFeaturesModal(false);
   };
 
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  // Get filtered data
+  const getFilteredData = () => {
+    let filtered = [...dataSubscriptions];
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    return filtered;
+  };
+
   const renderSubscriptionIcon = () => (
     <BiLayer 
       size={32}
@@ -178,7 +199,10 @@ const featuresList = subscription.data?.description || [];
             type="text"
             placeholder="Search by Subscription Name or Features"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="search-input"
           />
         </div>
@@ -189,7 +213,11 @@ const featuresList = subscription.data?.description || [];
         renderEmptyState()
       ) : (
         <div className="subscriptions-grid">
-          {dataSubscriptions?.map((item) => (
+          {(() => {
+            const filteredData = getFilteredData();
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            return filteredData.slice(startIndex, endIndex).map((item) => (
             <div key={item._id} className="subscriptions-card">
               <div className="subscriptions-card-header">
                 <div className="subscriptions-card-info">
@@ -276,9 +304,35 @@ const featuresList = subscription.data?.description || [];
                 </button>
               </div>
             </div>
-          ))}
+            ));
+          })()}
         </div>
       )}
+
+      {/* Pagination */}
+      {dataSubscriptions?.length > 0 && (() => {
+        const filteredData = getFilteredData();
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        return (
+          <Stack
+            spacing={2}
+            className="mt-5 mb-5"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Pagination
+              count={totalPages > 0 ? totalPages : 1}
+              page={currentPage}
+              onChange={handlePageChange}
+              variant="outlined"
+              shape="rounded"
+            />
+          </Stack>
+        );
+      })()}
 
       <ModalSubscriptions
         open={openPopup}

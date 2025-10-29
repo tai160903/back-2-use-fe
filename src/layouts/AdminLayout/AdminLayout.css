@@ -1,0 +1,22 @@
+/* Admin Layout - Adjust content area for fixed sidebar */
+.admin-layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-left: 70px; /* Default width when sidebar is closed */
+  transition: margin-left 0.3s ease;
+}
+
+.admin-content-wrapper.sidebar-open {
+  margin-left: 250px; /* Width when sidebar is open */
+}
+
+.admin-main-content {
+  flex: 1;
+}
+

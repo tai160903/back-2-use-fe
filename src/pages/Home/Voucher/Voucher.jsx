@@ -1,5 +1,7 @@
 import { Typography, Pagination, Stack } from '@mui/material'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { getAllVouchersApi } from '../../../store/slices/adminSlice'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination as SwiperPagination } from 'swiper/modules'
 import 'swiper/css'
@@ -7,7 +9,17 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import './Voucher.css'
 
-// Data giả cho tất cả vouchers
+// Helper function to format date
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+// Mock data - will be replaced by API data
 const allVouchers = [
   // Exclusive Top 50 vouchers
   {
@@ -270,18 +282,47 @@ const top50Vouchers = allVouchers.filter(v => v.type === 'exclusive')
 
 
 export default function Voucher() {
+  const dispatch = useDispatch();
+  const { vouchers, isLoading } = useSelector(state => state.admin);
+
   // State cho filter và pagination
   const [filter, setFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const vouchersPerPage = 6
 
+  // Load vouchers from API
+  useEffect(() => {
+    dispatch(getAllVouchersApi({
+      page: 1,
+      limit: 100,
+    }));
+  }, [dispatch]);
+
+  // Transform API data to match component format
+  const transformedVouchers = useMemo(() => {
+    if (!vouchers || vouchers.length === 0) return allVouchers; // Fallback to mock data
+    
+    return vouchers.map((voucher, index) => ({
+      id: voucher._id || voucher.id,
+      type: voucher.status === 'active' ? 'regular' : 'regular',
+      rank: index < 10 ? `Top ${index + 1}` : null,
+      title: voucher.name,
+      value: `${voucher.discount}%`,
+      description: voucher.description || `${voucher.discount}% discount voucher`,
+      points: voucher.rewardPointCost,
+      code: voucher.baseCode,
+      expiry: formatDate(voucher.endDate),
+      status: voucher.status === 'active' ? 'available' : voucher.status === 'expired' ? 'unavailable' : 'available'
+    }));
+  }, [vouchers]);
+
   // Filter vouchers
   const filteredVouchers = useMemo(() => {
-    if (filter === 'all') return allVouchers
-    if (filter === 'exclusive') return allVouchers.filter(v => v.type === 'exclusive')
-    if (filter === 'regular') return allVouchers.filter(v => v.type === 'regular')
-    return allVouchers
-  }, [filter])
+    if (filter === 'all') return transformedVouchers
+    if (filter === 'exclusive') return transformedVouchers.filter(v => v.rank !== null)
+    if (filter === 'regular') return transformedVouchers.filter(v => v.rank === null)
+    return transformedVouchers
+  }, [filter, transformedVouchers])
 
   // Pagination logic
   const totalPages = Math.ceil(filteredVouchers.length / vouchersPerPage)
@@ -299,9 +340,14 @@ export default function Voucher() {
     setCurrentPage(newPage)
   }
 
+  // Get top featured vouchers (first 10 or exclusive ones)
+  const featuredVouchers = useMemo(() => {
+    return transformedVouchers.filter(v => v.rank !== null).slice(0, 10);
+  }, [transformedVouchers]);
+
   // Render voucher card
   const renderVoucherCard = (voucher) => {
-    const isExclusive = voucher.type === 'exclusive'
+    const isExclusive = voucher.rank !== null
     const isCollected = voucher.status === 'collected'
     const isUnavailable = voucher.status === 'unavailable'
 
@@ -350,6 +396,24 @@ export default function Voucher() {
     )
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className='vouchers-page'>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '400px',
+          fontSize: '18px',
+          color: '#666'
+        }}>
+          Loading vouchers...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
     <div className='vouchers-page'>
@@ -368,48 +432,54 @@ export default function Voucher() {
           </div>
 
           <div className='vouchers-swiper-container'>
-            <Swiper
-              modules={[Navigation, SwiperPagination]}
-              spaceBetween={30}
-              slidesPerView={1}
-              navigation={{
-                nextEl: '.swiper-button-next-custom',
-                prevEl: '.swiper-button-prev-custom',
-              }}
-              pagination={{
-                clickable: true,
-                el: '.swiper-pagination-custom',
-              }}
-              loop={true}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: false,
-              }}
-              className="vouchers-swiper"
-            >
-              {top50Vouchers.map((voucher) => (
-                <SwiperSlide key={voucher.id}>
-                  <div className='voucher-card'>
-                    <div className='voucher-rank-badge'>
-                      <span className='rank-text'>{voucher.rank}</span>
-                      <span className='crown-icon'>👑</span>
+            {featuredVouchers.length > 0 ? (
+              <Swiper
+                modules={[Navigation, SwiperPagination]}
+                spaceBetween={30}
+                slidesPerView={1}
+                navigation={{
+                  nextEl: '.swiper-button-next-custom',
+                  prevEl: '.swiper-button-prev-custom',
+                }}
+                pagination={{
+                  clickable: true,
+                  el: '.swiper-pagination-custom',
+                }}
+                loop={true}
+                autoplay={{
+                  delay: 3000,
+                  disableOnInteraction: false,
+                }}
+                className="vouchers-swiper"
+              >
+                {featuredVouchers.map((voucher) => (
+                  <SwiperSlide key={voucher.id}>
+                    <div className='voucher-card'>
+                      <div className='voucher-rank-badge'>
+                        <span className='rank-text'>{voucher.rank}</span>
+                        <span className='crown-icon'>👑</span>
+                      </div>
+                      <div className='voucher-value'>
+                        {voucher.value}
+                      </div>
+                      <div className='voucher-description'>
+                        {voucher.description}
+                      </div>
+                      <div className='voucher-code'>
+                        Code: {voucher.code}
+                      </div>
+                      <div className='voucher-tag'>
+                        {voucher.title}
+                      </div>
                     </div>
-                    <div className='voucher-value' style={{ color: voucher.color }}>
-                      {voucher.value}
-                    </div>
-                    <div className='voucher-description'>
-                      {voucher.description}
-                    </div>
-                    <div className='voucher-code'>
-                      Code: {voucher.code}
-                    </div>
-                    <div className='voucher-tag' style={{ backgroundColor: voucher.color }}>
-                      {voucher.title}
-                    </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
+                No featured vouchers available at the moment
+              </div>
+            )}
             
             {/* Custom Navigation Buttons */}
             <div className='swiper-button-prev-custom'>
