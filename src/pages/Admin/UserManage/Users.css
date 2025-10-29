@@ -52,6 +52,7 @@
 }
 
 .stat-card {
+  max-width: 100%;
   background: white;
   border-radius: 16px;
   padding: 24px;
@@ -226,6 +227,8 @@
 }
 
 .user-card:hover {
+  background: #164e31;
+  color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
@@ -274,6 +277,33 @@
   color: #5b6b62;
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Đảm bảo chữ bên trong chuyển trắng khi hover */
+.user-card:hover .user-name,
+.user-card:hover .user-email,
+.user-card:hover .user-role,
+.user-card:hover .table-header-cell {
+  color: #ffffff !important;
+}
+
+/* Trạng thái khi hover: nền mờ + viền trắng, chữ trắng */
+.user-card:hover .status-indicator {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+.user-card:hover .status-dot {
+  background-color: #ffffff;
+  box-shadow: none;
+}
+
+/* Nút menu hành động trên nền tối */
+.user-card:hover .action-menu {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: transparent;
 }
 
 
