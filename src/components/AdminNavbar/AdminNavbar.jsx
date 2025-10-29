@@ -99,7 +99,7 @@ const AdminNavbar = ({ onDrawerToggle }) => {
       }}
     >
       <div className="navbar-header">
-        <div className="navbar-logo">
+        <div className="navbar-logo d-flex align-items-center">
           <img 
             src={logoImage} 
             alt="Back2Use Logo" 

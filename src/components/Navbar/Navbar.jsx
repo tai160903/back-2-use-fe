@@ -23,6 +23,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { PATH } from "../../routes/path";
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
+import logoImage from "../../assets/image/Back2Use-Review 1.png";
 
 const sidebarItems = [
   { id: "home", label: "Home", path: PATH.HOME },
@@ -72,13 +73,21 @@ const Navbar = () => {
     <div
       className={`navbar ${isOpen ? "navbar-open" : "navbar-closed"}`}
       style={{
-      height:"auto",// trừ chiều cao Header
+      height:"auto",
         background: "#fff",
         borderRight: "1px solid #ddd",
         transition: "width 0.3s",
       }}
     >
       <div className="navbar-header">
+        <div className="navbar-logo">
+          <img
+            src={logoImage}
+            alt="Back2Use Logo"
+            className="navbar-logo-image"
+          />
+          {isOpen && <span className="navbar-logo-text">Back2Use</span>}
+        </div>
         <IconButton onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <AiOutlineMenuFold /> : <AiOutlineMenuUnfold />}
         </IconButton>
@@ -86,7 +95,8 @@ const Navbar = () => {
 
       <List className="navbar-content">
         {sidebarItems.map((item) => (
-          <ListItem
+         <div>
+           <ListItem
             button
             key={item.id}
             selected={location.pathname === item.path}
@@ -104,6 +114,7 @@ const Navbar = () => {
             </Tooltip>
             {isOpen && <ListItemText primary={item.label} />}
           </ListItem>
+         </div>
         ))}
       </List>
     </div>
