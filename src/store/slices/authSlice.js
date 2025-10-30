@@ -116,6 +116,23 @@ export const registerBusinessAPI = createAsyncThunk(
   }
 );
 
+// Google Redirect - Handle Google OAuth callback
+export const googleRedirectAPI = createAsyncThunk(
+  "auth/googleRedirectAPI",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/auth/google-redirect", {
+        params: params, // code, state, etc from Google
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -227,6 +244,21 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "An error occurred during registration. Please try again later.");
+      })
+      .addCase(googleRedirectAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(googleRedirectAPI.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentUser = payload.data;
+        localStorage.setItem("currentUser", JSON.stringify(payload.data));
+        toast.success("Đăng nhập bằng Google thành công!");
+      })
+      .addCase(googleRedirectAPI.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Đăng nhập bằng Google thất bại. Vui lòng thử lại.");
       });
   },
 });

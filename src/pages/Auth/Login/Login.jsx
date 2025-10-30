@@ -94,10 +94,11 @@ export default function Login() {
   // Hàm xử lý login Google
 const handleGoogleLogin = async () => {
   try {
-    // Chuyển hướng đến backend để auth Google
-    window.location.href = "http://localhost:8000/auth/google";
+    // Chuyển hướng đến backend endpoint /auth/google-redirect
+    // Backend sẽ xử lý OAuth với Google và redirect về frontend
+    window.location.href = "http://localhost:8000/auth/google-redirect";
   } catch {
-    toast.error("Sign in with Google failed, please try again.");
+    toast.error("Đăng nhập bằng Google thất bại, vui lòng thử lại.");
   }
 };
 

@@ -2,7 +2,6 @@ import Grid from "@mui/material/Grid";
 import "../../Auth/Login/Login.css";
 import imageAuth from "../../../assets/image/ZRRXzB20OVRZOT67Cgq3GEIwusisOXv9FVHoHmSs.webp";
 import imageGoogle from "../../../assets/image/search.png";
-import imageFacebook from "../../../assets/image/facebook.png";
 import React, { useState } from "react";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
@@ -83,6 +82,17 @@ export default function Register() {
       navigate(PATH.LOGIN);
     } catch (error) {
       toast.error(error.message || "OTP verification failed");
+    }
+  };
+
+  // Hàm xử lý đăng ký bằng Google
+  const handleGoogleRegister = async () => {
+    try {
+      // Chuyển hướng đến backend endpoint /auth/google-redirect
+      // Backend sẽ xử lý OAuth với Google và redirect về frontend
+      window.location.href = "http://localhost:8000/auth/google-redirect";
+    } catch {
+      toast.error("Đăng ký bằng Google thất bại, vui lòng thử lại.");
     }
   };
 
@@ -196,7 +206,11 @@ export default function Register() {
                     </Typography>
                   </div>
                   <div className="auth-social">
-                    <Button className="auth-social-button google">
+                    <Button 
+                      className="auth-social-button google"
+                      onClick={handleGoogleRegister}
+                      disabled={isLoading}
+                    >
                       <img
                         src={imageGoogle}
                         className="auth-social-image"
