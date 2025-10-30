@@ -454,7 +454,7 @@ export default function Voucher() {
               >
                 {featuredVouchers.map((voucher) => (
                   <SwiperSlide key={voucher.id}>
-                    <div className='voucher-card'>
+                    <div className='voucher-cards-container'>
                       <div className='voucher-rank-badge'>
                         <span className='rank-text'>{voucher.rank}</span>
                         <span className='crown-icon'>👑</span>
@@ -506,7 +506,7 @@ export default function Voucher() {
           </div>
 
           {/* Filter Buttons */}
-          <div className='voucher-filters'>
+          <div className='voucher-filter'>
             <button 
               className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
               onClick={() => handleFilterChange('all')}
