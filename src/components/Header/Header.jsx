@@ -9,13 +9,12 @@ import { useState } from "react";
 import logoImage from "../../assets/image/cup6.png";
 import useAuth from "../../hooks/useAuth"; 
 import { logout } from "../../store/slices/authSlice";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { getProfileApi } from "../../store/slices/userSlice";
 
 export default function Header() {
   const location = useLocation();
   const { currentUser, dispatch, navigate } = useAuth();
-  const reduxDispatch = useDispatch();
   const {userInfo} = useSelector(state => state.user);
   console.log("userInfo", userInfo);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -29,14 +28,18 @@ export default function Header() {
   }, [currentUser, userInfo?.data, dispatch]);
 
   // Danh sách trang auth
-  const isAuthPage = [
-    "/auth/login",
-    "/auth/register",
-    "/auth/forgotpassword",
-  ].includes(location.pathname);
+  const loginPage = location.pathname === "/auth/login";
+  const registerPage = location.pathname === "/auth/register";
 
-  const buttonText = isAuthPage ? "Become Business" : "Get started";
-  const buttonLink = isAuthPage ? "/auth/register/bussiness" : "/auth/login";
+  let buttonText = "Get started";
+  let buttonLink = "/auth/login";
+  if (loginPage) {
+    buttonText = "Sign Up";
+    buttonLink = "/auth/register";
+  } else if (registerPage) {
+    buttonText = "Sign In";
+    buttonLink = "/auth/login";
+  }
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -136,15 +139,15 @@ export default function Header() {
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
+              {/* Thêm nút đăng ký doanh nghiệp cho customer */}
+           
             </>
           ) : (
             <Button
               sx={{
                 backgroundColor: "#006c1e",
                 color: "white",
-                "&:hover": {
-                  backgroundColor: "#004d15",
-                },
+                "&:hover": { backgroundColor: "#004d15" },
               }}
             >
               <Link

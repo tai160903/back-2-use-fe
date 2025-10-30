@@ -95,7 +95,9 @@ export default function HomePage() {
               find eco-friendly solutions for your daily needs.
             </p>
             <div className="hero-actions">
-              <Button className="shop-now-btn">Become a Partner</Button>
+              <Button className="shop-now-btn" onClick={() => navigate(PATH.REGISTERBUSSINESS)}>
+                Become a Partner
+              </Button>
             </div>
           </div>
           <div className="hero-plants"></div>

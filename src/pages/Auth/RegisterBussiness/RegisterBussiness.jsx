@@ -10,11 +10,13 @@ import "./RegisterBussiness.css";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { registerBusinessAPI } from "../../../store/slices/authSlice";
 import useAuth from "../../../hooks/useAuth";
 import toast from "react-hot-toast";
 import AddressSelector from "../../../components/AddressSelector/AddressSelector";
+import { useNavigate } from "react-router-dom";
+import { getUserRole } from '../../../utils/authUtils';
 
 const schema = yup
   .object({
@@ -34,6 +36,16 @@ const schema = yup
   .required();
 
 function RegisterBussiness() {
+  const navigate = useNavigate();
+  // kiểm tra role khi vào trang
+  useEffect(() => {
+    const role = getUserRole();
+    if (role !== 'customer') {
+     toast.error("Only customers can register a business");
+      navigate('/auth/login');
+    }
+  }, [navigate]);
+
   const {
     register,
     handleSubmit,
@@ -42,6 +54,11 @@ function RegisterBussiness() {
     resolver: yupResolver(schema),
   });
   const [files, setFiles] = useState({
+    businessLogo: null,
+    businessLicenseFile: null,
+    foodLicenseFile: null,
+  });
+  const [filePreviews, setFilePreviews] = useState({
     businessLogo: null,
     businessLicenseFile: null,
     foodLicenseFile: null,
@@ -55,6 +72,12 @@ function RegisterBussiness() {
   const handleFileChange = (e, type) => {
     const file = e.target.files?.[0] || null;
     setFiles((prev) => ({ ...prev, [type]: file }));
+    if (file && ["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.type)) {
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({ ...prev, [type]: url }));
+    } else {
+      setFilePreviews((prev) => ({ ...prev, [type]: null }));
+    }
   };
 
   const handleLocationSelect = (address, addressDetails) => {
@@ -121,6 +144,14 @@ function RegisterBussiness() {
       // Error will be handled in authSlice through toast
       console.error("Registration error:", error);
     }
+  };
+
+  // Utility function to shorten file name
+  const shortenFileName = (name, maxLen = 20) => {
+    if (!name) return "";
+    if (name.length <= maxLen) return name;
+    const ext = name.lastIndexOf(".") !== -1 ? name.slice(name.lastIndexOf(".")) : "";
+    return name.slice(0, maxLen - 3 - ext.length) + "..." + ext;
   };
 
   return (
@@ -283,14 +314,20 @@ function RegisterBussiness() {
                         onChange={(e) => handleFileChange(e, "businessLogo")}
                         className="registerBusiness-fileInput"
                       />
-                      <label
-                        htmlFor="businessLogo"
-                        className="registerBusiness-fileLabel"
-                      >
+                      <label htmlFor="businessLogo" className="registerBusiness-fileLabel">
                         {files.businessLogo ? (
-                          <span className="registerBusiness-fileName">
-                            {files.businessLogo.name}
-                          </span>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                            {filePreviews.businessLogo && (
+                              <img
+                                src={filePreviews.businessLogo}
+                                alt="preview"
+                                style={{ maxWidth: 80, maxHeight: 80, objectFit: "contain", marginBottom: 4, borderRadius: 4 }}
+                              />
+                            )}
+                            <span className="registerBusiness-fileName" style={{ wordBreak: "break-all", maxWidth: 120 }}>
+                              {shortenFileName(files.businessLogo.name)}
+                            </span>
+                          </div>
                         ) : (
                           <div className="registerBusiness-uploadBox">
                             <p>Business Logo *</p>
@@ -305,19 +342,23 @@ function RegisterBussiness() {
                         type="file"
                         id="businessLicenseFile"
                         accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) =>
-                          handleFileChange(e, "businessLicenseFile")
-                        }
+                        onChange={(e) => handleFileChange(e, "businessLicenseFile")}
                         className="registerBusiness-fileInput"
                       />
-                      <label
-                        htmlFor="businessLicenseFile"
-                        className="registerBusiness-fileLabel"
-                      >
+                      <label htmlFor="businessLicenseFile" className="registerBusiness-fileLabel">
                         {files.businessLicenseFile ? (
-                          <span className="registerBusiness-fileName">
-                            {files.businessLicenseFile.name}
-                          </span>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                            {filePreviews.businessLicenseFile && (
+                              <img
+                                src={filePreviews.businessLicenseFile}
+                                alt="preview"
+                                style={{ maxWidth: 80, maxHeight: 80, objectFit: "contain", marginBottom: 4, borderRadius: 4 }}
+                              />
+                            )}
+                            <span className="registerBusiness-fileName" style={{ wordBreak: "break-all", maxWidth: 120 }}>
+                              {shortenFileName(files.businessLicenseFile.name)}
+                            </span>
+                          </div>
                         ) : (
                           <div className="registerBusiness-uploadBox">
                             <p>Business License *</p>
@@ -335,14 +376,20 @@ function RegisterBussiness() {
                         onChange={(e) => handleFileChange(e, "foodLicenseFile")}
                         className="registerBusiness-fileInput"
                       />
-                      <label
-                        htmlFor="foodLicenseFile"
-                        className="registerBusiness-fileLabel"
-                      >
+                      <label htmlFor="foodLicenseFile" className="registerBusiness-fileLabel">
                         {files.foodLicenseFile ? (
-                          <span className="registerBusiness-fileName">
-                            {files.foodLicenseFile.name}
-                          </span>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                            {filePreviews.foodLicenseFile && (
+                              <img
+                                src={filePreviews.foodLicenseFile}
+                                alt="preview"
+                                style={{ maxWidth: 80, maxHeight: 80, objectFit: "contain", marginBottom: 4, borderRadius: 4 }}
+                              />
+                            )}
+                            <span className="registerBusiness-fileName" style={{ wordBreak: "break-all", maxWidth: 120 }}>
+                              {shortenFileName(files.foodLicenseFile.name)}
+                            </span>
+                          </div>
                         ) : (
                           <div className="registerBusiness-uploadBox">
                             <p>Food Safety Certificate *</p>

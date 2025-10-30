@@ -69,7 +69,7 @@
 }
 
 /* Voucher Card */
-.voucher-card {
+.voucher-cards-container {
     background: #fff8e1;
     border: 2px solid #ffecb3;
     border-radius: 20px;
@@ -209,7 +209,7 @@
 }
 
 /* Filter Buttons */
-.voucher-filters {
+.voucher-filter {
     display: flex;
     justify-content: center;
     gap: 20px;
