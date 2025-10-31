@@ -1,4 +1,4 @@
-// WalletCustomer.js
+
 import Typography from "@mui/material/Typography";
 import "./WalletCustomer.css";
 import { LuWallet } from "react-icons/lu";
@@ -7,6 +7,7 @@ import { FaMinus } from "react-icons/fa";
 import { useState, useEffect } from "react";
 
 import { MdAttachMoney } from "react-icons/md";
+import { FiArrowDownLeft, FiArrowUpRight } from "react-icons/fi";
 import { Tabs, Tab, Box, Chip, Button } from "@mui/material";
 
 import toast from "react-hot-toast";
@@ -28,8 +29,7 @@ export default function WalletCustomer() {
   const { 
     transactionHistory, 
     transactionTotalPages, 
-    transactionTotal, 
-    transactionCurrentPage,
+
     isLoading: transactionLoading 
   } = useSelector((state) => state.wallet);
 
@@ -57,7 +57,17 @@ export default function WalletCustomer() {
   const [openWithdraw, setOpenWithdraw] = useState(false);
   const [filter, setFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
+  const [direction, setDirection] = useState("all");
   const limit = 3;
+
+  const getStatusColor = (status) => {
+    if (!status) return "default";
+    const normalized = String(status).toLowerCase();
+    if (normalized === "completed" || normalized === "success" ) return "success";
+    if (normalized === "processing" || normalized === "pending") return "warning";
+    if (["failed", "faild", "rejected", "canceled", "cancelled", "error"].includes(normalized)) return "error";
+    return "default";
+  };
 
   const handleOpenAddFunds = () => {
     if (!walletId) {
@@ -86,16 +96,22 @@ export default function WalletCustomer() {
     setFilter(newFilter);
   };
 
+  const handleDirectionChange = (newDirection) => {
+    setDirection(newDirection);
+    setCurrentPage(1);
+  };
+
   // Load transaction history
   useEffect(() => {
     if (walletId) {
       dispatch(getTransactionHistoryApi({ 
         page: currentPage, 
         limit, 
-        typeGroup: "personal" 
+        typeGroup: "personal",
+        direction
       }));
     }
-  }, [dispatch, walletId, currentPage, limit]);
+  }, [dispatch, walletId, currentPage, limit, direction]);
 
   // Handle page change
   const handlePageChange = (event, newPage) => {
@@ -118,35 +134,7 @@ export default function WalletCustomer() {
     }));
   };
 
-  // Fake data
-  const subscriptionsData = [
-    {
-      id: "TXN-SUB-001",
-      date: "05/01/2024",
-      type: "Wallet Balance",
-      description: "Premium Subscription Extension",
-      amount: "-29.990 VNĐ",
-      status: "completed",
-      duration: "1 month",
-    },
-    {
-      id: "TXN-WITH-001",
-      date: "10/01/2024",
-      type: "Bank Account",
-      description: "Wallet Withdrawal to Bank",
-      amount: "-50.000 VNĐ",
-      status: "processing",
-    },
-    {
-      id: "TXN-SUB-002",
-      date: "05/01/2024",
-      type: "Wallet Balance",
-      description: "Basic Plan Extension",
-      amount: "-15.990 VNĐ",
-      status: "completed",
-      duration: "1 month",
-    },
-  ];
+  // Fake data (giữ depositsData cho tab 2)
 
   const depositsData = [
     {
@@ -277,12 +265,26 @@ export default function WalletCustomer() {
               <Tab label="Deposits & Refunds" />
             </Tabs>
             <TabPanelRecent value={value} index={0}>
-              <div
-                className="mb-2"
-                style={{ display: "flex", justifyContent: "flex-end" }}
-              >
-                <Button>{/* Placeholder for filter button if needed */}</Button>
-              </div>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2, justifyContent: "flex-end" }}>
+                <Chip
+                  label="All"
+                  color={direction === "all" ? "primary" : "default"}
+                  onClick={() => handleDirectionChange("all")}
+                  sx={{ mr: 1, cursor: "pointer" }}
+                />
+                <Chip
+                  label="Money In"
+                  color={direction === "in" ? "success" : "default"}
+                  onClick={() => handleDirectionChange("in")}
+                  sx={{ mr: 1, cursor: "pointer" }}
+                />
+                <Chip
+                  label="Money Out"
+                  color={direction === "out" ? "error" : "default"}
+                  onClick={() => handleDirectionChange("out")}
+                  sx={{ cursor: "pointer" }}
+                />
+              </Box>
               {transactionLoading ? (
                 <div style={{ textAlign: "center", padding: "20px" }}>
                   <Typography>Loading transactions...</Typography>
@@ -304,15 +306,41 @@ export default function WalletCustomer() {
                           item.status === "completed" ? "#f5f5f5" : "#fff",
                       }}
                     >
-                      <Box>
-                        <Typography variant="body1">{item.description}</Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          {item.date} {item.type}{" "}
-                          {item.status === "completed" && "completed"}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          ID: {item.id}
-                        </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: item.direction === "out" ? "#fde7e7" : "#e7f5ed",
+                            color: item.direction === "out" ? "#d32f2f" : "#2e7d32",
+                          }}
+                        >
+                          {item.direction === "out" ? (
+                            <FiArrowUpRight size={18} />
+                          ) : (
+                            <FiArrowDownLeft size={18} />
+                          )}
+                        </Box>
+                        <Box>
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>{item.description}</Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Typography variant="caption" color="textSecondary">
+                              {item.date} {item.type}
+                            </Typography>
+                            <Chip
+                              size="small"
+                              label={item.status}
+                              color={getStatusColor(item.status)}
+                            />
+                          </Box>
+                          <Typography variant="caption" color="textSecondary">
+                            ID: {item.id}
+                          </Typography>
+                        </Box>
                       </Box>
                       <Typography
                         variant="body1"
