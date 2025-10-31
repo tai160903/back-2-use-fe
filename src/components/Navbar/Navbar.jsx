@@ -23,7 +23,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { PATH } from "../../routes/path";
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
-import logoImage from "../../assets/image/Back2Use-Review 1.png";
+import logoImage from "../../assets/image/Logo.png";
 
 const sidebarItems = [
   { id: "home", label: "Home", path: PATH.HOME },
@@ -95,8 +95,8 @@ const Navbar = ({ onDrawerToggle }) => {
           />
           {isOpen && <span className="navbar-logo-text">Back2Use</span>}
         </div>
-        <IconButton onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <AiOutlineMenuFold /> : <AiOutlineMenuUnfold />}
+        <IconButton onClick={() => setIsOpen(!isOpen)} sx={{ color: "#ffffff" }}>
+          {isOpen ? <AiOutlineMenuFold color="#ffffff" /> : <AiOutlineMenuUnfold color="#ffffff" />}
         </IconButton>
       </div>
 

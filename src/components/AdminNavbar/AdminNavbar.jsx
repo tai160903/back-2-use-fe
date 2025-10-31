@@ -27,7 +27,7 @@ import {
   TrendingUp,
   Security,
 } from "@mui/icons-material";
-import "./AdminNavbar.css";
+// import "./AdminNavbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PATH } from "../../routes/path";
 import { useDispatch } from "react-redux";
@@ -90,27 +90,27 @@ const AdminNavbar = ({ onDrawerToggle }) => {
 
   return (
     <div
-      className={`navbar ${isOpen ? "navbar-open" : "navbar-closed"}`}
-      style={{
-        height: "auto",
-        background: "#fff",
-        borderRight: "1px solid #ddd",
-        transition: "width 0.3s",
-      }}
-    >
-      <div className="navbar-header">
-        <div className="navbar-logo d-flex align-items-center">
-          <img 
-            src={logoImage} 
-            alt="Back2Use Logo" 
-            className="navbar-logo-image"
-          />
-          {isOpen && <span className="navbar-logo-text">Back2Use</span>}
-        </div>
-        <IconButton onClick={handleDrawerToggle}>
-          {isOpen ? <AiOutlineMenuFold /> : <AiOutlineMenuUnfold />}
-        </IconButton>
+    className={`navbar ${isOpen ? "navbar-open" : "navbar-closed"}`}
+    style={{
+    height:"auto",
+      background: "#fff",
+      borderRight: "1px solid #ddd",
+      transition: "width 0.3s",
+    }}
+  >
+    <div className="navbar-header">
+      <div className="navbar-logo">
+        <img
+          src={logoImage}
+          alt="Back2Use Logo"
+          className="navbar-logo-image"
+        />
+        {isOpen && <span className="navbar-logo-text">Back2Use</span>}
       </div>
+      <IconButton onClick={() => setIsOpen(!isOpen)} sx={{ color: "#ffffff" }}>
+        {isOpen ? <AiOutlineMenuFold color="#ffffff" /> : <AiOutlineMenuUnfold color="#ffffff" />}
+      </IconButton>
+    </div>
       <List className="navbar-content">
         {adminSidebarItems.map((item) => (
           <ListItem

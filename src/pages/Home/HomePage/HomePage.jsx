@@ -337,7 +337,7 @@ export default function HomePage() {
           </Swiper>
 
           <div className="leaderboard-actions">
-            <button className="view-all-btn" onClick={() => navigate(PATH.RANKINGS)}>View all</button>
+            <button className="view-all-btn-leaderboard" onClick={() => navigate(PATH.RANKINGS)}>View all</button>
           </div>
         </div>
       </section>
