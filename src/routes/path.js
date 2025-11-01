@@ -10,6 +10,7 @@ export const PATH = {
     RESETPASSWORD: "/auth/reset-password",
     ACTIVEACCOUNT: "/active-account",
     GOOGLECALLBACK:"/auth/googleCallback",
+    BUSINESS_REGISTRATION_STATUS: "/auth/business-registration-status",
 
     // USER
     HOME: "/",

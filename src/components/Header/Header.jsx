@@ -11,6 +11,9 @@ import useAuth from "../../hooks/useAuth";
 import { logout } from "../../store/slices/authSlice";
 import { useSelector } from "react-redux";
 import { getProfileApi } from "../../store/slices/userSlice";
+import { getUserRole } from "../../utils/authUtils";
+import { PATH } from "../../routes/path";
+import { TiClipboard } from "react-icons/ti";
 
 export default function Header() {
   const location = useLocation();
@@ -19,6 +22,7 @@ export default function Header() {
   console.log("userInfo", userInfo);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const userRole = currentUser ? getUserRole() : null;
 
   // Gọi API get profile khi component mount và có currentUser
   useEffect(() => {
@@ -26,6 +30,7 @@ export default function Header() {
       dispatch(getProfileApi());
     }
   }, [currentUser, userInfo?.data, dispatch]);
+
 
   // Danh sách trang auth
   const loginPage = location.pathname === "/auth/login";
@@ -48,6 +53,11 @@ export default function Header() {
     dispatch(logout());
     handleMenuClose();
     navigate("/auth/login");
+  };
+
+  const handleBusinessRegistrationClick = () => {
+    navigate(PATH.BUSINESS_REGISTRATION_STATUS);
+    handleMenuClose();
   };
 
   return (
@@ -137,10 +147,14 @@ export default function Header() {
                 >
                   Wallet
                 </MenuItem>
+                {userRole === "customer" && (
+                  <MenuItem onClick={handleBusinessRegistrationClick}>
+                    <TiClipboard style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }} />
+                    Business Registration
+                  </MenuItem>
+                )}
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
-              {/* Thêm nút đăng ký doanh nghiệp cho customer */}
-           
             </>
           ) : (
             <Button

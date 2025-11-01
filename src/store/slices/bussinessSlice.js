@@ -128,6 +128,21 @@ export const getMyMaterials = createAsyncThunk(
   }
 );
 
+// Get my business registration (for customers to view their registration status)
+export const getMyBusinessRegistration = createAsyncThunk(
+  "businesses/getMyBusinessRegistration",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/businesses/form/my");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const businessSlice = createSlice({
   name: "businesses",
   initialState: {
@@ -145,6 +160,10 @@ const businessSlice = createSlice({
     myMaterials: [],
     materialLoading: false,
     materialError: null,
+    // My business registration state
+    myBusinessRegistration: null,
+    registrationLoading: false,
+    registrationError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -256,6 +275,20 @@ const businessSlice = createSlice({
       .addCase(getMyMaterials.rejected, (state, { payload }) => {
         state.materialLoading = false;
         state.materialError = payload;
+      })
+      // My business registration reducers
+      .addCase(getMyBusinessRegistration.pending, (state) => {
+        state.registrationLoading = true;
+        state.registrationError = null;
+      })
+      .addCase(getMyBusinessRegistration.fulfilled, (state, { payload }) => {
+        state.registrationLoading = false;
+        state.myBusinessRegistration = payload.data || payload;
+        state.registrationError = null;
+      })
+      .addCase(getMyBusinessRegistration.rejected, (state, { payload }) => {
+        state.registrationLoading = false;
+        state.registrationError = payload;
       });
   },
 });
