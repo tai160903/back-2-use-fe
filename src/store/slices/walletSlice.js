@@ -49,18 +49,7 @@ export const getTransactionHistoryApi = createAsyncThunk(
   }
 )
 
-// get business transaction history
-export const getBusinessTransactionHistoryApi = createAsyncThunk(
-  "wallet/getBusinessTransactionHistoryApi",
-  async({page,limit}, {rejectWithValue}) => {
-    try {
-      const response = await fetcher.get(`/wallet-transactions/my?page=${page}&limit=${limit}`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-)
+
 
 const walletSlice = createSlice({
   name: "wallet",
@@ -127,22 +116,7 @@ const walletSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
       })
-      .addCase(getBusinessTransactionHistoryApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(getBusinessTransactionHistoryApi.fulfilled, (state, {payload}) => {
-        state.isLoading = false;
-        state.error = null;
-        state.transactionHistory = payload.data;
-        state.transactionTotalPages = payload.totalPages;
-        state.transactionTotal = payload.total;
-        state.transactionCurrentPage = payload.currentPage;
-      })
-      .addCase(getBusinessTransactionHistoryApi.rejected, (state, {payload}) => {
-        state.isLoading = false;
-        state.error = payload;
-      })
+  
   },
 });
 
