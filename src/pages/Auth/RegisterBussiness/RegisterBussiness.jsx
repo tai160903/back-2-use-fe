@@ -140,6 +140,10 @@ function RegisterBussiness() {
 
       await dispatch(registerBusinessAPI(formData)).unwrap();
       setIsSuccess(true);
+      // Redirect to status page after successful registration
+      setTimeout(() => {
+        navigate('/auth/business-registration-status');
+      }, 2000);
     } catch (error) {
       // Error will be handled in authSlice through toast
       console.error("Registration error:", error);

@@ -14,6 +14,7 @@ import { useRoutes } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness";
+import BusinessRegistrationStatus from "../pages/Auth/BusinessRegistrationStatus/BusinessRegistrationStatus";
 import Profile from "../pages/Home/Profile/Profile";
 import StorePage from "../pages/Home/Store/StorePage";
 import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
@@ -207,6 +208,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["customer"]}>
               <UserDashborad />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_REGISTRATION_STATUS,
+          element: (
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <BusinessRegistrationStatus />
             </ProtectedRoute>
           ),
         },
