@@ -27,7 +27,7 @@ function BusinessRegistrationStatus() {
   const [registrationData, setRegistrationData] = useState(null);
   const [registrationHistory, setRegistrationHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('current'); // 'current' or 'history'
+  const [activeTab, setActiveTab] = useState('current'); 
 
   // Check role when accessing page
   useEffect(() => {
