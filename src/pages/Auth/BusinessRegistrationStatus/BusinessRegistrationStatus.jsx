@@ -21,13 +21,15 @@ import { LuClock, LuCalendar, LuFileText } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import { getUserRole } from '../../../utils/authUtils';
 import toast from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import { getHistoryBusinessForm } from "../../../store/slices/bussinessSlice";
 
 function BusinessRegistrationStatus() {
   const navigate = useNavigate();
-  const [registrationData, setRegistrationData] = useState(null);
-  const [registrationHistory, setRegistrationHistory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { businessFormHistory, isLoading } = useSelector((state) => state.businesses);
   const [activeTab, setActiveTab] = useState('current'); 
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Check role when accessing page
   useEffect(() => {
@@ -38,90 +40,16 @@ function BusinessRegistrationStatus() {
     }
   }, [navigate]);
 
-  // Hard coded sample data for UI preview
+  // Fetch history from API
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      // Sample data for current form
-      setRegistrationData({
-        id: "123456",
-        businessName: "Coffee House VN",
-        businessMail: "info@coffeehouse.vn",
-        businessPhone: "0901234567",
-        businessType: "Coffee Shop",
-        taxCode: "0123456789",
-        businessAddress: "123 Nguyen Van A Street, Ward 1, District 1, Ho Chi Minh City",
-        openTime: "07:00",
-        closeTime: "22:00",
-        status: "pending", // Change to 'approved' or 'rejected' to see different statuses
-        createdAt: "2024-01-15T10:30:00Z",
-        updatedAt: "2024-01-15T10:30:00Z",
-        businessLogoUrl: "https://via.placeholder.com/150",
-        businessLicenseUrl: "https://via.placeholder.com/800x600",
-        foodSafetyCertUrl: "https://via.placeholder.com/800x600",
-        rejectNote: "Business license is invalid. Please update and resubmit.",
-      });
+    dispatch(getHistoryBusinessForm({ limit: 10, page: 1 }));
+  }, [dispatch]);
 
-      // Sample data for registration history
-      setRegistrationHistory([
-        {
-          id: "123455",
-          businessName: "Bakery Sweet",
-          businessMail: "info@bakerysweet.vn",
-          businessPhone: "0901111111",
-          businessType: "Bakery",
-          taxCode: "0987654321",
-          businessAddress: "456 Nguyen Van B Street, Ward 2, District 2, Ho Chi Minh City",
-          openTime: "06:00",
-          closeTime: "20:00",
-          status: "rejected",
-          createdAt: "2023-12-10T08:00:00Z",
-          updatedAt: "2023-12-12T14:30:00Z",
-          businessLogoUrl: "https://via.placeholder.com/150",
-          businessLicenseUrl: "https://via.placeholder.com/800x600",
-          foodSafetyCertUrl: "https://via.placeholder.com/800x600",
-          rejectNote: "Missing food safety certificate.",
-        },
-        {
-          id: "123454",
-          businessName: "Restaurant Delight",
-          businessMail: "info@restaurantdelight.vn",
-          businessPhone: "0902222222",
-          businessType: "Restaurant",
-          taxCode: "0111111111",
-          businessAddress: "789 Nguyen Van C Street, Ward 3, District 3, Ho Chi Minh City",
-          openTime: "10:00",
-          closeTime: "23:00",
-          status: "approved",
-          createdAt: "2023-11-05T09:00:00Z",
-          updatedAt: "2023-11-08T16:00:00Z",
-          businessLogoUrl: "https://via.placeholder.com/150",
-          businessLicenseUrl: "https://via.placeholder.com/800x600",
-          foodSafetyCertUrl: "https://via.placeholder.com/800x600",
-          rejectNote: null,
-        },
-        {
-          id: "123453",
-          businessName: "Tea Shop",
-          businessMail: "info@teashop.vn",
-          businessPhone: "0903333333",
-          businessType: "Tea Shop",
-          taxCode: "0222222222",
-          businessAddress: "321 Nguyen Van D Street, Ward 4, District 4, Ho Chi Minh City",
-          openTime: "08:00",
-          closeTime: "21:00",
-          status: "rejected",
-          createdAt: "2023-10-20T10:00:00Z",
-          updatedAt: "2023-10-22T11:00:00Z",
-          businessLogoUrl: "https://via.placeholder.com/150",
-          businessLicenseUrl: "https://via.placeholder.com/800x600",
-          foodSafetyCertUrl: "https://via.placeholder.com/800x600",
-          rejectNote: "Invalid tax code.",
-        },
-      ]);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+  const hasHistory = Array.isArray(businessFormHistory) && businessFormHistory.length > 0;
+  const registrationData = hasHistory ? businessFormHistory[selectedIndex] : null;
+  const registrationHistory = hasHistory
+    ? businessFormHistory.filter((_, idx) => idx !== selectedIndex)
+    : [];
 
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
@@ -197,7 +125,7 @@ function BusinessRegistrationStatus() {
     );
   }
 
-  const status = registrationData.status?.toLowerCase();
+  const status = registrationData?.status?.toLowerCase();
 
   // Component để render chi tiết form
   const renderFormDetails = (data) => {
@@ -537,8 +465,8 @@ function BusinessRegistrationStatus() {
               </Paper>
             ) : (
               <div className="history-list">
-                {registrationHistory.map((item) => (
-                  <Paper key={item.id} className="history-card">
+                {registrationHistory.map((item, idx) => (
+                  <Paper key={item.id || item._id} className="history-card">
                     <div className="history-card-header">
                       <div className="history-card-title-section">
                         <Typography variant="h6" className="history-card-title">
@@ -589,17 +517,20 @@ function BusinessRegistrationStatus() {
                           </Typography>
                         </div>
                       )}
-                      <Button
+                      {/* <Button
                         variant="outlined"
                         size="small"
                         onClick={() => {
                           setActiveTab('current');
-                          setRegistrationData(item);
+                          const newIndex = businessFormHistory.findIndex(
+                            (f) => (f.id || f._id) === (item.id || item._id)
+                          );
+                          setSelectedIndex(newIndex >= 0 ? newIndex : 0);
                         }}
                         className="view-details-button"
                       >
                         View Details
-                      </Button>
+                      </Button> */}
                     </div>
                   </Paper>
                 ))}

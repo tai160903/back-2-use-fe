@@ -52,18 +52,52 @@ export const uploadAvatarApi = createAsyncThunk(
   }
 );
 
+
+
+// business profile 
+export const getProfileBusiness = createAsyncThunk(
+  "user/getProfileBusiness",
+  async (__dirname, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/businesses/profile")
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
+
+// update business profile
+export const updateProfileBusiness = createAsyncThunk(
+  "user/updateProfileBusiness",
+  async(data, {rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch("/businesses/profile", data)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
 const userSlice = createSlice({
   name: "user",
   initialState: {
     userInfo: null,
+    businessInfo: null,
     isLoading: false,
     error: null,
   },
   reducers: {
-    updateAvatarLocally: (state, action) => { 
+    updateAvatarLocally: (state, action) => {
       if (state.userInfo?.data?.user) {
         state.userInfo.data.user.avatar = action.payload;
-        
+
       } else {
         console.log('No user data found in state');
       }
@@ -86,24 +120,48 @@ const userSlice = createSlice({
       .addCase(updateProfileApi.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(updateProfileApi.fulfilled, (state, {payload}) => {
+      .addCase(updateProfileApi.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.error = null;
         state.userInfo = payload
       })
-      .addCase(updateProfileApi.rejected, (state, {payload}) => {
+      .addCase(updateProfileApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })
       .addCase(uploadAvatarApi.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(uploadAvatarApi.fulfilled, (state, {payload}) => {
+      .addCase(uploadAvatarApi.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.error = null;
         state.userInfo = payload
       })
-      .addCase(uploadAvatarApi.rejected, (state, {payload}) => {
+      .addCase(uploadAvatarApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(getProfileBusiness.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getProfileBusiness.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.businessInfo = payload
+      })
+      .addCase(getProfileBusiness.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload
+      })
+      .addCase(updateProfileBusiness.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateProfileBusiness.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.businessInfo = payload
+      })
+      .addCase(updateProfileBusiness.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })

@@ -10,7 +10,7 @@ export const PATH = {
     RESETPASSWORD: "/auth/reset-password",
     ACTIVEACCOUNT: "/active-account",
     GOOGLECALLBACK:"/auth/googleCallback",
-    BUSINESS_REGISTRATION_STATUS: "/auth/business-registration-status",
+
 
     // USER
     HOME: "/",
@@ -27,6 +27,7 @@ export const PATH = {
     ABOUT:"/about",
     RANKINGS: "/rankings",
     REWARDS:"/rewards",
+    BUSINESS_REGISTRATION_STATUS: "/business-registration-status",
 
     // PAYMENT
     PAYMENTSUCESS:"/payment-success",

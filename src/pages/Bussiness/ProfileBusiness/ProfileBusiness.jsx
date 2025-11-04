@@ -4,11 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import {
   TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel
+  Button
 } from '@mui/material'
 import {
   FaEdit,
@@ -22,34 +18,40 @@ import {
 } from 'react-icons/fa'
 import './ProfileBusiness.css'
 import { useDispatch, useSelector } from 'react-redux'
+import { getProfileBusiness, updateProfileBusiness } from '../../../store/slices/userSlice'
+import toast from 'react-hot-toast'
 
-// Schema validation với Yup
+// Schema validation with Yup
 const businessSchema = yup.object({
   businessName: yup
     .string()
-    .required('Tên doanh nghiệp là bắt buộc')
-    .min(2, 'Tên doanh nghiệp phải có ít nhất 2 ký tự')
-    .max(100, 'Tên doanh nghiệp không được quá 100 ký tự'),
+    .required('Business name is required')
+    .min(2, 'Business name must be at least 2 characters')
+    .max(100, 'Business name must be at most 100 characters'),
   businessType: yup
     .string()
-    .required('Loại hình kinh doanh là bắt buộc'),
-  taxCode: yup
-    .string()
-    .required('Mã số thuế là bắt buộc')
-    .matches(/^[0-9]{10,13}$/, 'Mã số thuế phải có từ 10-13 chữ số'),
-  email: yup
-    .string()
-    .required('Email là bắt buộc')
-    .email('Email không hợp lệ'),
+    .required('Business type is required'),
   businessPhone: yup
     .string()
-    .required('Số điện thoại là bắt buộc')
-    .matches(/^[0-9]{10,11}$/, 'Số điện thoại phải có 10-11 chữ số'),
+    .required('Phone number is required')
+    .matches(/^[0-9]{10,11}$/, 'Phone number must be 10-11 digits'),
   businessAddress: yup
     .string()
-    .required('Địa chỉ là bắt buộc')
-    .min(10, 'Địa chỉ phải có ít nhất 10 ký tự')
-    .max(200, 'Địa chỉ không được quá 200 ký tự')
+    .required('Address is required')
+    .min(10, 'Address must be at least 10 characters')
+    .max(200, 'Address must be at most 200 characters'),
+  openTime: yup
+    .string()
+    .matches(/^\d{2}:\d{2}$/,
+      'Opening time must be in HH:mm format'
+    )
+    .optional(),
+  closeTime: yup
+    .string()
+    .matches(/^\d{2}:\d{2}$/,
+      'Closing time must be in HH:mm format'
+    )
+    .optional()
 })
 
 export default function ProfileBusiness() {
@@ -58,46 +60,99 @@ export default function ProfileBusiness() {
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const dispatch = useDispatch()
-  const { userInfo: userInfoFromState } = useSelector((state) => state.user)
-  
-  // Get business info from userInfo
-  const userInfo = userInfoFromState || {}
+  const { businessInfo: apiBusinessPayload } = useSelector((state) => state.user)
 
+  // Fetch business profile on mount
+  useEffect(() => {
+    dispatch(getProfileBusiness())
+  }, [dispatch])
 
-  
+  // Extract data from API payload
+  const business = apiBusinessPayload?.data?.business
+  const wallet = apiBusinessPayload?.data?.wallet
+  const activeSubscription = apiBusinessPayload?.data?.activeSubscription
 
-  // React Hook Form
+  const getFormValues = () => ({
+    businessName: business?.businessName || '',
+    businessType: business?.businessType || '',
+    taxCode: business?.taxCode || '',
+    email: business?.userId?.email || business?.businessFormId?.businessMail || '',
+    businessPhone: business?.businessPhone || '',
+    businessAddress: business?.businessAddress || '',
+    openTime: business?.openTime || '',
+    closeTime: business?.closeTime || ''
+  })
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
-    watch
+    reset
   } = useForm({
     resolver: yupResolver(businessSchema),
-    defaultValues: userInfo
+    defaultValues: getFormValues()
   })
+
+  // Reset form when business data changes
+  useEffect(() => {
+    reset({
+      businessName: business?.businessName || '',
+      businessType: business?.businessType || '',
+      businessPhone: business?.businessPhone || '',
+      businessAddress: business?.businessAddress || '',
+      openTime: business?.openTime || '',
+      closeTime: business?.closeTime || ''
+    })
+  }, [business, reset])
 
   const handleEdit = () => {
     setIsEditing(true)
-    reset(userInfo)
+    reset({
+      businessName: business?.businessName || '',
+      businessType: business?.businessType || '',
+      businessPhone: business?.businessPhone || '',
+      businessAddress: business?.businessAddress || '',
+      openTime: business?.openTime || '',
+      closeTime: business?.closeTime || ''
+    })
   }
 
+  // Update business profile
   const onSubmit = async (data) => {
     setIsSubmitting(true)
     try {
-      // TODO: Gọi API để lưu dữ liệu
-      console.log('Dữ liệu gửi lên:', data)
+      await dispatch(updateProfileBusiness(data)).unwrap()
+      toast.success('Business profile updated successfully')
+      setIsEditing(false)
+      reset({
+        businessName: data.businessName || '',
+        businessType: data.businessType || '',
+        businessPhone: data.businessPhone || '',
+        businessAddress: data.businessAddress || '',
+        openTime: data.openTime || '',
+        closeTime: data.closeTime || ''
+      })
+      dispatch(getProfileBusiness())
     } catch (error) {
-      console.error('Error:', error)
+      const message = error?.message || error?.data?.message || 'Failed to update business profile'
+      toast.error(message)
     } finally {
-      setIsSubmitting(false)
+    setIsSubmitting(false)
     }
   }
 
   const handleCancel = () => {
     setIsEditing(false)
-    reset(userInfo)
+    reset({
+      businessName: business?.businessName || '',
+      businessType: business?.businessType || '',
+      taxCode: business?.taxCode || '',
+      email: business?.userId?.email || business?.businessFormId?.businessMail || '',
+      businessPhone: business?.businessPhone || '',
+      businessAddress: business?.businessAddress || '',
+      openTime: business?.openTime || '',
+      closeTime: business?.closeTime || ''
+    })
   }
 
   const formatBalance = (balance) => {
@@ -107,23 +162,25 @@ export default function ProfileBusiness() {
     }).format(balance)
   }
 
+
+
   return (
     <div className="profile-business-container">
-      <div className="profile-business-card">
-        {/* Header với avatar và tên */}
+      <form className="profile-business-card" onSubmit={handleSubmit(onSubmit)}>
+        {/* Header with avatar and name */}
         <div className="profile-header">
           <div className="profile-avatar">
-            {userInfo?.businessLogo ? (
-              <img src={userInfo?.businessLogo} alt="Business Logo" />
+            {business?.businessLogoUrl ? (
+              <img src={business?.businessLogoUrl} alt="Business Logo" />
             ) : (
               <div >
-                <span>{userInfo?.businessName?.charAt(0)}</span>
+                <span>{business?.businessName?.charAt(0)}</span>
               </div>
             )}
           </div>
           <div className="profile-title">
-            <h1 className="business-name">{userInfo?.businessName}</h1>
-            <p className="business-type">{userInfo?.businessType}</p>
+            <h1 className="business-name">{business?.businessName}</h1>
+            <p className="business-type">{business?.businessType}</p>
           </div>
           <div className="profile-actions">
             {!isEditing ? (
@@ -133,7 +190,7 @@ export default function ProfileBusiness() {
                 onClick={handleEdit}
                 className="edit-btn"
               >
-                Chỉnh sửa
+                Edit
               </Button>
             ) : (
               <div className="action-buttons">
@@ -141,11 +198,11 @@ export default function ProfileBusiness() {
                   variant="contained"
                   color="success"
                   startIcon={<FaSave />}
-                  onClick={handleSubmit(onSubmit)}
+                  type="submit"
                   disabled={isSubmitting}
                   className="save-btn"
                 >
-                  {isSubmitting ? 'Đang lưu...' : 'Lưu'}
+                  {isSubmitting ? 'Saving...' : 'Save'}
                 </Button>
                 <Button
                   variant="contained"
@@ -155,33 +212,41 @@ export default function ProfileBusiness() {
                   disabled={isSubmitting}
                   className="cancel-btn"
                 >
-                  Hủy
+                  Cancel
                 </Button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Thông tin chi tiết */}
+        {/* Details */}
         <div className="profile-details">
           <div className="detail-section">
             <h3 className="section-title">
               <FaWallet style={{ marginRight: '8px', marginBottom: '8px', color: '#c64200' }} />
-              Thông tin ví
+              Wallet
             </h3>
             <div className="detail-item">
-              <label>Số dư:</label>
-              <span className="balance">{formatBalance(userInfo?.wallet?.balance)}</span>
+              <label>Available balance:</label>
+              <span className="balance">{formatBalance(wallet?.availableBalance || 0)}</span>
+            </div>
+            <div className="detail-item">
+              <label>Holding balance:</label>
+              <span>{formatBalance(wallet?.holdingBalance || 0)}</span>
+            </div>
+            <div className="detail-item">
+              <label>Subscription:</label>
+              <span>{activeSubscription || 'No active subscription'}</span>
             </div>
           </div>
 
           <div className="detail-section">
             <h3 className="section-title">
               <FaBuilding style={{ marginRight: '8px', marginBottom: '8px', color: '#3169ed' }} />
-              Thông tin doanh nghiệp
+              Business information
             </h3>
             <div className="detail-item">
-              <label>Tên doanh nghiệp:</label>
+              <label>Business name:</label>
               {isEditing ? (
                 <TextField
                   {...register('businessName')}
@@ -192,46 +257,61 @@ export default function ProfileBusiness() {
                   className="edit-input"
                 />
               ) : (
-                <span>{userInfo?.businessName}</span>
+                <span>{business?.businessName}</span>
               )}
             </div>
             <div className="detail-item">
-              <label>Loại hình kinh doanh:</label>
-              {isEditing ? (
-                <FormControl fullWidth error={!!errors.businessType}>
-                  <Select
-                    {...register('businessType')}
-                    value={watch('businessType')}
-                    className="edit-select"
-                  >
-                    <MenuItem value="Cafe">Cafe</MenuItem>
-                    <MenuItem value="Restaurant">Nhà hàng</MenuItem>
-                    <MenuItem value="Shop">Cửa hàng</MenuItem>
-                    <MenuItem value="Service">Dịch vụ</MenuItem>
-                  </Select>
-                  {errors.businessType && (
-                    <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
-                      {errors.businessType.message}
-                    </span>
-                  )}
-                </FormControl>
-              ) : (
-                <span>{userInfo?.businessType}</span>
-              )}
-            </div>
-            <div className="detail-item">
-              <label>Mã số thuế:</label>
+              <label>Business type:</label>
               {isEditing ? (
                 <TextField
-                  {...register('taxCode')}
+                  {...register('businessType')}
                   fullWidth
                   variant="outlined"
-                  error={!!errors.taxCode}
-                  helperText={errors.taxCode?.message}
+                  error={!!errors.businessType}
+                  helperText={errors.businessType?.message}
                   className="edit-input"
                 />
               ) : (
-                <span>{userInfo?.taxCode}</span>
+                <span>{business?.businessType}</span>
+              )}
+            </div>
+            <div className="detail-item">
+              <label>Tax code:</label>
+                <span>{business?.taxCode}</span>
+          
+            </div>
+            <div className="detail-item">
+              <label>Opening time:</label>
+              {isEditing ? (
+                <TextField
+                  {...register('openTime')}
+                  fullWidth
+                  variant="outlined"
+                  type="time"
+                  inputProps={{ step: 300 }}
+                  error={!!errors.openTime}
+                  helperText={errors.openTime?.message}
+                  className="edit-input"
+                />
+              ) : (
+                <span>{business?.openTime || '-'}</span>
+              )}
+            </div>
+            <div className="detail-item">
+              <label>Closing time:</label>
+              {isEditing ? (
+                <TextField
+                  {...register('closeTime')}
+                  fullWidth
+                  variant="outlined"
+                  type="time"
+                  inputProps={{ step: 300 }}
+                  error={!!errors.closeTime}
+                  helperText={errors.closeTime?.message}
+                  className="edit-input"
+                />
+              ) : (
+                <span>{business?.closeTime || '-'}</span>
               )}
             </div>
           </div>
@@ -239,31 +319,22 @@ export default function ProfileBusiness() {
           <div className="detail-section">
             <h3 className="section-title">
               <FaPhone style={{ marginRight: '8px', marginBottom: '8px', color: '#ec5a0d'}} />
-              Thông tin liên hệ
+              Contact information
             </h3>
             <div className="detail-item">
               <label>
                 <FaEnvelope style={{ marginRight: '8px' }} />
                 Email:
               </label>
-              {isEditing ? (
-                <TextField
-                  {...register('email')}
-                  fullWidth
-                  variant="outlined"
-                  type="email"
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
-                  className="edit-input"
-                />
-              ) : (
-                <span>{userInfo?.email}</span>
-              )}
+             
+             
+                <span>{business?.userId?.email || business?.businessFormId?.businessMail || ''}</span>
+            
             </div>
             <div className="detail-item">
               <label>
                 <FaPhone style={{ marginRight: '8px' }} />
-                Số điện thoại:
+                Phone number:
               </label>
               {isEditing ? (
                 <TextField
@@ -276,13 +347,13 @@ export default function ProfileBusiness() {
                   className="edit-input"
                 />
               ) : (
-                <span>{userInfo?.businessPhone}</span>
+                <span>{business?.businessPhone}</span>
               )}
             </div>
             <div className="detail-item">
               <label>
                 <FaMapMarkerAlt style={{ marginRight: '8px' }} />
-                Địa chỉ:
+                Address:
               </label>
               {isEditing ? (
                 <TextField
@@ -296,12 +367,12 @@ export default function ProfileBusiness() {
                   className="edit-textarea"
                 />
               ) : (
-                <span>{userInfo?.businessAddress}</span>
+                <span>{business?.businessAddress}</span>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
