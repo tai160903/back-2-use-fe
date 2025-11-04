@@ -128,17 +128,17 @@ export const getMyMaterials = createAsyncThunk(
   }
 );
 
-// Get my business registration (for customers to view their registration status)
-export const getMyBusinessRegistration = createAsyncThunk(
-  "businesses/getMyBusinessRegistration",
-  async (_, { rejectWithValue }) => {
+
+
+// get history business form
+export const getHistoryBusinessForm = createAsyncThunk(
+  "businesses/getHistoryBusinessForm",
+  async({limit, page}, {rejectWithValue}) => {
     try {
-      const response = await fetcher.get("/businesses/form/my");
+      const response = await fetcher.get(`/businesses/history-business-form?limit=${limit}&page=${page}`);
       return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
@@ -146,6 +146,7 @@ export const getMyBusinessRegistration = createAsyncThunk(
 const businessSlice = createSlice({
   name: "businesses",
   initialState: {
+    businessFormHistory: [],
     businessesConfirmation: [],
     businesses: [],
     allBusinesses: [], 
@@ -154,16 +155,11 @@ const businessSlice = createSlice({
     currentPage: 1,
     isLoading: false,
     error: null,
-    // Material related state
     materials: [],
     approvedMaterials: [],
     myMaterials: [],
     materialLoading: false,
     materialError: null,
-    // My business registration state
-    myBusinessRegistration: null,
-    registrationLoading: false,
-    registrationError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -276,19 +272,18 @@ const businessSlice = createSlice({
         state.materialLoading = false;
         state.materialError = payload;
       })
-      // My business registration reducers
-      .addCase(getMyBusinessRegistration.pending, (state) => {
-        state.registrationLoading = true;
-        state.registrationError = null;
+      .addCase(getHistoryBusinessForm.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
       })
-      .addCase(getMyBusinessRegistration.fulfilled, (state, { payload }) => {
-        state.registrationLoading = false;
-        state.myBusinessRegistration = payload.data || payload;
-        state.registrationError = null;
+      .addCase(getHistoryBusinessForm.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.businessFormHistory = payload.data || [];
+        state.error = null;
       })
-      .addCase(getMyBusinessRegistration.rejected, (state, { payload }) => {
-        state.registrationLoading = false;
-        state.registrationError = payload;
+      .addCase(getHistoryBusinessForm.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
       });
   },
 });
