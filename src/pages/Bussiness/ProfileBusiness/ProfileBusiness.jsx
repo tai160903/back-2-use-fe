@@ -76,7 +76,7 @@ export default function ProfileBusiness() {
     businessName: business?.businessName || '',
     businessType: business?.businessType || '',
     taxCode: business?.taxCode || '',
-    email: business?.userId?.email || business?.businessFormId?.businessMail || '',
+    email: business?.businessMail || '',
     businessPhone: business?.businessPhone || '',
     businessAddress: business?.businessAddress || '',
     openTime: business?.openTime || '',
@@ -147,7 +147,7 @@ export default function ProfileBusiness() {
       businessName: business?.businessName || '',
       businessType: business?.businessType || '',
       taxCode: business?.taxCode || '',
-      email: business?.userId?.email || business?.businessFormId?.businessMail || '',
+      email: business?.businessFormId?.businessMail || '',
       businessPhone: business?.businessPhone || '',
       businessAddress: business?.businessAddress || '',
       openTime: business?.openTime || '',
@@ -160,6 +160,13 @@ export default function ProfileBusiness() {
       style: 'currency',
       currency: 'VND'
     }).format(balance)
+  }
+
+  const formatDate = (date) => {
+    if (!date) return '-'
+    const parsed = new Date(date)
+    if (isNaN(parsed.getTime())) return String(date)
+    return parsed.toLocaleDateString('vi-VN')
   }
 
 
@@ -236,7 +243,11 @@ export default function ProfileBusiness() {
             </div>
             <div className="detail-item">
               <label>Subscription:</label>
-              <span>{activeSubscription || 'No active subscription'}</span>
+              <span>
+                {activeSubscription
+                  ? `${activeSubscription?.subscriptionId?.name || 'Subscription'} | ${formatDate(activeSubscription?.startDate)} - ${formatDate(activeSubscription?.endDate)}`
+                  : 'No active subscription'}
+              </span>
             </div>
           </div>
 
@@ -327,8 +338,7 @@ export default function ProfileBusiness() {
                 Email:
               </label>
              
-             
-                <span>{business?.userId?.email || business?.businessFormId?.businessMail || ''}</span>
+                <span>{business?.businessFormId?.businessMail || ''}</span>
             
             </div>
             <div className="detail-item">

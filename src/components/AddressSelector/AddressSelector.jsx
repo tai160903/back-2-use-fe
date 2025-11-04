@@ -155,7 +155,7 @@ const AddressSelector = ({ onAddressSelect }) => {
           setLoadingDistricts(true);
           
           const apiUrls = [
-            `https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`,
+            `https://provinces.open-api.vn/api/p/`,
             // Có thể thêm các URLs backup khác ở đây
           ];
           

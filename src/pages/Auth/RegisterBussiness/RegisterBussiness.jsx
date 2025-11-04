@@ -84,7 +84,7 @@ function RegisterBussiness() {
     setSelectedAddress(address);
     // AddressSelector không trả về coordinates, chỉ trả về addressDetails
     if (addressDetails) {
-      setSelectedCoordinates(null); // Không có coordinates từ dropdown
+      setSelectedCoordinates(null); 
     }
   };
 
@@ -110,12 +110,10 @@ function RegisterBussiness() {
     try {
       // Create FormData to send files
       const formData = new FormData();
-
-      // Add form information
       formData.append("businessName", data.businessName);
       formData.append("businessType", data.businessType);
       formData.append("businessMail", data.businessMail);
-      formData.append("businessAddress", selectedAddress); // Use address from map
+      formData.append("businessAddress", selectedAddress); 
       formData.append("businessPhone", data.businessPhone);
       formData.append("taxCode", data.taxCode);
       formData.append("openTime", data.openTime);
@@ -142,7 +140,7 @@ function RegisterBussiness() {
       setIsSuccess(true);
       // Redirect to status page after successful registration
       setTimeout(() => {
-        navigate('/auth/business-registration-status');
+        navigate('/business-registration-status');
       }, 2000);
     } catch (error) {
       // Error will be handled in authSlice through toast

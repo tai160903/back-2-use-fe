@@ -23,7 +23,7 @@ import Stack from "@mui/material/Stack";
 
 export default function WalletBusiness() {
   const dispatch = useDispatch();
-  const { walletId, balance, isLoading: profileLoading } = useUserInfo();
+  const { walletId, balance, availableBalance, holdingBalance, isLoading: profileLoading } = useUserInfo();
   
   // Redux state for transaction history
   const { 
@@ -199,36 +199,48 @@ export default function WalletBusiness() {
                 Manage your deposits and payment methods
               </span>
             </div>
-            <div className="wallet-balance">
-              <div className="wallet-balance-des">
-                <Typography
-                  sx={{
-                    fontSize: "40px",
-                    color: "#007a00",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {balance.toLocaleString('vi-VN')} VNĐ
-                </Typography>
-                <span>Available Balance</span>
+          <div className="wallet-balance" style={{ display: 'flex', gap: 24 }}>
+            <div className="wallet-balance-des" style={{ minWidth: 280 }}>
+              <Typography
+                sx={{
+                  fontSize: "36px",
+                  color: "#007a00",
+                  fontWeight: "bold",
+                }}
+              >
+                {(availableBalance ?? balance).toLocaleString('vi-VN')} VNĐ
+              </Typography>
+              <span>Business Balance (Available)</span>
+            </div>
+            <div className="wallet-balance-des" style={{ minWidth: 280 }}>
+              <Typography
+                sx={{
+                  fontSize: "28px",
+                  color: "#c97700",
+                  fontWeight: 700,
+                }}
+              >
+                {(holdingBalance || 0).toLocaleString('vi-VN')} VNĐ
+              </Typography>
+              <span>Customer Deposits (Holding)</span>
+            </div>
+            <div>
+              <div
+                className="wallet-balance-transaction"
+                onClick={handleOpenAddFunds}
+              >
+                <FaPlus className="mr-3" />
+                Add funds
               </div>
-              <div>
-                <div
-                  className="wallet-balance-transaction"
-                  onClick={handleOpenAddFunds}
-                >
-                  <FaPlus className="mr-3" />
-                  Add funds
-                </div>
-                <div
-                  className="wallet-balance-transaction-withdraw mt-4"
-                  onClick={handleOpenWithdraw}
-                >
-                  <FaMinus className="mr-3" />
-                  Withdraw
-                </div>
+              <div
+                className="wallet-balance-transaction-withdraw mt-4"
+                onClick={handleOpenWithdraw}
+              >
+                <FaMinus className="mr-3" />
+                Withdraw
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

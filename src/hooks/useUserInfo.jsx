@@ -1,19 +1,40 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getProfileApi } from "../store/slices/userSlice";
+import { getProfileApi, getProfileBusiness } from "../store/slices/userSlice";
+import { getUserRole } from "../utils/authUtils";
 
 export const useUserInfo = () => {
   const dispatch = useDispatch();
-  const { userInfo, isLoading, error } = useSelector((state) => state.user);
+  const { userInfo, businessInfo, isLoading, error } = useSelector((state) => state.user);
+  const role = getUserRole();
 
   useEffect(() => {
-    if (!userInfo) {
-      dispatch(getProfileApi());
+    if (role === "business") {
+      if (!businessInfo) {
+        dispatch(getProfileBusiness());
+      }
+    } else {
+      if (!userInfo) {
+        dispatch(getProfileApi());
+      }
     }
-  }, [dispatch, userInfo]);
+  }, [dispatch, role, userInfo, businessInfo]);
 
-  const walletId = userInfo?.wallet?._id || null;
-  const balance = userInfo?.wallet?.balance || 0;
+  const walletId = role === "business"
+    ? (businessInfo?.data?.wallet?._id || null)
+    : (userInfo?.wallet?._id || null);
+
+  const balance = role === "business"
+    ? (businessInfo?.data?.wallet?.availableBalance || 0)
+    : (userInfo?.wallet?.availableBalance || 0);
+
+  const availableBalance = role === "business"
+    ? (businessInfo?.data?.wallet?.availableBalance || 0)
+    : (userInfo?.wallet?.availableBalance || 0);
+
+  const holdingBalance = role === "business"
+    ? (businessInfo?.data?.wallet?.holdingBalance || 0)
+    : (userInfo?.wallet?.holdingBalance || 0);
 
   return {
     walletId,
@@ -21,6 +42,9 @@ export const useUserInfo = () => {
     isLoading,
     error,
     userInfo,
-    refetch: () => dispatch(getProfileApi()),
+    businessInfo,
+    availableBalance,
+    holdingBalance,
+    refetch: () => role === "business" ? dispatch(getProfileBusiness()) : dispatch(getProfileApi()),
   };
 };
