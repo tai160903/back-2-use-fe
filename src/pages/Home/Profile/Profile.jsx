@@ -513,7 +513,7 @@ export default function Profile() {
                         fontWeight: "600",
                       }}
                     >
-                      {(wallet?.balance || 0).toLocaleString('vi-VN')} VNĐ
+                      {(wallet?.availableBalance || 0).toLocaleString('vi-VN')} VNĐ
                     </Typography>
                
                   </div>

@@ -8,7 +8,6 @@ export const getALLSubscriptions = createAsyncThunk(
   async (__dirname, { rejectWithValue }) => {
     try {
       const response = await fetcher.get("/subscriptions")
-      console.log("duy", response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -27,7 +26,9 @@ export const getSubscriptionById = createAsyncThunk(
       const response = await fetcher.get(`/subscriptions/${id}`)
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response ? error.response.data : error.message);
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
     }
   }
 )
@@ -73,7 +74,7 @@ export const updateSubscription = createAsyncThunk(
       dispatch(getALLSubscriptions());
       return response.data;
     } catch (error) {
-      console.error("Update subscription error:", error);
+     
       return rejectWithValue(error.response ? error.response.data : error.message);
     }
   }
@@ -137,6 +138,19 @@ export const buySubscription = createAsyncThunk(
       return rejectWithValue(
         error.response ? error.response.data : error.message
       );
+    }
+  }
+)
+
+// buy free trial
+export const buyFreeTrial = createAsyncThunk(
+  "subscription/buyFreeTrial",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/businesses/activate-trial")
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
     }
   }
 )
@@ -268,6 +282,19 @@ const subscriptionSlice = createSlice({
         state.subscription = payload;
       })
       .addCase(buySubscription.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(buyFreeTrial.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(buyFreeTrial.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.subscription = payload;
+      })
+      .addCase(buyFreeTrial.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })
