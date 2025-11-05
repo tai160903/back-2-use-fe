@@ -33,8 +33,13 @@ import {
   MdEmail
 } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
-import { getALLSubscriptions } from '../../../store/slices/subscriptionSlice';
+import { getALLSubscriptions, buyFreeTrial, buySubscription } from '../../../store/slices/subscriptionSlice';
 import './Pricing.css';
+import toast from 'react-hot-toast';
+import { getUserRole } from '../../../utils/authUtils';
+import { useNavigate } from 'react-router-dom';
+import { Path } from 'leaflet';
+import { PATH } from '../../../routes/path';
 
 // Fallback features cho trường hợp không có dữ liệu từ API
 const DEFAULT_FEATURES = [
@@ -84,9 +89,11 @@ const faqs = [
 ];
 
 const Pricing = () => {
+  const navigate = useNavigate();
   const [expandedFAQ, setExpandedFAQ] = useState(0);
   const dispatch = useDispatch();
   const { subscription, isLoading, error } = useSelector(state => state.subscription);
+  const { currentUser } = useSelector(state => state.auth);
 
   const dataSubscriptions = subscription?.data?.subscriptions || [];
   const featuresList = subscription?.data?.description || [];
@@ -97,6 +104,52 @@ const Pricing = () => {
 
   const handleFAQToggle = (index) => {
     setExpandedFAQ(expandedFAQ === index ? -1 : index);
+  };
+
+  // Chuẩn hóa message lỗi từ thunk
+  const getErrorMessage = (err) => {
+    if (!err) return 'An error occurred.';
+    if (typeof err === 'string') return err;
+    if (typeof err?.message === 'string') return err.message;
+    if (typeof err?.data?.message === 'string') return err.data.message;
+    if (typeof err?.payload?.message === 'string') return err.payload.message;
+    if (typeof err?.error === 'string') return err.error;
+    try { return JSON.stringify(err); } catch { return 'An error occurred.'; }
+  };
+
+  const handleBuy = async (plan) => {
+    const isLoggedIn = !!currentUser?.accessToken;
+    if (!isLoggedIn) {
+      toast.error('Please log in to continue.');
+      navigate(PATH.LOGIN);
+      return;
+    }
+
+    const isAccountActive = currentUser?.user?.isActive !== false;
+    if (!isAccountActive) {
+      toast.error('Your account has not been activated. Please verify your email before purchasing a package.');
+      navigate(PATH.REGISTERBUSSINESS);
+      return;
+    }
+
+    const role = getUserRole();
+    if (role !== 'business') {
+      toast.error('You need to register a business account to purchase a package.');
+      navigate(PATH.REGISTERBUSSINESS);
+      return;
+    }
+
+    try {
+      if (plan?.isTrial || plan?.price === 0) {
+        await dispatch(buyFreeTrial()).unwrap();
+        toast.success('Free trial activated successfully!');
+      } else {
+        await dispatch(buySubscription({ subscriptionId: plan?._id, autoRenew: false })).unwrap();
+        toast.success('Purchase successful!');
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
   };
 
   // Hàm để lấy icon dựa trên loại subscription
@@ -250,6 +303,8 @@ const Pricing = () => {
                       borderRadius: 8,
                       py: 1.5,
                     }}
+                    onClick={() => handleBuy(subscription)}
+                    disabled={isLoading}
                   >
                     {subscription.isTrial ? 'Start Free Trial' : 'Get Started'}
                   </Button>
