@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import {
   TextField,
-  Button
+  Button,
+  Typography
 } from '@mui/material'
 import {
   FaEdit,
@@ -20,6 +21,8 @@ import './ProfileBusiness.css'
 import { useDispatch, useSelector } from 'react-redux'
 import { getProfileBusiness, updateProfileBusiness } from '../../../store/slices/userSlice'
 import toast from 'react-hot-toast'
+import AddressSelector from '../../../components/AddressSelector/AddressSelector'
+import Box from '@mui/material/Box'
 
 // Schema validation with Yup
 const businessSchema = yup.object({
@@ -87,7 +90,8 @@ export default function ProfileBusiness() {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm({
     resolver: yupResolver(businessSchema),
     defaultValues: getFormValues()
@@ -168,6 +172,13 @@ export default function ProfileBusiness() {
     if (isNaN(parsed.getTime())) return String(date)
     return parsed.toLocaleDateString('vi-VN')
   }
+
+  // Handle address selection from AddressSelector
+  const handleAddressSelect = useCallback((addressData) => {
+    if (addressData && addressData.fullAddress) {
+      setValue('businessAddress', addressData.fullAddress);
+    }
+  }, [setValue]);
 
 
 
@@ -366,19 +377,24 @@ export default function ProfileBusiness() {
                 Address:
               </label>
               {isEditing ? (
-                <TextField
-                  {...register('businessAddress')}
-                  fullWidth
-                  variant="outlined"
-                  multiline
-                  rows={3}
-                  error={!!errors.businessAddress}
-                  helperText={errors.businessAddress?.message}
-                  className="edit-textarea"
-                />
-              ) : (
-                <span>{business?.businessAddress}</span>
-              )}
+                <Box>
+                  <AddressSelector 
+                    onAddressSelect={handleAddressSelect} 
+                    variant="light"
+                  />
+                  {errors.businessAddress && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ marginTop: "8px", display: "block" }}
+                    >
+                      {errors.businessAddress?.message}
+                    </Typography>
+                  )}
+                </Box>
+                             ) : (
+                 <span style={{ color: "black", fontWeight: "600" }}>{business?.businessAddress}</span>
+               )}
             </div>
           </div>
         </div>

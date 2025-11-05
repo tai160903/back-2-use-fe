@@ -10,7 +10,7 @@ import "./RegisterBussiness.css";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { registerBusinessAPI } from "../../../store/slices/authSlice";
 import useAuth from "../../../hooks/useAuth";
 import toast from "react-hot-toast";
@@ -80,13 +80,13 @@ function RegisterBussiness() {
     }
   };
 
-  const handleLocationSelect = (address, addressDetails) => {
-    setSelectedAddress(address);
-    // AddressSelector không trả về coordinates, chỉ trả về addressDetails
-    if (addressDetails) {
-      setSelectedCoordinates(null); 
+  const handleLocationSelect = useCallback((addressData) => {
+    if (addressData && addressData.fullAddress) {
+      setSelectedAddress(addressData.fullAddress);
     }
-  };
+    // AddressSelector không trả về coordinates, chỉ trả về addressDetails
+    setSelectedCoordinates(null);
+  }, []);
 
   const onSubmit = async (data) => {
     // Validate required files
