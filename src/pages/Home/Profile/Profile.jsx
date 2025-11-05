@@ -1,4 +1,5 @@
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
@@ -19,10 +20,11 @@ import CakeIcon from "@mui/icons-material/Cake";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import "./Profile.css";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import AddressSelector from "../../../components/AddressSelector/AddressSelector";
 import {
   getProfileApi,
   updateProfileApi,
@@ -77,6 +79,7 @@ export default function Profile() {
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -128,6 +131,13 @@ export default function Profile() {
     setIsEditing(false);
   };
 
+  // Handle address selection from AddressSelector
+  const handleAddressSelect = useCallback((addressData) => {
+    if (addressData && addressData.fullAddress) {
+      setValue("address", addressData.fullAddress);
+    }
+  }, [setValue]);
+
   // Avatar upload handlers
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -167,11 +177,8 @@ export default function Profile() {
       const formData = new FormData();
       formData.append('avatar', selectedFile);
       
-      const response = await dispatch(uploadAvatarApi(formData)).unwrap();
+      await dispatch(uploadAvatarApi(formData)).unwrap();
       
-
-      
- 
       dispatch(getProfileApi());
       toast.success('Update avatar success');
       setShowAvatarPreview(false);
@@ -368,21 +375,27 @@ export default function Profile() {
                           <div className="profile-info-text-icons">
                             <AddLocationAltIcon />
                           </div>
-                          <div className="profile-info-text-des">
+                          <div className="profile-info-text-des" style={{ width: "100%" }}>
                             <Typography>Address</Typography>
                             {isEditing ? (
-                              <TextField
-                                {...register("address")}
-                                variant="outlined"
-                                fullWidth
-                                size="small"
-                                sx={{ marginTop: "8px" }}
-                                error={!!errors.address}
-                                helperText={errors.address?.message}
-                              />
-                            ) : (
-                              <span>{user?.address || "No address"}</span>
-                            )}
+                              <Box sx={{ marginTop: "8px" }}>
+                                <AddressSelector 
+                                  onAddressSelect={handleAddressSelect} 
+                                  variant="light"
+                                />
+                                {errors.address && (
+                                  <Typography
+                                    variant="caption"
+                                    color="error"
+                                    sx={{ marginTop: "8px", display: "block" }}
+                                  >
+                                    {errors.address?.message}
+                                  </Typography>
+                                )}
+                              </Box>
+                                                         ) : (
+                               <span style={{ color: "black", fontWeight: "600" }}>{user?.address || "No address"}</span>
+                             )}
                           </div>
                         </div>
                       </div>
