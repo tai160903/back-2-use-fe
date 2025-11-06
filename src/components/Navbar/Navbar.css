@@ -18,7 +18,7 @@
 }
 
 .navbar-open {
-  width: 250px !important;
+  width: 230px !important;
 }
 
 .navbar-closed {
@@ -26,48 +26,55 @@
 }
 
 .navbar-content {
-  line-height: 38px !important;
-  padding: 10px 0px 10px 10px !important;
+  line-height: 30px !important;
+  padding: 6px 0px 6px 8px !important;
 }
 
 .navbar-header {
-
-text-align: center;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 6px 8px;
 }
+
+.navbar-closed .navbar-header { padding: 8px; justify-content: center; }
+.navbar-closed .navbar-logo-image { display: none; }
+.navbar-closed .navbar-logo-text { display: none; }
+.navbar-header .MuiIconButton-root { width: 32px; height: 32px; }
 
 .navbar-logo {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
 }
 
 .navbar-logo-image {
-  width: auto;
-  height: 80px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   flex-shrink: 0;
+  border-radius: 6px;
+  background: #ffffff22;
 }
 
 .navbar-logo-text {
-  font-size: 20px !important;
+  font-size: 16px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   white-space: nowrap !important;
 }
 
 .navbar-item {
-  margin-top: 16px;
+  margin-top: 8px;
   color: #ffffff;
-  padding: 15px !important;
+  padding: 10px !important;
   position: relative;
   overflow: visible;
-  padding: 10px 18px;
+  padding: 8px 14px;
 }
 
 .navbar-item:hover {
-  padding: 15px !important;
+  padding: 10px !important;
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
   background: #ffffff !important;
@@ -95,7 +102,7 @@ text-align: center;
   background: #ffffff;
   color: #007c00;
   box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  padding: 15px !important;
+  padding: 10px !important;
 }
   
 .navbar-item.active:hover {
@@ -113,8 +120,11 @@ text-align: center;
 
 .navbar-icon {
   text-align: center;
-  font-size: 22px;
+  font-size: 20px;
   color: #ffffff !important;
 }
 
 .navbar-item:hover .navbar-icon { color: #007c00 !important; }
+
+/* Reduce default MUI ListItem height */
+.navbar .MuiListItem-root { min-height: 44px; }

@@ -67,20 +67,23 @@ const Material = () => {
     setCurrentPage(1);
   };
 
-  // Get all filtered data
+  // Get all filtered data (safe guards for undefined fields)
   const getAllFilteredData = () => {
-    let filtered = [...materials];
+    const safeMaterials = Array.isArray(materials) ? materials : [];
+    let filtered = [...safeMaterials];
     if (filter !== "All") {
-      filtered = filtered.filter(
-        (item) => item.status.toLowerCase() === filter.toLowerCase()
-      );
+      filtered = filtered.filter((item) => {
+        const status = (item?.status ?? '').toLowerCase();
+        return status === filter.toLowerCase();
+      });
     }
     if (searchTerm) {
-      filtered = filtered.filter(
-        (item) =>
-          item.materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const q = searchTerm.toLowerCase();
+      filtered = filtered.filter((item) => {
+        const name = (item?.materialName ?? '').toLowerCase();
+        const desc = (item?.description ?? '').toLowerCase();
+        return name.includes(q) || desc.includes(q);
+      });
     }
     return filtered;
   };

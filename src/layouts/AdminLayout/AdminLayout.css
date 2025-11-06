@@ -4,6 +4,16 @@
   min-height: 100vh;
 }
 
+.admin-layout-container .navbar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 100;
+}
+
 .admin-content-wrapper {
   display: flex;
   flex-direction: column;

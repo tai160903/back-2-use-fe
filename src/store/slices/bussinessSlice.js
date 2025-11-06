@@ -83,12 +83,12 @@ export const rejectBusiness = createAsyncThunk(
   }
 );
 
-// Create material
+// Create material request (business)
 export const createMaterial = createAsyncThunk(
   "businesses/createMaterial",
   async (materialData, { rejectWithValue }) => {
     try {
-      const response = await fetcher.post("/materials", materialData);
+      const response = await fetcher.post("/materials/material-requests", materialData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -98,12 +98,12 @@ export const createMaterial = createAsyncThunk(
   }
 );
 
-// Get approved materials
+// Get all materials owned by current business (approved/active)
 export const getApprovedMaterials = createAsyncThunk(
   "businesses/getApprovedMaterials",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetcher.get("/materials/approved");
+      const response = await fetcher.get("/materials");
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -113,12 +113,12 @@ export const getApprovedMaterials = createAsyncThunk(
   }
 );
 
-// Get my materials (business's own materials)
+// Get my material requests (all statuses)
 export const getMyMaterials = createAsyncThunk(
   "businesses/getMyMaterials",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetcher.get("/materials/my");
+      const response = await fetcher.get("/materials/my-request");
       return response.data;
     } catch (error) {
       return rejectWithValue(
