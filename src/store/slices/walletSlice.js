@@ -1,6 +1,7 @@
 // walletSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import fetcher from "../../apis/fetcher";
+import { getUserRole } from "../../utils/authUtils";
 
 // deposite money
 export const depositeMoneyApi = createAsyncThunk(
@@ -35,13 +36,44 @@ export const withdrawMoneyApi = createAsyncThunk(
 // get transaction history
 export const getTransactionHistoryApi = createAsyncThunk(
   "wallet/getTransactionHistoryApi",
-  async({page,limit,typeGroup = "personal",direction}, {rejectWithValue}) => {
+  async({page,limit,typeGroup = "personal",direction,walletType}, {rejectWithValue}) => {
     try {
-      let url = `/wallet-transactions/my?typeGroup=${typeGroup}&page=${page}&limit=${limit}`;
-      if (direction && direction !== "all") {
-        url += `&direction=${direction}`;
+      let url = `/wallet-transactions/my`;
+      const params = [];
+      
+      // If walletType not provided, infer from current user role
+      const resolvedWalletType = walletType || (() => {
+        const role = getUserRole?.();
+        if (role === "business") return "business";
+        return "customer";
+      })();
+
+      if (resolvedWalletType) {
+        params.push(`walletType=${resolvedWalletType}`);
       }
+      params.push(`typeGroup=${typeGroup}`);
+      params.push(`page=${page}`);
+      params.push(`limit=${limit}`);
+      
+      if (direction && direction !== "all") {
+        params.push(`direction=${direction}`);
+      }
+      
+      url += `?${params.join('&')}`;
       const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+)
+
+
+export const getTransactionHistoryBusinessApiDetail = createAsyncThunk(
+  "wallet/getTransactionHistoryBusinessApiDetail",
+  async({id}, {rejectWithValue}) => {
+    try {
+      const response = await fetcher.get(`/wallet-transactions/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -116,7 +148,19 @@ const walletSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
       })
-  
+      .addCase(getTransactionHistoryBusinessApiDetail.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getTransactionHistoryBusinessApiDetail.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.transactionHistory = payload.data;
+      })
+      .addCase(getTransactionHistoryBusinessApiDetail.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
   },
 });
 

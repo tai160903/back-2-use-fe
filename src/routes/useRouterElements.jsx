@@ -46,6 +46,7 @@ import WalletBusiness from "../pages/Bussiness/WalletBusiness/WalletBusiness";
 import BusinessTransaction from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
 import ProfileBusiness from "../pages/Bussiness/ProfileBusiness/ProfileBusiness";
 import Rewards from "../pages/Home/Rewards/Rewards";
+import CustomerLegacyData from "../pages/Bussiness/CustomerLegacyData/CustomerLegacyData";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -273,6 +274,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
               <BusinessTransaction />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_MY_CUSTOMER_HISTORY,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <CustomerLegacyData />
             </ProtectedRoute>
           ),
         },

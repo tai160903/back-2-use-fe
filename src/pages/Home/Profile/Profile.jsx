@@ -58,7 +58,7 @@ const schema = yup.object().shape({
     .typeError("Invalid date"),
 });
 
-export default function Profile() {
+export default function Profile({ readOnly = false }) {
   const dispatch = useDispatch();
   const { userInfo, error } = useSelector((state) => state.user);
   console.log("userInfo", userInfo);
@@ -108,6 +108,13 @@ export default function Profile() {
       });
     }
   }, [user, reset]);
+
+  // Force read-only mode
+  useEffect(() => {
+    if (readOnly && isEditing) {
+      setIsEditing(false);
+    }
+  }, [readOnly, isEditing]);
 
   const onSubmit = async (data) => {
     try {
@@ -212,21 +219,23 @@ export default function Profile() {
           <div className="profile-content">
             <div className="profile-info">
               <div className="profile-info-header">
-                <div className={`profile-avatar ${isUploadingAvatar ? 'loading' : ''}`} onClick={!isUploadingAvatar ? handleAvatarClick : undefined}>
+                <div className={`profile-avatar ${isUploadingAvatar ? 'loading' : ''}`} onClick={!readOnly && !isUploadingAvatar ? handleAvatarClick : undefined} style={{ cursor: readOnly ? 'default' : 'pointer' }}>
                   <img
                     src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       user?.fullName || "User"
                     )}&background=0D8ABC&color=fff&size=128`}
                     alt="Avatar"
                   />
-                  {isUploadingAvatar ? (
-                    <div className="avatar-loading-overlay">
-                      <CircularProgress size={30} sx={{ color: 'white' }} />
-                    </div>
-                  ) : (
-                    <div className="avatar-overlay">
-                      <CameraAltIcon className="camera-icon" />
-                    </div>
+                  {!readOnly && (
+                    isUploadingAvatar ? (
+                      <div className="avatar-loading-overlay">
+                        <CircularProgress size={30} sx={{ color: 'white' }} />
+                      </div>
+                    ) : (
+                      <div className="avatar-overlay">
+                        <CameraAltIcon className="camera-icon" />
+                      </div>
+                    )
                   )}
                 </div>
                 <input
@@ -245,16 +254,18 @@ export default function Profile() {
                     }}
                   >
                     My Profile{" "}
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className={`p-2 rounded-lg transition-all duration-200 ${
-                        isEditing
-                          ? "text-orange-600 bg-orange-100 hover:bg-orange-200"
-                          : "text-gray-500 hover:text-orange-500 hover:bg-orange-50"
-                      }`}
-                    >
-                      <EditIcon className="w-5 h-5" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={() => setIsEditing(!isEditing)}
+                        className={`p-2 rounded-lg transition-all duration-200 ${
+                          isEditing
+                            ? "text-orange-600 bg-orange-100 hover:bg-orange-200"
+                            : "text-gray-500 hover:text-orange-500 hover:bg-orange-50"
+                        }`}
+                      >
+                        <EditIcon className="w-5 h-5" />
+                      </button>
+                    )}
                   </Typography>
                 </div>
               </div>
@@ -465,7 +476,7 @@ export default function Profile() {
                   </form>
                 </LocalizationProvider>
               </div>
-              {!isEditing && (
+              {!isEditing && !readOnly && (
                 <Button
                   className="profile-info-btn profile-info-btn-save"
                   variant="contained"

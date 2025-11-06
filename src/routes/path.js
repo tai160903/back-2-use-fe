@@ -41,6 +41,7 @@ export const PATH = {
     BUSINESS_REEDEM_REWARDS:"/business/reedem-rewards",
     BUSINESS_WALLET:"/business/wallet",
     BUSINESS_PROFILE:"/business/profile",
+    BUSINESS_MY_CUSTOMER_HISTORY:"/business/my-customer-history",
 
     // ADMIN
     ADMIN: "/admin",

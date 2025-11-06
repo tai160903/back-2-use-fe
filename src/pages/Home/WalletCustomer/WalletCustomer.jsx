@@ -120,7 +120,10 @@ export default function WalletCustomer() {
 
   // Format transaction data
   const formatTransactionData = (transactions) => {
-    return transactions.map(transaction => ({
+    const list = Array.isArray(transactions)
+      ? transactions
+      : (Array.isArray(transactions?.data) ? transactions.data : []);
+    return list.map(transaction => ({
       id: transaction._id,
       date: new Date(transaction.createdAt).toLocaleDateString('vi-VN'),
       type: transaction.transactionType === 'deposit' ? 'VNPay' : 'Bank Account',
@@ -291,7 +294,11 @@ export default function WalletCustomer() {
                 </div>
               ) : (
                 <>
-                  {getFilteredData(realTransactionData).map((item) => (
+                  {getFilteredData(realTransactionData).length === 0 ? (
+                    <div style={{ textAlign: "center", padding: 20 }}>
+                      <Typography>No transactions found.</Typography>
+                    </div>
+                  ) : getFilteredData(realTransactionData).map((item) => (
                     <Box
                       key={item.id}
                       sx={{

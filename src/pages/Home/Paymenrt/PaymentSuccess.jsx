@@ -1,33 +1,63 @@
 import { Box, Container, Typography, Button, Paper, Divider } from "@mui/material";
 import { FaCheckCircle, FaHome, FaReceipt } from "react-icons/fa";
 import { MdAccountBalanceWallet } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { getUserRole } from "../../../utils/authUtils";
 import { PATH } from "../../../routes/path";
 import "./CheckoutPayment.css";
+import { useDispatch } from "react-redux";
+import { getTransactionHistoryBusinessApiDetail } from "../../../store/slices/walletSlice";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
-  const [depositAmount, setDepositAmount] = useState("500,000");
-  
-  useEffect(() => {
-    const savedAmount = localStorage.getItem("depositAmount");
-    if (savedAmount) {
-      setDepositAmount(parseFloat(savedAmount).toLocaleString('vi-VN'));
-      localStorage.removeItem("depositAmount");
-    }
+  const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const [transactionDetail, setTransactionDetail] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const formatCurrency = useMemo(() => (value) => {
+    if (value === null || value === undefined) return "0";
+    const num = typeof value === "number" ? value : parseFloat(value);
+    if (Number.isNaN(num)) return "0";
+    return num.toLocaleString("vi-VN");
   }, []);
 
+  // No localStorage usage; rely solely on API detail by id from URL
+
+  useEffect(() => {
+    // Try multiple possible param keys coming back from BE/VNPay
+    const possibleKeys = ["id", "transactionId", "txnId", "txnRef", "vnp_TxnRef"];
+    const foundId = possibleKeys.map((k) => searchParams.get(k)).find(Boolean);
+    if (!foundId) return;
+
+    setLoading(true);
+    setError(null);
+    dispatch(getTransactionHistoryBusinessApiDetail({ id: foundId }))
+      .unwrap()
+      .then((res) => {
+        setTransactionDetail(res?.data || null);
+      })
+      .catch((e) => {
+        setError(typeof e === "string" ? e : e?.message || "Không thể tải chi tiết giao dịch");
+      })
+      .finally(() => setLoading(false));
+  }, [dispatch, searchParams]);
+
   const transactionData = {
-    amount: depositAmount,
-    transactionId: "WLT20250109123456",
-    date: "01/09/2025",
-    time: "14:30:25",
-    method: "Bank Card",
-    accountNumber: "**** **** **** 4532",
-    transactionType: "Wallet Top-Up",
-    walletBalance: "1,250,000",
+    amount: transactionDetail?.amount,
+    transactionId: transactionDetail?._id,
+    date: transactionDetail?.createdAt
+      ? new Date(transactionDetail.createdAt).toLocaleDateString("vi-VN")
+      : undefined,
+    time: transactionDetail?.createdAt
+      ? new Date(transactionDetail.createdAt).toLocaleTimeString("vi-VN")
+      : undefined,
+    method: transactionDetail?.referenceType === "manual" ? "VNPay" : transactionDetail?.referenceType,
+    transactionType: transactionDetail?.transactionType,
+    status: transactionDetail?.status,
+    direction: transactionDetail?.direction,
   };
 
   const getWalletRoute = () => {
@@ -70,9 +100,19 @@ export default function PaymentSuccess() {
           </Box>
 
           <Box sx={{ p: 6 }}>
+            {loading && (
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Đang tải chi tiết giao dịch...
+              </Typography>
+            )}
+            {error && (
+              <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+                {error}
+              </Typography>
+            )}
             <Box className="checkoutPayment-amount-box checkoutPayment-amount-box-success">
               <Typography variant="h3" className="checkoutPayment-amount-text">
-                {transactionData.amount} VND
+                {formatCurrency(transactionData.amount)} VND
               </Typography>
               <Typography
                 variant="body2"
@@ -82,74 +122,73 @@ export default function PaymentSuccess() {
               </Typography>
             </Box>
 
-            {/* <Box className="checkoutPayment-details-box">
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Current Wallet Balance
-                </Typography>
-                <Box className="checkoutPayment-wallet-balance">
-                  <MdAccountBalanceWallet size={24} color="#22c55e" />
-                  <Typography className="checkoutPayment-wallet-balance-text">
-                    {transactionData.walletBalance} VND
+            {transactionDetail && (
+              <Box className="checkoutPayment-details-box">
+                <Box className="checkoutPayment-detail-row">
+                  <Typography className="checkoutPayment-detail-label">
+                    Transaction ID
+                  </Typography>
+                  <Typography className="checkoutPayment-detail-value checkoutPayment-detail-value-monospace">
+                    {transactionData.transactionId}
+                  </Typography>
+                </Box>
+
+                <Divider className="checkoutPayment-divider" />
+
+                <Box className="checkoutPayment-detail-row">
+                  <Typography className="checkoutPayment-detail-label">
+                    Transaction Type
+                  </Typography>
+                  <Typography className="checkoutPayment-detail-value">
+                    {transactionData.transactionType}
+                  </Typography>
+                </Box>
+
+                <Divider className="checkoutPayment-divider" />
+
+                <Box className="checkoutPayment-detail-row">
+                  <Typography className="checkoutPayment-detail-label">
+                    Direction
+                  </Typography>
+                  <Typography className="checkoutPayment-detail-value">
+                    {transactionData.direction}
+                  </Typography>
+                </Box>
+
+                <Divider className="checkoutPayment-divider" />
+
+                <Box className="checkoutPayment-detail-row">
+                  <Typography className="checkoutPayment-detail-label">
+                    Status
+                  </Typography>
+                  <Typography className="checkoutPayment-detail-value">
+                    {transactionData.status}
+                  </Typography>
+                </Box>
+
+                <Divider className="checkoutPayment-divider" />
+
+                <Box className="checkoutPayment-detail-row">
+                  <Typography className="checkoutPayment-detail-label">
+                    Transaction Date
+                  </Typography>
+                  <Typography className="checkoutPayment-detail-value">
+                    {transactionData.date} {transactionData.time}
+                  </Typography>
+                </Box>
+
+                <Divider className="checkoutPayment-divider" />
+
+                <Box className="checkoutPayment-detail-row">
+                  <Typography className="checkoutPayment-detail-label">
+                    Payment Method
+                  </Typography>
+                  <Typography className="checkoutPayment-detail-value">
+                    {transactionData.method}
                   </Typography>
                 </Box>
               </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Transaction Type
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.transactionType}
-                </Typography>
-              </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Transaction ID
-                </Typography>
-                <Typography className="checkoutPayment-detail-value checkoutPayment-detail-value-monospace">
-                  {transactionData.transactionId}
-                </Typography>
-              </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Transaction Date
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.date}
-                </Typography>
-              </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Time
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.time}
-                </Typography>
-              </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Payment Method
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.method}
-                </Typography>
-              </Box>
-            </Box> */}
+            )}
 
             <Box
               sx={{ mt: 5, display: "flex", flexDirection: "row", gap: 2.5 }}

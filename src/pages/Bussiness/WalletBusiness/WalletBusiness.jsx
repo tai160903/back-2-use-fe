@@ -118,9 +118,12 @@ export default function WalletBusiness() {
     setCurrentPage(newPage);
   };
 
-  // Format transaction data
+  // Format transaction data (tolerate non-array shapes)
   const formatTransactionData = (transactions) => {
-    return transactions.map(transaction => ({
+    const list = Array.isArray(transactions)
+      ? transactions
+      : (Array.isArray(transactions?.data) ? transactions.data : []);
+    return list.map(transaction => ({
       id: transaction._id,
       date: new Date(transaction.createdAt).toLocaleDateString('vi-VN'),
       type: transaction.transactionType === 'deposit' ? 'VNPay' : 'Bank Account',
@@ -156,7 +159,7 @@ export default function WalletBusiness() {
   ];
 
   // Get real transaction data
-  const realTransactionData = transactionHistory ? formatTransactionData(transactionHistory) : [];
+  const realTransactionData = formatTransactionData(transactionHistory);
   
   // Filter logic
   const getFilteredData = (data) => {
@@ -303,7 +306,11 @@ export default function WalletBusiness() {
                 </div>
               ) : (
                 <>
-                  {getFilteredData(realTransactionData).map((item) => (
+                  {getFilteredData(realTransactionData).length === 0 ? (
+                    <div style={{ textAlign: "center", padding: 20 }}>
+                      <Typography>No transactions found.</Typography>
+                    </div>
+                  ) : getFilteredData(realTransactionData).map((item) => (
                     <Box
                       key={item.id}
                       sx={{
