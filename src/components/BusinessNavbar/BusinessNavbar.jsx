@@ -107,8 +107,8 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
         />
         {isOpen && <span className="navbar-logo-text">Back2Use</span>}
       </div>
-      <IconButton onClick={() => setIsOpen(!isOpen)} sx={{ color: "#ffffff" }}>
-        {isOpen ? <AiOutlineMenuFold color="#ffffff" /> : <AiOutlineMenuUnfold color="#ffffff" />}
+      <IconButton size="small" onClick={() => setIsOpen(!isOpen)} sx={{ color: "#ffffff" }}>
+        {isOpen ? <AiOutlineMenuFold color="#ffffff" size={22} /> : <AiOutlineMenuUnfold color="#ffffff" size={22} />}
       </IconButton>
     </div>
       <List className="navbar-content">

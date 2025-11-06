@@ -27,7 +27,8 @@ import './MaterialModal.css';
 const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
   const [formData, setFormData] = useState({
     materialName: '',
-    maximumReuse: '',
+    reuseLimit: '',
+    depositPercent: '',
     description: ''
   });
 
@@ -37,13 +38,15 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
     if (material) {
       setFormData({
         materialName: material.materialName || '',
-        maximumReuse: material.maximumReuse || '',
+        reuseLimit: material.reuseLimit ?? material.maximumReuse ?? '',
+        depositPercent: material.depositPercent ?? '',
         description: material.description || ''
       });
     } else {
       setFormData({
         materialName: '',
-        maximumReuse: '',
+        reuseLimit: '',
+        depositPercent: '',
         description: ''
       });
     }
@@ -73,10 +76,16 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       newErrors.materialName = 'Material name is required';
     }
 
-    if (!formData.maximumReuse) {
-      newErrors.maximumReuse = 'Maximum reuse count is required';
-    } else if (isNaN(formData.maximumReuse) || parseInt(formData.maximumReuse) <= 0) {
-      newErrors.maximumReuse = 'Maximum reuse must be a positive number';
+    if (!formData.reuseLimit) {
+      newErrors.reuseLimit = 'Reuse limit is required';
+    } else if (isNaN(formData.reuseLimit) || parseInt(formData.reuseLimit) <= 0) {
+      newErrors.reuseLimit = 'Reuse limit must be a positive number';
+    }
+
+    if (formData.depositPercent === '' || formData.depositPercent === null) {
+      newErrors.depositPercent = 'Deposit percent is required';
+    } else if (isNaN(formData.depositPercent) || parseInt(formData.depositPercent) < 0 || parseInt(formData.depositPercent) > 100) {
+      newErrors.depositPercent = 'Deposit percent must be between 0 and 100';
     }
 
     if (!formData.description.trim()) {
@@ -93,7 +102,8 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
     if (validateForm()) {
       onSubmit({
         materialName: formData.materialName.trim(),
-        maximumReuse: parseInt(formData.maximumReuse),
+        reuseLimit: parseInt(formData.reuseLimit),
+        depositPercent: parseInt(formData.depositPercent),
         description: formData.description.trim()
       });
     }
@@ -102,7 +112,8 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
   const handleClose = () => {
     setFormData({
       materialName: '',
-      maximumReuse: '',
+      reuseLimit: '',
+      depositPercent: '',
       description: ''
     });
     setErrors({});
@@ -219,7 +230,7 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
               />
             </Grid>
 
-            {/* Maximum Reuse Field */}
+            {/* Reuse Limit Field */}
             <Grid item xs={12} md={5}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography 
@@ -234,21 +245,21 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
                   }}
                 >
                   <ReplayIcon sx={{ fontSize: 16 }} />
-                  Reuse Count <span style={{ color: '#f44336' }}>*</span>
+                  Reuse Limit <span style={{ color: '#f44336' }}>*</span>
                 </Typography>
               </Box>
               <TextField
                 fullWidth
                 placeholder="100"
-                name="maximumReuse"
+                name="reuseLimit"
                 type="number"
-                value={formData.maximumReuse}
+                value={formData.reuseLimit}
                 onChange={handleInputChange}
                 required
                 variant="outlined"
                 inputProps={{ min: 1 }}
-                error={!!errors.maximumReuse}
-                helperText={errors.maximumReuse || 'Number of reuses'}
+                error={!!errors.reuseLimit}
+                helperText={errors.reuseLimit || 'Max times a material can be reused'}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -260,6 +271,56 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
                       <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
                         times
                       </Typography>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#22c55e',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#22c55e',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* Deposit Percent Field */}
+            <Grid item xs={12} md={5}>
+              <Box sx={{ mb: 0.5 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: '#16a34a', 
+                    fontWeight: 600,
+                    mb: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}
+                >
+                  Deposit Percent <span style={{ color: '#f44336' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                placeholder="20"
+                name="depositPercent"
+                type="number"
+                value={formData.depositPercent}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+                inputProps={{ min: 0, max: 100 }}
+                error={!!errors.depositPercent}
+                helperText={errors.depositPercent || 'Deposit percentage (0-100)'}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">%
                     </InputAdornment>
                   ),
                 }}

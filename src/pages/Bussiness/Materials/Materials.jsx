@@ -63,12 +63,12 @@ export default function Materials() {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     materialName: '',
-    maximumReuse: '',
     description: '',
   });
 
-  // Filter rejected materials from myMaterials
-  const rejectedMaterials = myMaterials.filter(material => material.status === 'rejected');
+  // Filter pending/rejected materials from myMaterials
+  const pendingMaterials = myMaterials.filter(material => (material.status || '').toLowerCase() === 'pending');
+  const rejectedMaterials = myMaterials.filter(material => (material.status || '').toLowerCase() === 'rejected');
 
   // Load materials on component mount
   useEffect(() => {
@@ -92,7 +92,6 @@ export default function Materials() {
     setSelectedMaterial(null);
     setFormData({
       materialName: '',
-      maximumReuse: '',
       description: '',
     });
     setFormErrors({});
@@ -114,8 +113,7 @@ export default function Materials() {
     setSelectedMaterial(material);
     setEditMode(true);
     setFormData({
-      materialName: material.materialName,
-      maximumReuse: material.maximumReuse,
+      materialName: material.materialName || material.requestedMaterialName || '',
       description: material.description,
     });
     setOpenDialog(true);
@@ -163,11 +161,7 @@ export default function Materials() {
       errors.materialName = 'Material name is required';
     }
     
-    if (!formData.maximumReuse || formData.maximumReuse === '') {
-      errors.maximumReuse = 'Maximum reuse is required';
-    } else if (isNaN(formData.maximumReuse) || parseInt(formData.maximumReuse, 10) < 1) {
-      errors.maximumReuse = 'Maximum reuse must be a number greater than 0';
-    }
+    // For business request creation, maximumReuse is not required by API
     
     if (!formData.description.trim()) {
       errors.description = 'Description is required';
@@ -187,10 +181,9 @@ export default function Materials() {
     }
     
     try {
-      // Convert maximumReuse to number before sending
       const materialData = {
-        ...formData,
-        maximumReuse: parseInt(formData.maximumReuse, 10)
+        materialName: formData.materialName.trim(),
+        description: formData.description.trim(),
       };
       
       if (editMode && selectedMaterial) {
@@ -211,11 +204,29 @@ export default function Materials() {
 
   const getStatusChip = (status) => {
     switch (status) {
+      case 'active':
+        return (
+          <Chip 
+            icon={<ApprovedIcon />} 
+            label="Active" 
+            size="small"
+            sx={{ 
+              backgroundColor: '#4CAF50', 
+              color: 'white',
+              '& .MuiChip-icon': { color: 'white' }
+            }} 
+          />
+        );
+      case 'unactive':
+        return <Chip label="Unactive" size="small" sx={{ backgroundColor: '#e5e7eb', color: '#374151' }} />;
+      case 'inactive':
+      case 'not_active':
+        return <Chip label="Inactive" size="small" sx={{ backgroundColor: '#e5e7eb', color: '#374151' }} />;
       case 'approved':
         return (
           <Chip 
             icon={<ApprovedIcon />} 
-            label="Approved" 
+            label="Active" 
             size="small"
             sx={{ 
               backgroundColor: '#4CAF50', 
@@ -231,48 +242,52 @@ export default function Materials() {
       case 'rejected':
         return <Chip label="Rejected" color="error" size="small" />;
       default:
-        return <Chip label="Unknown" color="default" size="small" />;
+        return <Chip label={status || 'Unknown'} color="default" size="small" />;
     }
   };
 
-  const renderMaterialsTable = (materials, showActions = false) => (
-    <TableContainer component={Paper} sx={{ mt: 2 }}>
-      <Table>
+  const renderMaterialsTable = (materials, showActions = false, useIsActive = false) => {
+    const hasReuse = Array.isArray(materials) && materials.some(m => m?.maximumReuse || m?.reuseLimit);
+    return (
+    <TableContainer component={Paper} sx={{ mt: 1.5, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+      <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Material Name</TableCell>
-            <TableCell>Maximum Reuse</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell>Status</TableCell>
-            {showActions && <TableCell>Actions</TableCell>}
+            <TableCell sx={{ py: 1 }}>Material Name</TableCell>
+            {hasReuse && <TableCell sx={{ py: 1 }}>Maximum Reuse</TableCell>}
+            <TableCell sx={{ py: 1 }}>Description</TableCell>
+            <TableCell sx={{ py: 1 }}>Status</TableCell>
+            {showActions && <TableCell sx={{ py: 1, width: 120 }}>Actions</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {materials.map((material, index) => (
             <TableRow key={material.id || index}>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight="bold">
-                  {material.materialName}
+              <TableCell sx={{ py: 0.75 }}>
+                <Typography variant="body2" fontWeight={600} sx={{ fontFamily: 'inherit' }}>
+                  {material.materialName || material.requestedMaterialName}
                 </Typography>
               </TableCell>
-              <TableCell>
-                <Typography variant="body2">
-                  {material.maximumReuse} times
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="body2" color="text.secondary">
+              {hasReuse && (
+                <TableCell sx={{ py: 0.75 }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'inherit' }}>
+                    {(material.maximumReuse || material.reuseLimit || '-')} {material.maximumReuse || material.reuseLimit ? 'times' : ''}
+                  </Typography>
+                </TableCell>
+              )}
+              <TableCell sx={{ py: 0.75 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'inherit' }}>
                   {material.description}
                 </Typography>
               </TableCell>
-              <TableCell>
-                {getStatusChip(material.status || 'pending')}
+              <TableCell sx={{ py: 0.75 }}>
+                {useIsActive ? getStatusChip(material?.isActive ? 'active' : 'unactive') : getStatusChip(material.status || 'pending')}
               </TableCell>
               {showActions && (
-                <TableCell>
+                <TableCell sx={{ py: 0.5 }}>
                   <Tooltip title="View Details">
                     <IconButton 
-                      size="small" 
+                      size="small"
                       onClick={() => handleViewMaterial(material)}
                       sx={{ color: '#2E7D32' }}
                     >
@@ -281,7 +296,7 @@ export default function Materials() {
                   </Tooltip>
                   <Tooltip title="Edit">
                     <IconButton 
-                      size="small" 
+                      size="small"
                       onClick={() => handleEditMaterial(material)}
                       sx={{ color: '#66BB6A' }}
                       disabled={material.status === 'approved'}
@@ -291,7 +306,7 @@ export default function Materials() {
                   </Tooltip>
                   <Tooltip title="Delete">
                     <IconButton 
-                      size="small" 
+                      size="small"
                       color="error"
                       onClick={() => handleDeleteMaterial(material)}
                       disabled={material.status === 'approved'}
@@ -306,13 +321,13 @@ export default function Materials() {
         </TableBody>
       </Table>
     </TableContainer>
-  );
+  ); };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 2.5, fontFamily: 'inherit' }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold" sx={{ color: '#2E7D32' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" component="h1" fontWeight={700} sx={{ color: '#2E7D32', fontFamily: 'inherit', letterSpacing: 0.2 }}>
           Materials Management
         </Typography>
         <Button
@@ -320,12 +335,13 @@ export default function Materials() {
           startIcon={<AddIcon />}
           onClick={handleOpenDialog}
           sx={{ 
-            borderRadius: 2,
+            borderRadius: 1.5,
             backgroundColor: '#4CAF50',
             '&:hover': {
               backgroundColor: '#388E3C'
             }
           }}
+          size="small"
         >
           Add New Material
         </Button>
@@ -334,19 +350,23 @@ export default function Materials() {
       {/* Error Alert */}
       {materialError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {materialError}
+          {typeof materialError === 'string' ? materialError : (materialError?.message || 'Something went wrong')}
         </Alert>
       )}
 
       {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
+      <Paper sx={{ mb: 2, borderRadius: 2 }}>
         <Tabs 
           value={activeTab} 
           onChange={handleTabChange} 
           variant="fullWidth"
+          textColor="inherit"
           sx={{
             '& .MuiTab-root': {
               color: '#66BB6A',
+              minHeight: 44,
+              fontSize: 14,
+              fontFamily: 'inherit',
               '&.Mui-selected': {
                 color: '#2E7D32',
                 fontWeight: 'bold'
@@ -358,7 +378,8 @@ export default function Materials() {
           }}
         >
           <Tab label={`My Materials (${myMaterials.length})`} />
-          <Tab label={`Approved Materials (${approvedMaterials.length})`} />
+          <Tab label={`Active Materials (${approvedMaterials.length})`} />
+          <Tab label={`Pending Materials (${pendingMaterials.length})`} />
           <Tab label={`Rejected Materials (${rejectedMaterials.length})`} />
         </Tabs>
       </Paper>
@@ -366,26 +387,26 @@ export default function Materials() {
       {/* Tab Content */}
       <Box sx={{ mt: 2 }}>
         {materialLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress sx={{ color: '#4CAF50' }} />
           </Box>
         ) : (
           <>
             {activeTab === 0 && (
               <Box>
-                <Typography variant="h6" gutterBottom sx={{ color: '#2E7D32', fontWeight: 'bold' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
                   My Materials
                 </Typography>
                 {myMaterials.length === 0 ? (
                   <Card>
-                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
                       <Typography variant="h6" color="text.secondary" gutterBottom>
                         No materials created yet
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Create your first material to get started
                       </Typography>
-                      <Button 
+                       <Button 
                         variant="outlined" 
                         onClick={handleOpenDialog}
                         sx={{
@@ -396,6 +417,7 @@ export default function Materials() {
                             backgroundColor: 'rgba(76, 175, 80, 0.08)'
                           }
                         }}
+                         size="small"
                       >
                         Create Material
                       </Button>
@@ -409,12 +431,12 @@ export default function Materials() {
 
             {activeTab === 1 && (
               <Box>
-                <Typography variant="h6" gutterBottom sx={{ color: '#2E7D32', fontWeight: 'bold' }}>
-                  Approved Materials
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
+                  Active Materials
                 </Typography>
                 {approvedMaterials.length === 0 ? (
                   <Card>
-                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
                       <Typography variant="h6" color="text.secondary" gutterBottom>
                         No approved materials available
                       </Typography>
@@ -424,14 +446,36 @@ export default function Materials() {
                     </CardContent>
                   </Card>
                 ) : (
-                  renderMaterialsTable(approvedMaterials, false)
+                  renderMaterialsTable(approvedMaterials, false, true)
                 )}
               </Box>
             )}
 
             {activeTab === 2 && (
               <Box>
-                <Typography variant="h6" gutterBottom sx={{ color: '#2E7D32', fontWeight: 'bold' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
+                  Pending Materials
+                </Typography>
+                {pendingMaterials.length === 0 ? (
+                  <Card>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No pending materials
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Your pending material requests will appear here
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  renderMaterialsTable(pendingMaterials, true)
+                )}
+              </Box>
+            )}
+
+            {activeTab === 3 && (
+              <Box>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
                   Rejected Materials
                 </Typography>
                 {rejectedMaterials.length === 0 ? (
@@ -473,12 +517,12 @@ export default function Materials() {
           }
         }}
       >
-        <DialogTitle 
+         <DialogTitle 
           sx={{ 
             background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
             color: 'white',
-            py: 2,
-            px: 3,
+            py: 1.5,
+            px: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
@@ -487,10 +531,10 @@ export default function Materials() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <EcoIcon sx={{ fontSize: 28 }} />
             <Box>
-              <Typography variant="h6" component="div" fontWeight="bold">
+               <Typography variant="subtitle1" component="div" fontWeight={700} sx={{ fontFamily: 'inherit' }}>
                 {editMode ? 'Edit Material' : 'Create New Material'}
               </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
+               <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block', fontFamily: 'inherit' }}>
                 {editMode ? 'Update your eco-friendly material details' : 'Add a new eco-friendly material to your inventory'}
               </Typography>
             </Box>
@@ -511,7 +555,7 @@ export default function Materials() {
 
         <form onSubmit={handleSubmit}>
           <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
-            <Grid container spacing={2.5}>
+             <Grid container spacing={2}>
               {/* Material Name Field */}
               <Grid item xs={12} md={7}>
                 <Box sx={{ mb: 0.5 }}>
@@ -530,7 +574,7 @@ export default function Materials() {
                     Material Name <span style={{ color: '#f44336' }}>*</span>
                   </Typography>
                 </Box>
-                <TextField
+                 <TextField
                   fullWidth
                   placeholder="e.g., Reusable Coffee Cup, Glass Container"
                   name="materialName"
@@ -538,6 +582,7 @@ export default function Materials() {
                   onChange={handleInputChange}
                   required
                   variant="outlined"
+                   size="small"
                   error={!!formErrors.materialName}
                   helperText={formErrors.materialName || 'Enter a clear and descriptive name'}
                   InputProps={{
@@ -562,64 +607,7 @@ export default function Materials() {
                 />
               </Grid>
 
-              {/* Maximum Reuse Field */}
-              <Grid item xs={12} md={5}>
-                <Box sx={{ mb: 0.5 }}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: '#2E7D32', 
-                      fontWeight: 600,
-                      mb: 0.75,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.75
-                    }}
-                  >
-                    <ReplayIcon sx={{ fontSize: 16 }} />
-                    Reuse Count <span style={{ color: '#f44336' }}>*</span>
-                  </Typography>
-                </Box>
-                <TextField
-                  fullWidth
-                  placeholder="100"
-                  name="maximumReuse"
-                  type="number"
-                  value={formData.maximumReuse}
-                  onChange={handleInputChange}
-                  required
-                  variant="outlined"
-                  inputProps={{ min: 1 }}
-                  error={!!formErrors.maximumReuse}
-                  helperText={formErrors.maximumReuse || 'Number of reuses'}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <ReplayIcon sx={{ color: '#4CAF50' }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Typography variant="body2" sx={{ color: '#66BB6A', fontWeight: 600 }}>
-                          times
-                        </Typography>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      '&:hover fieldset': {
-                        borderColor: '#4CAF50',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#4CAF50',
-                        borderWidth: 2,
-                      },
-                    },
-                  }}
-                />
-              </Grid>
+              {/* Note: Business request does not require reuse limit */}
 
               {/* Description Field */}
               <Grid item xs={12}>
@@ -639,7 +627,7 @@ export default function Materials() {
                     Description <span style={{ color: '#f44336' }}>*</span>
                   </Typography>
                 </Box>
-                <TextField
+                 <TextField
                   fullWidth
                   placeholder="Describe the material, its uses, and benefits..."
                   name="description"
@@ -647,8 +635,9 @@ export default function Materials() {
                   onChange={handleInputChange}
                   required
                   multiline
-                  rows={3}
+                   minRows={3}
                   variant="outlined"
+                   size="small"
                   error={!!formErrors.description}
                   helperText={formErrors.description || 'Provide detailed information about this material'}
                   InputProps={{
@@ -717,10 +706,10 @@ export default function Materials() {
 
           <Divider />
 
-          <DialogActions 
+           <DialogActions 
             sx={{ 
-              px: 3, 
-              py: 2, 
+               px: 2, 
+               py: 1.5, 
               gap: 2,
               backgroundColor: 'rgba(76, 175, 80, 0.02)',
               display: 'flex',
@@ -734,9 +723,9 @@ export default function Materials() {
               sx={{
                 color: '#666',
                 borderColor: '#ccc',
-                px: 3,
-                py: 1,
-                fontSize: '0.9375rem',
+                 px: 2,
+                 py: 0.75,
+                 fontSize: '0.9rem',
                 borderWidth: 1.5,
                 fontWeight: 500,
                 '&:hover': {
@@ -745,6 +734,7 @@ export default function Materials() {
                   borderWidth: 1.5,
                 }
               }}
+               size="small"
             >
               Cancel
             </Button>
@@ -754,9 +744,9 @@ export default function Materials() {
               startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
               sx={{
                 backgroundColor: '#4CAF50',
-                px: 3,
-                py: 1,
-                fontSize: '0.9375rem',
+                 px: 2,
+                 py: 0.75,
+                 fontSize: '0.9rem',
                 fontWeight: 600,
                 boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
                 transition: 'all 0.3s ease',
@@ -766,6 +756,7 @@ export default function Materials() {
                   transform: 'translateY(-2px)',
                 }
               }}
+               size="small"
             >
               {editMode ? 'Update Material' : 'Create Material'}
             </Button>
@@ -840,8 +831,8 @@ export default function Materials() {
                       Material Name
                     </Typography>
                   </Box>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#1B5E20' }}>
-                    {selectedMaterial.materialName}
+                    <Typography variant="h6" fontWeight="bold" sx={{ color: '#1B5E20' }}>
+                    {selectedMaterial.materialName || selectedMaterial.requestedMaterialName}
                   </Typography>
                 </Paper>
               </Grid>

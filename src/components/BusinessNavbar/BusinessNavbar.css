@@ -1,1 +1,16 @@
+.navbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 6px 8px;
+}
+
+.navbar-logo { display: flex; align-items: center; gap: 8px; }
+.navbar-logo-image { width: 28px; height: 28px; object-fit: contain; border-radius: 6px; background: #ffffff22; }
+.navbar-logo-text { font-size: 16px !important; font-weight: 700 !important; line-height: 1 !important; white-space: nowrap !important; }
+
+.navbar-closed .navbar-header { padding: 8px; justify-content: center; }
+.navbar-closed .navbar-logo-image { display: none; }
+.navbar-closed .navbar-logo-text { display: none; }
+.navbar-header .MuiIconButton-root { width: 32px; height: 32px; }
 

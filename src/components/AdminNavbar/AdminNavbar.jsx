@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   List,
   ListItem,
@@ -27,7 +27,7 @@ import {
   TrendingUp,
   Security,
 } from "@mui/icons-material";
-// import "./AdminNavbar.css";
+import "./AdminNavbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PATH } from "../../routes/path";
 import { useDispatch } from "react-redux";
@@ -57,6 +57,13 @@ const AdminNavbar = ({ onDrawerToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Notify parent when drawer toggles
+  useEffect(() => {
+    if (onDrawerToggle) {
+      onDrawerToggle(isOpen);
+    }
+  }, [isOpen, onDrawerToggle]);
 
   // LOGOUT
   const handleLogout = () => {
@@ -107,8 +114,8 @@ const AdminNavbar = ({ onDrawerToggle }) => {
         />
         {isOpen && <span className="navbar-logo-text">Back2Use</span>}
       </div>
-      <IconButton onClick={() => setIsOpen(!isOpen)} sx={{ color: "#ffffff" }}>
-        {isOpen ? <AiOutlineMenuFold color="#ffffff" /> : <AiOutlineMenuUnfold color="#ffffff" />}
+      <IconButton size="small" onClick={() => setIsOpen(!isOpen)} sx={{ color: "#ffffff" }}>
+        {isOpen ? <AiOutlineMenuFold color="#ffffff" size={22} /> : <AiOutlineMenuUnfold color="#ffffff" size={22} />}
       </IconButton>
     </div>
       <List className="navbar-content">
