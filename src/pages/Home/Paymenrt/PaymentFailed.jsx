@@ -7,233 +7,116 @@ import {
   Divider,
   Alert,
 } from "@mui/material";
-import { MdError, MdRefresh } from "react-icons/md";
-import { FaHome, FaHeadset } from "react-icons/fa";
-import { IoMdInformationCircle } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
+import { MdError } from "react-icons/md";
+import { FaRedo, FaReceipt } from "react-icons/fa";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getUserRole } from "../../../utils/authUtils";
-import { PATH } from "../../../routes/path";
 import "./CheckoutPayment.css";
+import { useDispatch } from "react-redux";
+import { getTransactionHistoryBusinessApiDetail } from "../../../store/slices/walletSlice";
 
 export default function PaymentFailure() {
   const navigate = useNavigate();
-  const [depositAmount, setDepositAmount] = useState("500,000");
+  const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   
+  const pendingTxnRef = localStorage.getItem("pendingTxnRef");
+  const txnRef = searchParams.get("txnRef") || pendingTxnRef;
+
   useEffect(() => {
-    // Lấy số tiền nạp từ localStorage
-    const savedAmount = localStorage.getItem("depositAmount");
-    if (savedAmount) {
-      setDepositAmount(parseFloat(savedAmount).toLocaleString('vi-VN'));
-      // Xóa số tiền đã lưu sau khi sử dụng
-      localStorage.removeItem("depositAmount");
+    if (!txnRef) {
+      setLoading(false);
+      return;
     }
-  }, []);
+    dispatch(getTransactionHistoryBusinessApiDetail({ id: txnRef }))
+      .unwrap()
+      .then((res) => setDetail(res?.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [dispatch, txnRef]);
 
-  const transactionData = {
-    amount: depositAmount,
-    transactionId: "WLT20250109123456",
-    date: "01/09/2025",
-    time: "14:30:25",
-    method: "Bank Card",
-    accountNumber: "**** **** **** 4532",
-    transactionType: "Wallet Top-Up",
-    errorCode: "ERR_PAYMENT_DECLINED",
-    errorMessage: "Transaction declined by the bank",
-  };
+  const format = (v) => (v ? Number(v).toLocaleString("vi-VN") : "0");
+  const date = detail?.createdAt ? new Date(detail.createdAt).toLocaleDateString("vi-VN") : "";
+  const time = detail?.createdAt ? new Date(detail.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : "";
 
-  // Xác định trang hiện tại để điều hướng đúng
-  const getWalletRoute = () => {
-    const userRole = getUserRole();
-
-    
-    if (userRole === "business" || userRole === "bussiness") {
-      return "/wallet_business";
-    }
-    return "/wallet_customer";
-  };
-
-  // Xác định trang chủ theo role
-  const getHomeRoute = () => {
-    const userRole = getUserRole();
-    if (userRole === "business" || userRole === "bussiness") {
-      return PATH.BUSINESS;
-    }
-    return PATH.HOME;
-  };
+  const wallet = getUserRole() === "business" ? "/business/wallet" : "/walllet_customer";
+  const code = searchParams.get("code") || "24";
 
   return (
     <Box className="checkoutPayment-container checkoutPayment-failure-container">
-      <Container maxWidth="md" style={{ position: "relative", zIndex: 1 }}>
-        <Paper className="checkoutPayment-paper">
-          <Box className="checkoutPayment-header checkoutPayment-failure-header">
-            <Box className="checkoutPayment-icon-circle checkoutPayment-icon-circle-failure">
-              <MdError
-                size={64}
-                color="#ffffff"
-                style={{ position: "relative", zIndex: 1 }}
-              />
-            </Box>
-            <Typography variant="h4" className="checkoutPayment-title">
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Paper elevation={10} sx={{ borderRadius: 3, overflow: "hidden" }}>
+          {/* HEADER */}
+          <Box sx={{ bgcolor: "#d32f2f", color: "white", p: 4, textAlign: "center" }}>
+            <MdError size={60} />
+            <Typography variant="h4" sx={{ mt: 2, fontWeight: 600 }}>
               Thanh toán thất bại
             </Typography>
-            <Typography variant="body1" className="checkoutPayment-subtitle">
-              Xin lỗi, chúng tôi không thể hoàn tất giao dịch nạp tiền
+            <Typography variant="body1" sx={{ mt: 1, opacity: 0.9 }}>
+              Mã lỗi: {code} - {code === "24" ? "Bạn đã hủy giao dịch" : "Lỗi không xác định"}
             </Typography>
           </Box>
 
-          <Box sx={{ p: 6 }}>
-            <Alert
-              severity="error"
-              icon={<IoMdInformationCircle size={28} />}
-              className="checkoutPayment-alert"
-            >
-              <Typography
-                variant="body2"
-                className="checkoutPayment-alert-title"
-              >
-                {transactionData.errorMessage}
+          <Box sx={{ p: 5 }}>
+            {loading && (
+              <Typography textAlign="center" color="text.secondary">
+                Đang tải chi tiết...
               </Typography>
-              <Typography
-                variant="caption"
-                className="checkoutPayment-alert-code"
-              >
-                Mã lỗi: {transactionData.errorCode}
-              </Typography>
-            </Alert>
+            )}
 
-            <Box className="checkoutPayment-amount-box checkoutPayment-amount-box-failure">
-              <Typography
-                variant="h3"
-                className="checkoutPayment-amount-text checkoutPayment-amount-text-failure"
-              >
-                {transactionData.amount} VND
-              </Typography>
-              <Typography
-                variant="body2"
-                className="checkoutPayment-amount-label"
-              >
-                Số tiền nạp
-              </Typography>
-            </Box>
+            {detail && (
+              <>
+                <Box sx={{ textAlign: "center", mb: 4 }}>
+                  <Typography variant="h3" color="#d32f2f" fontWeight={600}>
+                    {format(detail.amount)} VND
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Số tiền nạp
+                  </Typography>
+                </Box>
 
-            <Box className="checkoutPayment-details-box">
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Loại giao dịch
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.transactionType}
-                </Typography>
-              </Box>
+                <Box sx={{ bgcolor: "#fafafa", borderRadius: 2, p: 3 }}>
+                  <Typography variant="body2" fontWeight="bold" gutterBottom>
+                    Chi tiết giao dịch
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                  <Box sx={{ "& > div": { display: "flex", justifyContent: "space-between", py: 1 } }}>
+                    <div><strong>Mã GD:</strong> <code>{detail._id}</code></div>
+                    <div><strong>Phương thức:</strong> VNPay</div>
+                    <div><strong>Thời gian:</strong> {date} {time}</div>
+                    <div><strong>Trạng thái:</strong> <span style={{color: "#d32f2f"}}>Thất bại</span></div>
+                  </Box>
+                </Box>
+              </>
+            )}
 
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Mã giao dịch
-                </Typography>
-                <Typography className="checkoutPayment-detail-value checkoutPayment-detail-value-monospace">
-                  {transactionData.transactionId}
-                </Typography>
-              </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Ngày giao dịch
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.date}
-                </Typography>
-              </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Thời gian
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.time}
-                </Typography>
-              </Box>
-
-              <Divider className="checkoutPayment-divider" />
-
-              <Box className="checkoutPayment-detail-row">
-                <Typography className="checkoutPayment-detail-label">
-                  Phương thức thanh toán
-                </Typography>
-                <Typography className="checkoutPayment-detail-value">
-                  {transactionData.method}
-                </Typography>
-              </Box>
-            </Box>
-
-            <Box
-              sx={{ mt: 5, display: "flex", flexDirection: "row", gap: 2.5 }}
-            >
+            <Box sx={{ mt: 5, display: "flex", gap: 2 }}>
               <Button
                 variant="contained"
+                color="error"
                 fullWidth
-                startIcon={<MdRefresh />}
-                className="checkoutPayment-button checkoutPayment-button-failure"
-                onClick={() => navigate(getWalletRoute())}
+                startIcon={<FaRedo />}
+                onClick={() => navigate(wallet)}
               >
                 Thử nạp lại
               </Button>
-
               <Button
-                variant="text"
+                variant="outlined"
                 fullWidth
-                startIcon={<FaHome />}
-                className="checkoutPayment-button checkoutPayment-button-text"
-                onClick={() => navigate(getHomeRoute())}
+                startIcon={<FaReceipt />}
+                onClick={() => navigate(wallet)}
               >
-                Về trang chủ
+                Xem lịch sử
               </Button>
             </Box>
 
-            <Box className="checkoutPayment-suggestions-box">
-              <Typography
-                variant="subtitle2"
-                className="checkoutPayment-suggestions-title"
-              >
-                Gợi ý khắc phục:
-              </Typography>
-              <Box component="ul" className="checkoutPayment-suggestions-list">
-                <Typography
-                  component="li"
-                  variant="body2"
-                  className="checkoutPayment-suggestions-item"
-                >
-                  Kiểm tra số dư tài khoản ngân hàng của bạn
-                </Typography>
-                <Typography
-                  component="li"
-                  variant="body2"
-                  className="checkoutPayment-suggestions-item"
-                >
-                  Đảm bảo thẻ ngân hàng của bạn được kích hoạt cho thanh toán trực tuyến
-                </Typography>
-                <Typography
-                  component="li"
-                  variant="body2"
-                  className="checkoutPayment-suggestions-item"
-                >
-                  Thử sử dụng phương thức thanh toán khác
-                </Typography>
-                <Typography
-                  component="li"
-                  variant="body2"
-                  className="checkoutPayment-suggestions-item"
-                >
-                  Liên hệ ngân hàng hoặc bộ phận hỗ trợ nếu vấn đề vẫn tiếp diễn
-                </Typography>
-              </Box>
-            </Box>
+            <Alert severity="warning" sx={{ mt: 3 }}>
+              <strong>Gợi ý:</strong> Kiểm tra số dư, bật 3D Secure, hoặc thử thẻ khác.
+            </Alert>
           </Box>
         </Paper>
       </Container>
