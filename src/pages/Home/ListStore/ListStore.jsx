@@ -14,7 +14,6 @@ import { useStoreMap } from "../../../hooks/useStoreMap";
 
 export default function ListStore() {
   const navigate = useNavigate();
-  
   // Sử dụng các custom hooks
   const {
     userLocation,
@@ -52,15 +51,21 @@ export default function ListStore() {
   const greeting = getGreeting();
 
   const handleStoreSelect = (store) => {
+    // Set selectedStore để hiển thị trên map và mở popup
+    setSelectedStore(store.id);
+  };
+
+  const handleStoreDetail = (store) => {
+    // Navigate đến trang chi tiết store
     navigate(PATH.STOREDETAIL.replace(":id", store.id));
   };
 
-  // Xác định stores nào để hiển thị trên map
+
   const getStoresForMap = () => {
     if (searchTerm.trim()) {
       return filteredStores;
     }
-    return nearbyStores.length > 0 ? nearbyStores : allStores;
+    return allStores;
   };
 
   return (
@@ -99,7 +104,7 @@ export default function ListStore() {
                 setSelectedStore={setSelectedStore}
                 directionTo={directionTo}
                 setDirectionTo={setDirectionTo}
-                onSelectStore={handleStoreSelect} 
+                onSelectStore={handleStoreDetail} 
               />
             </div>
 
@@ -172,14 +177,14 @@ export default function ListStore() {
                         key={store.id}
                         className="store-nearby-content"
                         style={{
-                          border: "1px solid #d3e6d3",
+                          border: selectedStore === store.id ? "2px solid #1b4d1b" : "1px solid #d3e6d3",
                           borderRadius: "8px",
                           padding: "12px",
                           marginBottom: "12px",
                           marginTop: "12px",
-                          background: "#f6faf6",
+                          background: selectedStore === store.id ? "#e8f5e9" : "#f6faf6",
                           cursor: "pointer",
-                          transition: "background 0.2s",
+                          transition: "all 0.2s",
                           display: "flex",
                           gap: "12px"
                         }}

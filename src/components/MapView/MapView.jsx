@@ -83,6 +83,54 @@ function RoutingPolyline({ userLocation, storeLocation }) {
   return null;
 }
 
+// Component để điều khiển map khi selectedStore thay đổi
+function MapController({ selectedStore, stores, userLocation }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!selectedStore || !stores.length) return;
+
+    // Tìm store được chọn
+    const store = stores.find((s) => s.id === selectedStore);
+    if (!store || !store.coords) return;
+
+    // Di chuyển map đến vị trí store
+    map.setView(store.coords, 15, {
+      animate: true,
+      duration: 0.5,
+    });
+
+    // Tìm marker tương ứng và mở popup sau khi map đã di chuyển
+    setTimeout(() => {
+      // Duyệt qua tất cả các layers trong map để tìm marker
+      map.eachLayer((layer) => {
+        if (layer instanceof L.Marker) {
+          const markerLat = layer.getLatLng().lat;
+          const markerLng = layer.getLatLng().lng;
+          
+          // Bỏ qua marker của user location
+          if (userLocation && 
+              Math.abs(markerLat - userLocation[0]) < 0.0001 && 
+              Math.abs(markerLng - userLocation[1]) < 0.0001) {
+            return;
+          }
+          
+          // Kiểm tra xem marker này có khớp với store được chọn không
+          if (
+            Math.abs(markerLat - store.coords[0]) < 0.0001 &&
+            Math.abs(markerLng - store.coords[1]) < 0.0001
+          ) {
+            layer.openPopup();
+            return;
+          }
+        }
+      });
+    }, 600);
+  }, [selectedStore, stores, map, userLocation]);
+
+  return null;
+}
+
 export default function MapView({
   userLocation,
   stores,
@@ -92,6 +140,7 @@ export default function MapView({
   setDirectionTo,
   onSelectStore,
 }) {
+
   return (
     <MapContainer
       center={userLocation}
@@ -101,6 +150,13 @@ export default function MapView({
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      />
+
+      {/* Map Controller để điều khiển map khi selectedStore thay đổi */}
+      <MapController 
+        selectedStore={selectedStore} 
+        stores={stores}
+        userLocation={userLocation}
       />
 
       {/* Marker user */}
@@ -116,7 +172,9 @@ export default function MapView({
           key={store.id}
           position={store.coords}
           icon={selectedStore === store.id ? selectedIcon : defaultIcon}
-          eventHandlers={{ click: () => setSelectedStore(store.id) }}
+          eventHandlers={{ 
+            click: () => setSelectedStore(store.id)
+          }}
         >
           <Popup className="leaflet-popup-content">
             <div className="leaflet-popup-content-title">
