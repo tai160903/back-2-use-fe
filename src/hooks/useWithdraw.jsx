@@ -1,9 +1,10 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { withdrawMoneyApi } from "../store/slices/walletSlice";
+import { withdrawMoneyApi, getTransactionHistoryApi } from "../store/slices/walletSlice";
 import { useDispatch } from "react-redux";
 import { useUserInfo } from "./useUserInfo";
-import { getProfileApi } from "../store/slices/userSlice";
+import { getProfileApi, getProfileBusiness } from "../store/slices/userSlice";
+import { getUserRole } from "../utils/authUtils";
 
 export default function useWithdraw() {
   const dispatch = useDispatch();
@@ -13,8 +14,8 @@ export default function useWithdraw() {
   const { walletId, balance, isLoading: profileLoading } = useUserInfo();
 
   //   Logic withdraw money
-  const handleWithdraw = async (e, walletId,onSuccess) => {
-    e.preventDefault();
+  const handleWithdraw = async (e, walletId, onSuccess) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
     if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
@@ -24,7 +25,15 @@ export default function useWithdraw() {
       const response = await dispatch(
         withdrawMoneyApi({ walletId, amount: parseFloat(withdrawAmount) })
       ).unwrap();
-      dispatch(getProfileApi());
+      const role = getUserRole?.();
+      if (role === "business") {
+        await dispatch(getProfileBusiness());
+      } else {
+        await dispatch(getProfileApi());
+      }
+      await dispatch(
+        getTransactionHistoryApi({ page: 1, limit: 3, typeGroup: "personal", direction: "all" })
+      );
       toast.success("Withdraw request submitted successfully!");
       setWithdrawAmount("");
       if (onSuccess) onSuccess();

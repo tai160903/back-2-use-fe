@@ -16,8 +16,9 @@ import useDeposit from "../../../hooks/useDeposit";
 import useWithdraw from "../../../hooks/useWithdraw";
 import TabPanelRecent from "../../../components/TabPanelRecent/TabPanelRecent";
 import ModalWallet from "../../../components/ModalWallet/ModalWallet";
+import ModalTransactionDetail from "../../../components/ModalTransactionDetail/ModalTransactionDetail";
 import { useDispatch, useSelector } from "react-redux";
-import { getTransactionHistoryApi } from "../../../store/slices/walletSlice";
+import { getTransactionHistoryApi, getTransactionHistoryBusinessApiDetail } from "../../../store/slices/walletSlice";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 
@@ -59,6 +60,9 @@ export default function WalletCustomer() {
   const [currentPage, setCurrentPage] = useState(1);
   const [direction, setDirection] = useState("all");
   const limit = 3;
+  const [openTxnDetail, setOpenTxnDetail] = useState(false);
+  const [selectedTxn, setSelectedTxn] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const getStatusColor = (status) => {
     if (!status) return "default";
@@ -118,6 +122,24 @@ export default function WalletCustomer() {
     setCurrentPage(newPage);
   };
 
+  const handleOpenTxnDetail = async (id) => {
+    try {
+      setDetailLoading(true);
+      const res = await dispatch(getTransactionHistoryBusinessApiDetail({ id })).unwrap();
+      setSelectedTxn(res?.data);
+      setOpenTxnDetail(true);
+    } catch {
+      // ignore - toast đã có ở nơi khác nếu cần
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleCloseTxnDetail = () => {
+    setOpenTxnDetail(false);
+    setSelectedTxn(null);
+  };
+
   // Format transaction data
   const formatTransactionData = (transactions) => {
     const list = Array.isArray(transactions)
@@ -126,7 +148,7 @@ export default function WalletCustomer() {
     return list.map(transaction => ({
       id: transaction._id,
       date: new Date(transaction.createdAt).toLocaleDateString('vi-VN'),
-      type: transaction.transactionType === 'deposit' ? 'VNPay' : 'Bank Account',
+      type: ['deposit', 'top_up'].includes(String(transaction.transactionType)) ? 'VNPay' : 'Bank Account',
       description: transaction.description,
       amount: transaction.direction === 'in' 
         ? `+${transaction.amount.toLocaleString('vi-VN')} VNĐ`
@@ -298,69 +320,86 @@ export default function WalletCustomer() {
                     <div style={{ textAlign: "center", padding: 20 }}>
                       <Typography>No transactions found.</Typography>
                     </div>
-                  ) : getFilteredData(realTransactionData).map((item) => (
-                    <Box
-                      key={item.id}
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        p: 2,
-                        mb: 1,
-                        border: "1px solid #e0e0e0",
-                        borderRadius: "8px",
-                        backgroundColor:
-                          item.status === "completed" ? "#f5f5f5" : "#fff",
-                      }}
-                    >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Box
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: "10px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: item.direction === "out" ? "#fde7e7" : "#e7f5ed",
-                            color: item.direction === "out" ? "#d32f2f" : "#2e7d32",
+                  ) : getFilteredData(realTransactionData).map((item) => {
+                    const failedStatuses = [
+                      "failed",
+                      "faild",
+                      "rejected",
+                      "canceled",
+                      "cancelled",
+                      "error",
+                    ];
+                    const isDepositLike = ["deposit", "top_up"].includes(String(item.transactionType).toLowerCase());
+                    const isNegative =
+                      item.direction === "out" ||
+                      (isDepositLike && failedStatuses.includes(String(item.status).toLowerCase()));
+                    return (
+                      <Box
+                        key={item.id}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          p: 2,
+                          mb: 1,
+                          border: "1px solid #e0e0e0",
+                          borderRadius: "8px",
+                          backgroundColor:
+                            item.status === "completed" ? "#f5f5f5" : "#fff",
+                        }}
+                        onClick={() => handleOpenTxnDetail(item.id)}
+                        role="button"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          <Box
+                            sx={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: isNegative ? "#fde7e7" : "#e7f5ed",
+                              color: isNegative ? "#d32f2f" : "#2e7d32",
+                            }}
+                          >
+                            {item.direction === "out" ? (
+                              <FiArrowUpRight size={18} />
+                            ) : (
+                              <FiArrowDownLeft size={18} />
+                            )}
+                          </Box>
+                          <Box>
+                            <Typography variant="body1" sx={{ fontWeight: 600 }}>{item.description}</Typography>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <Typography variant="caption" color="textSecondary">
+                                {item.date} {item.type}
+                              </Typography>
+                              <Chip
+                                size="small"
+                                label={item.status}
+                                color={getStatusColor(item.status)}
+                              />
+                            </Box>
+                            <Typography variant="caption" color="textSecondary">
+                              ID: {item.id}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Typography
+                          variant="body1"
+                          color={isNegative ? "error" : "success"}
+                          sx={{ 
+                            fontWeight: "bold",
+                            color: isNegative ? "#d32f2f" : "#2e7d32"
                           }}
                         >
-                          {item.direction === "out" ? (
-                            <FiArrowUpRight size={18} />
-                          ) : (
-                            <FiArrowDownLeft size={18} />
-                          )}
-                        </Box>
-                        <Box>
-                          <Typography variant="body1" sx={{ fontWeight: 600 }}>{item.description}</Typography>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Typography variant="caption" color="textSecondary">
-                              {item.date} {item.type}
-                            </Typography>
-                            <Chip
-                              size="small"
-                              label={item.status}
-                              color={getStatusColor(item.status)}
-                            />
-                          </Box>
-                          <Typography variant="caption" color="textSecondary">
-                            ID: {item.id}
-                          </Typography>
-                        </Box>
+                          {item.amount}
+                        </Typography>
                       </Box>
-                      <Typography
-                        variant="body1"
-                        color={item.direction === "out" ? "error" : "success"}
-                        sx={{ 
-                          fontWeight: "bold",
-                          color: item.direction === "out" ? "#d32f2f" : "#2e7d32"
-                        }}
-                      >
-                        {item.amount}
-                      </Typography>
-                    </Box>
-                  ))}
+                    );
+                  })}
                   
                   {/* Pagination */}
                   {transactionTotalPages > 1 && (
@@ -471,6 +510,12 @@ export default function WalletCustomer() {
         error={withdrawError}
         walletId={walletId}
         currency="VND" 
+      />
+      <ModalTransactionDetail
+        open={openTxnDetail}
+        onClose={handleCloseTxnDetail}
+        transaction={selectedTxn}
+        loading={detailLoading}
       />
     </>
   );

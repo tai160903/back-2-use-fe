@@ -38,7 +38,7 @@ export default function HeaderLog() {
         Welcome, {userInfo?.fullName || "User"} 
       </Typography>
       <Typography className="header-log-balance">
-        <FaWallet className="mr-2" /> {userInfo?.wallet?.balance || 0} {"VND"}
+        <FaWallet className="mr-2" /> {userInfo?.wallet?.availableBalance || 0} {"VND"}
       </Typography>
     </>
   );

@@ -1,0 +1,44 @@
+.transactionDetailHistory {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.transactionDetailHistory__header {
+  border-bottom: 1px dashed #e0e0e0;
+  text-align: center;
+}
+
+.transactionDetailHistory__amount-card {
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.transactionDetailHistory__time-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.transactionDetailHistory__content {
+  background: #fff;
+}
+
+.transactionDetailHistory__description {
+  margin-bottom: 12px;
+}
+
+.transactionDetailHistory__table {
+  display: flex;
+  flex-direction: column;
+}
+
+.transactionDetailHistory__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.transactionDetailHistory__footer {
+  background: #fafafa;
+  border-top: 1px dashed #e0e0e0;
+}
+
+

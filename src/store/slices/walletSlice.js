@@ -88,6 +88,7 @@ const walletSlice = createSlice({
   initialState: {
     wallet: null,
     isLoading: false,
+    isDetailLoading: false,
     error: null,
     totalPages: 0,
     total: 0,
@@ -97,6 +98,7 @@ const walletSlice = createSlice({
     transactionTotalPages: 0,
     transactionTotal: 0,
     transactionCurrentPage: 1,
+    transactionDetail: null,
   },
   reducers: {
     clearDepositResult: (state) => {
@@ -149,16 +151,16 @@ const walletSlice = createSlice({
         state.error = payload;
       })
       .addCase(getTransactionHistoryBusinessApiDetail.pending, (state) => {
-        state.isLoading = true;
+        state.isDetailLoading = true;
         state.error = null;
       })
       .addCase(getTransactionHistoryBusinessApiDetail.fulfilled, (state, {payload}) => {
-        state.isLoading = false;
+        state.isDetailLoading = false;
         state.error = null;
-        state.transactionHistory = payload.data;
+        state.transactionDetail = payload.data;
       })
       .addCase(getTransactionHistoryBusinessApiDetail.rejected, (state, {payload}) => {
-        state.isLoading = false;
+        state.isDetailLoading = false;
         state.error = payload;
       })
   },
