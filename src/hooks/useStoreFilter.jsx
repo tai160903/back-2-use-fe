@@ -4,7 +4,7 @@ export const useStoreFilter = (stores, itemsPerPage = 3) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState("Any");
-  const [distanceFilter, setDistanceFilter] = useState(Infinity);
+  const [distanceRange, setDistanceRange] = useState([0, 100]); // [min, max] in km
 
   // Logic filter stores theo search term và các filter khác
   const getFilteredStores = useMemo(() => {
@@ -25,15 +25,17 @@ export const useStoreFilter = (stores, itemsPerPage = 3) => {
       filtered = filtered.filter(store => store.rating >= minRating);
     }
 
-    // Filter theo distance
-    if (distanceFilter !== Infinity) {
-      filtered = filtered.filter(store => 
-        store.distance && store.distance <= distanceFilter
-      );
+    // Filter theo distance range
+    if (distanceRange && distanceRange.length === 2) {
+      const [minDistance, maxDistance] = distanceRange;
+      filtered = filtered.filter(store => {
+        if (!store.distance) return false;
+        return store.distance >= minDistance && store.distance <= maxDistance;
+      });
     }
 
     return filtered;
-  }, [stores, searchTerm, ratingFilter, distanceFilter]);
+  }, [stores, searchTerm, ratingFilter, distanceRange]);
 
   // Logic phân trang
   const getPaginatedStores = useMemo(() => {
@@ -58,25 +60,31 @@ export const useStoreFilter = (stores, itemsPerPage = 3) => {
 
   // Hàm xử lý khi thay đổi filter
   const handleFilterChange = (filterType, value) => {
-    setCurrentPage(1); // Reset về trang đầu khi filter thay đổi
+    setCurrentPage(1); 
     
     switch (filterType) {
       case 'rating':
         setRatingFilter(value);
         break;
       case 'distance':
-        setDistanceFilter(value === 'Any' ? Infinity : value);
+        setDistanceRange(Array.isArray(value) ? value : [0, value]);
         break;
       default:
         break;
     }
   };
 
+  // Hàm xử lý khi thay đổi distance range
+  const handleDistanceRangeChange = (newValue) => {
+    setDistanceRange(newValue);
+    setCurrentPage(1);
+  };
+
   // Reset tất cả filters
   const resetFilters = () => {
     setSearchTerm("");
     setRatingFilter("Any");
-    setDistanceFilter(Infinity);
+    setDistanceRange([0, 50]);
     setCurrentPage(1);
   };
 
@@ -85,7 +93,7 @@ export const useStoreFilter = (stores, itemsPerPage = 3) => {
     currentPage,
     searchTerm,
     ratingFilter,
-    distanceFilter,
+    distanceRange,
     
     // Computed values
     filteredStores: getFilteredStores,
@@ -96,12 +104,13 @@ export const useStoreFilter = (stores, itemsPerPage = 3) => {
     handleSearchChange,
     handlePageChange,
     handleFilterChange,
+    handleDistanceRangeChange,
     resetFilters,
     
     // Setters
     setCurrentPage,
     setSearchTerm,
     setRatingFilter,
-    setDistanceFilter
+    setDistanceRange
   };
 };

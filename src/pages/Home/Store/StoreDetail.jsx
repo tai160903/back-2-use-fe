@@ -13,124 +13,18 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
+import { useDispatch, useSelector } from "react-redux";
+import { getStoreById } from "../../../store/slices/storeSilce";
 import cupImg from "../../../assets/image/cup6.png";
 import containerImg from "../../../assets/image/container.png";
 import cup3 from "../../../assets/image/cup3.png";
-import cup6 from "../../../assets/image/cup6.png";
-import cupdou from "../../../assets/image/cupdou.png";
-
-// Mock data (cùng với StorePage)
-const mockStores = [
-  {
-    id: 1,
-    name: "Green Café Downtown",
-    address: "1262 Kha Vạn Cân, Thủ Đức, TP.HCM",
-    coords: [10.8565, 106.7709],
-    products: ["cup", "container", "bottle"],
-    daily: "9AM - 8PM",
-    image:
-      "https://sakos.vn/wp-content/uploads/2024/07/2.-Nha-Trong-Ngo-Quan-ca-phe-dep-o-Ho-Tay.jpg",
-    avatar:
-      "https://sakos.vn/wp-content/uploads/2024/07/2.-Nha-Trong-Ngo-Quan-ca-phe-dep-o-Ho-Tay.jpg",
-    rating: 4.5,
-    reviewCount: 123,
-    email: "cduy527@gmail.com",
-    phone: "0901 234 567",
-    catalog: [
-      {
-        id: "p1",
-        name: "Plastic Cup 350ml",
-        rentalPrice: 10000,
-        available: 8,
-        unavailable: 2,
-        image: cup3,
-        type: "cup",
-        material: "plastic",
-      },
-      {
-        id: "p2",
-        name: "Glass Cup 350ml",
-        rentalPrice: 15000,
-        available: 5,
-        unavailable: 1,
-        image: cup6,
-        type: "cup",
-        material: "glass",
-      },
-      {
-        id: "p3",
-        name: "Double Cup 500ml",
-        rentalPrice: 18000,
-        available: 7,
-        unavailable: 0,
-        image: cupdou,
-        type: "cup",
-        material: "plastic",
-      },
-      {
-        id: "p4",
-        name: "Paper Food Box 750ml",
-        rentalPrice: 12000,
-        available: 10,
-        unavailable: 3,
-        image: containerImg,
-        type: "container",
-        material: "paper",
-      },
-      {
-        id: "p5",
-        name: "Stainless Food Box 800ml",
-        rentalPrice: 30000,
-        available: 4,
-        unavailable: 2,
-        image: containerImg,
-        type: "container",
-        material: "steel",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Eco Coffee Shop",
-    address: "456 River Rd, Uptown, City 67890",
-    coords: [10.768, 106.673],
-    products: ["cup"],
-    daily: "9AM - 8PM",
-    image:
-      "https://images.unsplash.com/photo-1517701604599-bb29b565090c?q=80&w=2070&auto=format&fit=crop",
-    avatar:
-      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=640&auto=format&fit=crop",
-    rating: 4.0,
-    reviewCount: 89,
-    email: "contact@ecocoffee.vn",
-    phone: "0987 654 321",
-    catalog: [
-      {
-        id: "p6",
-        name: "Plastic Cup 300ml",
-        rentalPrice: 9000,
-        available: 12,
-        unavailable: 1,
-        image: cup3,
-        type: "cup",
-        material: "plastic",
-      },
-      {
-        id: "p7",
-        name: "Paper Food Box 600ml",
-        rentalPrice: 11000,
-        available: 6,
-        unavailable: 2,
-        image: containerImg,
-        type: "container",
-        material: "paper",
-      },
-    ],
-  },
-];
+import Loading from "../../../components/Loading/Loading";
 
 export default function StoreDetail() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { id } = useParams();
+  const { storeDetail, isLoadingStoreDetail, error } = useSelector((state) => state.store);
   const vouchers = useMemo(
     () => [
       {
@@ -160,12 +54,112 @@ export default function StoreDetail() {
     ],
     []
   );
-  const { id } = useParams();
-  const [store, setStore] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [materialFilter, setMaterialFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const [materials, setMaterials] = useState([]);
+
+  // Lấy business data trực tiếp từ API
+  const business = storeDetail;
+
+  // Load store detail khi component mount hoặc id thay đổi
+  useEffect(() => {
+    if (id) {
+      dispatch(getStoreById(id));
+    }
+  }, [dispatch, id]);
+
+  // Mock data cho materials/catalog (tạm thời cho đến khi có API)
+  useEffect(() => {
+    if (business?._id) {
+      const mockMaterials = [
+        {
+          id: "m1",
+          name: "Plastic Cup 350ml",
+          rentalPrice: 10000,
+          available: 8,
+          unavailable: 2,
+          image: cup3,
+          type: "cup",
+          material: "plastic",
+        },
+        {
+          id: "m2",
+          name: "Glass Cup 350ml",
+          rentalPrice: 15000,
+          available: 5,
+          unavailable: 1,
+          image: cup3,
+          type: "cup",
+          material: "glass",
+        },
+        {
+          id: "m3",
+          name: "Double Cup 500ml",
+          rentalPrice: 18000,
+          available: 7,
+          unavailable: 0,
+          image: cup3,
+          type: "cup",
+          material: "plastic",
+        },
+        {
+          id: "m4",
+          name: "Paper Food Box 750ml",
+          rentalPrice: 12000,
+          available: 10,
+          unavailable: 3,
+          image: containerImg,
+          type: "container",
+          material: "paper",
+        },
+        {
+          id: "m5",
+          name: "Stainless Food Box 800ml",
+          rentalPrice: 30000,
+          available: 4,
+          unavailable: 2,
+          image: containerImg,
+          type: "container",
+          material: "steel",
+        },
+        {
+          id: "m6",
+          name: "Reusable Bottle 500ml",
+          rentalPrice: 20000,
+          available: 6,
+          unavailable: 1,
+          image: cup3,
+          type: "cup",
+          material: "plastic",
+        },
+        {
+          id: "m7",
+          name: "Glass Container 600ml",
+          rentalPrice: 25000,
+          available: 3,
+          unavailable: 1,
+          image: containerImg,
+          type: "container",
+          material: "glass",
+        },
+        {
+          id: "m8",
+          name: "Plastic Container 500ml",
+          rentalPrice: 11000,
+          available: 9,
+          unavailable: 2,
+          image: containerImg,
+          type: "container",
+          material: "plastic",
+        },
+      ];
+      setMaterials(mockMaterials);
+    } else {
+      setMaterials([]);
+    }
+  }, [business?._id]);
 
   const reviews = useMemo(
     () => [
@@ -199,6 +193,9 @@ export default function StoreDetail() {
     ],
     []
   );
+
+
+
   // Average kept for potential future use (sorting), but hidden from UI
   const AVERAGE_RATING = useMemo(() => {
     if (reviews.length === 0) return 0;
@@ -209,7 +206,7 @@ export default function StoreDetail() {
   // Reviews pagination
   const [reviewPage, setReviewPage] = useState(1);
   const reviewsPerPage = 6;
-  const [reviewRatingFilter, setReviewRatingFilter] = useState("all"); // 'all' | '1' | '2' | '3' | '4' | '5'
+  const [reviewRatingFilter, setReviewRatingFilter] = useState("all"); 
   const filteredReviews = useMemo(() => {
     if (reviewRatingFilter === "all") return reviews;
     const threshold = parseFloat(reviewRatingFilter);
@@ -229,19 +226,48 @@ export default function StoreDetail() {
     setReviewPage(1);
   }, [reviewRatingFilter]);
 
-  useEffect(() => {
-    const foundStore = mockStores.find((s) => s.id === parseInt(id));
-    setStore(foundStore);
-  }, [id]);
-
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [materialFilter, selectedProduct]);
 
-  if (!store) {
-    return <div>Không tìm thấy cửa hàng! (ID: {id})</div>;
+  // Loading state
+  if (isLoadingStoreDetail) {
+    return <Loading />;
   }
+
+  // Error state
+  if (error) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          Có lỗi xảy ra khi tải thông tin cửa hàng
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {error.message || "Vui lòng thử lại sau"}
+        </Typography>
+      </div>
+    );
+  }
+
+  // Store not found
+  if (!business) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        <Typography variant="h6">
+          Không tìm thấy cửa hàng! (ID: {id})
+        </Typography>
+      </div>
+    );
+  }
+
+  // Sử dụng materials trực tiếp làm catalog (đã có đầy đủ thông tin)
+  const catalog = materials;
+
+  // Xác định products types từ catalog
+  const productTypes = [];
+  if (catalog.some(p => p.type === "cup")) productTypes.push("cup");
+  if (catalog.some(p => p.type === "container")) productTypes.push("container");
 
   const materialLabelMap = {
     plastic: "Plastic",
@@ -251,27 +277,39 @@ export default function StoreDetail() {
   };
   const materialOptions = [
     "all",
-    ...Array.from(new Set((store.catalog || []).map((p) => p.material))),
+    ...Array.from(new Set(catalog.map((p) => p.material))),
   ];
 
-  const displayedProducts = (store.catalog || []).filter((p) => {
+  const displayedProducts = catalog.filter((p) => {
     const matchType = selectedProduct ? p.type === selectedProduct : true;
     const matchMaterial =
       materialFilter === "all" ? true : p.material === materialFilter;
     return matchType && matchMaterial;
   });
 
-  const effectiveProducts =
-    displayedProducts.length > 0 ? displayedProducts : store.catalog || [];
+  const effectiveProducts = displayedProducts.length > 0 ? displayedProducts : catalog;
   const totalPages = Math.max(1, Math.ceil(effectiveProducts.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = effectiveProducts.slice(startIndex, startIndex + itemsPerPage);
+
+  // Lấy các giá trị từ business object trực tiếp
+  const businessName = business.businessName || "";
+  const businessAddress = business.businessAddress || "";
+  const businessLogoUrl = business.businessLogoUrl || "";
+  const businessMail = business.businessMail || "";
+  const businessPhone = business.businessPhone || "";
+  const openTime = business.openTime || "08:00";
+  const closeTime = business.closeTime || "22:00";
+  const daily = `${openTime} - ${closeTime}`;
+  const products = productTypes.length > 0 ? productTypes : ["cup", "container"];
+  const rating = business.rating || business.averageRating || 4.5;
+  const reviewCount = business.reviewCount || business.totalReviews || 0;
 
   return (
     <div className="storeDetail">
       <div
         className="storeDetail-banner"
-        style={{ backgroundImage: `url(${store.image})` }}
+        style={{ backgroundImage: `url(${businessLogoUrl})` }}
       >
         <div className="storeDetail-overlay"></div>
         <div className="storeDetail-container">
@@ -282,8 +320,8 @@ export default function StoreDetail() {
                   <div className="storeDetail-left">
                     <img
                       className="storeDetail-avatar"
-                      src={store.avatar}
-                      alt={`${store.name} avatar`}
+                      src={businessLogoUrl}
+                      alt={`${businessName} avatar`}
                     />
                     <div className="storeDetail-heading">
                       <Typography
@@ -291,7 +329,7 @@ export default function StoreDetail() {
                         component="h1"
                         className="storeDetail-title"
                       >
-                        {store.name}
+                        {businessName}
                       </Typography>
                       <Stack
                         direction="row"
@@ -301,12 +339,12 @@ export default function StoreDetail() {
                       >
                         <Rating
                           name="half-rating-read"
-                          value={store.rating}
+                          value={rating}
                           precision={0.5}
                           readOnly
                         />
                         <Typography variant="body1">
-                          {store.rating} ({store.reviewCount} đánh giá)
+                          {rating} ({reviewCount} đánh giá)
                         </Typography>
                       </Stack>
                     </div>
@@ -317,25 +355,25 @@ export default function StoreDetail() {
                     <div className="storeDetail-infoRow">
                       <LocationOnIcon className="storeDetail-icon" />
                       <Typography variant="body1">
-                        <strong>Địa chỉ:</strong> {store.address}
+                        <strong>Địa chỉ:</strong> {businessAddress}
                       </Typography>
                     </div>
                     <div className="storeDetail-infoRow">
                       <AccessTimeIcon className="storeDetail-icon" />
                       <Typography variant="body1">
-                        <strong>Giờ mở cửa:</strong> {store.daily}
+                        <strong>Giờ mở cửa:</strong> {daily}
                       </Typography>
                     </div>
                     <div className="storeDetail-infoRow">
                       <EmailOutlinedIcon className="storeDetail-icon" />
                       <Typography variant="body1">
-                        <strong>Email:</strong> {store.email}
+                        <strong>Email:</strong> {businessMail}
                       </Typography>
                     </div>
                     <div className="storeDetail-infoRow">
                       <LocalPhoneIcon className="storeDetail-icon" />
                       <Typography variant="body1">
-                        <strong>Số điện thoại:</strong> {store.phone}
+                        <strong>Số điện thoại:</strong> {businessPhone}
                       </Typography>
                     </div>
                   </div>
@@ -357,9 +395,9 @@ export default function StoreDetail() {
         <div
           className={`storeDetail-category-card ${
             selectedProduct === "cup" ? "active" : ""
-          } ${store.products.includes("cup") ? "" : "disabled"}`}
+          } ${products.includes("cup") ? "" : "disabled"}`}
           onClick={() => {
-            if (!store.products.includes("cup")) return;
+            if (!products.includes("cup")) return;
             setSelectedProduct(selectedProduct === "cup" ? null : "cup");
           }}
         >
@@ -378,9 +416,9 @@ export default function StoreDetail() {
         <div
           className={`storeDetail-category-card ${
             selectedProduct === "container" ? "active" : ""
-          } ${store.products.includes("container") ? "" : "disabled"}`}
+          } ${products.includes("container") ? "" : "disabled"}`}
           onClick={() => {
-            if (!store.products.includes("container")) return;
+            if (!products.includes("container")) return;
             setSelectedProduct(
               selectedProduct === "container" ? null : "container"
             );
@@ -452,7 +490,7 @@ export default function StoreDetail() {
                   <span className="product-price">
                     {(p.rentalPrice ?? p.price).toLocaleString()}đ/day
                   </span>
-                  <button className="product-btn" onClick={() => navigate(`/product/${store.id}/${p.id}`)}>View details</button>
+                  <button className="product-btn" onClick={() => navigate(`/product/${business._id}/${p.id}`)}>View details</button>
                 </div>
               </div>
             </div>
@@ -480,36 +518,34 @@ export default function StoreDetail() {
 
         <section className="cooperate-section">
           <div className="homePage-container">
-            <div className="promo-wrapper">
-              <div className="promo-left">
-                <p className="voucher-eyebrow">Featured deals</p>
-                <h2 className="voucher-heading">Collect green vouchers</h2>
-                <p className="voucher-copy">
-                  Grab exclusive discount codes for partner stores. Collect now
-                  and redeem when borrowing reusable cups and containers.
-                </p>
-                <button className="voucher-cta">Collect now</button>
-              </div>
-              <div className="promo-right">
-                <div className="voucher-list">
-                  {vouchers.slice(0, 2).map((v) => (
-                    <div key={v.id} className="voucher-card">
-                      <div className="voucher-left">
-                        <div className="voucher-off">{v.off}</div>
-                        <div className="voucher-note">{v.note}</div>
-                      </div>
-                      <div className="voucher-right">
-                        <div className="voucher-title">{v.title}</div>
-                        <div className="voucher-meta">
-                          Code: {v.code} • Exp: {v.expire}
-                        </div>
-                        <button className="voucher-btn">Save voucher</button>
-                      </div>
+          <div className="promo-wrapper">
+            <div className="promo-left">
+              <p className="voucher-eyebrow">Featured deals</p>
+              <h2 className="voucher-heading">Collect green vouchers</h2>
+              <p className="voucher-copy">
+                Grab exclusive discount codes for partner stores. Collect now and
+                redeem when borrowing reusable cups and containers.
+              </p>
+              <button className="voucher-cta">Collect now</button>
+            </div>
+            <div className="promo-right">
+              <div className="voucher-lists">
+                {vouchers.slice(0, 2).map((v) => (
+                  <div key={v.id} className="voucher-cards">
+                    <div className="voucher-left">
+                      <div className="voucher-off">{v.off}</div>
+                      <div className="voucher-note">{v.note}</div>
                     </div>
-                  ))}
-                </div>
+                    <div className="voucher-right">
+                      <div className="voucher-title">{v.title}</div>
+                      <div className="voucher-meta">Code: {v.code} • Exp: {v.expire}</div>
+                      <button className="voucher-btn">Save voucher</button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </div>
           </div>
         </section>
 
