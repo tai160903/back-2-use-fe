@@ -97,30 +97,79 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  position: relative;
 }
 
 .stat-icon-container.revenue {
   background: linear-gradient(135deg, #12422a 0%, #0d2e1c 100%) !important;
+  border: 2px solid #0d2e1c;
+  color: #ffffff !important;
 }
 
 .stat-icon-container.orders {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  border: 2px solid #d97706;
+  color: #ffffff !important;
 }
 
 .stat-icon-container.materials {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border: 2px solid #15803d;
+  color: #ffffff !important;
 }
 
 .stat-icon-container.customers {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  border: 2px solid #2563eb;
+  color: #ffffff !important;
 }
 
 .stat-icon {
-  font-size: 28px;
+  font-size: 32px;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
   color: #ffffff !important;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Target the SVG element directly */
+.stat-icon-container svg {
+  width: 32px !important;
+  height: 32px !important;
+  display: block !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Target all SVG path elements */
+.stat-icon-container svg path {
+  fill: #ffffff !important;
+  stroke: none !important;
+}
+
+/* Target other SVG elements */
+.stat-icon-container svg circle,
+.stat-icon-container svg rect,
+.stat-icon-container svg polygon,
+.stat-icon-container svg polyline,
+.stat-icon-container svg line {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Ensure react-icons wrapper is visible */
+.stat-icon-container .react-icons {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  width: 32px !important;
+  height: 32px !important;
 }
 
 .stat-trend {
