@@ -10,9 +10,21 @@ import {
   FaArrowUp,
   FaArrowDown,
   FaRecycle,
-  FaShoppingCart
+  FaShoppingCart,
+  FaDollarSign,
+  FaShoppingBag,
+  FaBoxes,
+  FaUserFriends
 } from 'react-icons/fa';
-import { MdDashboard, MdTrendingUp, MdTrendingDown } from 'react-icons/md';
+import { 
+  MdDashboard, 
+  MdTrendingUp, 
+  MdTrendingDown,
+  MdAttachMoney,
+  MdShoppingCart,
+  MdInventory,
+  MdPeople
+} from 'react-icons/md';
 import { BiPackage } from 'react-icons/bi';
 import {
   LineChart,
@@ -179,7 +191,7 @@ export default function BussinessDashbord() {
               <p className="stat-value">{formatCurrency(stats.totalRevenue.amount)}</p>
             </div>
             <div className="stat-icon-container revenue">
-              <FaMoneyBillWave className="stat-icon" />
+              <MdAttachMoney className="stat-icon" color="#ffffff" size={32} />
             </div>
           </div>
           <div className="stat-trend">
@@ -203,7 +215,7 @@ export default function BussinessDashbord() {
               <p className="stat-value">{formatNumber(stats.totalOrders.count)}</p>
             </div>
             <div className="stat-icon-container orders">
-              <FaShoppingCart className="stat-icon" />
+              <FaShoppingBag className="stat-icon" color="#ffffff" size={32} />
             </div>
           </div>
           <div className="stat-trend">
@@ -227,7 +239,7 @@ export default function BussinessDashbord() {
               <p className="stat-value">{formatNumber(stats.totalMaterials.count)}</p>
             </div>
             <div className="stat-icon-container materials">
-              <FaRecycle className="stat-icon" />
+              <FaBoxes className="stat-icon" color="#ffffff" size={32} />
             </div>
           </div>
           <div className="stat-trend">
@@ -251,7 +263,7 @@ export default function BussinessDashbord() {
               <p className="stat-value">{formatNumber(stats.totalCustomers.count)}</p>
             </div>
             <div className="stat-icon-container customers">
-              <FaUsers className="stat-icon" />
+              <FaUserFriends className="stat-icon" color="#ffffff" size={32} />
             </div>
           </div>
           <div className="stat-trend">

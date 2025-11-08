@@ -143,6 +143,53 @@ export const getHistoryBusinessForm = createAsyncThunk(
   }
 );
 
+// Create product group (business)
+export const createProductGroup = createAsyncThunk(
+  "businesses/createProductGroup",
+  async (productGroupData, { rejectWithValue }) => {
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('materialId', productGroupData.materialId);
+      formData.append('name', productGroupData.name);
+      
+      if (productGroupData.description) {
+        formData.append('description', productGroupData.description);
+      }
+      
+      if (productGroupData.image) {
+        formData.append('image', productGroupData.image);
+      }
+
+      const response = await fetcher.post("/products/product-groups", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get all product groups for current business
+export const getMyProductGroups = createAsyncThunk(
+  "businesses/getMyProductGroups",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/products/product-groups");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const businessSlice = createSlice({
   name: "businesses",
   initialState: {
@@ -160,6 +207,9 @@ const businessSlice = createSlice({
     myMaterials: [],
     materialLoading: false,
     materialError: null,
+    productGroups: [],
+    productGroupLoading: false,
+    productGroupError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -284,6 +334,33 @@ const businessSlice = createSlice({
       .addCase(getHistoryBusinessForm.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+      })
+      // Product Group reducers
+      .addCase(createProductGroup.pending, (state) => {
+        state.productGroupLoading = true;
+        state.productGroupError = null;
+      })
+      .addCase(createProductGroup.fulfilled, (state, { payload }) => {
+        state.productGroupLoading = false;
+        state.productGroups.push(payload.data || payload);
+        state.productGroupError = null;
+      })
+      .addCase(createProductGroup.rejected, (state, { payload }) => {
+        state.productGroupLoading = false;
+        state.productGroupError = payload;
+      })
+      .addCase(getMyProductGroups.pending, (state) => {
+        state.productGroupLoading = true;
+        state.productGroupError = null;
+      })
+      .addCase(getMyProductGroups.fulfilled, (state, { payload }) => {
+        state.productGroupLoading = false;
+        state.productGroups = payload.data || payload || [];
+        state.productGroupError = null;
+      })
+      .addCase(getMyProductGroups.rejected, (state, { payload }) => {
+        state.productGroupLoading = false;
+        state.productGroupError = payload;
       });
   },
 });
