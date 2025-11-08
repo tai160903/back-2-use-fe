@@ -41,7 +41,6 @@ export const useStoreData = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [allStores, setAllStores] = useState([]); 
   const [nearbyStores, setNearbyStores] = useState([]);
-  const [selectedRadius, setSelectedRadius] = useState(5);
 
   // Load tất cả stores cho map
   useEffect(() => {
@@ -62,22 +61,23 @@ export const useStoreData = () => {
     );
   }, []);
 
-  // Load nearby stores khi có vị trí và khoảng cách
+  // Load tất cả nearby stores (không filter theo radius, lấy tất cả)
   useEffect(() => {
     if (!userLocation) {
       return;
     }
     
-    const radiusInMeters = selectedRadius * 1000;
+    // Gọi API với radius rất lớn (100km) để lấy tất cả stores gần đó
+    const radiusInMeters = 100 * 10000; // 100km
     
     dispatch(getNearbyStores({
       latitude: userLocation[0],
       longitude: userLocation[1],
-      radius: radiusInMeters, // Gửi bằng mét
+      radius: radiusInMeters,
       page: 1,
-      limit: 50
+      limit: 1000 // Lấy nhiều stores
     }));
-  }, [dispatch, userLocation, selectedRadius]);
+  }, [dispatch, userLocation]);
 
   // Cập nhật allStores cho map
   useEffect(() => {
@@ -101,10 +101,17 @@ export const useStoreData = () => {
       ),
     }));
     
+    // Sắp xếp theo khoảng cách từ gần đến xa
+    storesWithDistance.sort((a, b) => {
+      const distA = a.distance || Infinity;
+      const distB = b.distance || Infinity;
+      return distA - distB;
+    });
+    
     setAllStores(storesWithDistance);
   }, [storeAllStores, userLocation]);
 
-  // Cập nhật nearbyStores cho danh sách
+  // Cập nhật nearbyStores cho danh sách - sắp xếp theo khoảng cách
   useEffect(() => {
     if (!storeNearbyStores || !storeNearbyStores.length) {
       setNearbyStores([]);
@@ -129,23 +136,22 @@ export const useStoreData = () => {
       ),
     }));
     
+    // Sắp xếp theo khoảng cách từ gần đến xa
+    storesWithDistance.sort((a, b) => {
+      const distA = a.distance || Infinity;
+      const distB = b.distance || Infinity;
+      return distA - distB;
+    });
+    
     setNearbyStores(storesWithDistance);
-  }, [storeNearbyStores, userLocation, selectedRadius]);
-
-  // Hàm xử lý khi người dùng thay đổi khoảng cách
-  const handleRadiusChange = (event) => {
-    const newRadius = event.target.value;
-    setSelectedRadius(newRadius);
-  };
+  }, [storeNearbyStores, userLocation]);
 
   return {
     userLocation,
     allStores,
     nearbyStores,
-    selectedRadius,
     isLoadingNearby,
     error,
-    handleRadiusChange,
     calculateDistance
   };
 };

@@ -33,17 +33,32 @@ export const getNearbyStores = createAsyncThunk(
     }
 )
 
+// get store by id
+export const getStoreById = createAsyncThunk(
+    "store/getStoreById",
+    async(id, {rejectWithValue}) => {
+        try {
+            const response = await fetcher.get(`/businesses/${id}`)
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response ? error.response.data : error.message)
+        }
+    }
+)
+
 
 const storeSlice = createSlice({
 name: "store",
 initialState: {
-    allStores: [], // Tất cả stores từ getAllStoreApi
-    nearbyStores: [], // Stores gần đây từ getNearbyStores
+    allStores: [], 
+    nearbyStores: [], 
+    storeDetail: null,
     totalPages: 0,
     total: 0,
     currentPage: 1,
     isLoading: false,
-    isLoadingNearby: false, // Loading riêng cho nearby stores
+    isLoadingNearby: false,
+    isLoadingStoreDetail: false,
     error: null,
 },
 reducers: {
@@ -79,6 +94,20 @@ extraReducers: (builder) => {
     })
     .addCase(getNearbyStores.rejected, (state, {payload}) => {
         state.isLoadingNearby = false;
+        state.error = payload;
+    })
+    .addCase(getStoreById.pending, (state) => {
+        state.isLoadingStoreDetail = true;
+        state.error = null;
+    })
+    .addCase(getStoreById.fulfilled, (state, {payload}) => {
+        state.isLoadingStoreDetail = false;
+        state.error = null;
+        // Lưu toàn bộ response hoặc chỉ business object
+        state.storeDetail = payload.data?.business || payload.data || payload;
+    })
+    .addCase(getStoreById.rejected, (state, {payload}) => {
+        state.isLoadingStoreDetail = false;
         state.error = payload;
     })
 }
