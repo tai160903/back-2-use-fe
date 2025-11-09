@@ -48,6 +48,8 @@ import ProfileBusiness from "../pages/Bussiness/ProfileBusiness/ProfileBusiness"
 import Rewards from "../pages/Home/Rewards/Rewards";
 import CustomerLegacyData from "../pages/Bussiness/CustomerLegacyData/CustomerLegacyData";
 import InventoryManagement from "../pages/Bussiness/Inventory/InventoryManagement";
+import ProductItems from "../pages/Bussiness/Inventory/ProductItems";
+import ProductSizeManagement from "../pages/Bussiness/Inventory/ProductSizeManagement";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -291,6 +293,22 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
               <InventoryManagement />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_INVENTORY_ITEMS,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <ProductItems />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_INVENTORY_SIZES,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <ProductSizeManagement />
             </ProtectedRoute>
           ),
         },

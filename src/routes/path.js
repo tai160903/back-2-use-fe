@@ -36,6 +36,8 @@ export const PATH = {
     // BUSINESS
     BUSINESS: "/business",
     BUSINESS_INVENTORY:"/business/inventory",
+    BUSINESS_INVENTORY_ITEMS:"/business/inventory/:productGroupId/items",
+    BUSINESS_INVENTORY_SIZES:"/business/inventory/:productGroupId/sizes",
     BUSINESS_MATERIALS:"/business/materials",
     BUSINESS_TRANSACTION:"/business/transaction",
     BUSINESS_SUBSCRIPTIONS:"/business/subscriptions",

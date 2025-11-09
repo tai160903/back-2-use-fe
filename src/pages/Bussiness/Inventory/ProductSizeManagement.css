@@ -1,15 +1,34 @@
-.inventory-management {
+.product-size-management {
   padding: 24px 32px;
   background-color: #f8f9fa;
   min-height: 100vh;
 }
 
 /* Header Section */
-.inventory-header {
+.size-header {
+  margin-bottom: 24px;
+}
+
+.header-top {
+  margin-bottom: 16px;
+}
+
+.back-button {
+  color: #0d9488 !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  padding: 8px 16px !important;
+}
+
+.back-button:hover {
+  background-color: #f0fdfa !important;
+  color: #0f766e !important;
+}
+
+.header-main {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
 }
 
 .header-left {
@@ -54,26 +73,12 @@
   background-color: #0d2e1c !important;
 }
 
-/* Search Section */
-.search-section {
-  margin-bottom: 24px;
-}
-
-.search-input {
-  background-color: #ffffff;
-  border-radius: 8px;
-}
-
-.search-input .MuiOutlinedInput-root {
-  border-radius: 8px;
-}
-
-/* Products Grid */
-.products-grid {
+/* Sizes Grid */
+.sizes-grid {
   margin-top: 16px;
 }
 
-.product-card {
+.size-card {
   border-radius: 12px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
   transition: all 0.3s ease !important;
@@ -82,7 +87,7 @@
   flex-direction: column;
 }
 
-.product-card:hover {
+.size-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
   transform: translateY(-2px);
 }
@@ -113,12 +118,6 @@
   margin: 0;
 }
 
-.card-subtitle {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 2px;
-}
-
 .card-actions {
   display: flex;
   gap: 4px;
@@ -142,15 +141,6 @@
   background-color: rgba(220, 38, 38, 0.1) !important;
 }
 
-.manage-sizes-button {
-  color: #0d9488 !important;
-  padding: 6px !important;
-}
-
-.manage-sizes-button:hover {
-  background-color: rgba(13, 148, 136, 0.1) !important;
-}
-
 /* Card Details */
 .card-details {
   display: flex;
@@ -160,33 +150,37 @@
 
 .detail-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
+}
+
+.detail-icon {
+  font-size: 18px;
+  color: #6b7280;
+  margin-right: 4px;
 }
 
 .detail-label {
   font-weight: 600;
   color: #374151;
   min-width: 100px;
+  font-size: 14px;
 }
 
 .detail-value {
   color: #6b7280;
   flex: 1;
+  font-size: 14px;
 }
 
-.detail-value.available {
+.detail-value.price {
   color: #16a34a;
   font-weight: 600;
-}
-
-.detail-value.non-available {
-  color: #dc2626;
-  font-weight: 600;
+  font-size: 16px;
 }
 
 /* Dialog Styles */
-.add-product-dialog {
+.add-size-dialog {
   border-radius: 12px !important;
 }
 
@@ -240,53 +234,6 @@
   border-radius: 8px;
 }
 
-/* Upload Section */
-.upload-section {
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.upload-label {
-  font-weight: 500 !important;
-  color: #374151 !important;
-  margin-bottom: 8px !important;
-  display: block;
-}
-
-.upload-button {
-  border-radius: 8px !important;
-  border-color: #d1d5db !important;
-  color: #374151 !important;
-  text-transform: none !important;
-  padding: 10px 16px !important;
-  justify-content: flex-start !important;
-}
-
-.upload-button:hover {
-  border-color: #9ca3af !important;
-  background-color: #f9fafb !important;
-}
-
-.image-preview {
-  margin-top: 12px;
-  margin-bottom: 8px;
-}
-
-.preview-image {
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  object-fit: contain;
-}
-
-.upload-hint {
-  color: #6b7280 !important;
-  font-size: 12px !important;
-  display: block;
-  margin-top: 8px;
-}
-
 /* Dialog Actions */
 .dialog-actions-custom {
   padding: 16px 24px 24px 24px !important;
@@ -326,20 +273,13 @@
   color: #9ca3af !important;
 }
 
-/* Material Select Error */
-.MuiFormControl-root.error .MuiFormHelperText-root {
-  color: #f59e0b !important;
-  margin-top: 4px;
-  font-size: 13px;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
-  .inventory-management {
+  .product-size-management {
     padding: 16px;
   }
 
-  .inventory-header {
+  .header-main {
     flex-direction: column;
     gap: 16px;
   }
@@ -352,7 +292,7 @@
     width: 100%;
   }
 
-  .products-grid {
+  .sizes-grid {
     grid-template-columns: 1fr;
   }
 }

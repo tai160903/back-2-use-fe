@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -18,6 +19,10 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
+  Divider,
+  Alert,
+  Paper,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -27,6 +32,10 @@ import {
   Inventory2 as InventoryIcon,
   Close as CloseIcon,
   CloudUpload as CloudUploadIcon,
+  Straighten as SizeIcon,
+  Category as CategoryIcon,
+  Description as DescriptionIcon,
+  Image as ImageIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -34,10 +43,12 @@ import {
   createProductGroup, 
   getMyProductGroups 
 } from '../../../store/slices/bussinessSlice';
+import { PATH } from '../../../routes/path';
 import './InventoryManagement.css';
 
 export default function InventoryManagement() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { 
     approvedMaterials, 
     materialLoading,
@@ -113,10 +124,22 @@ export default function InventoryManagement() {
     setSelectedProduct(product);
     setSelectedImage(null);
     setImagePreview(product.image || product.imageUrl || null);
+    // Ensure materialId is extracted correctly (could be string or object)
+    let materialId = '';
+    if (product.materialId) {
+      materialId = typeof product.materialId === 'string' 
+        ? product.materialId 
+        : (product.materialId._id || product.materialId.id || '');
+    } else if (product.material?.id) {
+      materialId = product.material.id;
+    } else if (product.material?._id) {
+      materialId = product.material._id;
+    }
+    
     setFormData({
       typeName: product.name || product.typeName,
       description: product.description || '',
-      materialId: product.materialId || product.material?.id || '',
+      materialId: materialId,
       image: null,
     });
     setOpenDialog(true);
@@ -138,7 +161,8 @@ export default function InventoryManagement() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!formData.typeName || !formData.materialId) {
       return; // Basic validation
     }
@@ -172,24 +196,39 @@ export default function InventoryManagement() {
   };
 
   // Map product groups to display format
-  const productTypes = productGroups.map((pg) => {
-    // Find material name from approvedMaterials
-    const material = approvedMaterials.find(
-      (m) => (m.id || m._id) === pg.materialId
-    );
+  const productTypes = (Array.isArray(productGroups) ? productGroups : []).map((pg) => {
+    if (!pg) return null; // Skip null/undefined items
+    
+    // Handle materialId - it can be either a string ID or an object with _id and materialName
+    let materialId = pg.materialId;
+    let materialName = '';
+    let material = null;
+
+    if (pg.materialId && typeof pg.materialId === 'object' && pg.materialId !== null) {
+      // materialId is an object (populated)
+      materialId = pg.materialId._id || pg.materialId.id || '';
+      materialName = pg.materialId.materialName || pg.materialId.name || '';
+    } else if (pg.materialId && typeof pg.materialId === 'string') {
+      // materialId is a string, find material from approvedMaterials
+      materialId = pg.materialId;
+      material = Array.isArray(approvedMaterials) ? approvedMaterials.find(
+        (m) => (m?.id || m?._id) === materialId
+      ) : null;
+      materialName = material?.materialName || material?.name || '';
+    }
     
     return {
       id: pg.id || pg._id,
-      typeName: pg.name,
-      category: material?.materialName || material?.name || 'General',
+      typeName: pg.name || '',
+      category: materialName || 'General',
       description: pg.description || '',
-      material: material?.materialName || material?.name || '',
-      materialId: pg.materialId,
+      material: materialName,
+      materialId: materialId || '',
       available: pg.available || 0,
       nonAvailable: pg.nonAvailable || 0,
-      image: pg.image || pg.imageUrl,
+      image: pg.image || pg.imageUrl || '',
     };
-  });
+  }).filter(item => item !== null); // Remove any null items
 
   const filteredProducts = productTypes.filter(product =>
     product.typeName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -218,7 +257,7 @@ export default function InventoryManagement() {
           onClick={handleOpenDialog}
           className="add-button"
         >
-          + Add Product Type
+           Add Product Type
         </Button>
       </Box>
 
@@ -248,7 +287,14 @@ export default function InventoryManagement() {
       ) : productGroupError ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
           <Typography color="error">
-            Error loading product groups: {productGroupError.message || 'Unknown error'}
+            Error loading product groups: {
+              typeof productGroupError === 'string' 
+                ? productGroupError 
+                : productGroupError?.message 
+                || productGroupError?.error 
+                || productGroupError?.data?.message
+                || 'Unknown error'
+            }
           </Typography>
         </Box>
       ) : filteredProducts.length === 0 ? (
@@ -261,7 +307,11 @@ export default function InventoryManagement() {
         <Grid container spacing={3} className="products-grid">
           {filteredProducts.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Card className="product-card">
+            <Card 
+              className="product-card"
+              onClick={() => navigate(`/business/inventory/${product.id}/items`)}
+              sx={{ cursor: 'pointer' }}
+            >
               <CardContent>
                 <Box className="card-header">
                   <Box className="card-title-section">
@@ -278,14 +328,31 @@ export default function InventoryManagement() {
                   <Box className="card-actions">
                     <IconButton
                       size="small"
-                      onClick={() => handleEdit(product)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/business/inventory/${product.id}/sizes`);
+                      }}
+                      className="manage-sizes-button"
+                      title="Manage Sizes"
+                    >
+                      <SizeIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(product);
+                      }}
                       className="edit-button"
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDelete(product)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(product);
+                      }}
                       className="delete-button"
                     >
                       <DeleteIcon fontSize="small" />
@@ -338,142 +405,525 @@ export default function InventoryManagement() {
       <Dialog 
         open={openDialog} 
         onClose={handleCloseDialog} 
-        maxWidth="sm" 
+        maxWidth="md" 
         fullWidth
+        TransitionProps={{
+          timeout: 400,
+        }}
         PaperProps={{
-          className: 'add-product-dialog'
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
+            overflow: 'hidden',
+            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
+            maxHeight: '90vh'
+          }
         }}
       >
-        <DialogTitle className="dialog-title-section">
-          <Box className="dialog-header">
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+            color: 'white',
+            py: 1.5,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <InventoryIcon sx={{ fontSize: 28 }} />
             <Box>
-              <Typography variant="h6" className="dialog-title">
-                {editMode ? 'Edit Product Type' : 'Add New Product Type'}
+              <Typography variant="subtitle1" component="div" fontWeight={700} sx={{ fontFamily: 'inherit' }}>
+                {editMode ? 'Edit Product Type' : 'Create New Product Type'}
               </Typography>
-              {!editMode && (
-                <Typography variant="body2" className="dialog-subtitle">
-                  Create a new product type for your packaging items
-                </Typography>
-              )}
-            </Box>
-            <IconButton onClick={handleCloseDialog} size="small" className="close-button">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent className="dialog-content-custom">
-          <Box className="dialog-form">
-            {/* Product Type Name */}
-            <TextField
-              fullWidth
-              label="Product Type Name"
-              placeholder="e.g., Coffee Cup, Food Container"
-              value={formData.typeName}
-              onChange={(e) => setFormData({ ...formData, typeName: e.target.value })}
-              margin="normal"
-              required
-              className="dialog-field"
-            />
-
-            {/* Description */}
-            <TextField
-              fullWidth
-              label="Description"
-              placeholder="Brief description of this product type"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              margin="normal"
-              multiline
-              rows={4}
-              required
-              className="dialog-field"
-            />
-
-            {/* Material Select */}
-            <FormControl fullWidth margin="normal" className="dialog-field" error={approvedMaterials.length === 0}>
-              <InputLabel>Material</InputLabel>
-              <Select
-                value={formData.materialId}
-                onChange={(e) => setFormData({ ...formData, materialId: e.target.value })}
-                label="Material"
-                disabled={approvedMaterials.length === 0}
-              >
-                {approvedMaterials.map((material) => (
-                  <MenuItem key={material.id || material._id} value={material.id || material._id}>
-                    {material.materialName || material.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {approvedMaterials.length === 0 && (
-                <FormHelperText>
-                  No materials available. Please contact admin to add materials.
-                </FormHelperText>
-              )}
-            </FormControl>
-
-            {/* Upload Image */}
-            <Box className="upload-section">
-              <Typography variant="body2" className="upload-label">
-                Upload Image
-              </Typography>
-              <input
-                accept="image/*"
-                style={{ display: 'none' }}
-                id="image-upload"
-                type="file"
-                onChange={handleImageChange}
-              />
-              <label htmlFor="image-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<CloudUploadIcon />}
-                  className="upload-button"
-                  fullWidth
-                >
-                  Choose File
-                  {selectedImage && `: ${selectedImage.name}`}
-                  {!selectedImage && !imagePreview && ' (No file chosen)'}
-                </Button>
-              </label>
-              {imagePreview && (
-                <Box className="image-preview">
-                  <img src={imagePreview} alt="Preview" className="preview-image" />
-                </Box>
-              )}
-              <Typography variant="caption" className="upload-hint">
-                This image will be applied to all items of this product type
+              <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block', fontFamily: 'inherit' }}>
+                {editMode ? 'Update your product type details' : 'Create a new product type for your packaging items'}
               </Typography>
             </Box>
           </Box>
-        </DialogContent>
-        <DialogActions className="dialog-actions-custom">
-          <Button onClick={handleCloseDialog} className="cancel-button">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            variant="contained" 
-            className="create-button"
-            disabled={!formData.typeName || !formData.materialId || productGroupLoading}
+          <IconButton
+            onClick={handleCloseDialog}
+            size="small"
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              }
+            }}
           >
-            {productGroupLoading ? 'Creating...' : editMode ? 'Update Type' : 'Create Type'}
-          </Button>
-        </DialogActions>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <form onSubmit={handleSubmit}>
+          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+            <Grid container spacing={2}>
+              {/* Product Type Name Field */}
+              <Grid item xs={12} md={7}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <CategoryIcon sx={{ fontSize: 16 }} />
+                    Product Type Name <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., Coffee Cup, Food Container"
+                  name="typeName"
+                  value={formData.typeName}
+                  onChange={(e) => setFormData({ ...formData, typeName: e.target.value })}
+                  required
+                  variant="outlined"
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CategoryIcon sx={{ color: '#4CAF50' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Material Select Field */}
+              <Grid item xs={12} md={5}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <InventoryIcon sx={{ fontSize: 16 }} />
+                    Material <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  error={approvedMaterials.length === 0}
+                  disabled={approvedMaterials.length === 0}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                >
+                  <Select
+                    value={formData.materialId}
+                    onChange={(e) => setFormData({ ...formData, materialId: e.target.value })}
+                  >
+                    {approvedMaterials.map((material) => (
+                      <MenuItem key={material.id || material._id} value={material.id || material._id}>
+                        {material.materialName || material.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {approvedMaterials.length === 0 && (
+                    <FormHelperText>
+                      No materials available. Please contact admin to add materials.
+                    </FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+
+              {/* Description Field */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <DescriptionIcon sx={{ fontSize: 16 }} />
+                    Description <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="Brief description of this product type"
+                  name="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  required
+                  multiline
+                  minRows={3}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
+                        <DescriptionIcon sx={{ color: '#4CAF50', fontSize: 18 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Upload Image Field */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <ImageIcon sx={{ fontSize: 16 }} />
+                    Upload Image
+                  </Typography>
+                </Box>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="image-upload"
+                  type="file"
+                  onChange={handleImageChange}
+                />
+                <label htmlFor="image-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<CloudUploadIcon />}
+                    fullWidth
+                    sx={{
+                      backgroundColor: 'white',
+                      borderColor: '#4CAF50',
+                      color: '#2E7D32',
+                      '&:hover': {
+                        borderColor: '#388E3C',
+                        backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                      },
+                    }}
+                  >
+                    {selectedImage ? selectedImage.name : 'Choose File (No file chosen)'}
+                  </Button>
+                </label>
+                {imagePreview && (
+                  <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '200px', 
+                        borderRadius: '8px',
+                        border: '2px solid rgba(76, 175, 80, 0.3)'
+                      }} 
+                    />
+                  </Box>
+                )}
+                <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: '#666' }}>
+                  This image will be applied to all items of this product type
+                </Typography>
+              </Grid>
+
+              {/* Info Box */}
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    p: 2,
+                    background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(46, 125, 50, 0.05) 100%)',
+                    borderRadius: 2,
+                    border: '2px solid rgba(76, 175, 80, 0.3)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.1)'
+                  }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: '#4CAF50',
+                      borderRadius: '50%',
+                      p: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '36px',
+                      height: '36px'
+                    }}
+                  >
+                    <InventoryIcon sx={{ color: 'white', fontSize: 20 }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#2E7D32', fontWeight: 700, mb: 0.5 }}>
+                      📦 Product Type Management
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#1B5E20', lineHeight: 1.5, display: 'block' }}>
+                      Create a product type to organize your reusable packaging items. Each product type can have multiple sizes and items. 
+                      All items of this type will share the same image and material.
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          </DialogContent>
+
+          <Divider />
+
+          <DialogActions
+            sx={{
+              px: 2,
+              py: 1.5,
+              gap: 2,
+              backgroundColor: 'rgba(76, 175, 80, 0.02)',
+              display: 'flex',
+              justifyContent: 'space-between'
+            }}
+          >
+            <Button
+              onClick={handleCloseDialog}
+              variant="outlined"
+              startIcon={<CloseIcon fontSize="small" />}
+              sx={{
+                color: '#666',
+                borderColor: '#ccc',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                borderWidth: 1.5,
+                fontWeight: 500,
+                '&:hover': {
+                  borderColor: '#999',
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  borderWidth: 1.5,
+                }
+              }}
+              size="small"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
+              disabled={!formData.typeName || !formData.materialId || productGroupLoading}
+              sx={{
+                backgroundColor: '#4CAF50',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: '#388E3C',
+                  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.45)',
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  backgroundColor: '#d1d5db',
+                  color: '#9ca3af',
+                }
+              }}
+              size="small"
+            >
+              {productGroupLoading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={16} color="inherit" />
+                  {editMode ? 'Updating...' : 'Creating...'}
+                </Box>
+              ) : (
+                editMode ? 'Update Type' : 'Create Type'
+              )}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete "{selectedProduct?.typeName}"? This action cannot be undone.
-          </Typography>
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(211, 47, 47, 0.15)'
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+            color: 'white',
+            py: 3,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <DeleteIcon sx={{ fontSize: 32 }} />
+            <Box>
+              <Typography variant="h5" component="div" fontWeight="bold">
+                Delete Product Type
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                This action cannot be undone
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={() => setOpenDeleteDialog(false)}
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 4, pb: 3 }}>
+          {selectedProduct && (
+            <Box>
+              <Alert
+                severity="warning"
+                sx={{
+                  mb: 3,
+                  borderRadius: 2,
+                  '& .MuiAlert-message': {
+                    width: '100%'
+                  }
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                  ⚠️ Warning
+                </Typography>
+                <Typography variant="body2">
+                  This action is permanent and cannot be undone. The product type and all its associated items will be completely removed from your inventory.
+                </Typography>
+              </Alert>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  backgroundColor: 'rgba(244, 67, 54, 0.05)',
+                  borderRadius: 2,
+                  border: '1px solid rgba(244, 67, 54, 0.2)'
+                }}
+              >
+                <Typography variant="body1" gutterBottom sx={{ fontWeight: 600, color: '#d32f2f' }}>
+                  Are you sure you want to delete this product type?
+                </Typography>
+
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CategoryIcon sx={{ color: '#f44336', fontSize: 20 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Product Type Name:
+                  </Typography>
+                </Box>
+                <Typography variant="h6" sx={{ mt: 1, color: '#1B5E20', fontWeight: 'bold' }}>
+                  {selectedProduct.typeName}
+                </Typography>
+              </Paper>
+            </Box>
+          )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error">
-            Delete
+
+        <Divider />
+
+        <DialogActions sx={{ px: 3, py: 2.5, gap: 1.5 }}>
+          <Button
+            onClick={() => setOpenDeleteDialog(false)}
+            variant="outlined"
+            sx={{
+              color: '#666',
+              borderColor: '#ddd',
+              px: 3,
+              py: 1,
+              '&:hover': {
+                borderColor: '#999',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            startIcon={<DeleteIcon />}
+            sx={{
+              backgroundColor: '#f44336',
+              px: 3,
+              py: 1,
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(244, 67, 54, 0.35)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: '#d32f2f',
+                boxShadow: '0 6px 16px rgba(244, 67, 54, 0.45)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            Delete Type
           </Button>
         </DialogActions>
       </Dialog>

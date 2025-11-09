@@ -1,0 +1,818 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  FormHelperText,
+  Divider,
+  Alert,
+  Paper,
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Inventory2 as InventoryIcon,
+  Close as CloseIcon,
+  Straighten as SizeIcon,
+  AttachMoney as MoneyIcon,
+  Description as DescriptionIcon,
+} from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  getMyProductGroups,
+  getProductSizes,
+  createProductSize,
+  updateProductSize,
+} from '../../../store/slices/bussinessSlice';
+import { PATH } from '../../../routes/path';
+import toast from 'react-hot-toast';
+import './ProductSizeManagement.css';
+
+export default function ProductSizeManagement() {
+  const { productGroupId } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const {
+    productGroups,
+    productSizes,
+    productSizeLoading,
+    productSizeError,
+  } = useSelector((state) => state.businesses);
+
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({
+    sizeName: '',
+    basePrice: '',
+    description: '',
+  });
+  const [formErrors, setFormErrors] = useState({});
+
+  // Get current product group
+  const productGroup = productGroups.find(
+    (pg) => (pg.id || pg._id) === productGroupId
+  );
+
+  useEffect(() => {
+    // Load product groups if not loaded
+    if (productGroups.length === 0) {
+      dispatch(getMyProductGroups());
+    }
+  }, [dispatch, productGroups.length]);
+
+  useEffect(() => {
+    // Load product sizes when productGroupId is available
+    if (productGroupId) {
+      dispatch(getProductSizes({ productGroupId, page: 1, limit: 100 }));
+    }
+  }, [dispatch, productGroupId]);
+
+  const handleBack = () => {
+    navigate(PATH.BUSINESS_INVENTORY);
+  };
+
+  const handleOpenDialog = () => {
+    setEditMode(false);
+    setSelectedSize(null);
+    setFormData({
+      sizeName: '',
+      basePrice: '',
+      description: '',
+    });
+    setFormErrors({});
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditMode(false);
+    setSelectedSize(null);
+    setFormData({
+      sizeName: '',
+      basePrice: '',
+      description: '',
+    });
+    setFormErrors({});
+  };
+
+  const handleEdit = (size) => {
+    setEditMode(true);
+    setSelectedSize(size);
+    setFormData({
+      sizeName: size.sizeName || '',
+      basePrice: size.basePrice || '',
+      description: size.description || '',
+    });
+    setFormErrors({});
+    setOpenDialog(true);
+  };
+
+  const handleDelete = (size) => {
+    setSelectedSize(size);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    // TODO: Implement delete API if available
+    toast.error('Delete functionality not yet implemented');
+    setOpenDeleteDialog(false);
+    setSelectedSize(null);
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.sizeName.trim()) {
+      errors.sizeName = 'Size name is required';
+    }
+    if (!formData.basePrice || formData.basePrice <= 0) {
+      errors.basePrice = 'Base price must be greater than 0';
+    }
+    if (!formData.description.trim()) {
+      errors.description = 'Description is required';
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      const sizeData = {
+        sizeName: formData.sizeName.trim(),
+        basePrice: Number(formData.basePrice),
+        description: formData.description.trim(),
+      };
+
+      if (editMode && selectedSize) {
+        // Update existing size
+        await dispatch(
+          updateProductSize({
+            id: selectedSize.id || selectedSize._id,
+            productSizeData: sizeData,
+          })
+        ).unwrap();
+        toast.success('Product size updated successfully');
+      } else {
+        // Create new size
+        await dispatch(
+          createProductSize({
+            productGroupId: productGroupId,
+            ...sizeData,
+          })
+        ).unwrap();
+        toast.success('Product size created successfully');
+      }
+
+      // Reload product sizes
+      dispatch(getProductSizes({ productGroupId, page: 1, limit: 100 }));
+      handleCloseDialog();
+    } catch (error) {
+      const errorMessage =
+        error?.message ||
+        error?.data?.message ||
+        'Failed to save product size';
+      toast.error(errorMessage);
+    }
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price);
+  };
+
+  if (!productGroup) {
+    return (
+      <Box className="product-size-management">
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <Typography>Loading product group...</Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box className="product-size-management">
+      {/* Header */}
+      <Box className="size-header">
+        <Box className="header-top">
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBack}
+            className="back-button"
+          >
+            Back to Types
+          </Button>
+        </Box>
+        <Box className="header-main">
+          <Box className="header-left">
+            <Box className="header-title-section">
+              <SizeIcon className="header-icon" />
+              <Box>
+                <Typography variant="h4" className="header-title">
+                  Product Sizes
+                </Typography>
+                <Typography variant="body2" className="header-subtitle">
+                  Manage sizes for {productGroup.name || 'Product Type'}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenDialog}
+            className="add-button"
+          >
+            Add Size
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Product Sizes Grid */}
+      {productSizeLoading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <Typography>Loading...</Typography>
+        </Box>
+      ) : productSizeError ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <Typography color="error">
+            Error loading product sizes:{' '}
+            {typeof productSizeError === 'string'
+              ? productSizeError
+              : productSizeError?.message ||
+                productSizeError?.error ||
+                productSizeError?.data?.message ||
+                'Unknown error'}
+          </Typography>
+        </Box>
+      ) : productSizes.length === 0 ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <Typography color="textSecondary">
+            No product sizes found. Click "+ Add Size" to create one.
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={3} className="sizes-grid">
+          {productSizes.map((size) => (
+            <Grid item xs={12} sm={6} md={4} key={size.id || size._id}>
+              <Card className="size-card">
+                <CardContent>
+                  <Box className="card-header">
+                    <Box className="card-title-section">
+                      <SizeIcon className="card-icon" />
+                      <Box>
+                        <Typography variant="h6" className="card-title">
+                          {size.sizeName}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box className="card-actions">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEdit(size)}
+                        className="edit-button"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(size)}
+                        className="delete-button"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+
+                  <Box className="card-details">
+                    <Box className="detail-row">
+                      <MoneyIcon className="detail-icon" />
+                      <Typography variant="body2" className="detail-label">
+                        Base Price:
+                      </Typography>
+                      <Typography variant="body2" className="detail-value price">
+                        {formatPrice(size.basePrice)}
+                      </Typography>
+                    </Box>
+                    <Box className="detail-row">
+                      <Typography variant="body2" className="detail-label">
+                        Description:
+                      </Typography>
+                      <Typography variant="body2" className="detail-value">
+                        {size.description}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+        TransitionProps={{
+          timeout: 400,
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
+            overflow: 'hidden',
+            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+            color: 'white',
+            py: 1.5,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <SizeIcon sx={{ fontSize: 28 }} />
+            <Box>
+              <Typography variant="subtitle1" component="div" fontWeight={700} sx={{ fontFamily: 'inherit' }}>
+                {editMode ? 'Edit Product Size' : 'Create New Product Size'}
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block', fontFamily: 'inherit' }}>
+                {editMode ? 'Update your product size details' : `Add a new size for ${productGroup.name || 'Product Type'}`}
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={handleCloseDialog}
+            size="small"
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <form onSubmit={handleSubmit}>
+          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+            <Grid container spacing={2}>
+              {/* Size Name Field */}
+              <Grid item xs={12} md={7}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <SizeIcon sx={{ fontSize: 16 }} />
+                    Size Name <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., Small, Medium, Large"
+                  name="sizeName"
+                  value={formData.sizeName}
+                  onChange={(e) => {
+                    setFormData({ ...formData, sizeName: e.target.value });
+                    if (formErrors.sizeName) {
+                      setFormErrors({ ...formErrors, sizeName: '' });
+                    }
+                  }}
+                  required
+                  variant="outlined"
+                  size="small"
+                  error={!!formErrors.sizeName}
+                  helperText={formErrors.sizeName || 'Enter a clear size name (e.g., Small, Medium, Large)'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SizeIcon sx={{ color: '#4CAF50' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Base Price Field */}
+              <Grid item xs={12} md={5}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <MoneyIcon sx={{ fontSize: 16 }} />
+                    Base Price <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., 50000"
+                  name="basePrice"
+                  type="number"
+                  value={formData.basePrice}
+                  onChange={(e) => {
+                    setFormData({ ...formData, basePrice: e.target.value });
+                    if (formErrors.basePrice) {
+                      setFormErrors({ ...formErrors, basePrice: '' });
+                    }
+                  }}
+                  required
+                  variant="outlined"
+                  size="small"
+                  error={!!formErrors.basePrice}
+                  helperText={formErrors.basePrice || 'Enter the base price in VND'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <MoneyIcon sx={{ color: '#4CAF50' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Description Field */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <DescriptionIcon sx={{ fontSize: 16 }} />
+                    Description <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., 500ml bottle, 12oz cup"
+                  name="description"
+                  value={formData.description}
+                  onChange={(e) => {
+                    setFormData({ ...formData, description: e.target.value });
+                    if (formErrors.description) {
+                      setFormErrors({ ...formErrors, description: '' });
+                    }
+                  }}
+                  required
+                  multiline
+                  minRows={3}
+                  variant="outlined"
+                  size="small"
+                  error={!!formErrors.description}
+                  helperText={formErrors.description || 'Provide detailed information about this size'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
+                        <DescriptionIcon sx={{ color: '#4CAF50', fontSize: 18 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Info Box */}
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    p: 2,
+                    background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(46, 125, 50, 0.05) 100%)',
+                    borderRadius: 2,
+                    border: '2px solid rgba(76, 175, 80, 0.3)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.1)'
+                  }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: '#4CAF50',
+                      borderRadius: '50%',
+                      p: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '36px',
+                      height: '36px'
+                    }}
+                  >
+                    <SizeIcon sx={{ color: 'white', fontSize: 20 }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#2E7D32', fontWeight: 700, mb: 0.5 }}>
+                      📦 Product Size Management
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#1B5E20', lineHeight: 1.5, display: 'block' }}>
+                      Create different sizes for your product group. Each size can have its own base price and description.
+                      Customers will be able to choose from these sizes when renting your products.
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          </DialogContent>
+
+          <Divider />
+
+          <DialogActions
+            sx={{
+              px: 2,
+              py: 1.5,
+              gap: 2,
+              backgroundColor: 'rgba(76, 175, 80, 0.02)',
+              display: 'flex',
+              justifyContent: 'space-between'
+            }}
+          >
+            <Button
+              onClick={handleCloseDialog}
+              variant="outlined"
+              startIcon={<CloseIcon fontSize="small" />}
+              sx={{
+                color: '#666',
+                borderColor: '#ccc',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                borderWidth: 1.5,
+                fontWeight: 500,
+                '&:hover': {
+                  borderColor: '#999',
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  borderWidth: 1.5,
+                }
+              }}
+              size="small"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
+              disabled={productSizeLoading}
+              sx={{
+                backgroundColor: '#4CAF50',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: '#388E3C',
+                  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.45)',
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  backgroundColor: '#d1d5db',
+                  color: '#9ca3af',
+                }
+              }}
+              size="small"
+            >
+              {productSizeLoading
+                ? 'Saving...'
+                : editMode
+                ? 'Update Size'
+                : 'Create Size'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(211, 47, 47, 0.15)'
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+            color: 'white',
+            py: 3,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <DeleteIcon sx={{ fontSize: 32 }} />
+            <Box>
+              <Typography variant="h5" component="div" fontWeight="bold">
+                Delete Product Size
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                This action cannot be undone
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={() => setOpenDeleteDialog(false)}
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 4, pb: 3 }}>
+          {selectedSize && (
+            <Box>
+              <Alert
+                severity="warning"
+                sx={{
+                  mb: 3,
+                  borderRadius: 2,
+                  '& .MuiAlert-message': {
+                    width: '100%'
+                  }
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                  ⚠️ Warning
+                </Typography>
+                <Typography variant="body2">
+                  This action is permanent and cannot be undone. The product size will be completely removed from your inventory.
+                </Typography>
+              </Alert>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  backgroundColor: 'rgba(244, 67, 54, 0.05)',
+                  borderRadius: 2,
+                  border: '1px solid rgba(244, 67, 54, 0.2)'
+                }}
+              >
+                <Typography variant="body1" gutterBottom sx={{ fontWeight: 600, color: '#d32f2f' }}>
+                  Are you sure you want to delete this product size?
+                </Typography>
+
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <SizeIcon sx={{ color: '#f44336', fontSize: 20 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Size Name:
+                  </Typography>
+                </Box>
+                <Typography variant="h6" sx={{ mt: 1, color: '#1B5E20', fontWeight: 'bold' }}>
+                  {selectedSize.sizeName}
+                </Typography>
+              </Paper>
+            </Box>
+          )}
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions sx={{ px: 3, py: 2.5, gap: 1.5 }}>
+          <Button
+            onClick={() => setOpenDeleteDialog(false)}
+            variant="outlined"
+            sx={{
+              color: '#666',
+              borderColor: '#ddd',
+              px: 3,
+              py: 1,
+              '&:hover': {
+                borderColor: '#999',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            startIcon={<DeleteIcon />}
+            sx={{
+              backgroundColor: '#f44336',
+              px: 3,
+              py: 1,
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(244, 67, 54, 0.35)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: '#d32f2f',
+                boxShadow: '0 6px 16px rgba(244, 67, 54, 0.45)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            Delete Size
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
+
