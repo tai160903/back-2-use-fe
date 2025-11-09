@@ -155,6 +155,19 @@ export const buyFreeTrial = createAsyncThunk(
   }
 )
 
+// get business subscription history
+export const getBusinessSubscriptionHistory = createAsyncThunk(
+  "subscription/getBusinessSubscriptionHistory",
+  async ({ page, limit }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/businesses/subscriptions/history?page=${page}&limit=${limit}`)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+)
+
 
 const subscriptionSlice = createSlice({
   name: "subscription",
@@ -162,6 +175,7 @@ const subscriptionSlice = createSlice({
     subscription: [],
     subscriptionDetails: null, 
     features: [],
+    subscriptionHistory: { data: [], total: 0, currentPage: 1, totalPages: 1 },
     isLoading: false,
     error: null,
   },
@@ -226,7 +240,7 @@ const subscriptionSlice = createSlice({
       .addCase(getSubscriptionById.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.error = null;
-        state.subscriptionDetails = payload; // Lưu chi tiết vào state riêng
+        state.subscriptionDetails = payload; 
       })
       .addCase(getSubscriptionById.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -295,6 +309,19 @@ const subscriptionSlice = createSlice({
         state.subscription = payload;
       })
       .addCase(buyFreeTrial.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(getBusinessSubscriptionHistory.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessSubscriptionHistory.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.subscriptionHistory = payload;
+      })
+      .addCase(getBusinessSubscriptionHistory.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })

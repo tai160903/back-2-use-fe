@@ -107,7 +107,7 @@ const SubscriptionConfirmModal = ({
           variant="outlined"
           disabled={isLoading}
         >
-          Hủy
+          Cancel
         </Button>
         
         {hasEnoughBalance ? (

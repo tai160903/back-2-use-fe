@@ -74,6 +74,15 @@ export default function ProfileBusiness() {
   const business = apiBusinessPayload?.data?.business
   const wallet = apiBusinessPayload?.data?.wallet
   const activeSubscription = apiBusinessPayload?.data?.activeSubscription
+  const rawActive = activeSubscription
+  const subscriptions = Array.isArray(rawActive) ? rawActive : (rawActive ? [rawActive] : [])
+  const now = new Date()
+  const currentSubscriptions = subscriptions.filter((s) => {
+    const endDate = s?.endDate ? new Date(s.endDate) : null
+    const notExpired = !endDate || (!isNaN(endDate.getTime()) && endDate >= now)
+    const statusOk = s?.status === 'active' || s?.status === 'pending'
+    return statusOk && notExpired
+  })
 
   const getFormValues = () => ({
     businessName: business?.businessName || '',
@@ -151,7 +160,7 @@ export default function ProfileBusiness() {
       businessName: business?.businessName || '',
       businessType: business?.businessType || '',
       taxCode: business?.taxCode || '',
-      email: business?.businessFormId?.businessMail || '',
+      email: business?.businessMail || '',
       businessPhone: business?.businessPhone || '',
       businessAddress: business?.businessAddress || '',
       openTime: business?.openTime || '',
@@ -255,9 +264,16 @@ export default function ProfileBusiness() {
             <div className="detail-item">
               <label>Subscription:</label>
               <span>
-                {activeSubscription
-                  ? `${activeSubscription?.subscriptionId?.name || 'Subscription'} | ${formatDate(activeSubscription?.startDate)} - ${formatDate(activeSubscription?.endDate)}`
-                  : 'No active subscription'}
+                {currentSubscriptions.length > 0 ? (
+                  currentSubscriptions.map((s, idx) => (
+                    <span key={s?._id || idx} style={{ display: 'block' }}>
+                      {(s?.subscriptionId?.name || 'Subscription')}{' '}
+                      {s?.subscriptionId?.isTrial ? '(Free)' : ''} | {formatDate(s?.startDate)} - {formatDate(s?.endDate)}
+                    </span>
+                  ))
+                ) : (
+                  'No active subscription'
+                )}
               </span>
             </div>
           </div>
@@ -349,7 +365,7 @@ export default function ProfileBusiness() {
                 Email:
               </label>
              
-                <span>{business?.businessFormId?.businessMail || ''}</span>
+                <span>{business?.businessMail || ''}</span>
             
             </div>
             <div className="detail-item">
