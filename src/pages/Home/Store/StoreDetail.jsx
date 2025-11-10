@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./StoreDetail.css";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
@@ -23,195 +23,123 @@ import Loading from "../../../components/Loading/Loading";
 export default function StoreDetail() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { id } = useParams();
+  const { id: storeId } = useParams();
   const { storeDetail, isLoadingStoreDetail, error } = useSelector((state) => state.store);
-  const vouchers = useMemo(
-    () => [
-      {
-        id: "v1",
-        off: "25%",
-        note: "First order only",
-        title: "25% OFF at Green Leaf Cafe",
-        code: "GREEN25",
-        expire: "12/31",
-      },
-      {
-        id: "v2",
-        off: "40%",
-        note: "Limited stock",
-        title: "40% OFF at Eco Brew House",
-        code: "ECO40",
-        expire: "11/15",
-      },
-      {
-        id: "v3",
-        off: "15%",
-        note: "For all orders",
-        title: "15% OFF network-wide",
-        code: "REUSE15",
-        expire: "10/30",
-      },
-    ],
-    []
-  );
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const vouchers = [
+    {
+      id: "v1",
+      off: "25%",
+      note: "First order only",
+      title: "25% OFF at Green Leaf Cafe",
+      code: "GREEN25",
+      expire: "12/31",
+    },
+    {
+      id: "v2",
+      off: "40%",
+      note: "Limited stock",
+      title: "40% OFF at Eco Brew House",
+      code: "ECO40",
+      expire: "11/15",
+    },
+    {
+      id: "v3",
+      off: "15%",
+      note: "For all orders",
+      title: "15% OFF network-wide",
+      code: "REUSE15",
+      expire: "10/30",
+    },
+  ];
+  const [selectedProductType, setSelectedProductType] = useState(null);
   const [materialFilter, setMaterialFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  const [materials, setMaterials] = useState([]);
+  const [catalogProducts, setCatalogProducts] = useState([]);
 
-  // Lấy business data trực tiếp từ API
-  const business = storeDetail;
+  // Lấy data từ API
+  const business = storeDetail?.business || storeDetail || null;
+  const convertToSlug = (value) =>
+    (value || "").toLowerCase().trim().replace(/\s+/g, "-");
+  const deriveProductTypeFromName = (name) => {
+    const lower = (name || "").toLowerCase();
+    if (/(bottle|cup|mug)/.test(lower)) return "cup";
+    if (/(container|box|tray)/.test(lower)) return "container";
+    return "other";
+  };
 
   // Load store detail khi component mount hoặc id thay đổi
   useEffect(() => {
-    if (id) {
-      dispatch(getStoreById(id));
+    if (storeId) {
+      dispatch(getStoreById(storeId));
     }
-  }, [dispatch, id]);
+  }, [dispatch, storeId]);
 
-  // Mock data cho materials/catalog (tạm thời cho đến khi có API)
+  // Map productGroups từ API sang catalog hiển thị
   useEffect(() => {
-    if (business?._id) {
-      const mockMaterials = [
-        {
-          id: "m1",
-          name: "Plastic Cup 350ml",
-          rentalPrice: 10000,
-          available: 8,
-          unavailable: 2,
-          image: cup3,
-          type: "cup",
-          material: "plastic",
-        },
-        {
-          id: "m2",
-          name: "Glass Cup 350ml",
-          rentalPrice: 15000,
-          available: 5,
-          unavailable: 1,
-          image: cup3,
-          type: "cup",
-          material: "glass",
-        },
-        {
-          id: "m3",
-          name: "Double Cup 500ml",
-          rentalPrice: 18000,
-          available: 7,
-          unavailable: 0,
-          image: cup3,
-          type: "cup",
-          material: "plastic",
-        },
-        {
-          id: "m4",
-          name: "Paper Food Box 750ml",
-          rentalPrice: 12000,
-          available: 10,
-          unavailable: 3,
-          image: containerImg,
-          type: "container",
-          material: "paper",
-        },
-        {
-          id: "m5",
-          name: "Stainless Food Box 800ml",
-          rentalPrice: 30000,
-          available: 4,
-          unavailable: 2,
-          image: containerImg,
-          type: "container",
-          material: "steel",
-        },
-        {
-          id: "m6",
-          name: "Reusable Bottle 500ml",
-          rentalPrice: 20000,
-          available: 6,
-          unavailable: 1,
-          image: cup3,
-          type: "cup",
-          material: "plastic",
-        },
-        {
-          id: "m7",
-          name: "Glass Container 600ml",
-          rentalPrice: 25000,
-          available: 3,
-          unavailable: 1,
-          image: containerImg,
-          type: "container",
-          material: "glass",
-        },
-        {
-          id: "m8",
-          name: "Plastic Container 500ml",
-          rentalPrice: 11000,
-          available: 9,
-          unavailable: 2,
-          image: containerImg,
-          type: "container",
-          material: "plastic",
-        },
-      ];
-      setMaterials(mockMaterials);
+    const groups = storeDetail?.productGroups || [];
+    if (groups.length > 0) {
+      const mappedCatalogProducts = groups.map((productGroup) => {
+        const materialName = productGroup.materialId?.materialName || "Unknown";
+        return {
+          id: productGroup._id,
+          name: productGroup.name,
+          image: productGroup.imageUrl || cup3,
+          type: deriveProductTypeFromName(productGroup.name),
+          material: convertToSlug(materialName),
+          materialLabel: materialName,
+          depositPercent: productGroup.materialId?.depositPercent,
+          reuseLimit: productGroup.materialId?.reuseLimit,
+        };
+      });
+      setCatalogProducts(mappedCatalogProducts);
     } else {
-      setMaterials([]);
+      setCatalogProducts([]);
     }
-  }, [business?._id]);
+  }, [storeDetail]);
 
-  const reviews = useMemo(
-    () => [
-      {
-        id: "r1",
-        user: "Alex Nguyen",
-        role: "CEO",
-        rating: 5,
-        date: "2025-10-10",
-        comment:
-          "Back2Use made it easy to borrow and return cups. Super convenient and eco-friendly!",
-      },
-      {
-        id: "r2",
-        user: "Lan Pham",
-        role: "Product Designer",
-        rating: 4.5,
-        date: "2025-10-05",
-        comment:
-          "Thanks to the program, I feel more informed and confident about my choices. The containers are sturdy and clean.",
-      },
-      {
-        id: "r3",
-        user: "Khanh Vo",
-        role: "Design Lead",
-        rating: 4,
-        date: "2025-09-28",
-        comment:
-          "Great customer support. The team went above and beyond to help with a billing issue.",
-      },
-    ],
-    []
-  );
+  const reviews = [
+    {
+      id: "r1",
+      user: "Alex Nguyen",
+      role: "CEO",
+      rating: 5,
+      date: "2025-10-10",
+      comment:
+        "Back2Use made it easy to borrow and return cups. Super convenient and eco-friendly!",
+    },
+    {
+      id: "r2",
+      user: "Lan Pham",
+      role: "Product Designer",
+      rating: 4.5,
+      date: "2025-10-05",
+      comment:
+        "Thanks to the program, I feel more informed and confident about my choices. The containers are sturdy and clean.",
+    },
+    {
+      id: "r3",
+      user: "Khanh Vo",
+      role: "Design Lead",
+      rating: 4,
+      date: "2025-09-28",
+      comment:
+        "Great customer support. The team went above and beyond to help with a billing issue.",
+    },
+  ];
 
 
 
-  // Average kept for potential future use (sorting), but hidden from UI
-  const AVERAGE_RATING = useMemo(() => {
-    if (reviews.length === 0) return 0;
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-    return Math.round((sum / reviews.length) * 10) / 10;
-  }, [reviews]);
+  // (Bỏ AVERAGE_RATING vì không hiển thị trong UI)
 
   // Reviews pagination
   const [reviewPage, setReviewPage] = useState(1);
   const reviewsPerPage = 6;
   const [reviewRatingFilter, setReviewRatingFilter] = useState("all"); 
-  const filteredReviews = useMemo(() => {
-    if (reviewRatingFilter === "all") return reviews;
-    const threshold = parseFloat(reviewRatingFilter);
-    return reviews.filter((r) => r.rating >= threshold);
-  }, [reviews, reviewRatingFilter]);
+  const filteredReviews =
+    reviewRatingFilter === "all"
+      ? reviews
+      : reviews.filter((review) => review.rating >= parseFloat(reviewRatingFilter));
   const totalReviewPages = Math.max(
     1,
     Math.ceil(filteredReviews.length / reviewsPerPage)
@@ -221,7 +149,7 @@ export default function StoreDetail() {
     reviewStart,
     reviewStart + reviewsPerPage
   );
-  const handleReviewPageChange = (e, p) => setReviewPage(p);
+  const handleReviewPageChange = (event, page) => setReviewPage(page);
   useEffect(() => {
     setReviewPage(1);
   }, [reviewRatingFilter]);
@@ -229,7 +157,7 @@ export default function StoreDetail() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [materialFilter, selectedProduct]);
+  }, [materialFilter, selectedProductType]);
 
   // Loading state
   if (isLoadingStoreDetail) {
@@ -255,35 +183,35 @@ export default function StoreDetail() {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
         <Typography variant="h6">
-          Không tìm thấy cửa hàng! (ID: {id})
+          Không tìm thấy cửa hàng! (ID: {storeId})
         </Typography>
       </div>
     );
   }
 
   // Sử dụng materials trực tiếp làm catalog (đã có đầy đủ thông tin)
-  const catalog = materials;
+  const catalog = catalogProducts;
 
   // Xác định products types từ catalog
   const productTypes = [];
-  if (catalog.some(p => p.type === "cup")) productTypes.push("cup");
-  if (catalog.some(p => p.type === "container")) productTypes.push("container");
+  if (catalog.some(product => product.type === "cup")) productTypes.push("cup");
+  if (catalog.some(product => product.type === "container")) productTypes.push("container");
 
-  const materialLabelMap = {
-    plastic: "Plastic",
-    glass: "Glass",
-    steel: "Stainless steel",
-    paper: "Paper",
-  };
+  const materialLabelMap = {};
+  catalog.forEach((product) => {
+    if (product.material && product.materialLabel) {
+      materialLabelMap[product.material] = product.materialLabel;
+    }
+  });
   const materialOptions = [
     "all",
-    ...Array.from(new Set(catalog.map((p) => p.material))),
+    ...Array.from(new Set(catalog.map((product) => product.material))),
   ];
 
-  const displayedProducts = catalog.filter((p) => {
-    const matchType = selectedProduct ? p.type === selectedProduct : true;
+  const displayedProducts = catalog.filter((product) => {
+    const matchType = selectedProductType ? product.type === selectedProductType : true;
     const matchMaterial =
-      materialFilter === "all" ? true : p.material === materialFilter;
+      materialFilter === "all" ? true : product.material === materialFilter;
     return matchType && matchMaterial;
   });
 
@@ -300,8 +228,8 @@ export default function StoreDetail() {
   const businessPhone = business.businessPhone || "";
   const openTime = business.openTime || "08:00";
   const closeTime = business.closeTime || "22:00";
-  const daily = `${openTime} - ${closeTime}`;
-  const products = productTypes.length > 0 ? productTypes : ["cup", "container"];
+  const businessOpenCloseHours = `${openTime} - ${closeTime}`;
+  const availableProductTypes = productTypes.length > 0 ? productTypes : ["cup", "container"];
   const rating = business.rating || business.averageRating || 4.5;
   const reviewCount = business.reviewCount || business.totalReviews || 0;
 
@@ -355,13 +283,13 @@ export default function StoreDetail() {
                     <div className="storeDetail-infoRow">
                       <LocationOnIcon className="storeDetail-icon" />
                       <Typography variant="body1">
-                        <strong>Địa chỉ:</strong> {businessAddress}
+                        <strong>Address:</strong> {businessAddress}
                       </Typography>
                     </div>
                     <div className="storeDetail-infoRow">
                       <AccessTimeIcon className="storeDetail-icon" />
                       <Typography variant="body1">
-                        <strong>Giờ mở cửa:</strong> {daily}
+                        <strong>Opening Hours:</strong> {businessOpenCloseHours}
                       </Typography>
                     </div>
                     <div className="storeDetail-infoRow">
@@ -373,7 +301,7 @@ export default function StoreDetail() {
                     <div className="storeDetail-infoRow">
                       <LocalPhoneIcon className="storeDetail-icon" />
                       <Typography variant="body1">
-                        <strong>Số điện thoại:</strong> {businessPhone}
+                        <strong>Phone:</strong> {businessPhone}
                       </Typography>
                     </div>
                   </div>
@@ -394,11 +322,11 @@ export default function StoreDetail() {
       <div className="storeDetail-categories">
         <div
           className={`storeDetail-category-card ${
-            selectedProduct === "cup" ? "active" : ""
-          } ${products.includes("cup") ? "" : "disabled"}`}
+            selectedProductType === "cup" ? "active" : ""
+          } ${availableProductTypes.includes("cup") ? "" : "disabled"}`}
           onClick={() => {
-            if (!products.includes("cup")) return;
-            setSelectedProduct(selectedProduct === "cup" ? null : "cup");
+            if (!availableProductTypes.includes("cup")) return;
+            setSelectedProductType(selectedProductType === "cup" ? null : "cup");
           }}
         >
           <div className="storeDetail-category-text">
@@ -415,12 +343,12 @@ export default function StoreDetail() {
         </div>
         <div
           className={`storeDetail-category-card ${
-            selectedProduct === "container" ? "active" : ""
-          } ${products.includes("container") ? "" : "disabled"}`}
+            selectedProductType === "container" ? "active" : ""
+          } ${availableProductTypes.includes("container") ? "" : "disabled"}`}
           onClick={() => {
-            if (!products.includes("container")) return;
-            setSelectedProduct(
-              selectedProduct === "container" ? null : "container"
+            if (!availableProductTypes.includes("container")) return;
+            setSelectedProductType(
+              selectedProductType === "container" ? null : "container"
             );
           }}
         >
@@ -446,51 +374,51 @@ export default function StoreDetail() {
       <div className="storeDetail-products">
         <div className="storeDetail-products-header">
           <div className="storeDetail-material-filter">
-            {materialOptions.map((opt) => (
+            {materialOptions.map((option) => (
               <button
-                key={opt}
+                key={option}
                 className={`material-chip ${
-                  materialFilter === opt ? "active" : ""
+                  materialFilter === option ? "active" : ""
                 }`}
-                onClick={() => setMaterialFilter(opt)}
+                onClick={() => setMaterialFilter(option)}
               >
-                {opt === "all" ? "All" : materialLabelMap[opt] || opt}
+                {option === "all" ? "All" : materialLabelMap[option] || option}
               </button>
             ))}
           </div>
         </div>
 
         <div className="storeDetail-grid">
-          {paginatedProducts.map((p) => (
-            <div key={p.id} className="product-card">
+          {paginatedProducts.map((product) => (
+            <div key={product.id} className="product-card">
               <div className="product-thumb">
-                <img src={p.image} alt={p.name} />
+                <img src={product.image} alt={product.name} />
               </div>
               <div className="product-info">
-                <Typography className="product-name">{p.name}</Typography>
+                <Typography className="product-name">{product.name}</Typography>
                 <div className="product-meta">
                   <span className="product-tag">
-                    {p.type === "cup" ? "Cup/Bottle" : "Food Container"}
+                    {product.type === "cup" ? "Cup/Bottle" : product.type === "container" ? "Food Container" : "Other"}
                   </span>
                   <span className="product-dot">•</span>
                   <span className="product-tag">
-                    {materialLabelMap[p.material] || p.material}
+                    {materialLabelMap[product.material] || product.material}
                   </span>
                 </div>
                 <div className="product-stats">
                   <span className="available">
-                    Available: {p.available ?? 0}
+                    Deposit: {product.depositPercent ?? 0}%
                   </span>
                   <span className="separator">|</span>
                   <span className="unavailable">
-                    Unavailable: {p.unavailable ?? 0}
+                    Reuse limit: {product.reuseLimit ?? 0}
                   </span>
                 </div>
                 <div className="product-bottom">
                   <span className="product-price">
-                    {(p.rentalPrice ?? p.price).toLocaleString()}đ/day
+                    {product.rentalPrice ? `${product.rentalPrice.toLocaleString()}vnd/day` : "Contact for price"}
                   </span>
-                  <button className="product-btn" onClick={() => navigate(`/product/${business._id}/${p.id}`)}>View details</button>
+                  <button className="product-btn" onClick={() => navigate(`/product/${business._id}/${product.id}`)}>View details</button>
                 </div>
               </div>
             </div>
@@ -509,7 +437,7 @@ export default function StoreDetail() {
           <Pagination
             count={totalPages}
             page={currentPage}
-            onChange={(e, p) => setCurrentPage(p)}
+            onChange={(event, pageNumber) => setCurrentPage(pageNumber)}
             variant="outlined"
             shape="rounded"
           />
@@ -558,34 +486,34 @@ export default function StoreDetail() {
             </Typography>
           </div>
           <div className="review-filter">
-            {["all", "1", "2", "3", "4", "5"].map((opt) => (
+            {["all", "1", "2", "3", "4", "5"].map((option) => (
               <button
-                key={opt}
+                key={option}
                 className={`review-chip ${
-                  reviewRatingFilter === opt ? "active" : ""
+                  reviewRatingFilter === option ? "active" : ""
                 }`}
-                onClick={() => setReviewRatingFilter(opt)}
+                onClick={() => setReviewRatingFilter(option)}
               >
-                {opt === "all"
+                {option === "all"
                   ? "All ratings"
-                  : `${opt}${opt === "5" ? "" : "+"} stars`}
+                  : `${option}${option === "5" ? "" : "+"} stars`}
               </button>
             ))}
           </div>
           <div className="reviews-list">
-            {paginatedReviews.map((rv) => (
-              <div key={rv.id} className="review-card">
+            {paginatedReviews.map((review) => (
+              <div key={review.id} className="review-card">
                 <div className="review-score-row">
                   <StarRoundedIcon className="review-star" />
-                  <span className="review-score">{rv.rating.toFixed(1)}</span>
+                  <span className="review-score">{review.rating.toFixed(1)}</span>
                 </div>
-                <Typography className="review-text">{rv.comment}</Typography>
+                <Typography className="review-text">{review.comment}</Typography>
 
                 <div className="review-footer">
-                  <Avatar className="review-avatar">{rv.user.charAt(0)}</Avatar>
+                  <Avatar className="review-avatar">{review.user.charAt(0)}</Avatar>
                   <div className="review-footer-right">
-                    <Typography className="review-user">{rv.user}</Typography>
-                    <span className="review-role">{rv.role}</span>
+                    <Typography className="review-user">{review.user}</Typography>
+                    <span className="review-role">{review.role}</span>
                   </div>
                 </div>
               </div>

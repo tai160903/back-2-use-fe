@@ -39,12 +39,26 @@ export const getStoreById = createAsyncThunk(
     async(id, {rejectWithValue}) => {
         try {
             const response = await fetcher.get(`/businesses/${id}`)
+ 
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response ? error.response.data : error.message)
         }
     }
 )
+
+// get details product by id
+export const getDetailsProductById = createAsyncThunk(
+    "businesses/getDetailsProductById",
+    async ({ productGroupId,page,limit}, { rejectWithValue }) => {
+      try {
+        const response = await fetcher.get(`/products/customer/${productGroupId}?page=${page}&limit=${limit}`);
+        return response.data;
+      } catch (error) {
+        return rejectWithValue(error.response ? error.response.data : error.message);
+      }
+    }
+  )
 
 
 const storeSlice = createSlice({
@@ -53,12 +67,14 @@ initialState: {
     allStores: [], 
     nearbyStores: [], 
     storeDetail: null,
+    detailsProduct: { products: [], total: 0, currentPage: 1, totalPages: 0 },
     totalPages: 0,
     total: 0,
     currentPage: 1,
     isLoading: false,
     isLoadingNearby: false,
     isLoadingStoreDetail: false,
+    isLoadingDetailsProduct: false,
     error: null,
 },
 reducers: {
@@ -103,11 +119,24 @@ extraReducers: (builder) => {
     .addCase(getStoreById.fulfilled, (state, {payload}) => {
         state.isLoadingStoreDetail = false;
         state.error = null;
-        // Lưu toàn bộ response hoặc chỉ business object
-        state.storeDetail = payload.data?.business || payload.data || payload;
+
+        state.storeDetail = payload.data || payload;
     })
     .addCase(getStoreById.rejected, (state, {payload}) => {
         state.isLoadingStoreDetail = false;
+        state.error = payload;
+    })
+    .addCase(getDetailsProductById.pending, (state) => {
+        state.isLoadingDetailsProduct = true;
+        state.error = null;
+    })
+    .addCase(getDetailsProductById.fulfilled, (state, {payload}) => {
+        state.isLoadingDetailsProduct = false;
+        state.error = null;
+        state.detailsProduct = payload.data || payload;
+    })
+    .addCase(getDetailsProductById.rejected, (state, {payload}) => {
+        state.isLoadingDetailsProduct = false;
         state.error = payload;
     })
 }

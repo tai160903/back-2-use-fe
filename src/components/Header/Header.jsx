@@ -14,6 +14,9 @@ import { getProfileApi } from "../../store/slices/userSlice";
 import { getUserRole } from "../../utils/authUtils";
 import { PATH } from "../../routes/path";
 import { TiClipboard } from "react-icons/ti";
+import { IoWalletOutline } from "react-icons/io5";
+import { CiUser } from "react-icons/ci";
+import { CiLogout } from "react-icons/ci";
 
 export default function Header() {
   const location = useLocation();
@@ -137,15 +140,15 @@ export default function Header() {
                     handleMenuClose();
                   }}
                 >
-                  Profile
+                  <CiUser style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}/>  Profile
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
-                    navigate("/wallet");
+                    navigate("/walllet_customer");
                     handleMenuClose();
                   }}
                 >
-                  Wallet
+                 <IoWalletOutline style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}/>  Wallet
                 </MenuItem>
                 {userRole === "customer" && (
                   <MenuItem onClick={handleBusinessRegistrationClick}>
@@ -153,7 +156,10 @@ export default function Header() {
                     Business Registration
                   </MenuItem>
                 )}
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  <CiLogout style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }} />
+                  Logout
+                </MenuItem>
               </Menu>
             </>
           ) : (

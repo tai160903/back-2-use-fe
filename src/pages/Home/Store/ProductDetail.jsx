@@ -1,184 +1,36 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import Pagination from "@mui/material/Pagination";
 import "./ProductDetail.css";
-
-// Mock catalog for demo (no API calls)
-function buildMockCatalog(productId) {
-  const sizes = [
-    { _id: "size-300", sizeName: "Small", basePrice: 6500, description: "Compact and convenient" },
-    { _id: "size-350", sizeName: "Medium", basePrice: 10000, description: "Versatile everyday choice" },
-    { _id: "size-500", sizeName: "Large", basePrice: 14500, description: "Generous capacity" },
-  ];
-  const items = [
-    // 350 ml samples
-    {
-      _id: "69102972a205df423111deab",
-      productSizeId: { _id: "size-350" },
-      qrCode: "https://res.cloudinary.com/dioszgueh/image/upload/v1762666857/qrcodes/COF-1762666863543-78080-0.png",
-      serialNumber: "COF-1762666863543-78080-0",
-      status: "available",
-      reuseCount: 0,
-      createdAt: "2025-11-09T05:41:06.330Z",
-      updatedAt: "2025-11-09T05:41:06.330Z",
-    },
-    {
-      _id: "69102972a205df423111deac",
-      productSizeId: { _id: "size-350" },
-      qrCode: "https://res.cloudinary.com/dioszgueh/image/upload/v1762666857/qrcodes/COF-1762666863543-83013-1.png",
-      serialNumber: "COF-1762666863543-83013-1",
-      status: "available",
-      reuseCount: 0,
-      createdAt: "2025-11-09T05:41:06.330Z",
-      updatedAt: "2025-11-09T05:41:06.330Z",
-    },
-    {
-      _id: "69102972a205df423111dead",
-      productSizeId: { _id: "size-350" },
-      qrCode: "https://res.cloudinary.com/dioszgueh/image/upload/v1762666857/qrcodes/COF-1762666863543-36758-2.png",
-      serialNumber: "COF-1762666863543-36758-2",
-      status: "available",
-      reuseCount: 0,
-      createdAt: "2025-11-09T05:41:06.330Z",
-      updatedAt: "2025-11-09T05:41:06.330Z",
-    },
-    // 300 ml samples
-    {
-      _id: "mock-300-1",
-      productSizeId: { _id: "size-300" },
-      qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=COF-300-1",
-      serialNumber: "COF-300-1",
-      status: "available",
-      reuseCount: 2,
-      createdAt: "2025-10-01T08:41:06.330Z",
-      updatedAt: "2025-10-11T08:41:06.330Z",
-    },
-    {
-      _id: "mock-300-2",
-      productSizeId: { _id: "size-300" },
-      qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=COF-300-2",
-      serialNumber: "COF-300-2",
-      status: "available",
-      reuseCount: 1,
-      createdAt: "2025-10-02T08:41:06.330Z",
-      updatedAt: "2025-10-12T08:41:06.330Z",
-    },
-    // 500 ml samples
-    {
-      _id: "mock-500-1",
-      productSizeId: { _id: "size-500" },
-      qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=COF-500-1",
-      serialNumber: "COF-500-1",
-      status: "available",
-      reuseCount: 5,
-      createdAt: "2025-09-21T08:41:06.330Z",
-      updatedAt: "2025-10-01T08:41:06.330Z",
-    },
-  ];
-  const groupInfo = {
-    id: productId,
-    name: "Coffee Cup",
-    description: "Ly cà phê tái sử dụng, nhiều kích cỡ, dễ mượn trả.",
-    images: ["https://i.pinimg.com/1200x/26/0d/0a/260d0aed364c7ff8ad535f830a7c4aab.jpg"],
-    material: "plastic",
-  };
-  return { groupInfo, sizes, items };
-}
+import { useDispatch, useSelector } from "react-redux";
+import { getDetailsProductById } from "../../../store/slices/storeSilce";
 
 export default function ProductDetail() {
   const navigate = useNavigate();
-  const { productId } = useParams(); // productId ~ productGroupId
+  const { productId } = useParams();
+  const dispatch = useDispatch();
+  const { detailsProduct, isLoadingDetailsProduct, error } = useSelector((state) => state.store);
+  const [sizeFilter, setSizeFilter] = useState("All");
+  const [clientPage, setClientPage] = useState(1);
+  const clientPageSize = 10;
 
-  // Build mock data
-  const { groupInfo, sizes, items } = useMemo(() => buildMockCatalog(productId), [productId]);
-
-  const sizeOptions = useMemo(() => sizes.map((s) => s.sizeName), [sizes]);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [sizeFilter, setSizeFilter] = useState("");
-
-  // Initialize selection when sizes load
   useEffect(() => {
-    if (sizes.length > 0) {
-      const defaultSize = sizes[0].sizeName;
-      setSelectedSize((s) => s || defaultSize);
-      setSizeFilter((s) => s || defaultSize);
+    if (productId) {
+      dispatch(getDetailsProductById({ productGroupId: productId, page: 1, limit: 100000 }));
+      setClientPage(1);
+      setSizeFilter("All");
     }
-  }, [sizes]);
+  }, [dispatch, productId]);
 
-  // Price map by size name
-  const sizePriceMap = useMemo(() => {
-    const map = {};
-    for (const s of sizes) {
-      map[s.sizeName] = s.basePrice;
-    }
-    return map;
-  }, [sizes]);
-
-  // Map: sizeName -> sizeId
-  const sizeNameToId = useMemo(() => {
-    const map = {};
-    for (const s of sizes) map[s.sizeName] = s._id;
-    return map;
-  }, [sizes]);
-
-  // Count items per size
-  const sizeCounts = useMemo(() => {
-    const counts = {};
-    for (const s of sizes) counts[s.sizeName] = 0;
-    for (const it of items) {
-      const sizeId = typeof it.productSizeId === "object" ? (it.productSizeId._id || it.productSizeId.id) : it.productSizeId;
-      const sizeObj = sizes.find((s) => s._id === sizeId);
-      if (sizeObj) counts[sizeObj.sizeName] = (counts[sizeObj.sizeName] || 0) + 1;
-    }
-    return counts;
-  }, [items, sizes]);
-
-  // Variants visualization is now based on sizes, not use-tiers
-  const filteredVariants = useMemo(
-    () =>
-      sizes
-        .filter((s) => s.sizeName === sizeFilter)
-        .map((s) => ({
-          id: s._id,
-          size: s.sizeName,
-          rentalPrice: s.basePrice,
-        })),
-    [sizes, sizeFilter]
-  );
-  const [selectedVariantId, setSelectedVariantId] = useState("");
+  // Reset về trang 1 khi đổi filter (đặt trước mọi early return)
   useEffect(() => {
-    if (filteredVariants[0]) {
-      setSelectedVariantId(filteredVariants[0].id);
-    }
-  }, [filteredVariants]);
+    setClientPage(1);
+  }, [sizeFilter]);
 
-  const selectedVariant =
-    filteredVariants.find((v) => v.id === selectedVariantId) ||
-    filteredVariants[0] ||
-    null;
-
-  const allItems = useMemo(() => items || [], [items]);
-  const filteredItems = useMemo(() => {
-    if (!sizeFilter) return allItems;
-    const sizeId = sizeNameToId[sizeFilter];
-    return allItems.filter((item) => {
-      const itemSizeId =
-        typeof item.productSizeId === "object"
-          ? item.productSizeId._id || item.productSizeId.id
-          : item.productSizeId;
-      return itemSizeId === sizeId;
-    });
-  }, [allItems, sizeFilter, sizeNameToId]);
-
-  const statusLabelMap = {
-    available: "Sẵn sàng",
-    in_use: "Đang sử dụng",
-    cleaning: "Đang vệ sinh",
-    maintenance: "Bảo trì",
-    retired: "Ngừng sử dụng",
-  };
+  // Hiển thị status trực tiếp từ dữ liệu, không dịch
 
   const formatDate = (isoString) => {
     if (!isoString) return "—";
@@ -195,77 +47,130 @@ export default function ProductDetail() {
     }
   };
 
+  if (isLoadingDetailsProduct) {
+    return (
+      <div className="productDetail" style={{ padding: "16px" }}>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
+          Quay lại
+        </Button>
+        <Typography sx={{ mt: 2 }}>Đang tải danh sách sản phẩm...</Typography>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="productDetail" style={{ padding: "16px" }}>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
+          Quay lại
+        </Button>
+        <Typography variant="h6" color="error" sx={{ mt: 2 }}>
+          Có lỗi xảy ra khi tải sản phẩm
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {error.message || "Vui lòng thử lại sau"}
+        </Typography>
+      </div>
+    );
+  }
+
+  const allItems = (detailsProduct && detailsProduct.products) ? detailsProduct.products : [];
+
+  // Danh sách size duy nhất từ tất cả items
+  const sizeOptions = (() => {
+    const sizeNameSet = new Set();
+    for (const productItem of allItems) {
+      const sizeName = productItem?.productSizeId?.sizeName;
+      if (sizeName) sizeNameSet.add(sizeName);
+    }
+    return Array.from(sizeNameSet);
+  })();
+
+  // Lọc theo size trên client
+  const filteredItems =
+    sizeFilter && sizeFilter !== "All"
+      ? allItems.filter((productItem) => (productItem?.productSizeId?.sizeName || "") === sizeFilter)
+      : allItems;
+
+  // Phân trang client sau khi lọc
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / clientPageSize));
+  const startIndex = (clientPage - 1) * clientPageSize;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + clientPageSize);
+
+  // group info (from first item)
+  const group = allItems[0]?.productGroupId || null;
+  const groupImage = group?.imageUrl || "";
+  const groupName = group?.name || "Product group";
+  const groupDescription = group?.description || "";
+
   return (
     <div className="productDetail">
       <div className="productDetail-header">
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
-          Back to Store
+          Quay lại
         </Button>
       </div>
 
       <div className="productDetail-hero">
-        <div className="productDetail-visual"
-         >
-          <img src={groupInfo.images[0]} alt={groupInfo.name} />
-         </div>
         <div className="productDetail-main">
-          <Typography variant="h4" className="pd-title">{groupInfo.name}</Typography>
-          
-          <Typography>
-          Material: {groupInfo.material || "—"}  
-          </Typography>
+          <Typography variant="h4" className="pd-title">{groupName}</Typography>
+          <Typography className="pd-desc">{groupDescription}</Typography>
 
-          <Typography className="pd-desc">{groupInfo.description}</Typography>
-
-     
-
-          <div className="pd-actions">
-            <div className="pd-price">
-              <span className="pd-price-label">Daily rental</span>
-              <span className="pd-price-value">
-                {(sizePriceMap[selectedSize] || selectedVariant?.rentalPrice || 0).toLocaleString()}đ
+          <div className="pd-stats">
+            <div className="pd-stat">
+              <span className="pd-stat-label">Tổng số items</span>
+              <span className="pd-stat-value">{allItems.length}</span>
+            </div>
+            <div className="pd-stat">
+              <span className="pd-stat-label">Kích cỡ</span>
+              <span className="pd-stat-value">
+                {sizeOptions.length > 0 ? sizeOptions.join(", ") : "—"}
               </span>
             </div>
-            <Button variant="contained" className="pd-cta">Borrow now</Button>
+           
           </div>
-
-     
+        </div>
+        <div className="productDetail-visual">
+          {groupImage ? (
+            <img src={groupImage} alt={groupName} />
+          ) : (
+            <div style={{position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center"}}>
+              {groupName?.[0]?.toUpperCase() || "P"}
+            </div>
+          )}
         </div>
       </div>
 
-
-      {/* Options below: filter by size and variants */}
-      <div className="pd-options">
-        <div className="pd-size-filter">
-          <Typography className="pd-section">Available sizes</Typography>
-          <div className="pd-size-chips">
-            {sizeOptions.map((opt) => (
-              <button
-                key={opt}
-                className={`pd-chip ${sizeFilter === opt ? "active" : ""}`}
-                onClick={() => { setSizeFilter(opt); setSelectedSize(opt); }}
-              >
-                <span>{opt}</span>
-                <span className="pd-chip-stat">
-                  {(sizeCounts[opt] || 0)} sp · {(sizePriceMap[opt] || 0).toLocaleString()}đ
-                </span>
-              </button>
-            ))}
-          </div>
+      <div className="pd-size-filter" style={{ marginTop: 12 }}>
+        <Typography className="pd-section">Lọc theo kích cỡ</Typography>
+        <div className="pd-size-chips">
+          <button
+            className={`pd-chip ${sizeFilter === "All" ? "active" : ""}`}
+            onClick={() => setSizeFilter("All")}
+          >
+            <span>All</span>
+          </button>
+          {sizeOptions.map((option) => (
+            <button
+              key={option}
+              className={`pd-chip ${sizeFilter === option ? "active" : ""}`}
+              onClick={() => setSizeFilter(option)}
+            >
+              <span>{option}</span>
+            </button>
+          ))}
         </div>
-
-    
       </div>
 
       <div className="pd-items">
         <Typography className="pd-items-title">Inventory items</Typography>
         <div className="pd-items-grid">
-          {filteredItems.map((item) => (
+          {paginatedItems.map((item) => (
             <div key={item._id} className="pd-item-card">
               <div className="pd-item-header">
                 <span className="pd-item-serial">{item.serialNumber}</span>
                 <span className={`pd-item-status status-${item.status || "unknown"}`}>
-                  {statusLabelMap[item.status] || item.status || "Không rõ"}
+                  {item.status || "unknown"}
                 </span>
               </div>
               <div className="pd-item-body">
@@ -276,6 +181,18 @@ export default function ProductDetail() {
                   <div>
                     <span className="pd-meta-label">Reuse count</span>
                     <span className="pd-meta-value">{item.reuseCount}</span>
+                  </div>
+                  <div>
+                    <span className="pd-meta-label">Base price</span>
+                    <span className="pd-meta-value">
+                      {(item?.productSizeId?.basePrice || 0).toLocaleString()}đ
+                    </span>
+                  </div>
+                  <div>
+                    <span className="pd-meta-label">Deposit</span>
+                    <span className="pd-meta-value">
+                      {(item?.productSizeId?.depositValue || 0).toLocaleString()}đ
+                    </span>
                   </div>
                   <div>
                     <span className="pd-meta-label">Created at</span>
@@ -296,13 +213,22 @@ export default function ProductDetail() {
           ))}
           {filteredItems.length === 0 && (
             <div className="pd-item-empty">
-              <Typography>No items for this size yet.</Typography>
+              <Typography>Chưa có sản phẩm nào.</Typography>
             </div>
           )}
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+          <Pagination
+            count={totalPages}
+            page={clientPage}
+            onChange={(event, pageNumber) => setClientPage(pageNumber)}
+            variant="outlined"
+            shape="rounded"
+          />
         </div>
       </div>
     </div>
   );
 }
-
 

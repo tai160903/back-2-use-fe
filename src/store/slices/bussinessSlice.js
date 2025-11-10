@@ -276,10 +276,10 @@ export const getProducts = createAsyncThunk(
         page: page.toString(),
         limit: limit.toString(),
       });
-      if (productGroupId) {
-        queryParams.append('productGroupId', productGroupId);
-      }
-      const response = await fetcher.get(`/products?${queryParams.toString()}`);
+      // if (productGroupId) {
+      //   queryParams.append('productGroupId', productGroupId);
+      // }
+      const response = await fetcher.get(`/products/${productGroupId}?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -318,6 +318,8 @@ export const getProductByQRCode = createAsyncThunk(
     }
   }
 );
+
+
 
 const businessSlice = createSlice({
   name: "businesses",
@@ -612,7 +614,8 @@ const businessSlice = createSlice({
       .addCase(getProductByQRCode.rejected, (state, { payload }) => {
         state.productLoading = false;
         state.productError = payload;
-      });
+      })
+  
   },
 });
 
