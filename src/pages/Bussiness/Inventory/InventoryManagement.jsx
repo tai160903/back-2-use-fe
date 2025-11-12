@@ -23,6 +23,7 @@ import {
   Alert,
   Paper,
   CircularProgress,
+  Pagination,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -41,7 +42,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { 
   getApprovedMaterials, 
   createProductGroup, 
-  getMyProductGroups 
+  getMyProductGroups,
+  getProducts
 } from '../../../store/slices/bussinessSlice';
 import { PATH } from '../../../routes/path';
 import './InventoryManagement.css';
@@ -54,7 +56,8 @@ export default function InventoryManagement() {
     materialLoading,
     productGroups,
     productGroupLoading,
-    productGroupError
+    productGroupError,
+    products
   } = useSelector((state) => state.businesses);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,6 +67,7 @@ export default function InventoryManagement() {
   const [editMode, setEditMode] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
     typeName: '',
     description: '',
@@ -76,6 +80,37 @@ export default function InventoryManagement() {
     dispatch(getApprovedMaterials());
     dispatch(getMyProductGroups());
   }, [dispatch]);
+
+  // State to store products by product group ID
+  const [productsByGroup, setProductsByGroup] = useState({});
+
+  // Load all products for all product groups to calculate available/non-available counts
+  useEffect(() => {
+    if (productGroups.length > 0) {
+      // Load products for all product groups
+      const loadProductsForGroups = async () => {
+        const productsMap = {};
+        
+        for (const pg of productGroups) {
+          const pgId = pg.id || pg._id;
+          if (pgId) {
+            try {
+              const result = await dispatch(getProducts({ productGroupId: pgId, page: 1, limit: 10000 })).unwrap();
+              const productsList = Array.isArray(result.data) ? result.data : (result.data ? [result.data] : (Array.isArray(result) ? result : []));
+              productsMap[pgId] = productsList;
+            } catch (error) {
+              console.error(`Error loading products for group ${pgId}:`, error);
+              productsMap[pgId] = [];
+            }
+          }
+        }
+        
+        setProductsByGroup(productsMap);
+      };
+      
+      loadProductsForGroups();
+    }
+  }, [dispatch, productGroups]);
 
   const handleOpenDialog = () => {
     setEditMode(false);
@@ -216,16 +251,25 @@ export default function InventoryManagement() {
       ) : null;
       materialName = material?.materialName || material?.name || '';
     }
+
+    // Calculate available and non-available from actual products
+    const pgId = pg.id || pg._id;
+    
+    // Get products for this specific product group from productsByGroup state
+    const productsForGroup = productsByGroup[pgId] || [];
+
+    const availableCount = productsForGroup.filter((p) => (p.status || 'available') === 'available').length;
+    const nonAvailableCount = productsForGroup.filter((p) => (p.status || 'available') === 'non-available').length;
     
     return {
-      id: pg.id || pg._id,
+      id: pgId,
       typeName: pg.name || '',
       category: materialName || 'General',
       description: pg.description || '',
       material: materialName,
       materialId: materialId || '',
-      available: pg.available || 0,
-      nonAvailable: pg.nonAvailable || 0,
+      available: availableCount,
+      nonAvailable: nonAvailableCount,
       image: pg.image || pg.imageUrl || '',
     };
   }).filter(item => item !== null); // Remove any null items
@@ -233,6 +277,24 @@ export default function InventoryManagement() {
   const filteredProducts = productTypes.filter(product =>
     product.typeName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Pagination logic
+  const itemsPerPage = 9;
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <Box className="inventory-management">
@@ -304,101 +366,205 @@ export default function InventoryManagement() {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3} className="products-grid">
-          {filteredProducts.map((product) => (
-          <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Card 
-              className="product-card"
-              onClick={() => navigate(`/business/inventory/${product.id}/items`)}
-              sx={{ cursor: 'pointer' }}
+        <>
+          <Grid 
+            container 
+            spacing={3} 
+            className="products-grid"
+            sx={{ alignItems: 'stretch' }}
+          >
+            {currentProducts.map((product) => (
+            <Grid 
+              item 
+              xs={12} 
+              sm={6} 
+              md={4} 
+              key={product.id}
+              sx={{ 
+                display: 'flex'
+              }}
             >
-              <CardContent>
-                <Box className="card-header">
-                  <Box className="card-title-section">
-                    <InventoryIcon className="card-icon" />
-                    <Box>
-                      <Typography variant="h6" className="card-title">
-                        {product.typeName}
+              <Card 
+                className="product-card"
+                onClick={() => navigate(`/business/inventory/${product.id}/items`)}
+                sx={{ 
+                  cursor: 'pointer', 
+                  height: '100%', 
+                  width: '100%',
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  overflow: 'hidden'
+                }}
+              >
+                <CardContent 
+                  sx={{ 
+                    flexGrow: 1, 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    padding: '16px !important',
+                    width: '100%'
+                  }}
+                >
+                  <Box className="card-header">
+                    <Box className="card-title-section">
+                      <InventoryIcon className="card-icon" sx={{ flexShrink: 0 }} />
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography 
+                          variant="h6" 
+                          className="card-title"
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word'
+                          }}
+                        >
+                          {product.typeName}
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          className="card-subtitle"
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {product.category}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box className="card-actions" sx={{ flexShrink: 0 }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/business/inventory/${product.id}/sizes`);
+                        }}
+                        className="manage-sizes-button"
+                        title="Manage Sizes"
+                      >
+                        <SizeIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(product);
+                        }}
+                        className="edit-button"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(product);
+                        }}
+                        className="delete-button"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+
+                  <Box className="card-details" sx={{ flexGrow: 1 }}>
+                    <Box className="detail-row">
+                      <Typography variant="body2" className="detail-label">
+                        Description:
                       </Typography>
-                      <Typography variant="body2" className="card-subtitle">
-                        {product.category}
+                      <Typography 
+                        variant="body2" 
+                        className="detail-value"
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word'
+                        }}
+                      >
+                        {product.description || 'không'}
+                      </Typography>
+                    </Box>
+                    <Box className="detail-row">
+                      <Typography variant="body2" className="detail-label">
+                        Material:
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        className="detail-value"
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {product.material}
+                      </Typography>
+                    </Box>
+                    <Box className="detail-row">
+                      <Typography variant="body2" className="detail-label" sx={{ color: '#374151' }}>
+                        Available:
+                      </Typography>
+                      <Typography variant="body2" className="detail-value" sx={{ color: '#16a34a', fontWeight: 600 }}>
+                        {product.available}
+                      </Typography>
+                    </Box>
+                    <Box className="detail-row">
+                      <Typography variant="body2" className="detail-label" sx={{ color: '#374151' }}>
+                        Non-available:
+                      </Typography>
+                      <Typography variant="body2" className="detail-value" sx={{ color: '#dc2626', fontWeight: 600 }}>
+                        {product.nonAvailable}
                       </Typography>
                     </Box>
                   </Box>
-                  <Box className="card-actions">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/business/inventory/${product.id}/sizes`);
-                      }}
-                      className="manage-sizes-button"
-                      title="Manage Sizes"
-                    >
-                      <SizeIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(product);
-                      }}
-                      className="edit-button"
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(product);
-                      }}
-                      className="delete-button"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                </Box>
-
-                <Box className="card-details">
-                  <Box className="detail-row">
-                    <Typography variant="body2" className="detail-label">
-                      Description:
-                    </Typography>
-                    <Typography variant="body2" className="detail-value">
-                      {product.description}
-                    </Typography>
-                  </Box>
-                  <Box className="detail-row">
-                    <Typography variant="body2" className="detail-label">
-                      Material:
-                    </Typography>
-                    <Typography variant="body2" className="detail-value">
-                      {product.material}
-                    </Typography>
-                  </Box>
-                  <Box className="detail-row">
-                    <Typography variant="body2" className="detail-label">
-                      Available:
-                    </Typography>
-                    <Typography variant="body2" className="detail-value available">
-                      {product.available}
-                    </Typography>
-                  </Box>
-                  <Box className="detail-row">
-                    <Typography variant="body2" className="detail-label">
-                      Non-available:
-                    </Typography>
-                    <Typography variant="body2" className="detail-value non-available">
-                      {product.nonAvailable}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Grid>
+            ))}
           </Grid>
-          ))}
-        </Grid>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                mt: 4,
+                mb: 2
+              }}
+            >
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                  },
+                  '& .Mui-selected': {
+                    backgroundColor: '#12422a !important',
+                    color: '#ffffff !important',
+                  },
+                }}
+              />
+            </Box>
+          )}
+        </>
       )}
 
       {/* Add/Edit Dialog */}
