@@ -348,6 +348,35 @@ export default function ProductItems() {
                 <Typography variant="body2" className="header-subtitle">
                   Manage individual items for {productGroup.name || 'Product Type'}
                 </Typography>
+                {/* Available and Non-available counts */}
+                <Box sx={{ display: 'flex', gap: 2, mt: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: '#16a34a',
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
+                      Available: {productGroup.available || availableItems.length}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: '#dc2626',
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ color: '#dc2626', fontWeight: 600 }}>
+                      Non-available: {productGroup.nonAvailable || nonAvailableItems.length}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
             </Box>
           </Box>
@@ -1071,24 +1100,6 @@ export default function ProductItems() {
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#1a1a1a', fontWeight: 500 }}>
                           {getMaterialName() || 'N/A'}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ mb: 1.5 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: '#6b7280',
-                            display: 'block',
-                            mb: 0.5,
-                            fontWeight: 500,
-                          }}
-                        >
-                          Category:
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#1a1a1a', fontWeight: 500 }}>
-                          {productGroup?.category || 'N/A'}
                         </Typography>
                       </Box>
                     </Grid>
