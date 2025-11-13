@@ -20,43 +20,52 @@ import {
   CardGiftcard as VoucherIcon,
 } from '@mui/icons-material';
 
-const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
+const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
+  const [selectedVoucherType, setSelectedVoucherType] = useState(voucherType || 'system');
   const [formData, setFormData] = useState({
     name: '',
-    discount: '',
+    description: '',
     baseCode: '',
+    discountPercent: '',
     rewardPointCost: '',
     maxUsage: '',
+    startDate: '',
     endDate: '',
-    description: '',
+    ecoRewardPolicyId: '',
   });
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (voucher) {
+      setSelectedVoucherType(voucher.voucherType || 'system');
       setFormData({
         name: voucher.name || '',
-        discount: voucher.discount || '',
+        description: voucher.description || '',
         baseCode: voucher.baseCode || '',
+        discountPercent: voucher.discountPercent || voucher.discount || '',
         rewardPointCost: voucher.rewardPointCost || '',
         maxUsage: voucher.maxUsage || '',
+        startDate: voucher.startDate ? voucher.startDate.split('T')[0] : '',
         endDate: voucher.endDate ? voucher.endDate.split('T')[0] : '',
-        description: voucher.description || '',
+        ecoRewardPolicyId: voucher.ecoRewardPolicyId || '',
       });
     } else {
+      setSelectedVoucherType(voucherType || 'system');
       setFormData({
         name: '',
-        discount: '',
+        description: '',
         baseCode: '',
+        discountPercent: '',
         rewardPointCost: '',
         maxUsage: '',
+        startDate: '',
         endDate: '',
-        description: '',
+        ecoRewardPolicyId: '',
       });
     }
     setErrors({});
-  }, [voucher, isOpen]);
+  }, [voucher, isOpen, voucherType]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,28 +89,51 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
       newErrors.name = 'Voucher name is required';
     }
 
-    if (!formData.discount || formData.discount <= 0) {
-      newErrors.discount = 'Discount must be greater than 0';
-    }
-
-    if (formData.discount > 100) {
-      newErrors.discount = 'Discount cannot exceed 100%';
-    }
-
     if (!formData.baseCode.trim()) {
       newErrors.baseCode = 'Base code is required';
     }
 
-    if (!formData.rewardPointCost || formData.rewardPointCost <= 0) {
-      newErrors.rewardPointCost = 'Reward point cost must be greater than 0';
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required';
     }
 
-    if (!formData.maxUsage || formData.maxUsage <= 0) {
-      newErrors.maxUsage = 'Max usage must be greater than 0';
-    }
-
-    if (!formData.endDate) {
-      newErrors.endDate = 'End date is required';
+    // Validation based on voucher type
+    if (selectedVoucherType === 'business') {
+      if (!formData.maxUsage || formData.maxUsage <= 0) {
+        newErrors.maxUsage = 'Max usage must be greater than 0';
+      }
+      if (!formData.ecoRewardPolicyId.trim()) {
+        newErrors.ecoRewardPolicyId = 'Eco Reward Policy ID is required';
+      }
+    } else if (selectedVoucherType === 'leaderboard') {
+      if (!formData.discountPercent || formData.discountPercent <= 0) {
+        newErrors.discountPercent = 'Discount percent must be greater than 0';
+      }
+      if (formData.discountPercent > 100) {
+        newErrors.discountPercent = 'Discount percent cannot exceed 100%';
+      }
+    } else if (selectedVoucherType === 'system') {
+      if (!formData.discountPercent || formData.discountPercent <= 0) {
+        newErrors.discountPercent = 'Discount percent must be greater than 0';
+      }
+      if (formData.discountPercent > 100) {
+        newErrors.discountPercent = 'Discount percent cannot exceed 100%';
+      }
+      if (!formData.rewardPointCost || formData.rewardPointCost <= 0) {
+        newErrors.rewardPointCost = 'Reward point cost must be greater than 0';
+      }
+      if (!formData.maxUsage || formData.maxUsage <= 0) {
+        newErrors.maxUsage = 'Max usage must be greater than 0';
+      }
+      if (!formData.startDate) {
+        newErrors.startDate = 'Start date is required';
+      }
+      if (!formData.endDate) {
+        newErrors.endDate = 'End date is required';
+      }
+      if (formData.startDate && formData.endDate && formData.startDate >= formData.endDate) {
+        newErrors.endDate = 'End date must be after start date';
+      }
     }
 
     setErrors(newErrors);
@@ -110,7 +142,38 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
 
   const handleSubmit = () => {
     if (validate()) {
-      onSubmit(formData);
+      // Prepare data based on voucher type
+      let submitData = {};
+      
+      if (selectedVoucherType === 'business') {
+        submitData = {
+          name: formData.name,
+          description: formData.description,
+          baseCode: formData.baseCode,
+          maxUsage: parseInt(formData.maxUsage),
+          ecoRewardPolicyId: formData.ecoRewardPolicyId,
+        };
+      } else if (selectedVoucherType === 'leaderboard') {
+        submitData = {
+          name: formData.name,
+          description: formData.description,
+          discountPercent: parseFloat(formData.discountPercent),
+          baseCode: formData.baseCode,
+        };
+      } else if (selectedVoucherType === 'system') {
+        submitData = {
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          name: formData.name,
+          description: formData.description,
+          discountPercent: parseFloat(formData.discountPercent),
+          baseCode: formData.baseCode,
+          rewardPointCost: parseInt(formData.rewardPointCost),
+          maxUsage: parseInt(formData.maxUsage),
+        };
+      }
+      
+      onSubmit(submitData, selectedVoucherType);
     }
   };
 
@@ -163,6 +226,21 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
 
       <DialogContent sx={{ pt: 4, pb: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {!voucher && (
+            <FormControl fullWidth required>
+              <InputLabel>Voucher Type</InputLabel>
+              <Select
+                value={selectedVoucherType}
+                label="Voucher Type"
+                onChange={(e) => setSelectedVoucherType(e.target.value)}
+              >
+                <MenuItem value="system">System Voucher</MenuItem>
+                <MenuItem value="business">Business Voucher</MenuItem>
+                <MenuItem value="leaderboard">Leaderboard Voucher</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+
           <TextField
             name="name"
             label="Voucher Name"
@@ -174,85 +252,149 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
             required
           />
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              name="discount"
-              label="Discount (%)"
-              type="number"
-              value={formData.discount}
-              onChange={handleChange}
-              error={!!errors.discount}
-              helperText={errors.discount}
-              fullWidth
-              required
-              inputProps={{ min: 0, max: 100 }}
-            />
-
-            <TextField
-              name="baseCode"
-              label="Base Code"
-              value={formData.baseCode}
-              onChange={handleChange}
-              error={!!errors.baseCode}
-              helperText={errors.baseCode}
-              fullWidth
-              required
-              placeholder="e.g. SUMMER2025"
-            />
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              name="rewardPointCost"
-              label="Reward Point Cost"
-              type="number"
-              value={formData.rewardPointCost}
-              onChange={handleChange}
-              error={!!errors.rewardPointCost}
-              helperText={errors.rewardPointCost}
-              fullWidth
-              required
-              inputProps={{ min: 0 }}
-            />
-
-            <TextField
-              name="maxUsage"
-              label="Max Usage"
-              type="number"
-              value={formData.maxUsage}
-              onChange={handleChange}
-              error={!!errors.maxUsage}
-              helperText={errors.maxUsage}
-              fullWidth
-              required
-              inputProps={{ min: 0 }}
-            />
-          </Box>
-
-          <TextField
-            name="endDate"
-            label="End Date"
-            type="date"
-            value={formData.endDate}
-            onChange={handleChange}
-            error={!!errors.endDate}
-            helperText={errors.endDate}
-            fullWidth
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-
           <TextField
             name="description"
             label="Description"
             value={formData.description}
             onChange={handleChange}
+            error={!!errors.description}
+            helperText={errors.description}
             multiline
-            rows={4}
+            rows={3}
             fullWidth
+            required
           />
+
+          <TextField
+            name="baseCode"
+            label="Base Code"
+            value={formData.baseCode}
+            onChange={handleChange}
+            error={!!errors.baseCode}
+            helperText={errors.baseCode}
+            fullWidth
+            required
+            placeholder="e.g. SUMMER2025"
+          />
+
+          {/* Business Voucher Fields */}
+          {selectedVoucherType === 'business' && (
+            <>
+              <TextField
+                name="maxUsage"
+                label="Max Usage"
+                type="number"
+                value={formData.maxUsage}
+                onChange={handleChange}
+                error={!!errors.maxUsage}
+                helperText={errors.maxUsage}
+                fullWidth
+                required
+                inputProps={{ min: 1 }}
+              />
+              <TextField
+                name="ecoRewardPolicyId"
+                label="Eco Reward Policy ID"
+                value={formData.ecoRewardPolicyId}
+                onChange={handleChange}
+                error={!!errors.ecoRewardPolicyId}
+                helperText={errors.ecoRewardPolicyId}
+                fullWidth
+                required
+                placeholder="Enter eco reward policy ID"
+              />
+            </>
+          )}
+
+          {/* Leaderboard Voucher Fields */}
+          {selectedVoucherType === 'leaderboard' && (
+            <TextField
+              name="discountPercent"
+              label="Discount Percent (%)"
+              type="number"
+              value={formData.discountPercent}
+              onChange={handleChange}
+              error={!!errors.discountPercent}
+              helperText={errors.discountPercent}
+              fullWidth
+              required
+              inputProps={{ min: 0, max: 100, step: 0.1 }}
+            />
+          )}
+
+          {/* System Voucher Fields */}
+          {selectedVoucherType === 'system' && (
+            <>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  name="startDate"
+                  label="Start Date"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  error={!!errors.startDate}
+                  helperText={errors.startDate}
+                  fullWidth
+                  required
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+                <TextField
+                  name="endDate"
+                  label="End Date"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleChange}
+                  error={!!errors.endDate}
+                  helperText={errors.endDate}
+                  fullWidth
+                  required
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  name="discountPercent"
+                  label="Discount Percent (%)"
+                  type="number"
+                  value={formData.discountPercent}
+                  onChange={handleChange}
+                  error={!!errors.discountPercent}
+                  helperText={errors.discountPercent}
+                  fullWidth
+                  required
+                  inputProps={{ min: 0, max: 100, step: 0.1 }}
+                />
+                <TextField
+                  name="rewardPointCost"
+                  label="Reward Point Cost"
+                  type="number"
+                  value={formData.rewardPointCost}
+                  onChange={handleChange}
+                  error={!!errors.rewardPointCost}
+                  helperText={errors.rewardPointCost}
+                  fullWidth
+                  required
+                  inputProps={{ min: 0 }}
+                />
+              </Box>
+              <TextField
+                name="maxUsage"
+                label="Max Usage"
+                type="number"
+                value={formData.maxUsage}
+                onChange={handleChange}
+                error={!!errors.maxUsage}
+                helperText={errors.maxUsage}
+                fullWidth
+                required
+                inputProps={{ min: 1 }}
+              />
+            </>
+          )}
         </Box>
       </DialogContent>
 

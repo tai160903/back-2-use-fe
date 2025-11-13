@@ -58,7 +58,7 @@ export const updateMaterialApi = createAsyncThunk(
   "admin/updateMaterialApi",
   async ({ materialId, materialData }, { rejectWithValue }) => {
     try {
-      const response = await fetcher.put(`/admin/materials/${materialId}`, materialData);
+      const response = await fetcher.patch(`/admin/materials/${materialId}`, materialData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -190,6 +190,51 @@ export const reviewVoucherApi = createAsyncThunk(
   async ({ voucherId, reviewData }, { rejectWithValue }) => {
     try {
       const response = await fetcher.patch(`/admin/vouchers/${voucherId}/review`, reviewData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Create Business Voucher API
+export const createBusinessVoucherApi = createAsyncThunk(
+  "admin/createBusinessVoucherApi",
+  async (voucherData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/admin/vouchers/business", voucherData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Create Leaderboard Voucher API
+export const createLeaderboardVoucherApi = createAsyncThunk(
+  "admin/createLeaderboardVoucherApi",
+  async (voucherData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/admin/vouchers/leaderboard", voucherData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Create System Voucher API
+export const createSystemVoucherApi = createAsyncThunk(
+  "admin/createSystemVoucherApi",
+  async (voucherData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/admin/vouchers/system", voucherData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -519,8 +564,19 @@ const adminSlice = createSlice({
           );
           if (index !== -1) {
             state.materials[index].status = updatedStatus || state.materials[index].status;
+            // Support both adminNote (new) and rejectReason (legacy)
+            if (updated.adminNote !== undefined) {
+              state.materials[index].adminNote = updated.adminNote;
+            }
             if (updated.rejectReason !== undefined) {
               state.materials[index].rejectReason = updated.rejectReason;
+            }
+            // Update reuseLimit and depositPercent for approved materials
+            if (updated.reuseLimit !== undefined) {
+              state.materials[index].reuseLimit = updated.reuseLimit;
+            }
+            if (updated.depositPercent !== undefined) {
+              state.materials[index].depositPercent = updated.depositPercent;
             }
           }
 
@@ -529,8 +585,19 @@ const adminSlice = createSlice({
             (state.currentMaterial?.id && state.currentMaterial.id === updatedId)
           ) {
             if (updatedStatus) state.currentMaterial.status = updatedStatus;
+            // Support both adminNote (new) and rejectReason (legacy)
+            if (updated.adminNote !== undefined) {
+              state.currentMaterial.adminNote = updated.adminNote;
+            }
             if (updated.rejectReason !== undefined) {
               state.currentMaterial.rejectReason = updated.rejectReason;
+            }
+            // Update reuseLimit and depositPercent for approved materials
+            if (updated.reuseLimit !== undefined) {
+              state.currentMaterial.reuseLimit = updated.reuseLimit;
+            }
+            if (updated.depositPercent !== undefined) {
+              state.currentMaterial.depositPercent = updated.depositPercent;
             }
           }
         }
@@ -820,6 +887,66 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to review voucher");
+      })
+      
+      // Create Business Voucher
+      .addCase(createBusinessVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createBusinessVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Add the new voucher to the beginning of the list
+        if (payload.data) {
+          state.vouchers.unshift(payload.data);
+        }
+        toast.success(payload.message || "Business voucher created successfully!");
+      })
+      .addCase(createBusinessVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create business voucher");
+      })
+      
+      // Create Leaderboard Voucher
+      .addCase(createLeaderboardVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createLeaderboardVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Add the new voucher to the beginning of the list
+        if (payload.data) {
+          state.vouchers.unshift(payload.data);
+        }
+        toast.success(payload.message || "Leaderboard voucher created successfully!");
+      })
+      .addCase(createLeaderboardVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create leaderboard voucher");
+      })
+      
+      // Create System Voucher
+      .addCase(createSystemVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createSystemVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Add the new voucher to the beginning of the list
+        if (payload.data) {
+          state.vouchers.unshift(payload.data);
+        }
+        toast.success(payload.message || "System voucher created successfully!");
+      })
+      .addCase(createSystemVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create system voucher");
       });
   },
 });

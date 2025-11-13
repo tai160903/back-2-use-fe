@@ -211,21 +211,62 @@
   flex-direction: column;
 }
 
+/* Hover effect - chữ trắng khi hover vào card */
 .voucher-card:hover {
-  background: #164e31 !important;
-  color: #ffffff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  background: #12422a !important;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(18, 66, 42, 0.3);
 }
 
 .voucher-card:hover .voucher-card-title,
 .voucher-card:hover .voucher-card-subtitle,
 .voucher-card:hover .voucher-detail-label,
 .voucher-card:hover .voucher-detail-value,
-.voucher-card:hover .status-badge,
-.voucher-card:hover .points-cost,
-.voucher-card:hover .discount-badge,
 .voucher-card:hover .expiry-date {
+  color: #ffffff !important;
+}
+
+.voucher-card:hover .voucher-card-icon {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.voucher-card:hover .discount-badge {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.voucher-card:hover .status-badge {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.voucher-card:hover .points-cost {
+  color: #ffffff !important;
+}
+
+/* Giữ màu button khi hover card */
+.voucher-card:hover .action-btn {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.voucher-card:hover .edit-btn {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.voucher-card:hover .delete-btn {
+  background-color: rgba(220, 38, 38, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.voucher-card:hover .approve-btn {
+  background-color: rgba(22, 163, 74, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.voucher-card:hover .reject-btn {
+  background-color: rgba(220, 38, 38, 0.3) !important;
   color: #ffffff !important;
 }
 

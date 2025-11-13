@@ -174,7 +174,7 @@ const VoucherCard = ({ voucher, onEdit }) => {
           <span className="voucher-detail-label">Discount:</span>
           <span className="voucher-detail-value">
             <span className="discount-badge">
-              {voucher.discount}%
+              {voucher.discountPercent || voucher.discount || 0}%
             </span>
           </span>
         </div>

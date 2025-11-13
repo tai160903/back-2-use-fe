@@ -5,6 +5,9 @@ import VoucherModal from './VoucherModal';
 import { 
   getAllVouchersApi,
   createVoucherApi,
+  createBusinessVoucherApi,
+  createLeaderboardVoucherApi,
+  createSystemVoucherApi,
   updateVoucherApi,
   setVoucherNameFilter,
   resetVoucherFilters 
@@ -32,6 +35,7 @@ const Analytics = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [filter, setFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -67,12 +71,22 @@ const Analytics = () => {
     setCurrentPage(1);
   };
 
+  const handleTypeFilterChange = (newTypeFilter) => {
+    setTypeFilter(newTypeFilter);
+    setCurrentPage(1);
+  };
+
   // Get all filtered data
   const getAllFilteredData = () => {
     let filtered = [...vouchers];
     if (filter !== "All") {
       filtered = filtered.filter(
         (item) => item.status.toLowerCase() === filter.toLowerCase()
+      );
+    }
+    if (typeFilter !== "All") {
+      filtered = filtered.filter(
+        (item) => item.voucherType && item.voucherType.toLowerCase() === typeFilter.toLowerCase()
       );
     }
     if (searchTerm) {
@@ -165,7 +179,7 @@ const Analytics = () => {
               <h3 className="stat-title">Total Vouchers</h3>
               <span className="stat-number">{vouchers.length}</span>
             </div>
-            <PiClipboardTextBold className="stat-icon" />
+            <PiClipboardTextBold className="stat-icon" size={56} />
           </div>
         </div>
 
@@ -177,7 +191,7 @@ const Analytics = () => {
                 {vouchers.filter((item) => item.status === "pending").length}
               </span>
             </div>
-            <CiClock2 className="stat-icon pending" />
+            <CiClock2 className="stat-icon pending" size={56} />
           </div>
         </div>
 
@@ -189,7 +203,7 @@ const Analytics = () => {
                 {vouchers.filter((item) => item.status === "active").length}
               </span>
             </div>
-            <SiTicktick className="stat-icon active" />
+            <SiTicktick className="stat-icon active" size={56} />
           </div>
         </div>
 
@@ -201,7 +215,7 @@ const Analytics = () => {
                 {vouchers.filter((item) => item.status === "expired").length}
               </span>
             </div>
-            <BiMessageSquareX className="stat-icon expired" />
+            <BiMessageSquareX className="stat-icon expired" size={56} />
           </div>
         </div>
       </div>
@@ -250,6 +264,37 @@ const Analytics = () => {
           >
             <BiMessageSquareX />
             Expired ({vouchers.filter((item) => item.status === "expired").length})
+          </button>
+        </div>
+        
+        <div className="filter-tabs" style={{ marginTop: '12px' }}>
+          <button 
+            className={`filter-tab ${typeFilter === "All" ? "active" : ""}`}
+            onClick={() => handleTypeFilterChange("All")}
+          >
+            <PiClipboardTextBold />
+            All Types ({vouchers.length})
+          </button>
+          <button 
+            className={`filter-tab ${typeFilter === "system" ? "active" : ""}`}
+            onClick={() => handleTypeFilterChange("system")}
+          >
+            <FaGift />
+            System ({vouchers.filter((item) => item.voucherType === "system").length})
+          </button>
+          <button 
+            className={`filter-tab ${typeFilter === "business" ? "active" : ""}`}
+            onClick={() => handleTypeFilterChange("business")}
+          >
+            <FaGift />
+            Business ({vouchers.filter((item) => item.voucherType === "business").length})
+          </button>
+          <button 
+            className={`filter-tab ${typeFilter === "leaderboard" ? "active" : ""}`}
+            onClick={() => handleTypeFilterChange("leaderboard")}
+          >
+            <FaGift />
+            Leaderboard ({vouchers.filter((item) => item.voucherType === "leaderboard").length})
           </button>
         </div>
       </div>
@@ -307,14 +352,24 @@ const Analytics = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           voucher={editingVoucher}
-          onSubmit={(voucherData) => {
+          onSubmit={(voucherData, voucherType) => {
             if (editingVoucher) {
               dispatch(updateVoucherApi({
                 voucherId: editingVoucher._id,
                 voucherData
               }));
             } else {
-              dispatch(createVoucherApi(voucherData));
+              // Call appropriate API based on voucher type
+              if (voucherType === 'business') {
+                dispatch(createBusinessVoucherApi(voucherData));
+              } else if (voucherType === 'leaderboard') {
+                dispatch(createLeaderboardVoucherApi(voucherData));
+              } else if (voucherType === 'system') {
+                dispatch(createSystemVoucherApi(voucherData));
+              } else {
+                // Fallback to generic create
+                dispatch(createVoucherApi(voucherData));
+              }
             }
             handleCloseModal();
           }}

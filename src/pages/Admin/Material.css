@@ -132,28 +132,128 @@
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  color: #0f172a;
-  background-color: #e5e7eb; /* less faded */
-  padding: 14px;
-  border-radius: 14px;
-  flex-shrink: 0;
+  width: 80px !important;
+  height: 80px !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* Làm icon rõ ràng, sắc nét */
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  box-sizing: border-box !important;
 }
 
+/* Total Materials - icon màu xám đậm */
+.stat-card-0 .stat-icon {
+  color: #374151 !important;
+  background-color: #f3f4f6 !important;
+}
+
+.stat-card-0 .stat-icon,
+.stat-card-0 .stat-icon svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-card-0 .stat-icon svg {
+  color: #374151 !important;
+  fill: #374151 !important;
+  stroke: #374151 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Pending Review - icon màu cam đậm */
 .stat-icon.pending {
-  color: #b45309; /* darker amber */
-  background-color: #fde68a;
+  color: #f97316 !important;
+  background-color: #fed7aa !important;
 }
 
+.stat-icon.pending,
+.stat-icon.pending svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-icon.pending svg {
+  color: #f97316 !important;
+  fill: #f97316 !important;
+  stroke: #f97316 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Approved - icon màu xanh lá đậm */
 .stat-icon.approved {
-  color: #166534; /* darker green */
-  background-color: #bbf7d0;
+  color: #16a34a !important;
+  background-color: #dcfce7 !important;
 }
 
+.stat-icon.approved,
+.stat-icon.approved svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-icon.approved svg {
+  color: #16a34a !important;
+  fill: #16a34a !important;
+  stroke: #16a34a !important;
+  stroke-width: 3 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Rejected - icon màu đỏ đậm */
 .stat-icon.rejected {
-  color: #b91c1c; /* darker red */
-  background-color: #fecaca;
+  color: #dc2626 !important;
+  background-color: #fee2e2 !important;
+}
+
+.stat-icon.rejected,
+.stat-icon.rejected svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-icon.rejected svg {
+  color: #dc2626 !important;
+  fill: #dc2626 !important;
+  stroke: #dc2626 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
 }
 
 /* Search and Filter Section */
@@ -246,19 +346,16 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .material-card:hover {
-  background: #164e31;
-  color: #ffffff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  background: #12422a !important;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(18, 66, 42, 0.3);
 }
 
-.material-card:hover .material-name,
-.material-card:hover .material-description,
-.material-card:hover .detail-label,
-.material-card:hover .detail-value {
+.material-card:hover * {
   color: #ffffff !important;
 }
 
@@ -405,8 +502,24 @@
   }
   
   .stat-icon {
-    width: 48px;
-    height: 48px;
-    padding: 12px;
+    width: 72px;
+    height: 72px;
+    padding: 10px;
+  }
+  
+  .stat-card-0 .stat-icon svg {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    min-height: 52px !important;
+  }
+  
+  .stat-icon.pending svg,
+  .stat-icon.approved svg,
+  .stat-icon.rejected svg {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    min-height: 52px !important;
   }
 }

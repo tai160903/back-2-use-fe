@@ -56,4 +56,5 @@ export const PATH = {
     ADMIN_SETTINGS: "/admin/settings",
     ADMIN_STORE: "/admin/store",
     ADMIN_MATERIAL: "/admin/material",
+    ADMIN_MATERIAL_DETAIL: "/admin/material/:id",
 }

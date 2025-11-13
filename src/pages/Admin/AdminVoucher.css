@@ -107,15 +107,15 @@
 
 .stat-title {
   font-size: 18px;
-  font-weight: 600;
-  color: #6b7280;
+  font-weight: 700;
+  color: #1f2937;
   margin: 0 0 12px 0;
 }
 
 .stat-number {
-  font-size: 40px;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-size: 42px;
+  font-weight: 800;
+  color: #0f172a;
   line-height: 1;
 }
 
@@ -132,28 +132,128 @@
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  color: #6b7280;
-  background-color: #f3f4f6;
-  padding: 14px;
-  border-radius: 14px;
-  flex-shrink: 0;
+  width: 80px !important;
+  height: 80px !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* Làm icon rõ ràng, sắc nét */
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  box-sizing: border-box !important;
 }
 
+/* Total Vouchers - icon màu xám đậm */
+.stat-card-0 .stat-icon {
+  color: #374151 !important;
+  background-color: #f3f4f6 !important;
+}
+
+.stat-card-0 .stat-icon,
+.stat-card-0 .stat-icon svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-card-0 .stat-icon svg {
+  color: #374151 !important;
+  fill: #374151 !important;
+  stroke: #374151 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Pending Review - icon màu cam đậm */
 .stat-icon.pending {
-  color: #f59e0b;
-  background-color: #fef3c7;
+  color: #f97316 !important;
+  background-color: #fed7aa !important;
 }
 
+.stat-icon.pending,
+.stat-icon.pending svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-icon.pending svg {
+  color: #f97316 !important;
+  fill: #f97316 !important;
+  stroke: #f97316 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Active - icon màu xanh lá đậm */
 .stat-icon.active {
-  color: #12422a;
-  background-color: #e8f5e8;
+  color: #16a34a !important;
+  background-color: #dcfce7 !important;
 }
 
+.stat-icon.active,
+.stat-icon.active svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-icon.active svg {
+  color: #16a34a !important;
+  fill: #16a34a !important;
+  stroke: #16a34a !important;
+  stroke-width: 3 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Expired - icon màu đỏ đậm */
 .stat-icon.expired {
-  color: #ef4444;
-  background-color: #fee2e2;
+  color: #dc2626 !important;
+  background-color: #fee2e2 !important;
+}
+
+.stat-icon.expired,
+.stat-icon.expired svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-icon.expired svg {
+  color: #dc2626 !important;
+  fill: #dc2626 !important;
+  stroke: #dc2626 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
 }
 
 /* Search and Filter Section */
@@ -374,8 +474,24 @@
   }
   
   .stat-icon {
-    width: 48px;
-    height: 48px;
-    padding: 12px;
+    width: 72px;
+    height: 72px;
+    padding: 10px;
+  }
+  
+  .stat-card-0 .stat-icon svg {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    min-height: 52px !important;
+  }
+  
+  .stat-icon.pending svg,
+  .stat-icon.active svg,
+  .stat-icon.expired svg {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    min-height: 52px !important;
   }
 }

@@ -189,6 +189,59 @@
   color: #dc2626 !important;
 }
 
+/* Hover effect - chữ trắng khi hover vào card */
+.material-card:hover {
+  background: #12422a !important;
+}
+
+.material-card:hover .material-card-title,
+.material-card:hover .material-card-subtitle,
+.material-card:hover .material-detail-label,
+.material-card:hover .material-detail-value,
+.material-card:hover .created-date {
+  color: #ffffff !important;
+}
+
+.material-card:hover .material-card-icon {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.material-card:hover .maximum-reuse-badge {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.material-card:hover .status-badge {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+/* Giữ màu button khi hover card */
+.material-card:hover .action-btn {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.material-card:hover .edit-btn {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.material-card:hover .delete-btn {
+  background-color: rgba(220, 38, 38, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.material-card:hover .approve-btn {
+  background-color: rgba(22, 163, 74, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.material-card:hover .reject-btn {
+  background-color: rgba(220, 38, 38, 0.3) !important;
+  color: #ffffff !important;
+}
+
 /* Simple modal styles for reject reason */
 .mc-modal-overlay {
   position: fixed;
