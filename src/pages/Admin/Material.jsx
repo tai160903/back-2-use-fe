@@ -173,7 +173,7 @@ const Material = () => {
               <h3 className="stat-title">Total Materials</h3>
               <span className="stat-number">{materials.length}</span>
             </div>
-            <PiClipboardTextBold className="stat-icon" />
+            <PiClipboardTextBold className="stat-icon" size={56} />
           </div>
         </div>
 
@@ -185,7 +185,7 @@ const Material = () => {
                 {materials.filter((item) => item.status === "pending").length}
               </span>
             </div>
-            <CiClock2 className="stat-icon pending" />
+            <CiClock2 className="stat-icon pending" size={56} />
           </div>
         </div>
 
@@ -197,7 +197,7 @@ const Material = () => {
                 {materials.filter((item) => item.status === "approved").length}
               </span>
             </div>
-            <SiTicktick className="stat-icon approved" />
+            <SiTicktick className="stat-icon approved" size={56} />
           </div>
         </div>
 
@@ -209,7 +209,7 @@ const Material = () => {
                 {materials.filter((item) => item.status === "rejected").length}
               </span>
             </div>
-            <BiMessageSquareX className="stat-icon rejected" />
+            <BiMessageSquareX className="stat-icon rejected" size={56} />
           </div>
         </div>
       </div>

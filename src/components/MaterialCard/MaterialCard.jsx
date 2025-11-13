@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { 
   deleteMaterialApi, 
   reviewMaterialApi 
 } from '../../store/slices/adminSlice';
+import { PATH } from '../../routes/path';
 import { 
   FaRegEdit, 
   FaCheck, 
@@ -34,6 +36,7 @@ import {
 
 const MaterialCard = ({ material, onEdit }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -115,7 +118,7 @@ const MaterialCard = ({ material, onEdit }) => {
   return (
     <div className="material-card">
       <div className="material-card-header">
-        <div className="material-card-info">
+        <div className="material-card-info" style={{ cursor: 'pointer', flex: 1 }} onClick={() => navigate(PATH.ADMIN_MATERIAL_DETAIL.replace(':id', material._id))}>
           {getRecycleIcon()}
           <div>
             <h3 className="material-card-title">{material.materialName}</h3>
@@ -171,7 +174,7 @@ const MaterialCard = ({ material, onEdit }) => {
           <span className="material-detail-label">Maximum Reuse:</span>
           <span className="material-detail-value">
             <span className="maximum-reuse-badge">
-              {material.maximumReuse} times
+              {material.reuseLimit || material.maximumReuse || 'N/A'} lần
             </span>
           </span>
         </div>
@@ -199,11 +202,11 @@ const MaterialCard = ({ material, onEdit }) => {
           </div>
         )}
         
-        {material.status === 'rejected' && material.rejectReason && (
+        {material.status === 'rejected' && (material.adminNote || material.rejectReason) && (
           <div className="material-detail-item">
             <span className="material-detail-label">Rejection Reason:</span>
             <span className="material-detail-value" style={{ fontSize: '13px', color: '#dc2626' }}>
-              {material.rejectReason}
+              {material.adminNote || material.rejectReason}
             </span>
           </div>
         )}

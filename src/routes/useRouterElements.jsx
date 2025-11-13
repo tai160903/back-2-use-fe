@@ -37,6 +37,7 @@ import Rankings from "../pages/Home/Rankings/Rankings";
 import ProductDetail from "../pages/Home/Store/ProductDetail";
 import Users from "../pages/Admin/UserManage/Users";
 import Material from "../pages/Admin/Material";
+import AdminMaterialDetail from "../pages/Admin/AdminMaterialDetail";
 import Voucher from "../pages/Home/Voucher/Voucher";
 import Materials from "../pages/Bussiness/Materials/Materials";
 import RedemVoucher from "../pages/Bussiness/RedeemVoucher/RedemVoucher";
@@ -393,6 +394,15 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>
               <Material />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: PATH.ADMIN_MATERIAL_DETAIL,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminMaterialDetail />
             </ProtectedRoute>
           ),
         },
