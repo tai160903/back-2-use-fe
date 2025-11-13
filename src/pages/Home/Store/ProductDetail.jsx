@@ -5,6 +5,17 @@ import Button from "@mui/material/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Pagination from "@mui/material/Pagination";
 import "./ProductDetail.css";
+import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
+import PaidRoundedIcon from "@mui/icons-material/PaidRounded";
+import AutorenewRoundedIcon from "@mui/icons-material/AutorenewRounded";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
+import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
+import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
 import { useDispatch, useSelector } from "react-redux";
 import { getDetailsProductById } from "../../../store/slices/storeSilce";
 
@@ -16,6 +27,7 @@ export default function ProductDetail() {
   const [sizeFilter, setSizeFilter] = useState("All");
   const [clientPage, setClientPage] = useState(1);
   const clientPageSize = 10;
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     if (productId) {
@@ -25,12 +37,10 @@ export default function ProductDetail() {
     }
   }, [dispatch, productId]);
 
-  // Reset về trang 1 khi đổi filter (đặt trước mọi early return)
   useEffect(() => {
     setClientPage(1);
   }, [sizeFilter]);
 
-  // Hiển thị status trực tiếp từ dữ liệu, không dịch
 
   const formatDate = (isoString) => {
     if (!isoString) return "—";
@@ -51,9 +61,9 @@ export default function ProductDetail() {
     return (
       <div className="productDetail" style={{ padding: "16px" }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
-          Quay lại
+          Back
         </Button>
-        <Typography sx={{ mt: 2 }}>Đang tải danh sách sản phẩm...</Typography>
+        <Typography sx={{ mt: 2 }}>Loading...</Typography>
       </div>
     );
   }
@@ -62,13 +72,13 @@ export default function ProductDetail() {
     return (
       <div className="productDetail" style={{ padding: "16px" }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
-          Quay lại
+         Back
         </Button>
         <Typography variant="h6" color="error" sx={{ mt: 2 }}>
-          Có lỗi xảy ra khi tải sản phẩm
+          An error occurred while loading the product
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {error.message || "Vui lòng thử lại sau"}
+          {error.message || "Please try again later"}
         </Typography>
       </div>
     );
@@ -86,13 +96,13 @@ export default function ProductDetail() {
     return Array.from(sizeNameSet);
   })();
 
-  // Lọc theo size trên client
+  // filter by size
   const filteredItems =
     sizeFilter && sizeFilter !== "All"
       ? allItems.filter((productItem) => (productItem?.productSizeId?.sizeName || "") === sizeFilter)
       : allItems;
 
-  // Phân trang client sau khi lọc
+  // Phân trang 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / clientPageSize));
   const startIndex = (clientPage - 1) * clientPageSize;
   const paginatedItems = filteredItems.slice(startIndex, startIndex + clientPageSize);
@@ -100,8 +110,16 @@ export default function ProductDetail() {
   // group info (from first item)
   const group = allItems[0]?.productGroupId || null;
   const groupImage = group?.imageUrl || "";
-  const groupName = group?.name || "Product group";
-  const groupDescription = group?.description || "";
+  const groupName = group?.name || "coffee cup";
+
+  // Giá/đặt cọc lấy theo size đang lọc (nếu có), fallback item đầu tiên
+  const sampleItemForMeta =
+    (sizeFilter && sizeFilter !== "All"
+      ? allItems.find((it) => (it?.productSizeId?.sizeName || "") === sizeFilter)
+      : allItems[0]) || {};
+  const metaBasePrice = sampleItemForMeta?.productSizeId?.basePrice || 0;
+  const metaDeposit = sampleItemForMeta?.productSizeId?.depositValue || 0;
+  const metaSize = sampleItemForMeta?.productSizeId?.sizeName || sizeOptions[0] || "—";
 
   return (
     <div className="productDetail">
@@ -113,21 +131,37 @@ export default function ProductDetail() {
 
       <div className="productDetail-hero">
         <div className="productDetail-main">
-          <Typography variant="h4" className="pd-title">{groupName}</Typography>
-          <Typography className="pd-desc">{groupDescription}</Typography>
+          <div className="pd-badge">
+            <CategoryRoundedIcon fontSize="small" />
+            <span>{groupName}</span>
+          </div>
+          <Typography variant="h2" className="pd-title">{groupName}</Typography>
+          <Typography className="pd-desc">
+            Quản lý {allItems.length.toLocaleString("vi-VN")} mã QR với nhiều trạng thái khác nhau
+          </Typography>
 
           <div className="pd-stats">
             <div className="pd-stat">
-              <span className="pd-stat-label">Tổng số items</span>
-              <span className="pd-stat-value">{allItems.length}</span>
+              <div className="pd-stat-icon"><PaidRoundedIcon fontSize="small" /></div>
+              <div>
+                <span className="pd-stat-label">Giá bán</span>
+                <span className="pd-stat-value">{metaBasePrice.toLocaleString()}đ</span>
+              </div>
             </div>
             <div className="pd-stat">
-              <span className="pd-stat-label">Kích cỡ</span>
-              <span className="pd-stat-value">
-                {sizeOptions.length > 0 ? sizeOptions.join(", ") : "—"}
-              </span>
+              <div className="pd-stat-icon"><CategoryRoundedIcon fontSize="small" /></div>
+              <div>
+                <span className="pd-stat-label">Kích thước</span>
+                <span className="pd-stat-value">{metaSize}</span>
+              </div>
             </div>
-           
+            <div className="pd-stat">
+              <div className="pd-stat-icon"><AutorenewRoundedIcon fontSize="small" /></div>
+              <div>
+                <span className="pd-stat-label">Đặt cọc</span>
+                <span className="pd-stat-value">{metaDeposit.toLocaleString()}đ</span>
+              </div>
+            </div>
           </div>
         </div>
         <div className="productDetail-visual">
@@ -141,76 +175,86 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      <div className="pd-size-filter" style={{ marginTop: 12 }}>
-        <Typography className="pd-section">Lọc theo kích cỡ</Typography>
-        <div className="pd-size-chips">
-          <button
-            className={`pd-chip ${sizeFilter === "All" ? "active" : ""}`}
-            onClick={() => setSizeFilter("All")}
-          >
-            <span>All</span>
-          </button>
-          {sizeOptions.map((option) => (
-            <button
-              key={option}
-              className={`pd-chip ${sizeFilter === option ? "active" : ""}`}
-              onClick={() => setSizeFilter(option)}
-            >
-              <span>{option}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="pd-items">
-        <Typography className="pd-items-title">Inventory items</Typography>
-        <div className="pd-items-grid">
-          {paginatedItems.map((item) => (
-            <div key={item._id} className="pd-item-card">
-              <div className="pd-item-header">
-                <span className="pd-item-serial">{item.serialNumber}</span>
-                <span className={`pd-item-status status-${item.status || "unknown"}`}>
-                  {item.status || "unknown"}
-                </span>
-              </div>
-              <div className="pd-item-body">
-                <div className="pd-item-qr">
-                  <img src={item.qrCode} alt={`QR ${item.serialNumber}`} />
-                </div>
-                <div className="pd-item-meta">
-                  <div>
-                    <span className="pd-meta-label">Reuse count</span>
-                    <span className="pd-meta-value">{item.reuseCount}</span>
-                  </div>
-                  <div>
-                    <span className="pd-meta-label">Base price</span>
-                    <span className="pd-meta-value">
-                      {(item?.productSizeId?.basePrice || 0).toLocaleString()}đ
-                    </span>
-                  </div>
-                  <div>
-                    <span className="pd-meta-label">Deposit</span>
-                    <span className="pd-meta-value">
-                      {(item?.productSizeId?.depositValue || 0).toLocaleString()}đ
-                    </span>
-                  </div>
-                  <div>
-                    <span className="pd-meta-label">Created at</span>
-                    <span className="pd-meta-value">{formatDate(item.createdAt)}</span>
-                  </div>
-                  <div>
-                    <span className="pd-meta-label">Updated at</span>
-                    <span className="pd-meta-value">{formatDate(item.updatedAt)}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="pd-item-footer">
-                <a href={item.qrCode} target="_blank" rel="noreferrer" className="pd-link">
-                  View full QR
-                </a>
-              </div>
+        <div className="pd-items-header">
+          <Typography className="pd-items-title">Tất cả mã QR</Typography>
+         
+        </div>
+        <div className="pd-filter-inline">
+            <span className="pd-filter-label">Lọc theo kích cỡ</span>
+            <div className="pd-size-chips">
+              <button
+                className={`pd-chip ${sizeFilter === "All" ? "active" : ""}`}
+                onClick={() => setSizeFilter("All")}
+              >
+                <span>All</span>
+              </button>
+              {sizeOptions.map((option) => (
+                <button
+                  key={option}
+                  className={`pd-chip ${sizeFilter === option ? "active" : ""}`}
+                  onClick={() => setSizeFilter(option)}
+                >
+                  <span>{option}</span>
+                </button>
+              ))}
             </div>
-          ))}
+          </div>
+        <div className="pd-items-list">
+          {paginatedItems.map((item) => {
+            const sizeName = item?.productSizeId?.sizeName || "—";
+            const basePrice = (item?.productSizeId?.basePrice || 0).toLocaleString();
+            const deposit = (item?.productSizeId?.depositValue || 0).toLocaleString();
+            return (
+              <div key={item._id} className="pd-line-card">
+                <div className="pd-line-left">
+                  <div className="pd-line-icon">
+                    <img
+                      src={item?.productGroupId?.imageUrl || groupImage}
+                      alt={groupName}
+                      className="pd-line-thumb"
+                    />
+                  </div>
+                </div>
+                <div className="pd-line-center">
+                  <div className="pd-line-title">{groupName}</div>
+                  <div className="pd-line-sub">
+                    {sizeName} • {groupName}
+                  </div>
+                  <div className="pd-line-serial" onClick={() => setSelectedItem(item)}>
+                    <QrCode2RoundedIcon fontSize="small" />
+                    <button className="pd-serial-link">{item.serialNumber}</button>
+                  </div>
+                  <div className="pd-line-meta">
+                    <div className="pd-line-meta-item">
+                      <span className="pd-meta-label">Số lần mượn</span>
+                      <span className="pd-meta-value">{item.reuseCount}</span>
+                    </div>
+                    <div className="pd-line-meta-item">
+                      <span className="pd-meta-label">Giá bán</span>
+                      <span className="pd-meta-value">{basePrice}đ</span>
+                    </div>
+                    <div className="pd-line-meta-item">
+                      <span className="pd-meta-label">Tiền cọc</span>
+                      <span className="pd-meta-value">{deposit}đ</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pd-line-right">
+                  <span className={`pd-item-status status-${item.status || "unknown"}`}>
+                    {item.status || "unknown"}
+                  </span>
+                  <Button
+                    size="small"
+                    className="pd-qr-view-btn"
+                    onClick={() => setSelectedItem(item)}
+                  >
+                    View QR Code
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
           {filteredItems.length === 0 && (
             <div className="pd-item-empty">
               <Typography>Chưa có sản phẩm nào.</Typography>
@@ -228,6 +272,80 @@ export default function ProductDetail() {
           />
         </div>
       </div>
+
+      {/* Modal chi tiết sản phẩm */}
+      <Dialog
+        open={Boolean(selectedItem)}
+        onClose={() => setSelectedItem(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ m: 0, p: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontWeight: 800, color: "#164c34" }}>{groupName}</span>
+            {selectedItem && (
+              <span className={`pd-item-status status-${selectedItem.status || "unknown"}`}>
+                {selectedItem.status || "unknown"}
+              </span>
+            )}
+          </div>
+          <IconButton
+            aria-label="close"
+            onClick={() => setSelectedItem(null)}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedItem && (
+            <div className="pd-detail">
+              <div className="pd-detail-header">
+                <div>
+                  <span className="pd-meta-label">Size</span>
+                  <div className="pd-detail-value">{selectedItem?.productSizeId?.sizeName || "—"}</div>
+                </div>
+                <div>
+                  <span className="pd-meta-label">Giá bán</span>
+                  <div className="pd-detail-value">
+                    {(selectedItem?.productSizeId?.basePrice || 0).toLocaleString()}đ
+                  </div>
+                </div>
+                <div>
+                  <span className="pd-meta-label">Tiền cọc</span>
+                  <div className="pd-detail-value">
+                    {(selectedItem?.productSizeId?.depositValue || 0).toLocaleString()}đ
+                  </div>
+                </div>
+                <div>
+                  <span className="pd-meta-label">Số lần mượn</span>
+                  <div className="pd-detail-value">{selectedItem.reuseCount}</div>
+                </div>
+                <div>
+                  <span className="pd-meta-label">Ngày tạo</span>
+                  <div className="pd-detail-value">{formatDate(selectedItem.createdAt)}</div>
+                </div>
+                <div>
+                  <span className="pd-meta-label">Cập nhật</span>
+                  <div className="pd-detail-value">{formatDate(selectedItem.updatedAt)}</div>
+                </div>
+              </div>
+
+              <div className="pd-modal-qr">
+                <Typography className="pd-section" style={{ marginTop: 0 }}>Product QR Code</Typography>
+                <div className="pd-modal-qr-box">
+                  <img src={selectedItem.qrCode} alt={`QR ${selectedItem.serialNumber}`} />
+                </div>
+                <div className="pd-qr-id">QR Code ID</div>
+                <div className="pd-qr-serial">{selectedItem.serialNumber}</div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setSelectedItem(null)}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
