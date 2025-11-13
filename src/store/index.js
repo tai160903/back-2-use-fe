@@ -7,6 +7,7 @@ import adminSlice from "./slices/adminSlice";
 import subscriptionSlice from "./slices/subscriptionSlice";
 import  manageUserSlice  from "./slices/manageUserSlice";
 import storeSlice from "./slices/storeSilce";
+import borrowSlice from "./slices/borrowSlice";
 export const store = configureStore({
   reducer: {
     auth: authSlice,
@@ -17,6 +18,7 @@ export const store = configureStore({
     subscription: subscriptionSlice,
     manageUser:manageUserSlice,
     store: storeSlice,
+    borrow: borrowSlice,
   },
 });
 

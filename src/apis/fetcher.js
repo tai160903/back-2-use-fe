@@ -7,6 +7,21 @@ export const fetcher = axios.create({
   },
 });
 
+// Biến trạng thái để tránh gọi refresh song song
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  while (failedQueue.length) {
+    const { resolve, reject } = failedQueue.shift();
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  }
+};
+
 // Sử dụng interceptor để thêm token vào header trước mỗi yêu cầu
 fetcher.interceptors.request.use((config) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -21,20 +36,67 @@ fetcher.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
-    // Nếu gặp 401 và chưa retry
+
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
-      // Kiểm tra lại token trong localStorage
+
       const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-      if (currentUser?.accessToken) {
-        // Thêm token vào request và retry
-        originalRequest.headers.Authorization = `Bearer ${currentUser.accessToken}`;
+      const refreshToken = currentUser?.refreshToken;
+
+      if (!refreshToken) {
+        return Promise.reject(error);
+      }
+
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(fetcher(originalRequest));
+            },
+            reject,
+          });
+        });
+      }
+
+      isRefreshing = true;
+
+      try {
+
+        const resp = await axios.post(
+          `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
+          { refreshToken },
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        const newAccessToken = resp?.data?.data?.accessToken;
+        if (!newAccessToken) {
+          throw new Error("No access token returned from refresh endpoint");
+        }
+
+
+        const updatedUser = { ...currentUser, accessToken: newAccessToken };
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+
+
+        fetcher.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
+
+        processQueue(null, newAccessToken);
+
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return fetcher(originalRequest);
+      } catch (refreshErr) {
+        processQueue(refreshErr, null);
+
+        localStorage.removeItem("currentUser");
+        return Promise.reject(refreshErr);
+      } finally {
+        isRefreshing = false;
       }
     }
-    
+
     return Promise.reject(error);
   }
 )
