@@ -90,23 +90,7 @@ export default function ListStore() {
             Discover partner stores participating in the Back2Use reusable packaging program
           </Typography>
         </div>
-        {nearbyStores.length > 0 && (
-          <Paper elevation={0} className="list-store-stats">
-            <Box className="stat-item">
-              <Box className="stat-icon-wrapper">
-                <FaStore className="stat-icon" />
-              </Box>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="h6" className="stat-number">
-                  {nearbyStores.length}
-                </Typography>
-                <Typography variant="caption" className="stat-label">
-                  Stores Found
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        )}
+    
       </div>
 
       {/* Main Content */}

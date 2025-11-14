@@ -32,6 +32,7 @@ const schema = yup
 export default function Login() {
   const { dispatch, navigate, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [loginType, setLoginType] = useState("customer"); // customer | business
   // Clear error when component mounts
   useEffect(() => {
     // Component mounted
@@ -55,7 +56,8 @@ export default function Login() {
       // Xóa khoảng trắng từ username và password
       const trimmedData = {
         username: data.username?.trim(),
-        password: data.password?.trim()
+        password: data.password?.trim(),
+        type: loginType, // chỉ gửi customer hoặc business; admin chọn loại nào cũng được
       };
       
       const payload = await dispatch(loginAPI(trimmedData)).unwrap();
@@ -117,6 +119,33 @@ const handleGoogleLogin = async () => {
                  Enter your login information to access your account
                 </Typography>
                 <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
+                  {/* Chọn loại tài khoản đăng nhập */}
+                  <div className="auth-role-toggle">
+                    <Button
+                      type="button"
+                      variant={loginType === "customer" ? "contained" : "outlined"}
+                      className={
+                        loginType === "customer"
+                          ? "auth-role-button active"
+                          : "auth-role-button"
+                      }
+                      onClick={() => setLoginType("customer")}
+                    >
+                      Customer
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={loginType === "business" ? "contained" : "outlined"}
+                      className={
+                        loginType === "business"
+                          ? "auth-role-button active"
+                          : "auth-role-button"
+                      }
+                      onClick={() => setLoginType("business")}
+                    >
+                      Business
+                    </Button>
+                  </div>
                   <TextField
                     id="username"
                     label="Username"

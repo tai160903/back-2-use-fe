@@ -31,6 +31,29 @@
   max-width: 400px !important;
 }
 
+/* Toggle chọn loại tài khoản (customer / business) */
+.auth-role-toggle {
+  display: flex;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.auth-role-button {
+  flex: 1;
+  text-transform: none !important;
+  border-radius: 8px !important;
+  border: 1px solid #3a704e !important;
+  color: #3a704e !important;
+  background-color: #ffffff !important;
+}
+
+.auth-role-button.active {
+  background-color: #3a704e !important;
+  color: #ffffff !important;
+}
+
 .auth-forget {
   color: #3a704e !important;
   text-align: right !important;
