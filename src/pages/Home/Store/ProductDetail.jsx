@@ -125,7 +125,7 @@ export default function ProductDetail() {
     <div className="productDetail">
       <div className="productDetail-header">
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
-          Quay lại
+          Back
         </Button>
       </div>
 
@@ -137,28 +137,28 @@ export default function ProductDetail() {
           </div>
           <Typography variant="h2" className="pd-title">{groupName}</Typography>
           <Typography className="pd-desc">
-            Quản lý {allItems.length.toLocaleString("vi-VN")} mã QR với nhiều trạng thái khác nhau
+            Manage {allItems.length.toLocaleString("vi-VN")} QR codes with different statuses
           </Typography>
 
           <div className="pd-stats">
             <div className="pd-stat">
               <div className="pd-stat-icon"><PaidRoundedIcon fontSize="small" /></div>
               <div>
-                <span className="pd-stat-label">Giá bán</span>
+                <span className="pd-stat-label">Price</span>
                 <span className="pd-stat-value">{metaBasePrice.toLocaleString()}đ</span>
               </div>
             </div>
             <div className="pd-stat">
               <div className="pd-stat-icon"><CategoryRoundedIcon fontSize="small" /></div>
               <div>
-                <span className="pd-stat-label">Kích thước</span>
+                <span className="pd-stat-label">Size</span>
                 <span className="pd-stat-value">{metaSize}</span>
               </div>
             </div>
             <div className="pd-stat">
               <div className="pd-stat-icon"><AutorenewRoundedIcon fontSize="small" /></div>
               <div>
-                <span className="pd-stat-label">Đặt cọc</span>
+                <span className="pd-stat-label">Deposit</span>
                 <span className="pd-stat-value">{metaDeposit.toLocaleString()}đ</span>
               </div>
             </div>
@@ -177,11 +177,11 @@ export default function ProductDetail() {
 
       <div className="pd-items">
         <div className="pd-items-header">
-          <Typography className="pd-items-title">Tất cả mã QR</Typography>
+          <Typography className="pd-items-title">All QR codes</Typography>
          
         </div>
         <div className="pd-filter-inline">
-            <span className="pd-filter-label">Lọc theo kích cỡ</span>
+            <span className="pd-filter-label">Filter by size</span>
             <div className="pd-size-chips">
               <button
                 className={`pd-chip ${sizeFilter === "All" ? "active" : ""}`}
@@ -227,15 +227,15 @@ export default function ProductDetail() {
                   </div>
                   <div className="pd-line-meta">
                     <div className="pd-line-meta-item">
-                      <span className="pd-meta-label">Số lần mượn</span>
+                      <span className="pd-meta-label">Reuse count</span>
                       <span className="pd-meta-value">{item.reuseCount}</span>
                     </div>
                     <div className="pd-line-meta-item">
-                      <span className="pd-meta-label">Giá bán</span>
+                      <span className="pd-meta-label">Price</span>
                       <span className="pd-meta-value">{basePrice}đ</span>
                     </div>
                     <div className="pd-line-meta-item">
-                      <span className="pd-meta-label">Tiền cọc</span>
+                      <span className="pd-meta-label">Deposit</span>
                       <span className="pd-meta-value">{deposit}đ</span>
                     </div>
                   </div>
@@ -257,7 +257,7 @@ export default function ProductDetail() {
           })}
           {filteredItems.length === 0 && (
             <div className="pd-item-empty">
-              <Typography>Chưa có sản phẩm nào.</Typography>
+              <Typography>No product found.</Typography>
             </div>
           )}
         </div>
@@ -306,29 +306,23 @@ export default function ProductDetail() {
                   <div className="pd-detail-value">{selectedItem?.productSizeId?.sizeName || "—"}</div>
                 </div>
                 <div>
-                  <span className="pd-meta-label">Giá bán</span>
+                  <span className="pd-meta-label">Price</span>
                   <div className="pd-detail-value">
                     {(selectedItem?.productSizeId?.basePrice || 0).toLocaleString()}đ
                   </div>
                 </div>
                 <div>
-                  <span className="pd-meta-label">Tiền cọc</span>
+                  <span className="pd-meta-label">Deposit</span>
                   <div className="pd-detail-value">
                     {(selectedItem?.productSizeId?.depositValue || 0).toLocaleString()}đ
                   </div>
                 </div>
                 <div>
-                  <span className="pd-meta-label">Số lần mượn</span>
+                  <span className="pd-meta-label">Reuse count</span>
                   <div className="pd-detail-value">{selectedItem.reuseCount}</div>
                 </div>
-                <div>
-                  <span className="pd-meta-label">Ngày tạo</span>
-                  <div className="pd-detail-value">{formatDate(selectedItem.createdAt)}</div>
-                </div>
-                <div>
-                  <span className="pd-meta-label">Cập nhật</span>
-                  <div className="pd-detail-value">{formatDate(selectedItem.updatedAt)}</div>
-                </div>
+             
+              
               </div>
 
               <div className="pd-modal-qr">
@@ -336,14 +330,14 @@ export default function ProductDetail() {
                 <div className="pd-modal-qr-box">
                   <img src={selectedItem.qrCode} alt={`QR ${selectedItem.serialNumber}`} />
                 </div>
-                <div className="pd-qr-id">QR Code ID</div>
+              
                 <div className="pd-qr-serial">{selectedItem.serialNumber}</div>
               </div>
             </div>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setSelectedItem(null)}>Đóng</Button>
+          <Button onClick={() => setSelectedItem(null)}>Close</Button>
         </DialogActions>
       </Dialog>
     </div>

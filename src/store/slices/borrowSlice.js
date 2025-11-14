@@ -16,6 +16,19 @@ export const borrowProductApi = createAsyncThunk(
     }
 );
 
+
+export const getTransactionHistoryApi = createAsyncThunk(
+    "borrow/getTransactionHistoryApi",
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.get("/borrow-transactions");
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 const borrowSlice = createSlice({
     name: "borrow",
     initialState: {
@@ -37,6 +50,19 @@ const borrowSlice = createSlice({
             state.borrow = payload
         })
         .addCase(borrowProductApi.rejected, (state, {payload}) => {
+            state.isLoading = false
+            state.error = payload
+        })
+        .addCase(getTransactionHistoryApi.pending, (state) => {
+            state.isLoading = true
+            state.error = null
+        })
+        .addCase(getTransactionHistoryApi.fulfilled, (state, {payload}) => {
+            state.isLoading = false
+            state.error = null
+            state.borrow = payload
+        })
+        .addCase(getTransactionHistoryApi.rejected, (state, {payload}) => {
             state.isLoading = false
             state.error = payload
         })
