@@ -18,6 +18,7 @@ export default function Subscription() {
   const dispatch = useDispatch();
   const { subscription, isLoading, subscriptionHistory } = useSelector((state) => state.subscription);
   const { balance, businessInfo, refetch } = useUserInfo();
+  const featuresList = subscription?.data?.description || [];
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,6 +27,7 @@ export default function Subscription() {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
+  const [autoRenew, setAutoRenew] = useState(false);
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
@@ -36,7 +38,7 @@ export default function Subscription() {
     dispatch(getBusinessSubscriptionHistory({ page: currentPage, limit: itemsPerPage }));
   }, [dispatch, currentPage, itemsPerPage]);
 
-  // Helper: chuẩn hóa message lỗi từ BE/RTK để hiển thị an toàn
+  // Helper: chuẩn hóa message lỗi từ BE
   const getErrorMessage = (err) => {
     if (!err) return 'Đã có lỗi xảy ra.';
     if (typeof err === 'string') return err;
@@ -76,7 +78,7 @@ export default function Subscription() {
     return status;
   };
 
-  // Đã từng dùng trial hay chưa (ưu tiên cờ tổng trong businessInfo, fallback từ lịch sử hiện tại)
+ 
   const hasUsedTrial = Boolean(businessInfo?.data?.isTrialUsed) || (subscriptionHistory?.data || []).some((historyRecord) =>
     Boolean(historyRecord?.isTrialUsed) || Boolean(historyRecord?.subscriptionId?.isTrial)
   );
@@ -97,7 +99,10 @@ export default function Subscription() {
 
   // Handle select subscription
   const handleSelectSubscription = (pkg) => {
-    setSelectedSubscription(pkg);
+    setSelectedSubscription({
+      ...pkg,
+      features: featuresList
+    });
     setModalOpen(true);
   };
 
@@ -105,6 +110,7 @@ export default function Subscription() {
   const handleModalClose = () => {
     setModalOpen(false);
     setSelectedSubscription(null);
+    setAutoRenew(false);
   };
 
   // free trial logic
@@ -134,12 +140,19 @@ export default function Subscription() {
     }
 
     try {
-      await dispatch(buySubscription({ subscriptionId: selectedSubscription._id, autoRenew: false })).unwrap();
+      // Gửi payload đúng format BE yêu cầu: { subscriptionId, autoRenew }
+      await dispatch(
+        buySubscription({
+          subscriptionId: selectedSubscription._id,
+          autoRenew
+        })
+      ).unwrap();
       toast.success('Subscription purchased successfully!');
-     
+
       dispatch(getALLSubscriptions());
-     
-      dispatch(getBusinessSubscriptionHistory({ page: currentPage, limit: itemsPerPage }));
+      dispatch(
+        getBusinessSubscriptionHistory({ page: currentPage, limit: itemsPerPage })
+      );
       refetch();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -347,6 +360,8 @@ export default function Subscription() {
         userBalance={balance}
         onConfirm={handleConfirmPurchase}
         isLoading={isLoading}
+        autoRenew={autoRenew}
+        onToggleAutoRenew={() => setAutoRenew((prev) => !prev)}
       />
     </>
   )

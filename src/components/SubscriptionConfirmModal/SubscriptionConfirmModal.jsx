@@ -8,9 +8,11 @@ import {
   Typography,
   Box,
   Divider,
-  CircularProgress
+  CircularProgress,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
-import { FaCrown, FaWallet, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCrown, FaWallet, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import './SubscriptionConfirmModal.css';
 
 const SubscriptionConfirmModal = ({
@@ -19,7 +21,9 @@ const SubscriptionConfirmModal = ({
   subscription,
   userBalance,
   onConfirm,
-  isLoading = false
+  isLoading = false,
+  autoRenew = false,
+  onToggleAutoRenew
 }) => {
   const formatPrice = (priceInVND) => {
     if (priceInVND === 0) return 'FREE';
@@ -38,6 +42,7 @@ const SubscriptionConfirmModal = ({
   };
 
   const hasEnoughBalance = userBalance >= subscription?.price;
+  const featureList = subscription?.features || [];
 
   return (
     <Dialog 
@@ -48,56 +53,107 @@ const SubscriptionConfirmModal = ({
       className="subscription-confirm-modal"
     >
       <DialogTitle className="modal-title">
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
           <FaCrown className="crown-icon" />
-          <Typography variant="h6" fontWeight="bold">
-         Confirm Purchase
-          </Typography>
+          <Box className="modal-title-text">
+            <Typography variant="h6" fontWeight="bold">
+              Confirm subscription purchase
+            </Typography>
+            <Typography variant="body2">
+              Please review the package information before confirming the payment.
+            </Typography>
+          </Box>
         </Box>
       </DialogTitle>
 
       <DialogContent className="modal-content-subscription-confirm">
         {subscription && (
-          <>
+          <Box className="modal-inner">
             {/* Subscription Info */}
             <Box className="subscription-info">
+              <Typography variant="overline" className="package-label">
+                Selected plan
+              </Typography>
               <Typography variant="h6" className="package-name">
                 {subscription.name}
               </Typography>
-              <Typography variant="body1" className="package-duration">
-                Thời gian: {formatDuration(subscription.durationInDays)}
+              <Typography variant="body2" className="package-duration">
+                Duration: {formatDuration(subscription.durationInDays)}
               </Typography>
-              <Typography variant="h5" className="package-price">
+              <Typography variant="h4" className="package-price">
                 {formatPrice(subscription.price)}
               </Typography>
             </Box>
+
+            {featureList.length > 0 && (
+              <Box className="modal-features">
+                <Typography variant="subtitle2" className="features-title">
+                  Plan features
+                </Typography>
+                <Box className="features-list">
+                  {featureList.map((feature, index) => (
+                    <Box key={index} className="features-row">
+                     
+                      <Typography variant="body2" className="feature-text">
+                        {feature}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
 
             <Divider className="divider" />
 
             {/* Balance Check */}
             <Box className="balance-check">
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                <FaWallet className="wallet-icon" />
-                <Typography variant="body1">
-                  Current balance: {formatPrice(userBalance)}
-                </Typography>
-              </Box>
+        
+
+            
 
               {!hasEnoughBalance && (
                 <Box className="insufficient-balance">
-                  <Box display="flex" alignItems="center" gap={1}>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    className="warning-header"
+                  >
                     <FaExclamationTriangle className="warning-icon" />
-                    <Typography variant="body2" color="error">
-                      Insufficient balance to purchase this package
+                    <Typography variant="body2" className="warning-title">
+                      Your wallet balance is not enough to purchase this plan
                     </Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Need to add: {formatPrice(subscription.price - userBalance)}
+                  <Typography variant="body2" className="warning-description">
+                    You need to add{" "}
+                    <span className="warning-highlight">
+                      {formatPrice(subscription.price - userBalance)}
+                    </span>{" "}
+                    to complete the payment.
                   </Typography>
                 </Box>
               )}
             </Box>
-          </>
+
+            <Box className="auto-renew-row">
+              <FormControlLabel
+                control={
+                  <Switch
+                    color="success"
+                    checked={autoRenew}
+                    onChange={onToggleAutoRenew}
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    Enable auto-renewal for the next period
+                  </Typography>
+                }
+              />
+            </Box>
+
+           
+          </Box>
         )}
       </DialogContent>
 
@@ -118,7 +174,7 @@ const SubscriptionConfirmModal = ({
             disabled={isLoading}
             startIcon={isLoading ? <CircularProgress size={20} /> : <FaCrown />}
           >
-            {isLoading ? 'Processing...' : 'Confirm Purchase'}
+            {isLoading ? 'Processing...' : 'Confirm payment'}
           </Button>
         ) : (
           <Button
@@ -128,7 +184,7 @@ const SubscriptionConfirmModal = ({
             disabled={isLoading}
             startIcon={<FaWallet />}
           >
-            Go to wallet
+            View top-up guide
           </Button>
         )}
       </DialogActions>
