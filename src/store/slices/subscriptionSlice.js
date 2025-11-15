@@ -169,6 +169,20 @@ export const getBusinessSubscriptionHistory = createAsyncThunk(
 )
 
 
+// auto renew subscription
+export const autoRenewSubscription = createAsyncThunk(
+  "subscription/autoRenewSubscription",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post(`/businesses/subscription/${id}/auto-renew`)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+)
+
+
 const subscriptionSlice = createSlice({
   name: "subscription",
   initialState: {
@@ -322,6 +336,19 @@ const subscriptionSlice = createSlice({
         state.subscriptionHistory = payload;
       })
       .addCase(getBusinessSubscriptionHistory.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(autoRenewSubscription.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(autoRenewSubscription.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.subscription = payload;
+      })
+      .addCase(autoRenewSubscription.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })
