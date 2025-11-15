@@ -1,0 +1,313 @@
+.eco-reward-page {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  padding: 24px;
+  min-height: 100%;
+}
+
+.eco-reward-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  border-radius: 16px;
+  padding: 24px;
+
+}
+
+.eco-reward-breadcrumb {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.eco-reward-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.eco-reward-subtitle {
+  margin-top: 8px;
+  color: #475569;
+  max-width: 560px;
+}
+
+.eco-reward-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.eco-reward-action-btn {
+  text-transform: none !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  padding: 8px 18px !important;
+}
+
+.eco-reward-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.eco-reward-stat-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  color: #0f172a !important;
+}
+
+.eco-reward-stat-card.stat-highlight {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(to right, #0fa34e 0%, #164e31 100%);
+  color: #0f172a;
+}
+
+.stat-icon {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  padding: 12px;
+  display: inline-flex;
+}
+
+.stat-label {
+  font-size: 18px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.stat-value {
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.stat-highlight .stat-value {
+  color: #1f2937;
+}
+
+.stat-hint {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.stat-highlight .stat-hint {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.eco-reward-alert {
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 14px;
+}
+
+.eco-reward-alert.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.eco-reward-alert.info {
+  background: #e0f2fe;
+  color: #075985;
+  border: 1px solid #bae6fd;
+}
+
+.eco-reward-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.eco-reward-card {
+  background: linear-gradient(135deg, #f7fff9 0%, #ffffff 65%);
+  border-radius: 22px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column; 
+  gap: 18px;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.eco-reward-card:hover {
+  transform: translateY(-2px);
+  
+}
+
+.eco-reward-pagination {
+  margin-top: 12px;
+  margin-bottom: 32px;
+}
+
+
+
+.eco-reward-card.inactive {
+  opacity: 0.85;
+}
+
+.eco-reward-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.eco-reward-card-primary {
+  flex: 1;
+  min-width: 220px;
+}
+
+.eco-reward-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.eco-reward-tier-label {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
+}
+
+.eco-reward-tier-desc {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.eco-reward-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.eco-reward-status-badge.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.eco-reward-status-badge.inactive {
+  background: rgba(248, 113, 113, 0.18);
+  color: #b91c1c;
+}
+
+.eco-reward-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.05);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.eco-reward-card-stat {
+  min-width: 160px;
+}
+
+.eco-reward-metric-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.eco-reward-metric-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.eco-reward-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.eco-reward-edit-btn.MuiIconButton-root {
+  background: #15803d;
+  color: #ffffff;
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 12px 24px rgba(21, 128, 61, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.eco-reward-edit-btn.MuiIconButton-root:hover {
+  background: #166534;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 26px rgba(21, 128, 61, 0.45);
+}
+
+.eco-reward-modal-content {
+  padding: 32px 32px 8px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.eco-reward-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eco-reward-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.eco-reward-form-toggle {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .eco-reward-card-body {
+    grid-template-columns: 1fr;
+  }
+
+  .eco-reward-header {
+    flex-direction: column;
+  }
+
+  .eco-reward-header-actions {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+}
+

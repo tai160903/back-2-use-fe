@@ -46,6 +46,7 @@ const adminSidebarItems = [
   { id: "users", label: "Users", path: PATH.ADMIN_USERS },
   { id: "subscriptions", label: "Subscriptions", path: PATH.ADMIN_SUBSCRIPTIONS },
   { id: "voucher", label: "Voucher", path: PATH.ADMIN_VOUCHER },
+  { id: "eco-reward", label: "Eco Reward", path: PATH.ADMIN_ECO_REWARD },
   { id: "stores", label: "Stores", path: PATH.ADMIN_STORE },
   { id: "material", label: "Material", path: PATH.ADMIN_MATERIAL },
   { id: "settings", label: "Settings", path: PATH.ADMIN_SETTINGS },
@@ -87,6 +88,7 @@ const AdminNavbar = ({ onDrawerToggle }) => {
       users: <GoPeople color="#6967ac" className="navbar-icon" />,
       subscriptions: <FiPackage color="#419065" className="navbar-icon" />,
       voucher: <AiOutlineGift color="#ee8a59" className="navbar-icon" />,
+      "eco-reward": <CiStar color="#f59e0b" className="navbar-icon" />,
       stores: <LuStore color="#7b1fa2" className="navbar-icon" />,
       material: <AiOutlinePlusCircle color="#2e7d32" className="navbar-icon" />,
       settings: <Settings color="#6a1b9a" className="navbar-icon" />,
@@ -114,7 +116,7 @@ const AdminNavbar = ({ onDrawerToggle }) => {
         />
         {isOpen && <span className="navbar-logo-text">Back2Use</span>}
       </div>
-      <IconButton size="small" onClick={() => setIsOpen(!isOpen)} sx={{ color: "#ffffff" }}>
+      <IconButton size="small" onClick={handleDrawerToggle} sx={{ color: "#ffffff" }}>
         {isOpen ? <AiOutlineMenuFold color="#ffffff" size={22} /> : <AiOutlineMenuUnfold color="#ffffff" size={22} />}
       </IconButton>
     </div>
