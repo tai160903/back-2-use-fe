@@ -19,10 +19,22 @@ export const borrowProductApi = createAsyncThunk(
 
 export const getTransactionHistoryApi = createAsyncThunk(
     "borrow/getTransactionHistoryApi",
-    async (data, { rejectWithValue }) => {
+    async (data = {}, { rejectWithValue }) => {
         try {
-            const response = await fetcher.get("/borrow-transactions");
-            return response.data;
+            const response = await fetcher.get(
+                "/borrow-transactions/customer-history",
+                {
+                    params: {
+                        status: data.status || undefined,
+                        productName: data.productName || undefined,
+                    
+                        borrowTransactionType:
+                            data.borrowTransactionType || undefined,
+                    },
+                }
+            );
+
+            return response.data?.data || [];
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }

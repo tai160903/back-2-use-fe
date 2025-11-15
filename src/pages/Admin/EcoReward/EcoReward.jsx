@@ -127,15 +127,18 @@ const EcoReward = () => {
 
   // logic create and edit eco reward
   const onSubmit = async (formData) => {
-    const payload = {
-      ...formData,
-      threshold: Number(formData.threshold),
+    // tách _id ra để tránh gửi kèm khi tạo mới
+    const { _id, ...rest } = formData;
+    const basePayload = {
+      ...rest,
+      threshold: Number(rest.threshold),
     };
 
     if (modalMode === "create") {
       try {
-        await dispatch(addEcoRewardApi(payload)).unwrap();
-        toast.success("Create Eco Reward tier successfully");
+        // create: không gửi _id trong body
+        await dispatch(addEcoRewardApi(basePayload)).unwrap();
+        toast.success("Add Eco Reward tier successfully");
         await dispatch(getEcoRewardApi(REQUEST_PARAMS));
         reset(DEFAULT_POLICY_VALUES);
         setIsModalOpen(false);
@@ -147,14 +150,13 @@ const EcoReward = () => {
         toast.error(message);
       }
     } else if (modalMode === "edit") {
-      if (!payload._id) {
+      if (!_id) {
         toast.error("Cannot determine the tier to update");
         return;
       }
-      const { _id, ...updateData } = payload;
       try {
         await dispatch(
-          editEcoRewardApi({ id: _id, data: updateData })
+          editEcoRewardApi({ id: _id, data: basePayload })
         ).unwrap();
         toast.success("Edit Eco Reward tier successfully");
         await dispatch(getEcoRewardApi(REQUEST_PARAMS));
