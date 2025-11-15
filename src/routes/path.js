@@ -57,4 +57,5 @@ export const PATH = {
     ADMIN_STORE: "/admin/store",
     ADMIN_MATERIAL: "/admin/material",
     ADMIN_MATERIAL_DETAIL: "/admin/material/:id",
+    ADMIN_ECO_REWARD: "/admin/eco-reward",
 }
