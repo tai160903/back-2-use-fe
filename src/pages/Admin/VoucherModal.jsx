@@ -6,6 +6,8 @@ import {
   DialogActions,
   Button,
   TextField,
+  Grid,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
@@ -14,6 +16,7 @@ import {
   Typography,
   IconButton,
   Alert,
+  Divider,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -140,7 +143,8 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (validate()) {
       // Prepare data based on voucher type
       let submitData = {};
@@ -186,33 +190,38 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
       PaperProps={{
         sx: {
           borderRadius: 3,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
+          overflow: 'hidden',
+          background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
+          maxHeight: '90vh'
         }
       }}
     >
       <DialogTitle 
         sx={{ 
-          background: 'linear-gradient(135deg, #12422a 0%, #0d2e1c 100%)',
+          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
           color: 'white',
-          py: 3,
+          py: 2,
+          px: 3,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <VoucherIcon sx={{ fontSize: 32 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <VoucherIcon sx={{ fontSize: 28 }} />
           <Box>
-            <Typography variant="h5" component="div" fontWeight="bold">
+            <Typography variant="h6" component="div" fontWeight="bold">
               {voucher ? 'Edit Voucher' : 'Create New Voucher'}
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+            <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
               {voucher ? 'Update voucher information' : 'Add a new voucher to the system'}
             </Typography>
           </Box>
         </Box>
         <IconButton 
           onClick={onClose}
+          size="small"
           sx={{ 
             color: 'white',
             '&:hover': {
@@ -224,138 +233,104 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 4, pb: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {!voucher && (
-            <FormControl fullWidth required>
-              <InputLabel>Voucher Type</InputLabel>
-              <Select
-                value={selectedVoucherType}
-                label="Voucher Type"
-                onChange={(e) => setSelectedVoucherType(e.target.value)}
-              >
-                <MenuItem value="system">System Voucher</MenuItem>
-                <MenuItem value="business">Business Voucher</MenuItem>
-                <MenuItem value="leaderboard">Leaderboard Voucher</MenuItem>
-              </Select>
-            </FormControl>
-          )}
+      <form onSubmit={handleSubmit}>
+        <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+          <Grid container spacing={2.5}>
+            {!voucher && (
+              <Grid item xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel>Voucher Type</InputLabel>
+                  <Select
+                    value={selectedVoucherType}
+                    label="Voucher Type"
+                    onChange={(e) => setSelectedVoucherType(e.target.value)}
+                  >
+                    <MenuItem value="system">System Voucher</MenuItem>
+                    <MenuItem value="business">Business Voucher</MenuItem>
+                    <MenuItem value="leaderboard">Leaderboard Voucher</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
 
-          <TextField
-            name="name"
-            label="Voucher Name"
-            value={formData.name}
-            onChange={handleChange}
-            error={!!errors.name}
-            helperText={errors.name}
-            fullWidth
-            required
-          />
-
-          <TextField
-            name="description"
-            label="Description"
-            value={formData.description}
-            onChange={handleChange}
-            error={!!errors.description}
-            helperText={errors.description}
-            multiline
-            rows={3}
-            fullWidth
-            required
-          />
-
-          <TextField
-            name="baseCode"
-            label="Base Code"
-            value={formData.baseCode}
-            onChange={handleChange}
-            error={!!errors.baseCode}
-            helperText={errors.baseCode}
-            fullWidth
-            required
-            placeholder="e.g. SUMMER2025"
-          />
-
-          {/* Business Voucher Fields */}
-          {selectedVoucherType === 'business' && (
-            <>
+            <Grid item xs={12} md={7}>
               <TextField
-                name="maxUsage"
-                label="Max Usage"
-                type="number"
-                value={formData.maxUsage}
+                name="name"
+                label="Voucher Name"
+                value={formData.name}
                 onChange={handleChange}
-                error={!!errors.maxUsage}
-                helperText={errors.maxUsage}
+                error={!!errors.name}
+                helperText={errors.name}
                 fullWidth
                 required
-                inputProps={{ min: 1 }}
               />
+            </Grid>
+            <Grid item xs={12} md={5}>
               <TextField
-                name="ecoRewardPolicyId"
-                label="Eco Reward Policy ID"
-                value={formData.ecoRewardPolicyId}
+                name="baseCode"
+                label="Base Code"
+                value={formData.baseCode}
                 onChange={handleChange}
-                error={!!errors.ecoRewardPolicyId}
-                helperText={errors.ecoRewardPolicyId}
+                error={!!errors.baseCode}
+                helperText={errors.baseCode || 'e.g. SUMMER2025'}
                 fullWidth
                 required
-                placeholder="Enter eco reward policy ID"
+                placeholder="e.g. SUMMER2025"
               />
-            </>
-          )}
+            </Grid>
 
-          {/* Leaderboard Voucher Fields */}
-          {selectedVoucherType === 'leaderboard' && (
-            <TextField
-              name="discountPercent"
-              label="Discount Percent (%)"
-              type="number"
-              value={formData.discountPercent}
-              onChange={handleChange}
-              error={!!errors.discountPercent}
-              helperText={errors.discountPercent}
-              fullWidth
-              required
-              inputProps={{ min: 0, max: 100, step: 0.1 }}
-            />
-          )}
+            <Grid item xs={12}>
+              <TextField
+                name="description"
+                label="Description"
+                value={formData.description}
+                onChange={handleChange}
+                error={!!errors.description}
+                helperText={errors.description}
+                multiline
+                rows={3}
+                fullWidth
+                required
+              />
+            </Grid>
 
-          {/* System Voucher Fields */}
-          {selectedVoucherType === 'system' && (
-            <>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  name="startDate"
-                  label="Start Date"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  error={!!errors.startDate}
-                  helperText={errors.startDate}
-                  fullWidth
-                  required
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-                <TextField
-                  name="endDate"
-                  label="End Date"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                  error={!!errors.endDate}
-                  helperText={errors.endDate}
-                  fullWidth
-                  required
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              </Box>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+            {selectedVoucherType === 'business' && (
+              <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="maxUsage"
+                    label="Max Usage"
+                    type="number"
+                    value={formData.maxUsage}
+                    onChange={handleChange}
+                    error={!!errors.maxUsage}
+                    helperText={errors.maxUsage}
+                    fullWidth
+                    required
+                    inputProps={{ min: 1 }}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">times</InputAdornment>
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="ecoRewardPolicyId"
+                    label="Eco Reward Policy ID"
+                    value={formData.ecoRewardPolicyId}
+                    onChange={handleChange}
+                    error={!!errors.ecoRewardPolicyId}
+                    helperText={errors.ecoRewardPolicyId}
+                    fullWidth
+                    required
+                    placeholder="Enter eco reward policy ID"
+                  />
+                </Grid>
+              </>
+            )}
+
+            {selectedVoucherType === 'leaderboard' && (
+              <Grid item xs={12} md={6}>
                 <TextField
                   name="discountPercent"
                   label="Discount Percent (%)"
@@ -367,71 +342,144 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
                   fullWidth
                   required
                   inputProps={{ min: 0, max: 100, step: 0.1 }}
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">%</InputAdornment>
+                  }}
                 />
-                <TextField
-                  name="rewardPointCost"
-                  label="Reward Point Cost"
-                  type="number"
-                  value={formData.rewardPointCost}
-                  onChange={handleChange}
-                  error={!!errors.rewardPointCost}
-                  helperText={errors.rewardPointCost}
-                  fullWidth
-                  required
-                  inputProps={{ min: 0 }}
-                />
-              </Box>
-              <TextField
-                name="maxUsage"
-                label="Max Usage"
-                type="number"
-                value={formData.maxUsage}
-                onChange={handleChange}
-                error={!!errors.maxUsage}
-                helperText={errors.maxUsage}
-                fullWidth
-                required
-                inputProps={{ min: 1 }}
-              />
-            </>
-          )}
-        </Box>
-      </DialogContent>
+              </Grid>
+            )}
 
-      <DialogActions sx={{ px: 3, py: 2.5, gap: 1.5 }}>
-        <Button 
-          onClick={onClose}
-          variant="outlined"
-          sx={{
-            color: '#666',
-            borderColor: '#ddd',
-            px: 3,
-            py: 1,
-            '&:hover': {
-              borderColor: '#999',
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
-            }
-          }}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSubmit}
-          variant="contained"
-          sx={{
-            background: 'linear-gradient(135deg, #12422a 0%, #0d2e1c 100%)',
-            px: 3,
-            py: 1,
-            boxShadow: '0 4px 12px rgba(18, 66, 42, 0.3)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #0d2e1c 0%, #12422a 100%)',
-              boxShadow: '0 6px 16px rgba(18, 66, 42, 0.4)',
-            }
-          }}
-        >
-          {voucher ? 'Update Voucher' : 'Create Voucher'}
-        </Button>
-      </DialogActions>
+            {selectedVoucherType === 'system' && (
+              <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="startDate"
+                    label="Start Date"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    error={!!errors.startDate}
+                    helperText={errors.startDate}
+                    fullWidth
+                    required
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="endDate"
+                    label="End Date"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    error={!!errors.endDate}
+                    helperText={errors.endDate}
+                    fullWidth
+                    required
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="discountPercent"
+                    label="Discount Percent (%)"
+                    type="number"
+                    value={formData.discountPercent}
+                    onChange={handleChange}
+                    error={!!errors.discountPercent}
+                    helperText={errors.discountPercent}
+                    fullWidth
+                    required
+                    inputProps={{ min: 0, max: 100, step: 0.1 }}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">%</InputAdornment>
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="rewardPointCost"
+                    label="Reward Point Cost"
+                    type="number"
+                    value={formData.rewardPointCost}
+                    onChange={handleChange}
+                    error={!!errors.rewardPointCost}
+                    helperText={errors.rewardPointCost}
+                    fullWidth
+                    required
+                    inputProps={{ min: 0 }}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">pts</InputAdornment>
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="maxUsage"
+                    label="Max Usage"
+                    type="number"
+                    value={formData.maxUsage}
+                    onChange={handleChange}
+                    error={!!errors.maxUsage}
+                    helperText={errors.maxUsage}
+                    fullWidth
+                    required
+                    inputProps={{ min: 1 }}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">times</InputAdornment>
+                    }}
+                  />
+                </Grid>
+              </>
+            )}
+          </Grid>
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions sx={{ px: 3, py: 2, gap: 2, backgroundColor: 'rgba(34, 197, 94, 0.02)', display: 'flex', justifyContent: 'space-between' }}>
+          <Button 
+            onClick={onClose}
+            variant="outlined"
+            sx={{
+              color: '#666',
+              borderColor: '#ccc',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              borderWidth: 1.5,
+              fontWeight: 500,
+              '&:hover': {
+                borderColor: '#999',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                borderWidth: 1.5,
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            variant="contained"
+            sx={{
+              backgroundColor: '#22c55e',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: '#16a34a',
+                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            {voucher ? 'Update Voucher' : 'Create Voucher'}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 };

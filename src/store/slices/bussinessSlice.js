@@ -18,6 +18,28 @@ export const getAllBusinesses = createAsyncThunk(
   }
 );
 
+// Get vouchers for business
+export const getBusinessVouchers = createAsyncThunk(
+  "businesses/getBusinessVouchers",
+  async ({ tierLabel, minThreshold, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const query = new URLSearchParams();
+      if (tierLabel) query.append("tierLabel", tierLabel);
+      if (minThreshold !== undefined && minThreshold !== null) {
+        query.append("minThreshold", String(minThreshold));
+      }
+      query.append("page", String(page));
+      query.append("limit", String(limit));
+      const response = await fetcher.get(`/business-vouchers?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // Get all businesses for statistics (no pagination)
 export const getAllBusinessesForStats = createAsyncThunk(
   "businesses/getAllBusinessesForStats",
@@ -45,6 +67,38 @@ export const getBusinessById = createAsyncThunk(
       return rejectWithValue(
         error.response ? error.response.data : error.message
       );
+    }
+  }
+);
+
+// Get voucher detail by business voucher id with filter/pagination
+export const getBusinessVoucherDetail = createAsyncThunk(
+  "businesses/getBusinessVoucherDetail",
+  async ({ businessVoucherId, status, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const query = new URLSearchParams();
+      if (status) query.append("status", status);
+      query.append("page", String(page));
+      query.append("limit", String(limit));
+      const response = await fetcher.get(
+        `/business-vouchers/${businessVoucherId}/detail?${query.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
+// Update a business voucher
+export const updateBusinessVoucher = createAsyncThunk(
+  "businesses/updateBusinessVoucher",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(`/business-vouchers/${id}`, data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
     }
   }
 );
@@ -328,6 +382,18 @@ const businessSlice = createSlice({
     businessesConfirmation: [],
     businesses: [],
     allBusinesses: [], 
+    vouchers: [],
+    vouchersTotalPages: 0,
+    vouchersTotal: 0,
+    vouchersCurrentPage: 1,
+    voucherLoading: false,
+    voucherError: null,
+    voucherDetail: [],
+    voucherDetailTotalPages: 0,
+    voucherDetailTotal: 0,
+    voucherDetailCurrentPage: 1,
+    voucherDetailLoading: false,
+    voucherDetailError: null,
     totalPages: 0,
     total: 0,
     currentPage: 1,
@@ -369,6 +435,23 @@ const businessSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
       })
+      // Business vouchers
+      .addCase(getBusinessVouchers.pending, (state) => {
+        state.voucherLoading = true;
+        state.voucherError = null;
+      })
+      .addCase(getBusinessVouchers.fulfilled, (state, { payload }) => {
+        state.voucherLoading = false;
+        state.vouchers = payload.data || [];
+        state.vouchersTotalPages = payload.totalPages || 0;
+        state.vouchersTotal = payload.total || 0;
+        state.vouchersCurrentPage = payload.currentPage || 1;
+        state.voucherError = null;
+      })
+      .addCase(getBusinessVouchers.rejected, (state, { payload }) => {
+        state.voucherLoading = false;
+        state.voucherError = payload;
+      })
       .addCase(getAllBusinessesForStats.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -381,6 +464,23 @@ const businessSlice = createSlice({
       .addCase(getAllBusinessesForStats.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+      })
+      // Business voucher detail
+      .addCase(getBusinessVoucherDetail.pending, (state) => {
+        state.voucherDetailLoading = true;
+        state.voucherDetailError = null;
+      })
+      .addCase(getBusinessVoucherDetail.fulfilled, (state, { payload }) => {
+        state.voucherDetailLoading = false;
+        state.voucherDetail = payload.data || [];
+        state.voucherDetailTotalPages = payload.totalPages || 0;
+        state.voucherDetailTotal = payload.total || 0;
+        state.voucherDetailCurrentPage = payload.currentPage || 1;
+        state.voucherDetailError = null;
+      })
+      .addCase(getBusinessVoucherDetail.rejected, (state, { payload }) => {
+        state.voucherDetailLoading = false;
+        state.voucherDetailError = payload;
       })
       .addCase(getBusinessById.pending, (state) => {
         state.isLoading = true;
@@ -398,6 +498,27 @@ const businessSlice = createSlice({
       .addCase(approveBusiness.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+      })
+      // Update voucher
+      .addCase(updateBusinessVoucher.pending, (state) => {
+        state.voucherLoading = true;
+        state.voucherError = null;
+      })
+      .addCase(updateBusinessVoucher.fulfilled, (state, { payload }) => {
+        state.voucherLoading = false;
+        // sync into list if present
+        const updated = payload.data || payload;
+        const idx = state.vouchers.findIndex(
+          (v) => (v.id || v._id) === (updated.id || updated._id)
+        );
+        if (idx !== -1) {
+          state.vouchers[idx] = { ...state.vouchers[idx], ...updated };
+        }
+        state.voucherError = null;
+      })
+      .addCase(updateBusinessVoucher.rejected, (state, { payload }) => {
+        state.voucherLoading = false;
+        state.voucherError = payload;
       })
       .addCase(approveBusiness.fulfilled, (state, { payload }) => {
         state.isLoading = false;
