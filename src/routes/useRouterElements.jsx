@@ -46,6 +46,7 @@ import Transactions from "../pages/Bussiness/BusinessTransaction/BusinessTransac
 import WalletBusiness from "../pages/Bussiness/WalletBusiness/WalletBusiness";
 import BusinessTransaction from "../pages/Bussiness/BusinessTransaction/BusinessTransaction";
 import ProfileBusiness from "../pages/Bussiness/ProfileBusiness/ProfileBusiness";
+import OnlineBorrowOrders from "../pages/Bussiness/OnlineBorrowOrders/OnlineBorrowOrders";
 import Rewards from "../pages/Home/Rewards/Rewards";
 import CustomerLegacyData from "../pages/Bussiness/CustomerLegacyData/CustomerLegacyData";
 import InventoryManagement from "../pages/Bussiness/Inventory/InventoryManagement";
@@ -279,6 +280,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
               <BusinessTransaction />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_ONLINE_BORROW_ORDERS,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <OnlineBorrowOrders />
             </ProtectedRoute>
           ),
         },

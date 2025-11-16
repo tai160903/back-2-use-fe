@@ -17,7 +17,6 @@ import { MdOutlineQrCode2 } from "react-icons/md";
 import { FiBox } from "react-icons/fi";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { CiWarning } from "react-icons/ci";
 import { MdOutlineFeedback } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { getTransactionHistoryApi } from "../../../store/slices/borrowSlice";
