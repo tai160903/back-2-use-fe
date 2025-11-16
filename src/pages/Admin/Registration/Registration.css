@@ -92,8 +92,9 @@
 .stat-number {
   font-size: 40px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #12422a; /* improve visibility */
   line-height: 1;
+  text-shadow: 0 0 0.5px rgba(0,0,0,0.15);
 }
 
 .stat-number.pending {

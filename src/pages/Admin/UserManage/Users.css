@@ -45,13 +45,15 @@
 /* Statistics Cards */
 .users-stats {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
+  justify-content: space-between;
+  align-items: stretch;
   gap: 24px;
   margin-bottom: 32px;
 }
 
 .stat-card {
+  flex: 1 1 0;
+  min-width: 0;
   max-width: 100%;
   background: white;
   border-radius: 16px;
@@ -59,6 +61,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
   transition: all 0.3s ease;
+  min-height: 170px;
 }
 
 .stat-card:hover {
@@ -87,7 +90,8 @@
 .stat-number {
   font-size: 32px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #12422a !important;
+  text-shadow: 0 0 0.5px rgba(0,0,0,0.15);
 }
 
 .stat-number.blocked {

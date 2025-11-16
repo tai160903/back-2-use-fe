@@ -305,11 +305,12 @@ const Analytics = () => {
       ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className="voucher-grid">
+        <div className={`voucher-grid ${typeFilter === "leaderboard" ? "leaderboard" : ""}`}>
           {(() => {
             const filteredData = getAllFilteredData();
-            const startIndex = (currentPage - 1) * 6;
-            const endIndex = startIndex + 6;
+            const perPage = typeFilter === "leaderboard" ? 8 : 6;
+            const startIndex = (currentPage - 1) * perPage;
+            const endIndex = startIndex + perPage;
             return filteredData.slice(startIndex, endIndex).map((voucher) => (
               <VoucherCard 
                 key={voucher._id} 
@@ -324,7 +325,8 @@ const Analytics = () => {
       {/* Pagination */}
       {!isLoading && vouchers.length > 0 && (() => {
         const filteredData = getAllFilteredData();
-        const filteredTotalPages = Math.ceil(filteredData.length / 6);
+        const perPage = typeFilter === "leaderboard" ? 8 : 6;
+        const filteredTotalPages = Math.ceil(filteredData.length / perPage);
         return (
           <Stack
             spacing={2}

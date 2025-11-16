@@ -115,8 +115,9 @@
 .stat-number {
   font-size: 42px;
   font-weight: 800;
-  color: #0f172a; /* stronger contrast */
+  color: #12422a !important; /* stronger contrast */
   line-height: 1;
+  text-shadow: 0 0 0.5px rgba(0,0,0,0.18);
 }
 
 .stat-number.pending {

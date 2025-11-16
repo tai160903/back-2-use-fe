@@ -115,8 +115,9 @@
 .stat-number {
   font-size: 42px;
   font-weight: 800;
-  color: #0f172a;
+  color: #12422a !important;
   line-height: 1;
+  text-shadow: 0 0 0.5px rgba(0,0,0,0.18);
 }
 
 .stat-number.pending {
@@ -341,6 +342,10 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-bottom: 32px;
+}
+
+.voucher-grid.leaderboard {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 /* Empty state */
