@@ -40,6 +40,9 @@ import {
   Replay as ReplayIcon,
   Description as DescriptionIcon,
   Close as CloseIcon,
+  ViewList as ViewListIcon,
+  ViewModule as ViewModuleIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -47,6 +50,7 @@ import {
   getApprovedMaterials,
   getMyMaterials,
 } from '../../../store/slices/bussinessSlice';
+import './Materials.css';
 
 export default function Materials() {
   const dispatch = useDispatch();
@@ -61,6 +65,8 @@ export default function Materials() {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [editMode, setEditMode] = useState(false);
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     materialName: '',
     description: '',
@@ -69,6 +75,20 @@ export default function Materials() {
   // Filter pending/rejected materials from myMaterials
   const pendingMaterials = myMaterials.filter(material => (material.status || '').toLowerCase() === 'pending');
   const rejectedMaterials = myMaterials.filter(material => (material.status || '').toLowerCase() === 'rejected');
+
+  const normalize = (v = '') => (v || '').toString().toLowerCase().trim();
+  const matchesSearch = (m) => {
+    const q = normalize(searchQuery);
+    if (!q) return true;
+    return normalize(m.materialName || m.requestedMaterialName).includes(q) || normalize(m.description).includes(q);
+  };
+
+  const filtered = {
+    my: myMaterials.filter(matchesSearch),
+    approved: approvedMaterials.filter(matchesSearch),
+    pending: pendingMaterials.filter(matchesSearch),
+    rejected: rejectedMaterials.filter(matchesSearch),
+  };
 
   // Load materials on component mount
   useEffect(() => {
@@ -323,28 +343,144 @@ export default function Materials() {
     </TableContainer>
   ); };
 
+  const renderMaterialsCards = (materials, showActions = false, useIsActive = false) => {
+    return (
+      <Grid container spacing={2} className="materials-grid">
+        {materials.map((material, index) => (
+          <Grid item xs={12} sm={6} md={4} key={material.id || index}>
+            <Card className="material-card" elevation={0}>
+              <CardContent>
+                <Box className="card-header" sx={{ mb: 1.5 }}>
+                  <Box className="card-title-section">
+                    <CategoryIcon className="card-icon" />
+                    <Box>
+                      <Typography className="card-title">
+                        {material.materialName || material.requestedMaterialName}
+                      </Typography>
+                      <Typography className="card-subtitle">
+                        {useIsActive ? 'Status' : 'Status'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    {showActions && (
+                      <>
+                        <Tooltip title="View Details">
+                          <IconButton size="small" onClick={() => handleViewMaterial(material)} className="view-button">
+                            <ViewIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton size="small" onClick={() => handleEditMaterial(material)} disabled={material.status === 'approved'} className="edit-button">
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton size="small" onClick={() => handleDeleteMaterial(material)} disabled={material.status === 'approved'} className="delete-button">
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    )}
+                  </Box>
+                </Box>
+
+                <Box className="card-details">
+                  <Box className="detail-row">
+                    <Typography className="detail-label">Description</Typography>
+                    <Typography className="detail-value">
+                      {material.description || '-'}
+                    </Typography>
+                  </Box>
+                  {(material.maximumReuse || material.reuseLimit) && (
+                    <Box className="detail-row">
+                      <Typography className="detail-label">Reuse</Typography>
+                      <Typography className="detail-value">
+                        {(material.maximumReuse || material.reuseLimit)} times
+                      </Typography>
+                    </Box>
+                  )}
+                  <Box className="detail-row">
+                    <Typography className="detail-label">Status</Typography>
+                    <Box className="detail-value">
+                      {useIsActive ? getStatusChip(material?.isActive ? 'active' : 'unactive') : getStatusChip(material.status || 'pending')}
+                    </Box>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
+
   return (
-    <Box sx={{ p: 2.5, fontFamily: 'inherit' }}>
+    <Box className="materials-page" sx={{ p: 2.5, fontFamily: 'inherit' }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" component="h1" fontWeight={700} sx={{ color: '#2E7D32', fontFamily: 'inherit', letterSpacing: 0.2 }}>
-          Materials Management
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenDialog}
-          sx={{ 
-            borderRadius: 1.5,
-            backgroundColor: '#4CAF50',
-            '&:hover': {
-              backgroundColor: '#388E3C'
-            }
-          }}
-          size="small"
-        >
-          Add New Material
-        </Button>
+      <Box className="materials-header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h5" component="h1" fontWeight={700} sx={{ color: '#12422a', fontFamily: 'inherit', letterSpacing: 0.2 }}>
+            Materials
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
+            Manage your business materials
+          </Typography>
+        </Box>
+        <Box className="materials-toolbar" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <TextField
+            size="small"
+            placeholder="Search materials..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: '#9ca3af' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Tooltip title="List">
+            <span>
+              <IconButton
+                className={`view-toggle ${viewMode === 'table' ? 'active' : ''}`}
+                onClick={() => setViewMode('table')}
+                size="small"
+              >
+                <ViewListIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="Cards">
+            <span>
+              <IconButton
+                className={`view-toggle ${viewMode === 'cards' ? 'active' : ''}`}
+                onClick={() => setViewMode('cards')}
+                size="small"
+              >
+                <ViewModuleIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenDialog}
+            sx={{ 
+              borderRadius: 1.5,
+              backgroundColor: '#12422a',
+              '&:hover': {
+                backgroundColor: '#0d2e1c'
+              }
+            }}
+            size="small"
+            className="add-button"
+          >
+            Add New Material
+          </Button>
+        </Box>
       </Box>
 
       {/* Error Alert */}
@@ -355,7 +491,7 @@ export default function Materials() {
       )}
 
       {/* Tabs */}
-      <Paper sx={{ mb: 2, borderRadius: 2 }}>
+      <Paper sx={{ mb: 2, borderRadius: 2 }} className="materials-tabs">
         <Tabs 
           value={activeTab} 
           onChange={handleTabChange} 
@@ -363,17 +499,17 @@ export default function Materials() {
           textColor="inherit"
           sx={{
             '& .MuiTab-root': {
-              color: '#66BB6A',
+              color: '#6b7280',
               minHeight: 44,
               fontSize: 14,
               fontFamily: 'inherit',
               '&.Mui-selected': {
-                color: '#2E7D32',
+                color: '#12422a',
                 fontWeight: 'bold'
               }
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: '#4CAF50'
+              backgroundColor: '#12422a'
             }
           }}
         >
@@ -394,10 +530,10 @@ export default function Materials() {
           <>
             {activeTab === 0 && (
               <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
                   My Materials
                 </Typography>
-                {myMaterials.length === 0 ? (
+                {filtered.my.length === 0 ? (
                   <Card>
                     <CardContent sx={{ textAlign: 'center', py: 3 }}>
                       <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -406,15 +542,15 @@ export default function Materials() {
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Create your first material to get started
                       </Typography>
-                       <Button 
+                      <Button 
                         variant="outlined" 
                         onClick={handleOpenDialog}
                         sx={{
-                          color: '#4CAF50',
-                          borderColor: '#4CAF50',
+                          color: '#12422a',
+                          borderColor: '#12422a',
                           '&:hover': {
-                            borderColor: '#2E7D32',
-                            backgroundColor: 'rgba(76, 175, 80, 0.08)'
+                            borderColor: '#0d2e1c',
+                            backgroundColor: 'rgba(18, 66, 42, 0.08)'
                           }
                         }}
                          size="small"
@@ -424,17 +560,17 @@ export default function Materials() {
                     </CardContent>
                   </Card>
                 ) : (
-                  renderMaterialsTable(myMaterials, true)
+                  viewMode === 'table' ? renderMaterialsTable(filtered.my, true) : renderMaterialsCards(filtered.my, true)
                 )}
               </Box>
             )}
 
             {activeTab === 1 && (
               <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
                   Active Materials
                 </Typography>
-                {approvedMaterials.length === 0 ? (
+                {filtered.approved.length === 0 ? (
                   <Card>
                     <CardContent sx={{ textAlign: 'center', py: 3 }}>
                       <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -446,17 +582,17 @@ export default function Materials() {
                     </CardContent>
                   </Card>
                 ) : (
-                  renderMaterialsTable(approvedMaterials, false, true)
+                  viewMode === 'table' ? renderMaterialsTable(filtered.approved, false, true) : renderMaterialsCards(filtered.approved, false, true)
                 )}
               </Box>
             )}
 
             {activeTab === 2 && (
               <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
                   Pending Materials
                 </Typography>
-                {pendingMaterials.length === 0 ? (
+                {filtered.pending.length === 0 ? (
                   <Card>
                     <CardContent sx={{ textAlign: 'center', py: 3 }}>
                       <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -468,17 +604,17 @@ export default function Materials() {
                     </CardContent>
                   </Card>
                 ) : (
-                  renderMaterialsTable(pendingMaterials, true)
+                  viewMode === 'table' ? renderMaterialsTable(filtered.pending, true) : renderMaterialsCards(filtered.pending, true)
                 )}
               </Box>
             )}
 
             {activeTab === 3 && (
               <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#2E7D32', fontWeight: 700, fontFamily: 'inherit' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
                   Rejected Materials
                 </Typography>
-                {rejectedMaterials.length === 0 ? (
+                {filtered.rejected.length === 0 ? (
                   <Card>
                     <CardContent sx={{ textAlign: 'center', py: 4 }}>
                       <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -490,7 +626,7 @@ export default function Materials() {
                     </CardContent>
                   </Card>
                 ) : (
-                  renderMaterialsTable(rejectedMaterials, true)
+                  viewMode === 'table' ? renderMaterialsTable(filtered.rejected, true) : renderMaterialsCards(filtered.rejected, true)
                 )}
               </Box>
             )}
@@ -510,16 +646,16 @@ export default function Materials() {
         PaperProps={{
           sx: {
             borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
+            boxShadow: '0 12px 40px rgba(18, 66, 42, 0.2)',
             overflow: 'hidden',
-            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
+            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%)',
             maxHeight: '90vh'
           }
         }}
       >
          <DialogTitle 
           sx={{ 
-            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+            background: 'linear-gradient(135deg, #12422a 0%, #0d2e1c 100%)',
             color: 'white',
             py: 1.5,
             px: 2,
@@ -562,7 +698,7 @@ export default function Materials() {
                   <Typography 
                     variant="body2" 
                     sx={{ 
-                      color: '#2E7D32', 
+                      color: '#12422a', 
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
@@ -588,7 +724,7 @@ export default function Materials() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <CategoryIcon sx={{ color: '#4CAF50' }} />
+                        <CategoryIcon sx={{ color: '#12422a' }} />
                       </InputAdornment>
                     ),
                   }}
@@ -596,10 +732,10 @@ export default function Materials() {
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
                       '&:hover fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                         borderWidth: 2,
                       },
                     },
@@ -615,7 +751,7 @@ export default function Materials() {
                   <Typography 
                     variant="body2" 
                     sx={{ 
-                      color: '#2E7D32', 
+                      color: '#12422a', 
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
@@ -643,7 +779,7 @@ export default function Materials() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
-                        <DescriptionIcon sx={{ color: '#4CAF50', fontSize: 18 }} />
+                        <DescriptionIcon sx={{ color: '#12422a', fontSize: 18 }} />
                       </InputAdornment>
                     ),
                   }}
@@ -651,10 +787,10 @@ export default function Materials() {
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
                       '&:hover fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                         borderWidth: 2,
                       },
                     },
@@ -667,18 +803,18 @@ export default function Materials() {
                 <Box 
                   sx={{ 
                     p: 2, 
-                    background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(46, 125, 50, 0.05) 100%)',
+                    background: 'linear-gradient(135deg, rgba(18, 66, 42, 0.08) 0%, rgba(13, 46, 28, 0.05) 100%)',
                     borderRadius: 2,
-                    border: '2px solid rgba(76, 175, 80, 0.3)',
+                    border: '2px solid rgba(18, 66, 42, 0.25)',
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 1.5,
-                    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.1)'
+                    boxShadow: '0 2px 8px rgba(18, 66, 42, 0.1)'
                   }}
                 >
                   <Box 
                     sx={{ 
-                      backgroundColor: '#4CAF50',
+                      backgroundColor: '#12422a',
                       borderRadius: '50%',
                       p: 1,
                       display: 'flex',
@@ -691,10 +827,10 @@ export default function Materials() {
                     <EcoIcon sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ color: '#2E7D32', fontWeight: 700, mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ color: '#12422a', fontWeight: 700, mb: 0.5 }}>
                       🌱 Contributing to a Sustainable Future
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#1B5E20', lineHeight: 1.5, display: 'block' }}>
+                    <Typography variant="caption" sx={{ color: '#0f2e1e', lineHeight: 1.5, display: 'block' }}>
                       By adding eco-friendly materials, you're helping reduce waste and promote sustainability. 
                       All materials will be reviewed by our team before approval.
                     </Typography>
@@ -711,7 +847,7 @@ export default function Materials() {
                px: 2, 
                py: 1.5, 
               gap: 2,
-              backgroundColor: 'rgba(76, 175, 80, 0.02)',
+              backgroundColor: 'rgba(18, 66, 42, 0.02)',
               display: 'flex',
               justifyContent: 'space-between'
             }}
@@ -735,6 +871,7 @@ export default function Materials() {
                 }
               }}
                size="small"
+              className="cancel-button"
             >
               Cancel
             </Button>
@@ -743,20 +880,21 @@ export default function Materials() {
               variant="contained"
               startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
               sx={{
-                backgroundColor: '#4CAF50',
+                backgroundColor: '#12422a',
                  px: 2,
                  py: 0.75,
                  fontSize: '0.9rem',
                 fontWeight: 600,
-                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
+                boxShadow: '0 4px 12px rgba(18, 66, 42, 0.35)',
                 transition: 'all 0.3s ease',
                 '&:hover': {
-                  backgroundColor: '#388E3C',
-                  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.45)',
+                  backgroundColor: '#0d2e1c',
+                  boxShadow: '0 6px 16px rgba(18, 66, 42, 0.45)',
                   transform: 'translateY(-2px)',
                 }
               }}
                size="small"
+              className="create-button"
             >
               {editMode ? 'Update Material' : 'Create Material'}
             </Button>
@@ -773,13 +911,13 @@ export default function Materials() {
         PaperProps={{
           sx: {
             borderRadius: 3,
-            boxShadow: '0 8px 32px rgba(46, 125, 50, 0.15)'
+            boxShadow: '0 8px 32px rgba(18, 66, 42, 0.15)'
           }
         }}
       >
         <DialogTitle 
           sx={{ 
-            background: 'linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)',
+            background: 'linear-gradient(135deg, #166534 0%, #12422a 100%)',
             color: 'white',
             py: 3,
             display: 'flex',
@@ -820,14 +958,14 @@ export default function Materials() {
                   elevation={0} 
                   sx={{ 
                     p: 3, 
-                    backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                    backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
-                    border: '1px solid rgba(76, 175, 80, 0.2)'
+                    border: '1px solid rgba(18, 66, 42, 0.2)'
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <CategoryIcon sx={{ color: '#4CAF50', fontSize: 20 }} />
-                    <Typography variant="subtitle2" sx={{ color: '#2E7D32', fontWeight: 600 }}>
+                    <CategoryIcon sx={{ color: '#12422a', fontSize: 20 }} />
+                    <Typography variant="subtitle2" sx={{ color: '#12422a', fontWeight: 600 }}>
                       Material Name
                     </Typography>
                   </Box>
@@ -843,15 +981,15 @@ export default function Materials() {
                   elevation={0} 
                   sx={{ 
                     p: 3, 
-                    backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                    backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
-                    border: '1px solid rgba(76, 175, 80, 0.2)',
+                    border: '1px solid rgba(18, 66, 42, 0.2)',
                     height: '100%'
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <ReplayIcon sx={{ color: '#4CAF50', fontSize: 20 }} />
-                    <Typography variant="subtitle2" sx={{ color: '#2E7D32', fontWeight: 600 }}>
+                    <ReplayIcon sx={{ color: '#12422a', fontSize: 20 }} />
+                    <Typography variant="subtitle2" sx={{ color: '#12422a', fontWeight: 600 }}>
                       Maximum Reuse
                     </Typography>
                   </Box>
@@ -870,15 +1008,15 @@ export default function Materials() {
                   elevation={0} 
                   sx={{ 
                     p: 3, 
-                    backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                    backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
-                    border: '1px solid rgba(76, 175, 80, 0.2)',
+                    border: '1px solid rgba(18, 66, 42, 0.2)',
                     height: '100%'
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <ApprovedIcon sx={{ color: '#4CAF50', fontSize: 20 }} />
-                    <Typography variant="subtitle2" sx={{ color: '#2E7D32', fontWeight: 600 }}>
+                    <ApprovedIcon sx={{ color: '#12422a', fontSize: 20 }} />
+                    <Typography variant="subtitle2" sx={{ color: '#12422a', fontWeight: 600 }}>
                       Status
                     </Typography>
                   </Box>
@@ -894,14 +1032,14 @@ export default function Materials() {
                   elevation={0} 
                   sx={{ 
                     p: 3, 
-                    backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                    backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
-                    border: '1px solid rgba(76, 175, 80, 0.2)'
+                    border: '1px solid rgba(18, 66, 42, 0.2)'
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                    <DescriptionIcon sx={{ color: '#4CAF50', fontSize: 20 }} />
-                    <Typography variant="subtitle2" sx={{ color: '#2E7D32', fontWeight: 600 }}>
+                    <DescriptionIcon sx={{ color: '#12422a', fontSize: 20 }} />
+                    <Typography variant="subtitle2" sx={{ color: '#12422a', fontWeight: 600 }}>
                       Description
                     </Typography>
                   </Box>
@@ -943,11 +1081,11 @@ export default function Materials() {
             onClick={handleCloseViewDialog}
             variant="contained"
             sx={{
-              backgroundColor: '#4CAF50',
+              backgroundColor: '#12422a',
               px: 3,
               py: 1,
               '&:hover': {
-                backgroundColor: '#388E3C'
+                backgroundColor: '#0d2e1c'
               }
             }}
           >
