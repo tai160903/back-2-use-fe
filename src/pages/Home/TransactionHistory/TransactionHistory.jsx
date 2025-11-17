@@ -11,7 +11,15 @@ import { useEffect, useState } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import { Button } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Divider,
+} from "@mui/material";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { MdOutlineQrCode2 } from "react-icons/md";
 import { FiBox } from "react-icons/fi";
@@ -19,7 +27,11 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { MdOutlineFeedback } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import { getTransactionHistoryApi } from "../../../store/slices/borrowSlice";
+import {
+  getTransactionHistoryApi,
+  getDetailsBorrowTransactionCustomerApi,
+  cancelBorrowTransactionCustomerApi,
+} from "../../../store/slices/borrowSlice";
 
 function BorrowCard({ item }) {
   const product = item.productId || {};
@@ -107,10 +119,24 @@ function BorrowCard({ item }) {
                   {deposit.toLocaleString("vi-VN")} VNĐ
                 </span>
               </Typography>
-              <Button className="borrow-content-btn">
-                <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
-                Details
-              </Button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
+                  <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
+                  Details
+                </Button>
+                {item.status === "pending_pickup" && item.onCancel && (
+                  <Button
+                    className="borrow-content-btn"
+                    color="error"
+                    onClick={item.onCancel}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -217,7 +243,10 @@ function SuccessCard({ item }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
-                <Button className="borrow-content-btn">
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
                   <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
                 </Button>
                 <Button className="borrow-content-btn">
@@ -331,7 +360,10 @@ function FailedCard({ item }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
-                <Button className="borrow-content-btn">
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
                   <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
                 </Button>
                 <Button className="borrow-content-btn">
@@ -349,12 +381,17 @@ function FailedCard({ item }) {
 
 export default function TransactionHistory() {
   const dispatch = useDispatch();
-  const { borrow, isLoading } = useSelector((state) => state.borrow);
+  const { borrow, isLoading, borrowDetail, isDetailLoading } = useSelector(
+    (state) => state.borrow
+  );
 
   // trạng thái filter
   const [status, setStatus] = useState("");
   const [searchText, setSearchText] = useState("");
   const [value, setValue] = useState(0); // tab hiện tại
+  const [openDetail, setOpenDetail] = useState(false);
+  const [openCancel, setOpenCancel] = useState(false);
+  const [selectedCancelId, setSelectedCancelId] = useState(null);
 
   const transactions = Array.isArray(borrow) ? borrow : [];
 
@@ -379,7 +416,51 @@ export default function TransactionHistory() {
     setValue(newValue);
   };
 
+  const handleViewDetails = (id) => {
+    if (!id) return;
+    dispatch(getDetailsBorrowTransactionCustomerApi(id));
+    setOpenDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setOpenDetail(false);
+  };
+
+  const handleOpenCancel = (id) => {
+    setSelectedCancelId(id);
+    setOpenCancel(true);
+  };
+
+  const handleCloseCancel = () => {
+    setOpenCancel(false);
+    setSelectedCancelId(null);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!selectedCancelId) return;
+    await dispatch(cancelBorrowTransactionCustomerApi(selectedCancelId));
+    setOpenCancel(false);
+    setSelectedCancelId(null);
+  };
+
   const filteredData = transactions;
+
+  const detail = borrowDetail || {};
+  const detailProduct = detail.productId || {};
+  const detailGroup = detailProduct.productGroupId || {};
+  const detailMaterial = detailGroup.materialId || {};
+  const detailSize = detailProduct.productSizeId || {};
+  const detailBusiness = detail.businessId || {};
+
+  const toVNDate = (d) =>
+    d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
+
+  // Format type label in English
+  const detailRawType = detail.borrowTransactionType;
+  let detailTypeLabel = detailRawType;
+  if (detailRawType === "borrow") detailTypeLabel = "Borrow";
+  if (detailRawType === "return_success") detailTypeLabel = "Return Success";
+  if (detailRawType === "return_failed") detailTypeLabel = "Return Failed";
 
   return (
     <div className="transaction">
@@ -486,17 +567,236 @@ export default function TransactionHistory() {
             </Typography>
           ) : (
             filteredData.map((item) => {
+              const cardProps = {
+                ...item,
+                onViewDetails: () => handleViewDetails(item._id),
+                onCancel: () => handleOpenCancel(item._id),
+              };
               if (item.borrowTransactionType === "borrow")
-                return <BorrowCard key={item._id} item={item} />;
+                return <BorrowCard key={item._id} item={cardProps} />;
               if (item.borrowTransactionType === "return_success")
-                return <SuccessCard key={item._id} item={item} />;
+                return <SuccessCard key={item._id} item={cardProps} />;
               if (item.borrowTransactionType === "return_failed")
-                return <FailedCard key={item._id} item={item} />;
+                return <FailedCard key={item._id} item={cardProps} />;
               // fallback
-              return <BorrowCard key={item._id} item={item} />;
+              return <BorrowCard key={item._id} item={cardProps} />;
             })
           )}
         </div>
+
+        {/* Detail Popup */}
+        <Dialog
+          open={openDetail}
+          onClose={handleCloseDetail}
+          fullWidth
+          maxWidth="md"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              maxWidth: 900,
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              fontSize: 18,
+              backgroundColor: "#0b5529",
+              color: "#ffffff",
+              borderBottom: "1px solid #eee",
+            }}
+          >
+            Transaction Detail
+          </DialogTitle>
+          <DialogContent dividers>
+            {isDetailLoading ? (
+              <Typography>Loading transaction detail...</Typography>
+            ) : !detail || !detail._id ? (
+              <Typography>Transaction not found.</Typography>
+            ) : (
+              <Box className="borrow-detail-popup" sx={{ mt: 1 }}>
+                {/* Header sản phẩm + chip trạng thái */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    mb: 2,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={
+                      detailGroup.imageUrl ||
+                      detailProduct.imageUrl ||
+                      "https://via.placeholder.com/150"
+                    }
+                    alt={detailGroup.name || "Product"}
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: 2,
+                      objectFit: "cover",
+                      boxShadow: 2,
+                    }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
+                      <Typography variant="h6">
+                        {detailGroup.name || "Unknown Item"}
+                      </Typography>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <Chip
+                          size="small"
+                          label={detailTypeLabel}
+                          variant="outlined"
+                          sx={{
+                            borderColor: "#0b5529",
+                            color: "#0b5529",
+                            fontWeight: 500,
+                          }}
+                        />
+                        <Chip
+                          size="small"
+                          label={detail.status}
+                          variant="filled"
+                          sx={{
+                            backgroundColor: "#0b5529",
+                            color: "#ffffff",
+                            fontWeight: 500,
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Material: {detailMaterial.materialName || "N/A"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Size: {detailSize.sizeName || "N/A"}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ wordBreak: "break-all" }}
+                    >
+                      QR / Serial:{" "}
+                      {detail.qrCode ||
+                        detailProduct.qrCode ||
+                        detailProduct.serialNumber ||
+                        "N/A"}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                {/* Two columns: Transaction & Business */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 2.5,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Transaction Info
+                    </Typography>
+                    <Typography variant="body2">
+                      Borrowed at:{" "}
+                      <strong>
+                        {toVNDate(detail.borrowDate || detail.createdAt)}
+                      </strong>
+                    </Typography>
+                    <Typography variant="body2">
+                      Due date:{" "}
+                      <strong>{toVNDate(detail.dueDate)}</strong>
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Deposit:{" "}
+                      <span
+                        style={{ color: "#cc3500", fontWeight: "bold" }}
+                      >
+                        {Number(detail.depositAmount || 0).toLocaleString(
+                          "vi-VN"
+                        )}{" "}
+                        VNĐ
+                      </span>
+                    </Typography>
+                  </Box>
+
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Business
+                    </Typography>
+                    <Typography variant="body2">
+                      Name:{" "}
+                      <strong>
+                        {detailBusiness.businessName || "N/A"}
+                      </strong>
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      Address: {detailBusiness.businessAddress || "N/A"}
+                    </Typography>
+                    <Typography variant="body2">
+                      Phone: {detailBusiness.businessPhone || "N/A"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDetail}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Cancel confirmation popup */}
+        <Dialog
+          open={openCancel}
+          onClose={handleCloseCancel}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>Cancel transaction</DialogTitle>
+          <DialogContent dividers>
+            <Typography>
+              Are you sure you want to cancel this transaction?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              This action cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseCancel} disabled={isLoading}>
+              Keep
+            </Button>
+            <Button
+              onClick={handleConfirmCancel}
+              color="error"
+              variant="contained"
+              disabled={isLoading}
+            >
+              {isLoading ? "Canceling..." : "Yes, cancel"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     </div>
   );

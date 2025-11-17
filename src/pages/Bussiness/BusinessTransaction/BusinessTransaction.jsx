@@ -11,7 +11,15 @@ import { useEffect, useState } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import { Button } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Divider,
+} from "@mui/material";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { MdOutlineQrCode2 } from "react-icons/md";
 import { FiBox } from "react-icons/fi";
@@ -20,7 +28,10 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { CiWarning } from "react-icons/ci";
 import { MdOutlineFeedback } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import { getTransactionHistoryBusinessApi } from "../../../store/slices/borrowSlice";
+import {
+  getTransactionHistoryBusinessApi,
+  getDetailsBorrowTransactionBusinessApi,
+} from "../../../store/slices/borrowSlice";
 
 // ================== Card Components ==================
 function BorrowCard({ item }) {
@@ -123,7 +134,10 @@ function BorrowCard({ item }) {
                   {deposit.toLocaleString("vi-VN")} VNĐ
                 </span>
               </Typography>
-              <Button className="borrow-content-btn">
+              <Button
+                className="borrow-content-btn"
+                onClick={item.onViewDetails}
+              >
                 <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
                 Details
               </Button>
@@ -401,16 +415,29 @@ function FailedCard({ item }) {
 // ================== Main Component ==================
 export default function BusinessTransaction() {
   const dispatch = useDispatch();
-  const { borrow, isLoading } = useSelector((state) => state.borrow);
+  const { borrow, isLoading, borrowDetail, isDetailLoading } = useSelector(
+    (state) => state.borrow
+  );
 
   const [status, setStatus] = useState("");
   const [searchText, setSearchText] = useState("");
   const [value, setValue] = useState(0);
+  const [openDetail, setOpenDetail] = useState(false);
 
   const transactions = Array.isArray(borrow) ? borrow : [];
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+  };
+
+  const handleViewDetails = (id) => {
+    if (!id) return;
+    dispatch(getDetailsBorrowTransactionBusinessApi(id));
+    setOpenDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setOpenDetail(false);
   };
 
   // Gọi API mỗi khi filter thay đổi (giống TransactionHistory)
@@ -430,6 +457,21 @@ export default function BusinessTransaction() {
   }, [dispatch, status, searchText, value]);
 
   const filteredData = transactions;
+
+  const detail = borrowDetail || {};
+  const detailProduct = detail.productId || {};
+  const detailGroup = detailProduct.productGroupId || {};
+  const detailMaterial = detailGroup.materialId || {};
+  const detailSize = detailProduct.productSizeId || {};
+
+  const toVNDate = (d) =>
+    d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
+
+  const rawType = detail.borrowTransactionType;
+  let typeLabel = rawType;
+  if (rawType === "borrow") typeLabel = "Borrow";
+  if (rawType === "return_success") typeLabel = "Return Success";
+  if (rawType === "return_failed") typeLabel = "Return Failed";
 
   return (
     <div className="transaction">
@@ -536,16 +578,170 @@ export default function BusinessTransaction() {
             </Typography>
           ) : (
             filteredData.map((item) => {
+              const cardProps = {
+                ...item,
+                onViewDetails: () => handleViewDetails(item._id),
+              };
               if (item.borrowTransactionType === "borrow")
-                return <BorrowCard key={item._id} item={item} />;
+                return <BorrowCard key={item._id} item={cardProps} />;
               if (item.borrowTransactionType === "return_success")
-                return <SuccessCard key={item._id} item={item} />;
+                return <SuccessCard key={item._id} item={cardProps} />;
               if (item.borrowTransactionType === "return_failed")
-                return <FailedCard key={item._id} item={item} />;
-              return <BorrowCard key={item._id} item={item} />;
+                return <FailedCard key={item._id} item={cardProps} />;
+              return <BorrowCard key={item._id} item={cardProps} />;
             })
           )}
         </div>
+
+        {/* Detail popup for business transaction */}
+        <Dialog
+          open={openDetail}
+          onClose={handleCloseDetail}
+          fullWidth
+          maxWidth="md"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              maxWidth: 900,
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              fontSize: 18,
+              backgroundColor: "#0b5529",
+              color: "#ffffff",
+              borderBottom: "1px solid #eee",
+            }}
+          >
+            Transaction Detail
+          </DialogTitle>
+          <DialogContent dividers>
+            {isDetailLoading ? (
+              <Typography>Loading transaction detail...</Typography>
+            ) : !detail || !detail._id ? (
+              <Typography>Transaction not found.</Typography>
+            ) : (
+              <Box sx={{ mt: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    mb: 2,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={
+                      detailGroup.imageUrl ||
+                      detailProduct.imageUrl ||
+                      "https://via.placeholder.com/150"
+                    }
+                    alt={detailGroup.name || "Product"}
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: 2,
+                      objectFit: "cover",
+                      boxShadow: 2,
+                    }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
+                      <Typography variant="h6">
+                        {detailGroup.name || "Unknown Item"}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={typeLabel}
+                        variant="outlined"
+                        sx={{
+                          borderColor: "#0b5529",
+                          color: "#0b5529",
+                          fontWeight: 500,
+                        }}
+                      />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Material: {detailMaterial.materialName || "N/A"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Size: {detailSize.sizeName || "N/A"}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ wordBreak: "break-all" }}
+                    >
+                      QR / Serial:{" "}
+                      {detail.qrCode ||
+                        detailProduct.qrCode ||
+                        detailProduct.serialNumber ||
+                        "N/A"}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 2.5,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Transaction Info
+                    </Typography>
+                    <Typography variant="body2">
+                      Borrowed at:{" "}
+                      <strong>
+                        {toVNDate(detail.borrowDate || detail.createdAt)}
+                      </strong>
+                    </Typography>
+                    <Typography variant="body2">
+                      Due date:{" "}
+                      <strong>{toVNDate(detail.dueDate)}</strong>
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Deposit:{" "}
+                      <span
+                        style={{ color: "#cc3500", fontWeight: "bold" }}
+                      >
+                        {Number(detail.depositAmount || 0).toLocaleString(
+                          "vi-VN"
+                        )}{" "}
+                        VNĐ
+                      </span>
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Status: <strong>{detail.status}</strong>
+                    </Typography>
+                  </Box>
+
+               
+                </Box>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDetail}>Close</Button>
+          </DialogActions>
+        </Dialog>
       </div>
     </div>
   );
