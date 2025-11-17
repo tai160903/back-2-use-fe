@@ -110,6 +110,49 @@ export const confirmBorrowTransactionBusinessApi = createAsyncThunk(
     }
 );
 
+
+// get details borrow transaction for customer
+export const getDetailsBorrowTransactionCustomerApi = createAsyncThunk(
+    "borrow/getDetailsBorrowTransactionCustomerApi",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.get(`/borrow-transactions/customer/${id}`);
+       
+            return response.data?.data || null;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+// get detail borrow transaction for business
+export const getDetailsBorrowTransactionBusinessApi = createAsyncThunk(
+    "borrow/getDetailsBorrowTransactionBusinessApi",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.get(`/borrow-transactions/business/${id}`);
+            return response.data?.data || null;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+
+// cancel borrow transaction for customer
+export const cancelBorrowTransactionCustomerApi = createAsyncThunk(
+    "borrow/cancelBorrowTransactionCustomerApi",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.patch(`/borrow-transactions/customer/cancel/${id}`);
+            return response.data?.data || null;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+
 const borrowSlice = createSlice({
     name: "borrow",
     initialState: {
@@ -199,6 +242,51 @@ const borrowSlice = createSlice({
         })
         .addCase(confirmBorrowTransactionBusinessApi.rejected, (state, {payload}) => {
             state.isLoading = false
+            state.error = payload
+        })
+        .addCase(getDetailsBorrowTransactionCustomerApi.pending, (state) => {
+            state.isDetailLoading = true
+            state.error = null
+        })
+        .addCase(getDetailsBorrowTransactionCustomerApi.fulfilled, (state, {payload}) => {
+            state.isDetailLoading = false
+            state.error = null
+            state.borrowDetail = payload
+        })
+        .addCase(getDetailsBorrowTransactionCustomerApi.rejected, (state, {payload}) => {
+            state.isDetailLoading = false
+            state.error = payload
+        })
+        .addCase(cancelBorrowTransactionCustomerApi.pending, (state) => {
+            state.isLoading = true
+            state.error = null
+        })
+        .addCase(cancelBorrowTransactionCustomerApi.fulfilled, (state, {payload}) => {
+            state.isLoading = false
+            state.error = null
+            state.borrowDetail = payload
+
+            if (payload && payload._id) {
+                state.borrow = state.borrow.map((item) =>
+                    item._id === payload._id ? payload : item
+                )
+            }
+        })
+        .addCase(cancelBorrowTransactionCustomerApi.rejected, (state, {payload}) => {
+            state.isLoading = false
+            state.error = payload
+        })
+        .addCase(getDetailsBorrowTransactionBusinessApi.pending, (state) => {
+            state.isDetailLoading = true
+            state.error = null
+        })
+        .addCase(getDetailsBorrowTransactionBusinessApi.fulfilled, (state, {payload}) => {
+            state.isDetailLoading = false
+            state.error = null
+            state.borrowDetail = payload
+        })
+        .addCase(getDetailsBorrowTransactionBusinessApi.rejected, (state, {payload}) => {
+            state.isDetailLoading = false
             state.error = payload
         })
     }
