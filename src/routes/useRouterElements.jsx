@@ -53,6 +53,7 @@ import InventoryManagement from "../pages/Bussiness/Inventory/InventoryManagemen
 import ProductItems from "../pages/Bussiness/Inventory/ProductItems";
 import ProductSizeManagement from "../pages/Bussiness/Inventory/ProductSizeManagement";
 import EcoReward from "../pages/Admin/EcoReward/EcoReward";
+import LeaderBoard from "../pages/Admin/LeaderBoard/LeaderBoard";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -371,6 +372,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>
               <EcoReward />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_LEADERBOARD,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <LeaderBoard />
             </ProtectedRoute>
           ),
         },

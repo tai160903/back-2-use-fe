@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import VoucherCard from '../../components/VoucherCard/VoucherCard';
 import VoucherModal from './VoucherModal';
+import VoucherDetailModal from '../../components/VoucherDetailModal/VoucherDetailModal';
 import { 
   getAllVouchersApi,
   createVoucherApi,
@@ -9,6 +10,7 @@ import {
   createLeaderboardVoucherApi,
   createSystemVoucherApi,
   updateVoucherApi,
+  getVoucherByIdApi,
   setVoucherNameFilter,
   resetVoucherFilters 
 } from '../../store/slices/adminSlice';
@@ -26,6 +28,7 @@ const Analytics = () => {
   const dispatch = useDispatch();
   const { 
     vouchers, 
+    currentVoucher,
     isLoading, 
     error, 
     voucherPagination, 
@@ -33,6 +36,7 @@ const Analytics = () => {
   } = useSelector(state => state.admin);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [filter, setFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -60,6 +64,18 @@ const Analytics = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingVoucher(null);
+  };
+
+  const handleViewDetail = (voucher) => {
+    const voucherId = voucher._id || voucher.id;
+    if (voucherId) {
+      dispatch(getVoucherByIdApi(voucherId));
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
   };
 
   const handlePageChange = (event, newPage) => {
@@ -316,6 +332,7 @@ const Analytics = () => {
                 key={voucher._id} 
                 voucher={voucher}
                 onEdit={handleEditVoucher}
+                onViewDetail={handleViewDetail}
               />
             ));
           })()}
@@ -377,6 +394,14 @@ const Analytics = () => {
           }}
         />
       )}
+
+      {/* Voucher Detail Modal */}
+      <VoucherDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        voucher={currentVoucher}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 
-const VoucherCard = ({ voucher, onEdit }) => {
+const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
   const dispatch = useDispatch();
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -47,13 +47,28 @@ const VoucherCard = ({ voucher, onEdit }) => {
   };
 
 
-  const handleEdit = () => {
+  const handleEdit = (e) => {
+    e.stopPropagation();
     if (onEdit) {
       onEdit(voucher);
     }
   };
 
-  const handleDelete = () => {
+  const handleViewDetail = (e) => {
+    e.stopPropagation();
+    if (onViewDetail) {
+      onViewDetail(voucher);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (onViewDetail) {
+      onViewDetail(voucher);
+    }
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
     setIsDeleteOpen(true);
   };
 
@@ -66,7 +81,8 @@ const VoucherCard = ({ voucher, onEdit }) => {
     setIsDeleteOpen(false);
   };
 
-  const handleApprove = () => {
+  const handleApprove = (e) => {
+    e.stopPropagation();
     dispatch(reviewVoucherApi({
       voucherId: voucher._id,
       reviewData: {
@@ -75,7 +91,8 @@ const VoucherCard = ({ voucher, onEdit }) => {
     }));
   };
 
-  const handleReject = () => {
+  const handleReject = (e) => {
+    e.stopPropagation();
     setRejectReason('');
     setIsRejectOpen(true);
   };
@@ -113,7 +130,7 @@ const VoucherCard = ({ voucher, onEdit }) => {
   };
 
   return (
-    <div className="voucher-card">
+    <div className="voucher-card" onClick={handleCardClick} style={{ cursor: onViewDetail ? 'pointer' : 'default' }}>
       <div className="voucher-card-header">
         <div className="voucher-card-info">
           {getGiftIcon()}
@@ -124,7 +141,7 @@ const VoucherCard = ({ voucher, onEdit }) => {
         </div>
 
         {/* Action buttons aligned with title */}
-        <div className="voucher-card-actions-top">
+        <div className="voucher-card-actions-top" onClick={(e) => e.stopPropagation()}>
           {/* Row 1: Edit & Delete */}
           <div className="voucher-card-actions-row">
             <button 
@@ -213,20 +230,79 @@ const VoucherCard = ({ voucher, onEdit }) => {
         </div>
         
         {voucher.description && (
-          <div className="voucher-detail-item">
+          <div className="voucher-detail-item" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
             <span className="voucher-detail-label">Description:</span>
-            <span className="voucher-detail-value" style={{ fontSize: '13px', color: '#6b7280' }}>
+            <span className="voucher-detail-value" style={{ 
+              fontSize: '12px', 
+              color: '#6b7280',
+              fontWeight: 400,
+              textAlign: 'left',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              width: '100%'
+            }}>
               {voucher.description}
             </span>
           </div>
         )}
         
         {voucher.status === 'expired' && voucher.rejectReason && (
-          <div className="voucher-detail-item">
+          <div className="voucher-detail-item" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
             <span className="voucher-detail-label">Rejection Reason:</span>
-            <span className="voucher-detail-value" style={{ fontSize: '13px', color: '#dc2626' }}>
+            <span className="voucher-detail-value" style={{ 
+              fontSize: '12px', 
+              color: '#dc2626',
+              fontWeight: 400,
+              textAlign: 'left',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              width: '100%'
+            }}>
               {voucher.rejectReason}
             </span>
+          </div>
+        )}
+
+        {onViewDetail && (
+          <div className="voucher-detail-item" style={{ 
+            marginTop: '12px', 
+            paddingTop: '12px', 
+            borderTop: '1px solid #e5e7eb',
+            flexShrink: 0
+          }}>
+            <button 
+              className="view-detail-btn"
+              onClick={handleViewDetail}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                backgroundColor: '#22c55e',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '13px',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#16a34a';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#22c55e';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              Xem chi tiết
+            </button>
           </div>
         )}
       </div>

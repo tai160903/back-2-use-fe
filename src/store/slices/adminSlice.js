@@ -153,6 +153,23 @@ export const getVoucherByIdApi = createAsyncThunk(
   }
 );
 
+// Get Business Vouchers by Voucher ID API
+export const getBusinessVouchersByVoucherIdApi = createAsyncThunk(
+  "admin/getBusinessVouchersByVoucherIdApi",
+  async ({ voucherId, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        `/admin/vouchers/${voucherId}/businessVoucher?page=${page}&limit=${limit}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // Update Voucher API
 export const updateVoucherApi = createAsyncThunk(
   "admin/updateVoucherApi",
@@ -324,6 +341,24 @@ export const updateBusinessBlockStatusApi = createAsyncThunk(
   }
 );
 
+// ============ LEADERBOARD REWARD APIs ============
+
+// Get Leaderboard Reward API
+export const getLeaderboardRewardApi = createAsyncThunk(
+  "admin/getLeaderboardRewardApi",
+  async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const url = `/admin/leaderboard-reward?page=${page}&limit=${limit}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -333,6 +368,15 @@ const adminSlice = createSlice({
     currentBusiness: null,
     vouchers: [],
     currentVoucher: null,
+    businessVouchers: [], // Business vouchers for a specific voucher
+    businessVouchersPagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
+    },
+    leaderboardRewards: [],
     isLoading: false,
     error: null,
     pagination: {
@@ -350,6 +394,13 @@ const adminSlice = createSlice({
       totalPages: 0,
     },
     voucherPagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
+    },
+    leaderboardRewardPagination: {
       page: 1,
       limit: 10,
       total: 0,
@@ -426,6 +477,9 @@ const adminSlice = createSlice({
         status: 'all',
         name: '',
       };
+    },
+    setLeaderboardRewardPagination: (state, { payload }) => {
+      state.leaderboardRewardPagination = { ...state.leaderboardRewardPagination, ...payload };
     },
   },
   extraReducers: (builder) => {
@@ -781,6 +835,28 @@ const adminSlice = createSlice({
         toast.error(payload?.message || "Failed to fetch voucher");
       })
       
+      // Get Business Vouchers by Voucher ID
+      .addCase(getBusinessVouchersByVoucherIdApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessVouchersByVoucherIdApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.businessVouchers = payload.data || [];
+        state.businessVouchersPagination = {
+          ...state.businessVouchersPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getBusinessVouchersByVoucherIdApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch business vouchers");
+      })
+      
       // Update Voucher
       .addCase(updateVoucherApi.pending, (state) => {
         state.isLoading = true;
@@ -947,6 +1023,31 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to create system voucher");
+      })
+      
+      // ============ LEADERBOARD REWARD EXTRA REDUCERS ============
+      
+      // Get Leaderboard Reward
+      .addCase(getLeaderboardRewardApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getLeaderboardRewardApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.leaderboardRewards = payload.data || [];
+        // Update pagination with response data
+        state.leaderboardRewardPagination = {
+          ...state.leaderboardRewardPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getLeaderboardRewardApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch leaderboard rewards");
       });
   },
 });
@@ -966,6 +1067,7 @@ export const {
   setVoucherStatusFilter,
   setVoucherNameFilter,
   setVoucherPagination,
-  resetVoucherFilters
+  resetVoucherFilters,
+  setLeaderboardRewardPagination
 } = adminSlice.actions;
 export default adminSlice.reducer;
