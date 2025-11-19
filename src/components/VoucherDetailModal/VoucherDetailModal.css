@@ -1,0 +1,105 @@
+.voucher-detail-section {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.voucher-detail-section-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #164c34;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+.voucher-detail-item {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 32px;
+}
+
+.voucher-detail-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 140px;
+  text-align: left;
+}
+
+.voucher-detail-value {
+  font-size: 0.9375rem;
+  color: #111827;
+  font-weight: 500;
+  word-break: break-word;
+  text-align: right;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.voucher-detail-value.code-value {
+  font-family: 'Courier New', monospace;
+  background: #f3f4f6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.voucher-detail-value.discount-value {
+  color: #22c55e;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.voucher-detail-value.points-value {
+  color: #f59e0b;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.status-chip {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-chip.status-active {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-chip.status-expired {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.status-chip.status-pending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.reject-section {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.reject-reason {
+  color: #dc2626;
+  font-style: italic;
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 6px;
+  border-left: 4px solid #dc2626;
+}
+
