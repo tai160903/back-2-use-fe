@@ -115,6 +115,54 @@ export const createSystemVoucherApi = createAsyncThunk(
   }
 );
 
+// Get Business Vouchers by Voucher ID API
+export const getBusinessVouchersByVoucherIdApi = createAsyncThunk(
+  "vouchers/getBusinessVouchersByVoucherIdApi",
+  async ({ voucherId, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        `/admin/vouchers/${voucherId}/businessVoucher?page=${page}&limit=${limit}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
+// Get Business Voucher Codes API
+export const getBusinessVoucherCodesApi = createAsyncThunk(
+  "vouchers/getBusinessVoucherCodesApi",
+  async ({ businessVoucherId, status, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/vouchers/businessVoucher/${businessVoucherId}/codes?page=${page}&limit=${limit}`;
+      if (status) {
+        url += `&status=${status}`;
+      }
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
+// Update Business Voucher isDisabled Status API
+export const updateBusinessVoucherIsDisabledApi = createAsyncThunk(
+  "vouchers/updateBusinessVoucherIsDisabledApi",
+  async ({ voucherId, isDisabled }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(
+        `/admin/vouchers/businessVoucher/${voucherId}/is-disabled`,
+        { isDisabled }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
 // ============ BUSINESS VOUCHER APIs ============
 export const getBusinessVouchers = createAsyncThunk(
   "vouchers/getBusinessVouchers",
@@ -285,6 +333,23 @@ const voucherSlice = createSlice({
     voucherFilters: {
       status: "all",
       name: "",
+    },
+    // Admin business vouchers (for voucher detail modal)
+    adminBusinessVouchers: [],
+    adminBusinessVouchersPagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
+    },
+    adminBusinessVoucherCodes: [],
+    adminBusinessVoucherCodesPagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
     },
     // Business voucher views
     businessVouchers: [],
@@ -473,6 +538,73 @@ const voucherSlice = createSlice({
       .addCase(reviewVoucherApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+      })
+      // Get Business Vouchers by Voucher ID
+      .addCase(getBusinessVouchersByVoucherIdApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessVouchersByVoucherIdApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.adminBusinessVouchers = payload.data || [];
+        state.adminBusinessVouchersPagination = {
+          ...state.adminBusinessVouchersPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getBusinessVouchersByVoucherIdApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch business vouchers");
+      })
+      // Get Business Voucher Codes
+      .addCase(getBusinessVoucherCodesApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessVoucherCodesApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.adminBusinessVoucherCodes = payload.data || [];
+        state.adminBusinessVoucherCodesPagination = {
+          ...state.adminBusinessVoucherCodesPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getBusinessVoucherCodesApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch business voucher codes");
+      })
+      // Update Business Voucher isDisabled
+      .addCase(updateBusinessVoucherIsDisabledApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateBusinessVoucherIsDisabledApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update business voucher in the list if exists
+        const updatedId = payload?.data?._id || payload?.data?.id;
+        if (updatedId && state.adminBusinessVouchers) {
+          const index = state.adminBusinessVouchers.findIndex(
+            (bv) => bv._id === updatedId || bv.id === updatedId
+          );
+          if (index !== -1) {
+            state.adminBusinessVouchers[index] = payload.data;
+          }
+        }
+        toast.success(payload?.message || "Business voucher status updated successfully!");
+      })
+      .addCase(updateBusinessVoucherIsDisabledApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to update business voucher status");
       })
       // Business voucher list
       .addCase(getBusinessVouchers.pending, (state) => {

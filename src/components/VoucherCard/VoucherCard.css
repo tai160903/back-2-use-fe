@@ -3,7 +3,7 @@
 .voucher-card-actions-top {
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
+  gap: 5px !important;
   align-items: flex-end !important;
   margin-left: auto !important;
   flex-shrink: 0 !important;
@@ -11,7 +11,7 @@
 
 .voucher-card-actions-row {
   display: flex !important;
-  gap: 6px !important;
+  gap: 5px !important;
   align-items: center !important;
 }
 
@@ -21,10 +21,10 @@
 }
 
 .action-btn {
-  width: 36px !important;
-  height: 36px !important;
+  width: 30px !important;
+  height: 30px !important;
   border: none !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
@@ -36,8 +36,8 @@
 /* Ensure SVG icons are visible */
 .action-btn svg {
   display: block !important;
-  width: 16px !important;
-  height: 16px !important;
+  width: 14px !important;
+  height: 14px !important;
   fill: currentColor !important;
   color: currentColor !important;
   flex-shrink: 0 !important;
@@ -91,31 +91,32 @@
 
 /* Adjust header spacing */
 .voucher-card-header {
-  margin-bottom: 14px !important;
+  margin-bottom: 10px !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: flex-start !important;
-  gap: 12px !important;
+  gap: 10px !important;
   flex-shrink: 0;
 }
 
 .voucher-card-info {
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 10px !important;
 }
 
 .voucher-card-icon {
-  width: 24px !important;
-  height: 24px !important;
+  width: 20px !important;
+  height: 20px !important;
   color: #12422a !important;
   background-color: #e8f5e8 !important;
-  padding: 8px !important;
-  border-radius: 8px !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+  flex-shrink: 0 !important;
 }
 
 .voucher-card-title {
-  font-size: 18px !important;
+  font-size: 15px !important;
   font-weight: 700 !important;
   color: #1a1a1a !important;
   margin: 0 !important;
@@ -125,63 +126,43 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 280px;
+  max-width: 240px;
 }
 
 .voucher-card-subtitle {
-  font-size: 13px !important;
+  font-size: 11px !important;
   color: #6b7280 !important;
-  margin: 2px 0 0 0 !important;
+  margin: 1px 0 0 0 !important;
 }
 
 /* Card details section */
 .voucher-card-details {
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px !important;
+  gap: 7px !important;
   flex: 1;
-  overflow-y: auto;
-  max-height: 350px;
+  overflow: visible;
   padding-right: 4px;
-}
-
-/* Scrollbar styling */
-.voucher-card-details::-webkit-scrollbar {
-  width: 4px;
-}
-
-.voucher-card-details::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.voucher-card-details::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.voucher-card-details::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }
 
 .voucher-detail-item {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  min-height: 24px;
+  min-height: 20px;
   flex-shrink: 0;
 }
 
 .voucher-detail-label {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #6b7280 !important;
   font-weight: 500 !important;
   flex-shrink: 0;
-  min-width: 100px;
+  min-width: 85px;
 }
 
 .voucher-detail-value {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #1a1a1a !important;
   font-weight: 600 !important;
   display: flex !important;
@@ -194,9 +175,9 @@
 .discount-badge {
   background-color: #e8f5e8 !important;
   color: #12422a !important;
-  padding: 4px 12px !important;
-  border-radius: 20px !important;
-  font-size: 12px !important;
+  padding: 3px 10px !important;
+  border-radius: 16px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
 }
 
@@ -213,9 +194,9 @@
 
 /* Status badges */
 .status-badge {
-  padding: 4px 12px !important;
-  border-radius: 20px !important;
-  font-size: 12px !important;
+  padding: 3px 10px !important;
+  border-radius: 16px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
@@ -239,16 +220,17 @@
 /* Voucher card base */
 .voucher-card {
   background: white !important;
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 14px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
   transition: all 0.3s ease;
   position: relative;
   display: flex;
   flex-direction: column;
-  max-height: 500px;
-  overflow: hidden;
+  min-height: fit-content;
+  height: auto;
+  overflow: visible;
 }
 
 /* Hover effect - chữ trắng khi hover vào card */
@@ -256,6 +238,7 @@
   background: #12422a !important;
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(18, 66, 42, 0.3);
+  cursor: pointer;
 }
 
 .voucher-card:hover .voucher-card-title,

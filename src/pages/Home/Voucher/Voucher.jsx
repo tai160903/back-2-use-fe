@@ -1,7 +1,7 @@
 import { Typography, Pagination, Stack } from '@mui/material'
 import React, { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { getAllVouchersApi } from '../../../store/slices/adminSlice'
+import { getAllVouchersApi } from '../../../store/slices/voucherSlice'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination as SwiperPagination } from 'swiper/modules'
 import 'swiper/css'
@@ -283,7 +283,7 @@ const top50Vouchers = allVouchers.filter(v => v.type === 'exclusive')
 
 export default function Voucher() {
   const dispatch = useDispatch();
-  const { vouchers, isLoading } = useSelector(state => state.admin);
+  const { vouchers, isLoading } = useSelector(state => state.vouchers);
 
   // State cho filter và pagination
   const [filter, setFilter] = useState('all')

@@ -27,14 +27,15 @@ const LeaderBoard = () => {
     (state) => state.admin
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 10;
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    dispatch(getLeaderboardRewardApi({ page: currentPage, limit }));
-  }, [dispatch, currentPage]);
+    // Load all leaderboard rewards on component mount
+    dispatch(getLeaderboardRewardApi({ page: 1, limit: 1000 }));
+  }, [dispatch]);
 
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
   };
 
   const getRankIcon = (rank) => {
@@ -80,13 +81,19 @@ const LeaderBoard = () => {
       })
     : [];
 
-  // Calculate stats from sorted data
+  // Calculate stats from all sorted data
   const totalRewards = sortedRewards?.length || 0;
   const topRank = sortedRewards?.[0]?.leaderboard?.rank || 0;
   const topPoints = sortedRewards?.[0]?.leaderboard?.rankingPoints || 0;
   const redeemedCount = sortedRewards?.filter(
     (item) => item.voucher?.status === "redeemed"
   ).length || 0;
+
+  // Pagination logic - similar to Material page
+  const totalPages = Math.ceil(sortedRewards.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageRewards = sortedRewards.slice(startIndex, endIndex);
 
   return (
     <div className="leaderboard-page">
@@ -96,7 +103,7 @@ const LeaderBoard = () => {
             Leader Board Reward
           </Typography>
           <Typography variant="body1" color="#6b7280" fontSize={16}>
-            Xem và quản lý phần thưởng bảng xếp hạng cho các người dùng hàng đầu
+            View and manage leaderboard rewards for top users
           </Typography>
         </div>
       </header>
@@ -108,9 +115,9 @@ const LeaderBoard = () => {
             <FaLeaf size={24} />
           </div>
           <div className="stat-content">
-            <Typography className="stat-label">Tổng phần thưởng</Typography>
+            <Typography className="stat-label">Total Rewards</Typography>
             <Typography className="stat-value">{totalRewards}</Typography>
-            <Typography className="stat-hint">Tổng số rewards đã trao</Typography>
+            <Typography className="stat-hint">Total rewards awarded</Typography>
           </div>
         </div>
 
@@ -119,10 +126,10 @@ const LeaderBoard = () => {
             <MdEmojiEvents size={24} />
           </div>
           <div className="stat-content">
-            <Typography className="stat-label">Hạng nhất</Typography>
+            <Typography className="stat-label">Top Rank</Typography>
             <Typography className="stat-value">{topRank || "—"}</Typography>
             <Typography className="stat-hint">
-              {topPoints > 0 ? `${topPoints.toLocaleString("en-US")} điểm` : "Chưa có dữ liệu"}
+              {topPoints > 0 ? `${topPoints.toLocaleString("en-US")} points` : "No data available"}
             </Typography>
           </div>
         </div>
@@ -132,12 +139,12 @@ const LeaderBoard = () => {
             <MdPerson size={24} />
           </div>
           <div className="stat-content">
-            <Typography className="stat-label">Đã sử dụng</Typography>
+            <Typography className="stat-label">Redeemed</Typography>
             <Typography className="stat-value">{redeemedCount}</Typography>
             <Typography className="stat-hint">
               {totalRewards > 0
-                ? `${((redeemedCount / totalRewards) * 100).toFixed(0)}% đã redeem`
-                : "Chưa có dữ liệu"}
+                ? `${((redeemedCount / totalRewards) * 100).toFixed(0)}% redeemed`
+                : "No data available"}
             </Typography>
           </div>
         </div>
@@ -164,20 +171,20 @@ const LeaderBoard = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell className="leaderboard-table-header">Hạng</TableCell>
-                  <TableCell className="leaderboard-table-header">Người dùng</TableCell>
+                  <TableCell className="leaderboard-table-header">Rank</TableCell>
+                  <TableCell className="leaderboard-table-header">User</TableCell>
                   <TableCell className="leaderboard-table-header" align="right">
-                    Điểm số
+                    Points
                   </TableCell>
                   <TableCell className="leaderboard-table-header">Voucher</TableCell>
-                  <TableCell className="leaderboard-table-header">Trạng thái</TableCell>
-                  <TableCell className="leaderboard-table-header">Ngày trao thưởng</TableCell>
+                  <TableCell className="leaderboard-table-header">Status</TableCell>
+                  <TableCell className="leaderboard-table-header">Reward Date</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {sortedRewards && sortedRewards.length > 0 ? (
-                  sortedRewards.map((item, index) => {
-                    const rank = item.leaderboard?.rank || (currentPage - 1) * limit + index + 1;
+                {currentPageRewards && currentPageRewards.length > 0 ? (
+                  currentPageRewards.map((item, index) => {
+                    const rank = item.leaderboard?.rank || startIndex + index + 1;
                     const customer = item.leaderboard?.customer || {};
                     const voucher = item.voucher || {};
                     const isTopThree = rank <= 3;
@@ -232,7 +239,7 @@ const LeaderBoard = () => {
                             {item.leaderboard?.rankingPoints?.toLocaleString("en-US") || 0}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            điểm
+                            points
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -274,10 +281,10 @@ const LeaderBoard = () => {
                       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                         <FaLeaf size={48} color="#d1d5db" />
                         <Typography variant="body1" color="text.secondary" fontWeight={600}>
-                          Chưa có dữ liệu bảng xếp hạng
+                          No leaderboard data available
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Dữ liệu sẽ được hiển thị khi có phần thưởng được trao
+                          Data will be displayed when rewards are awarded
                         </Typography>
                       </Box>
                     </TableCell>
@@ -287,58 +294,43 @@ const LeaderBoard = () => {
             </Table>
           </TableContainer>
 
-          {sortedRewards && sortedRewards.length > 0 && (
+          {!isLoading && sortedRewards.length > 0 && (
             <Stack
               spacing={2}
               className="leaderboard-pagination"
-              sx={{ alignItems: "center", mt: 4 }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mt: 4,
+                mb: 4,
+              }}
             >
-              <Box
+              <Pagination
+                count={totalPages > 0 ? totalPages : 1}
+                page={currentPage}
+                onChange={handlePageChange}
+                variant="outlined"
+                shape="rounded"
+                color="primary"
+                showFirstButton
+                showLastButton
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  mb: 1,
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  Hiển thị{" "}
-                  <strong>
-                    {(currentPage - 1) * limit + 1} -{" "}
-                    {Math.min(currentPage * limit, leaderboardRewardPagination.total || 0)}
-                  </strong>{" "}
-                  trong tổng số <strong>{leaderboardRewardPagination.total || 0}</strong> hạng
-                </Typography>
-              </Box>
-              {leaderboardRewardPagination.totalPages > 1 && (
-                <Pagination
-                  count={leaderboardRewardPagination.totalPages || 0}
-                  page={currentPage}
-                  onChange={handlePageChange}
-                  variant="outlined"
-                  shape="rounded"
-                  color="primary"
-                  showFirstButton
-                  showLastButton
-                  sx={{
-                    "& .MuiPaginationItem-root": {
-                      "&.Mui-selected": {
-                        backgroundColor: "#12422a",
-                        color: "#ffffff",
-                        fontWeight: 600,
-                        "&:hover": {
-                          backgroundColor: "#0d2e1c",
-                        },
-                      },
+                  "& .MuiPaginationItem-root": {
+                    "&.Mui-selected": {
+                      backgroundColor: "#12422a",
+                      color: "#ffffff",
+                      fontWeight: 600,
                       "&:hover": {
-                        backgroundColor: "rgba(18, 66, 42, 0.1)",
+                        backgroundColor: "#0d2e1c",
                       },
                     },
-                  }}
-                />
-              )}
+                    "&:hover": {
+                      backgroundColor: "rgba(18, 66, 42, 0.1)",
+                    },
+                  },
+                }}
+              />
             </Stack>
           )}
         </>
