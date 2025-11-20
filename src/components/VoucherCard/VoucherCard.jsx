@@ -3,14 +3,12 @@ import { useDispatch } from 'react-redux';
 import { 
   deleteVoucherApi,
   reviewVoucherApi
-} from '../../store/slices/adminSlice';
+} from '../../store/slices/voucherSlice';
 import { 
   FaRegEdit, 
   FaCheck, 
   FaTimes, 
-  FaGift,
-  FaPercentage,
-  FaCoins
+  FaGift
 } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
 import { CiEdit } from "react-icons/ci";
@@ -36,16 +34,6 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric'
-    });
-  };
-
 
   const handleEdit = (e) => {
     e.stopPropagation();
@@ -184,27 +172,13 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
       </div>
 
       <div className="voucher-card-details">
+        {/* Chỉ hiển thị 3 thông tin: Discount, Base Code, Status */}
         <div className="voucher-detail-item">
           <span className="voucher-detail-label">Discount:</span>
           <span className="voucher-detail-value">
             <span className="discount-badge">
               {voucher.discountPercent || voucher.discount || 0}%
             </span>
-          </span>
-        </div>
-        
-        <div className="voucher-detail-item">
-          <span className="voucher-detail-label">Points Cost:</span>
-          <span className="voucher-detail-value points-cost">
-            <FaCoins size={14} style={{ marginRight: '4px', color: '#f59e0b' }} />
-            {voucher.rewardPointCost} pts
-          </span>
-        </div>
-        
-        <div className="voucher-detail-item">
-          <span className="voucher-detail-label">Max Usage:</span>
-          <span className="voucher-detail-value">
-            {voucher.maxUsage}
           </span>
         </div>
         
@@ -216,63 +190,16 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
         </div>
         
         <div className="voucher-detail-item">
-          <span className="voucher-detail-label">Expiry Date:</span>
-          <span className="voucher-detail-value expiry-date">
-            {formatDate(voucher.endDate)}
-          </span>
-        </div>
-        
-        <div className="voucher-detail-item">
           <span className="voucher-detail-label">Status:</span>
           <span className={`status-badge ${getStatusBadgeClass(voucher.status)}`}>
             {voucher.status}
           </span>
         </div>
-        
-        {voucher.description && (
-          <div className="voucher-detail-item" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
-            <span className="voucher-detail-label">Description:</span>
-            <span className="voucher-detail-value" style={{ 
-              fontSize: '12px', 
-              color: '#6b7280',
-              fontWeight: 400,
-              textAlign: 'left',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              width: '100%'
-            }}>
-              {voucher.description}
-            </span>
-          </div>
-        )}
-        
-        {voucher.status === 'expired' && voucher.rejectReason && (
-          <div className="voucher-detail-item" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
-            <span className="voucher-detail-label">Rejection Reason:</span>
-            <span className="voucher-detail-value" style={{ 
-              fontSize: '12px', 
-              color: '#dc2626',
-              fontWeight: 400,
-              textAlign: 'left',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              width: '100%'
-            }}>
-              {voucher.rejectReason}
-            </span>
-          </div>
-        )}
 
         {onViewDetail && (
           <div className="voucher-detail-item" style={{ 
-            marginTop: '12px', 
-            paddingTop: '12px', 
+            marginTop: '8px', 
+            paddingTop: '8px', 
             borderTop: '1px solid #e5e7eb',
             flexShrink: 0
           }}>
@@ -282,14 +209,14 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
               onMouseDown={(e) => e.stopPropagation()}
               style={{
                 width: '100%',
-                padding: '8px 12px',
+                padding: '6px 10px',
                 backgroundColor: '#22c55e',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: 600,
-                fontSize: '13px',
+                fontSize: '12px',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {

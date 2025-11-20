@@ -100,167 +100,6 @@ export const reviewMaterialApi = createAsyncThunk(
   }
 );
 
-// ============ VOUCHER APIs ============
-
-// Create Voucher API
-export const createVoucherApi = createAsyncThunk(
-  "admin/createVoucherApi",
-  async (voucherData, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.post("/admin/vouchers", voucherData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Get All Vouchers API
-export const getAllVouchersApi = createAsyncThunk(
-  "admin/getAllVouchersApi",
-  async ({ page = 1, limit = 10, status, name }, { rejectWithValue }) => {
-    try {
-      let url = `/admin/vouchers?page=${page}&limit=${limit}`;
-      
-      // Append filters
-      if (status && status !== 'all') url += `&status=${status}`;
-      if (name && name.trim()) url += `&name=${encodeURIComponent(name.trim())}`;
-      
-      const response = await fetcher.get(url);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Get Voucher by ID API
-export const getVoucherByIdApi = createAsyncThunk(
-  "admin/getVoucherByIdApi",
-  async (voucherId, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.get(`/admin/vouchers/${voucherId}`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Get Business Vouchers by Voucher ID API
-export const getBusinessVouchersByVoucherIdApi = createAsyncThunk(
-  "admin/getBusinessVouchersByVoucherIdApi",
-  async ({ voucherId, page = 1, limit = 10 }, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.get(
-        `/admin/vouchers/${voucherId}/businessVoucher?page=${page}&limit=${limit}`
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Update Voucher API
-export const updateVoucherApi = createAsyncThunk(
-  "admin/updateVoucherApi",
-  async ({ voucherId, voucherData }, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.put(`/admin/vouchers/${voucherId}`, voucherData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Delete Voucher API
-export const deleteVoucherApi = createAsyncThunk(
-  "admin/deleteVoucherApi",
-  async (voucherId, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.delete(`/admin/vouchers/${voucherId}`);
-      const payload = response?.data || {};
-      return { ...payload, id: voucherId };
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Review Voucher API (Approve/Reject)
-export const reviewVoucherApi = createAsyncThunk(
-  "admin/reviewVoucherApi",
-  async ({ voucherId, reviewData }, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.patch(`/admin/vouchers/${voucherId}/review`, reviewData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Create Business Voucher API
-export const createBusinessVoucherApi = createAsyncThunk(
-  "admin/createBusinessVoucherApi",
-  async (voucherData, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.post("/admin/vouchers/business", voucherData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Create Leaderboard Voucher API
-export const createLeaderboardVoucherApi = createAsyncThunk(
-  "admin/createLeaderboardVoucherApi",
-  async (voucherData, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.post("/admin/vouchers/leaderboard", voucherData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
-// Create System Voucher API
-export const createSystemVoucherApi = createAsyncThunk(
-  "admin/createSystemVoucherApi",
-  async (voucherData, { rejectWithValue }) => {
-    try {
-      const response = await fetcher.post("/admin/vouchers/system", voucherData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
-);
-
 // Get Business Statistics API
 export const getBusinessStatsApi = createAsyncThunk(
   "admin/getBusinessStatsApi",
@@ -359,6 +198,121 @@ export const getLeaderboardRewardApi = createAsyncThunk(
   }
 );
 
+// ============ LEADERBOARD POLICY APIs ============
+
+// Get Leaderboard Policies API
+export const getLeaderboardPoliciesApi = createAsyncThunk(
+  "admin/getLeaderboardPoliciesApi",
+  async ({ month, year, isDistributed, rankFrom, rankTo, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/leaderboard-policy?page=${page}&limit=${limit}`;
+      if (month !== undefined && month !== null) url += `&month=${month}`;
+      if (year !== undefined && year !== null) url += `&year=${year}`;
+      if (isDistributed !== undefined && isDistributed !== null) url += `&isDistributed=${isDistributed}`;
+      if (rankFrom !== undefined && rankFrom !== null) url += `&rankFrom=${rankFrom}`;
+      if (rankTo !== undefined && rankTo !== null) url += `&rankTo=${rankTo}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Create Leaderboard Policy API
+export const createLeaderboardPolicyApi = createAsyncThunk(
+  "admin/createLeaderboardPolicyApi",
+  async (policyData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/admin/leaderboard-policy", policyData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Update Leaderboard Policy API
+export const updateLeaderboardPolicyApi = createAsyncThunk(
+  "admin/updateLeaderboardPolicyApi",
+  async ({ id, policyData }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(`/admin/leaderboard-policy/${id}`, policyData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// ============ REWARD SETTING APIs ============
+
+// Get Reward Settings API
+export const getRewardSettingsApi = createAsyncThunk(
+  "admin/getRewardSettingsApi",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/admin/reward-setting");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Create Reward Setting API
+export const createRewardSettingApi = createAsyncThunk(
+  "admin/createRewardSettingApi",
+  async (settingData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/admin/reward-setting", settingData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Update Reward Setting API
+export const updateRewardSettingApi = createAsyncThunk(
+  "admin/updateRewardSettingApi",
+  async ({ id, settingData }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(`/admin/reward-setting/${id}`, settingData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Toggle Reward Setting API
+export const toggleRewardSettingApi = createAsyncThunk(
+  "admin/toggleRewardSettingApi",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(`/admin/reward-setting/${id}/toggle`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -366,17 +320,11 @@ const adminSlice = createSlice({
     currentMaterial: null,
     businesses: [],
     currentBusiness: null,
-    vouchers: [],
-    currentVoucher: null,
-    businessVouchers: [], // Business vouchers for a specific voucher
-    businessVouchersPagination: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      currentPage: 1,
-      totalPages: 0,
-    },
     leaderboardRewards: [],
+    leaderboardPolicies: [],
+    currentLeaderboardPolicy: null,
+    rewardSettings: [],
+    currentRewardSetting: null,
     isLoading: false,
     error: null,
     pagination: {
@@ -393,14 +341,14 @@ const adminSlice = createSlice({
       currentPage: 1,
       totalPages: 0,
     },
-    voucherPagination: {
+    leaderboardRewardPagination: {
       page: 1,
       limit: 10,
       total: 0,
       currentPage: 1,
       totalPages: 0,
     },
-    leaderboardRewardPagination: {
+    leaderboardPolicyPagination: {
       page: 1,
       limit: 10,
       total: 0,
@@ -419,10 +367,6 @@ const adminSlice = createSlice({
     businessFilters: {
       isBlocked: null, // null = all, true = blocked, false = unblocked
     },
-    voucherFilters: {
-      status: 'all', // 'all', 'pending', 'active', 'expired'
-      name: '',
-    },
   },
   reducers: {
     clearError: (state) => {
@@ -433,9 +377,6 @@ const adminSlice = createSlice({
     },
     clearCurrentBusiness: (state) => {
       state.currentBusiness = null;
-    },
-    clearCurrentVoucher: (state) => {
-      state.currentVoucher = null;
     },
     setStatusFilter: (state, { payload }) => {
       state.filters.status = payload;
@@ -461,21 +402,6 @@ const adminSlice = createSlice({
     resetBusinessFilters: (state) => {
       state.businessFilters = {
         isBlocked: null,
-      };
-    },
-    setVoucherStatusFilter: (state, { payload }) => {
-      state.voucherFilters.status = payload;
-    },
-    setVoucherNameFilter: (state, { payload }) => {
-      state.voucherFilters.name = payload;
-    },
-    setVoucherPagination: (state, { payload }) => {
-      state.voucherPagination = { ...state.voucherPagination, ...payload };
-    },
-    resetVoucherFilters: (state) => {
-      state.voucherFilters = {
-        status: 'all',
-        name: '',
       };
     },
     setLeaderboardRewardPagination: (state, { payload }) => {
@@ -776,255 +702,6 @@ const adminSlice = createSlice({
         toast.error(payload?.message || "Failed to update business block status");
       })
       
-      // ============ VOUCHER EXTRA REDUCERS ============
-      
-      // Create Voucher
-      .addCase(createVoucherApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(createVoucherApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        // Add the new voucher to the beginning of the list
-        state.vouchers.unshift(payload.data);
-        toast.success(payload.message || "Voucher created successfully!");
-      })
-      .addCase(createVoucherApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to create voucher");
-      })
-      
-      // Get All Vouchers
-      .addCase(getAllVouchersApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(getAllVouchersApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        state.vouchers = payload.data || [];
-        // Update pagination with response data
-        state.voucherPagination = {
-          ...state.voucherPagination,
-          total: payload.total || 0,
-          currentPage: payload.currentPage || 1,
-          totalPages: payload.totalPages || 0,
-        };
-      })
-      .addCase(getAllVouchersApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to fetch vouchers");
-      })
-      
-      // Get Voucher by ID
-      .addCase(getVoucherByIdApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(getVoucherByIdApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        state.currentVoucher = payload.data;
-      })
-      .addCase(getVoucherByIdApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to fetch voucher");
-      })
-      
-      // Get Business Vouchers by Voucher ID
-      .addCase(getBusinessVouchersByVoucherIdApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(getBusinessVouchersByVoucherIdApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        state.businessVouchers = payload.data || [];
-        state.businessVouchersPagination = {
-          ...state.businessVouchersPagination,
-          total: payload.total || 0,
-          currentPage: payload.currentPage || 1,
-          totalPages: payload.totalPages || 0,
-        };
-      })
-      .addCase(getBusinessVouchersByVoucherIdApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to fetch business vouchers");
-      })
-      
-      // Update Voucher
-      .addCase(updateVoucherApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(updateVoucherApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        // Update the voucher in the list
-        const updatedId = payload?.data?._id || payload?.data?.id;
-        const index = state.vouchers.findIndex(
-          (voucher) => voucher._id === updatedId || voucher.id === updatedId
-        );
-        if (index !== -1) {
-          state.vouchers[index] = payload.data;
-        }
-        if (
-          (state.currentVoucher?._id && state.currentVoucher._id === updatedId) ||
-          (state.currentVoucher?.id && state.currentVoucher.id === updatedId)
-        ) {
-          state.currentVoucher = payload.data;
-        }
-        toast.success(payload.message || "Voucher updated successfully!");
-      })
-      .addCase(updateVoucherApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to update voucher");
-      })
-      
-      // Delete Voucher
-      .addCase(deleteVoucherApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteVoucherApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        // Remove the voucher from the list
-        const deletedId = payload?.data?._id || payload?.data?.id || payload?.id;
-        state.vouchers = state.vouchers.filter(
-          (voucher) => voucher._id !== deletedId && voucher.id !== deletedId
-        );
-        if (
-          (state.currentVoucher?._id && state.currentVoucher._id === deletedId) ||
-          (state.currentVoucher?.id && state.currentVoucher.id === deletedId)
-        ) {
-          state.currentVoucher = null;
-        }
-        toast.success(payload.message || "Voucher deleted successfully!");
-      })
-      .addCase(deleteVoucherApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to delete voucher");
-      })
-      
-      // Review Voucher (Approve/Reject)
-      .addCase(reviewVoucherApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(reviewVoucherApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-
-        const updated = payload?.data || payload || {};
-        const updatedId = updated._id || updated.id;
-        const updatedStatus = updated.status;
-
-        if (updatedId) {
-          // Update the voucher status in the list
-          const index = state.vouchers.findIndex(
-            (voucher) => voucher._id === updatedId || voucher.id === updatedId
-          );
-          if (index !== -1) {
-            state.vouchers[index].status = updatedStatus || state.vouchers[index].status;
-            if (updated.rejectReason !== undefined) {
-              state.vouchers[index].rejectReason = updated.rejectReason;
-            }
-          }
-
-          if (
-            (state.currentVoucher?._id && state.currentVoucher._id === updatedId) ||
-            (state.currentVoucher?.id && state.currentVoucher.id === updatedId)
-          ) {
-            if (updatedStatus) state.currentVoucher.status = updatedStatus;
-            if (updated.rejectReason !== undefined) {
-              state.currentVoucher.rejectReason = updated.rejectReason;
-            }
-          }
-        }
-
-        // Show appropriate success message
-        if (updatedStatus === 'approved' || updatedStatus === 'active') {
-          toast.success(payload?.message || "Voucher approved successfully!");
-        } else if (updatedStatus === 'rejected' || updatedStatus === 'expired') {
-          toast.success(payload?.message || "Voucher rejected successfully!");
-        } else {
-          toast.success(payload?.message || "Voucher review updated successfully!");
-        }
-      })
-      .addCase(reviewVoucherApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to review voucher");
-      })
-      
-      // Create Business Voucher
-      .addCase(createBusinessVoucherApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(createBusinessVoucherApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        // Add the new voucher to the beginning of the list
-        if (payload.data) {
-          state.vouchers.unshift(payload.data);
-        }
-        toast.success(payload.message || "Business voucher created successfully!");
-      })
-      .addCase(createBusinessVoucherApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to create business voucher");
-      })
-      
-      // Create Leaderboard Voucher
-      .addCase(createLeaderboardVoucherApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(createLeaderboardVoucherApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        // Add the new voucher to the beginning of the list
-        if (payload.data) {
-          state.vouchers.unshift(payload.data);
-        }
-        toast.success(payload.message || "Leaderboard voucher created successfully!");
-      })
-      .addCase(createLeaderboardVoucherApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to create leaderboard voucher");
-      })
-      
-      // Create System Voucher
-      .addCase(createSystemVoucherApi.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(createSystemVoucherApi.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        // Add the new voucher to the beginning of the list
-        if (payload.data) {
-          state.vouchers.unshift(payload.data);
-        }
-        toast.success(payload.message || "System voucher created successfully!");
-      })
-      .addCase(createSystemVoucherApi.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        toast.error(payload?.message || "Failed to create system voucher");
-      })
-      
       // ============ LEADERBOARD REWARD EXTRA REDUCERS ============
       
       // Get Leaderboard Reward
@@ -1048,6 +725,197 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to fetch leaderboard rewards");
+      })
+      
+      // ============ LEADERBOARD POLICY EXTRA REDUCERS ============
+      
+      // Get Leaderboard Policies
+      .addCase(getLeaderboardPoliciesApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getLeaderboardPoliciesApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.leaderboardPolicies = payload.data || [];
+        state.leaderboardPolicyPagination = {
+          ...state.leaderboardPolicyPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getLeaderboardPoliciesApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch leaderboard policies");
+      })
+      
+      // Create Leaderboard Policy
+      .addCase(createLeaderboardPolicyApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createLeaderboardPolicyApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Add the new policy to the beginning of the list
+        if (payload.data) {
+          state.leaderboardPolicies.unshift(payload.data);
+        }
+        toast.success(payload.message || "Leaderboard policy created successfully!");
+      })
+      .addCase(createLeaderboardPolicyApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create leaderboard policy");
+      })
+      
+      // Update Leaderboard Policy
+      .addCase(updateLeaderboardPolicyApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateLeaderboardPolicyApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update the policy in the list
+        const updatedId = payload?.data?._id || payload?.data?.id;
+        const index = state.leaderboardPolicies.findIndex(
+          (policy) => policy._id === updatedId || policy.id === updatedId
+        );
+        if (index !== -1) {
+          state.leaderboardPolicies[index] = payload.data;
+        }
+        if (
+          (state.currentLeaderboardPolicy?._id && state.currentLeaderboardPolicy._id === updatedId) ||
+          (state.currentLeaderboardPolicy?.id && state.currentLeaderboardPolicy.id === updatedId)
+        ) {
+          state.currentLeaderboardPolicy = payload.data;
+        }
+        toast.success(payload.message || "Leaderboard policy updated successfully!");
+      })
+      .addCase(updateLeaderboardPolicyApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to update leaderboard policy");
+      })
+      
+      // ============ REWARD SETTING EXTRA REDUCERS ============
+      
+      // Get Reward Settings
+      .addCase(getRewardSettingsApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getRewardSettingsApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Handle different response structures
+        if (Array.isArray(payload)) {
+          // If payload is directly an array
+          state.rewardSettings = payload;
+        } else if (payload.data) {
+          // If payload has data property
+          if (Array.isArray(payload.data)) {
+            // If data is an array
+            state.rewardSettings = payload.data;
+          } else if (typeof payload.data === 'object' && payload.data !== null) {
+            // If data is a single object, wrap it in an array
+            state.rewardSettings = [payload.data];
+          } else {
+            state.rewardSettings = [];
+          }
+        } else {
+          state.rewardSettings = [];
+        }
+      })
+      .addCase(getRewardSettingsApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch reward settings");
+      })
+      
+      // Create Reward Setting
+      .addCase(createRewardSettingApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createRewardSettingApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Add the new setting to the beginning of the list
+        if (payload.data) {
+          state.rewardSettings.unshift(payload.data);
+        }
+        toast.success(payload.message || "Reward setting created successfully!");
+      })
+      .addCase(createRewardSettingApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create reward setting");
+      })
+      
+      // Update Reward Setting
+      .addCase(updateRewardSettingApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateRewardSettingApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update the setting in the list
+        const updatedId = payload?.data?._id || payload?.data?.id;
+        const index = state.rewardSettings.findIndex(
+          (setting) => setting._id === updatedId || setting.id === updatedId
+        );
+        if (index !== -1) {
+          state.rewardSettings[index] = payload.data;
+        }
+        if (
+          (state.currentRewardSetting?._id && state.currentRewardSetting._id === updatedId) ||
+          (state.currentRewardSetting?.id && state.currentRewardSetting.id === updatedId)
+        ) {
+          state.currentRewardSetting = payload.data;
+        }
+        toast.success(payload.message || "Reward setting updated successfully!");
+      })
+      .addCase(updateRewardSettingApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to update reward setting");
+      })
+      
+      // Toggle Reward Setting
+      .addCase(toggleRewardSettingApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(toggleRewardSettingApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update the setting in the list
+        const updatedId = payload?.data?._id || payload?.data?.id;
+        const updated = payload?.data || payload || {};
+        const index = state.rewardSettings.findIndex(
+          (setting) => setting._id === updatedId || setting.id === updatedId
+        );
+        if (index !== -1) {
+          // Update the setting with the new data
+          state.rewardSettings[index] = { ...state.rewardSettings[index], ...updated };
+        }
+        if (
+          (state.currentRewardSetting?._id && state.currentRewardSetting._id === updatedId) ||
+          (state.currentRewardSetting?.id && state.currentRewardSetting.id === updatedId)
+        ) {
+          state.currentRewardSetting = { ...state.currentRewardSetting, ...updated };
+        }
+        toast.success(payload.message || "Reward setting toggled successfully!");
+      })
+      .addCase(toggleRewardSettingApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to toggle reward setting");
       });
   },
 });
@@ -1056,7 +924,6 @@ export const {
   clearError, 
   clearCurrentMaterial, 
   clearCurrentBusiness,
-  clearCurrentVoucher,
   setStatusFilter, 
   setMaterialNameFilter,
   setPagination, 
@@ -1064,10 +931,6 @@ export const {
   setBusinessBlockedFilter,
   setBusinessPagination,
   resetBusinessFilters,
-  setVoucherStatusFilter,
-  setVoucherNameFilter,
-  setVoucherPagination,
-  resetVoucherFilters,
   setLeaderboardRewardPagination
 } = adminSlice.actions;
 export default adminSlice.reducer;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllVouchersApi } from '../../../store/slices/adminSlice';
+import { getAllVouchersApi } from '../../../store/slices/voucherSlice';
 import { Pagination, Stack } from '@mui/material';
 import { FaGift, FaHistory, FaClock } from 'react-icons/fa';
 import { IoIosSearch } from 'react-icons/io';
@@ -9,7 +9,7 @@ import './Rewards.css';
 
 export default function Rewards() {
   const dispatch = useDispatch();
-  const { vouchers, isLoading } = useSelector(state => state.admin);
+  const { vouchers, isLoading } = useSelector(state => state.vouchers);
   const { userInfo } = useSelector(state => state.user);
 
   const [filter, setFilter] = useState('All');

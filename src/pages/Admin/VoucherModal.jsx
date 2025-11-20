@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Dialog,
   DialogTitle,
@@ -17,14 +18,18 @@ import {
   IconButton,
   Alert,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   CardGiftcard as VoucherIcon,
 } from '@mui/icons-material';
+import { getEcoRewardApi } from '../../store/slices/ecoRewardSlice';
 
 const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
-  const [selectedVoucherType, setSelectedVoucherType] = useState(voucherType || 'system');
+  const dispatch = useDispatch();
+  const { items: ecoRewardPolicies, status: ecoRewardStatus } = useSelector((state) => state.ecoreward);
+  const [selectedVoucherType, setSelectedVoucherType] = useState(voucherType || 'business');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -39,9 +44,16 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
 
   const [errors, setErrors] = useState({});
 
+  // Load eco reward policies when modal opens and voucher type is business
+  useEffect(() => {
+    if (isOpen && selectedVoucherType === 'business') {
+      dispatch(getEcoRewardApi({ page: 1, limit: 100 }));
+    }
+  }, [isOpen, selectedVoucherType, dispatch]);
+
   useEffect(() => {
     if (voucher) {
-      setSelectedVoucherType(voucher.voucherType || 'system');
+      setSelectedVoucherType(voucher.voucherType || 'business');
       setFormData({
         name: voucher.name || '',
         description: voucher.description || '',
@@ -54,7 +66,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         ecoRewardPolicyId: voucher.ecoRewardPolicyId || '',
       });
     } else {
-      setSelectedVoucherType(voucherType || 'system');
+      setSelectedVoucherType(voucherType || 'business');
       setFormData({
         name: '',
         description: '',
@@ -115,28 +127,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
       if (formData.discountPercent > 100) {
         newErrors.discountPercent = 'Discount percent cannot exceed 100%';
       }
-    } else if (selectedVoucherType === 'system') {
-      if (!formData.discountPercent || formData.discountPercent <= 0) {
-        newErrors.discountPercent = 'Discount percent must be greater than 0';
-      }
-      if (formData.discountPercent > 100) {
-        newErrors.discountPercent = 'Discount percent cannot exceed 100%';
-      }
-      if (!formData.rewardPointCost || formData.rewardPointCost <= 0) {
-        newErrors.rewardPointCost = 'Reward point cost must be greater than 0';
-      }
-      if (!formData.maxUsage || formData.maxUsage <= 0) {
-        newErrors.maxUsage = 'Max usage must be greater than 0';
-      }
-      if (!formData.startDate) {
-        newErrors.startDate = 'Start date is required';
-      }
-      if (!formData.endDate) {
-        newErrors.endDate = 'End date is required';
-      }
-      if (formData.startDate && formData.endDate && formData.startDate >= formData.endDate) {
-        newErrors.endDate = 'End date must be after start date';
-      }
     }
 
     setErrors(newErrors);
@@ -156,6 +146,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
           baseCode: formData.baseCode,
           maxUsage: parseInt(formData.maxUsage),
           ecoRewardPolicyId: formData.ecoRewardPolicyId,
+          isDisabled: true,
         };
       } else if (selectedVoucherType === 'leaderboard') {
         submitData = {
@@ -163,17 +154,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
           description: formData.description,
           discountPercent: parseFloat(formData.discountPercent),
           baseCode: formData.baseCode,
-        };
-      } else if (selectedVoucherType === 'system') {
-        submitData = {
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          name: formData.name,
-          description: formData.description,
-          discountPercent: parseFloat(formData.discountPercent),
-          baseCode: formData.baseCode,
-          rewardPointCost: parseInt(formData.rewardPointCost),
-          maxUsage: parseInt(formData.maxUsage),
         };
       }
       
@@ -245,7 +225,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
                     label="Voucher Type"
                     onChange={(e) => setSelectedVoucherType(e.target.value)}
                   >
-                    <MenuItem value="system">System Voucher</MenuItem>
                     <MenuItem value="business">Business Voucher</MenuItem>
                     <MenuItem value="leaderboard">Leaderboard Voucher</MenuItem>
                   </Select>
@@ -313,18 +292,93 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    name="ecoRewardPolicyId"
-                    label="Eco Reward Policy ID"
-                    value={formData.ecoRewardPolicyId}
-                    onChange={handleChange}
-                    error={!!errors.ecoRewardPolicyId}
-                    helperText={errors.ecoRewardPolicyId}
-                    fullWidth
-                    required
-                    placeholder="Enter eco reward policy ID"
-                  />
+                <Grid item xs={12}>
+                  <FormControl fullWidth required error={!!errors.ecoRewardPolicyId}>
+                    <InputLabel id="eco-reward-policy-label">Eco Reward Policy</InputLabel>
+                    <Select
+                      name="ecoRewardPolicyId"
+                      value={formData.ecoRewardPolicyId || ''}
+                      onChange={handleChange}
+                      labelId="eco-reward-policy-label"
+                      label="Eco Reward Policy"
+                      disabled={ecoRewardStatus === 'loading'}
+                      displayEmpty
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 400,
+                            minWidth: 400,
+                            maxWidth: '100%',
+                          },
+                        },
+                      }}
+                    >
+                      {ecoRewardStatus === 'loading' ? (
+                        <MenuItem disabled value="">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}>
+                            <CircularProgress size={16} />
+                            <Typography variant="body2">Đang tải...</Typography>
+                          </Box>
+                        </MenuItem>
+                      ) : Array.isArray(ecoRewardPolicies) && ecoRewardPolicies.length > 0 ? (
+                        ecoRewardPolicies.map((policy) => (
+                          <MenuItem 
+                            key={policy._id} 
+                            value={policy._id}
+                            sx={{ 
+                              py: 1.5,
+                              minHeight: 'auto',
+                              whiteSpace: 'normal',
+                            }}
+                          >
+                            <Box sx={{ width: '100%', pr: 1 }}>
+                              <Typography variant="body1" fontWeight={600} sx={{ mb: 0.5, lineHeight: 1.4 }}>
+                                {policy.label || 'Unnamed Policy'}
+                              </Typography>
+                              {policy.description && (
+                                <Typography 
+                                  variant="body2" 
+                                  color="text.secondary" 
+                                  sx={{ 
+                                    display: 'block', 
+                                    mb: 0.5,
+                                    lineHeight: 1.4,
+                                    wordBreak: 'break-word'
+                                  }}
+                                >
+                                  {policy.description}
+                                </Typography>
+                              )}
+                              {policy.threshold !== undefined && (
+                                <Typography 
+                                  variant="body2" 
+                                  color="primary" 
+                                  sx={{ 
+                                    display: 'block', 
+                                    fontWeight: 500,
+                                    mt: 0.25
+                                  }}
+                                >
+                                  Threshold: {policy.threshold}
+                                </Typography>
+                              )}
+                            </Box>
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem disabled sx={{ py: 1.5 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Không có policy nào
+                          </Typography>
+                        </MenuItem>
+                      )}
+                    </Select>
+                    {errors.ecoRewardPolicyId && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                        {errors.ecoRewardPolicyId}
+                      </Typography>
+                    )}
+                  </FormControl>
                 </Grid>
               </>
             )}
@@ -349,89 +403,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
               </Grid>
             )}
 
-            {selectedVoucherType === 'system' && (
-              <>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    name="startDate"
-                    label="Start Date"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    error={!!errors.startDate}
-                    helperText={errors.startDate}
-                    fullWidth
-                    required
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    name="endDate"
-                    label="End Date"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                    error={!!errors.endDate}
-                    helperText={errors.endDate}
-                    fullWidth
-                    required
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    name="discountPercent"
-                    label="Discount Percent (%)"
-                    type="number"
-                    value={formData.discountPercent}
-                    onChange={handleChange}
-                    error={!!errors.discountPercent}
-                    helperText={errors.discountPercent}
-                    fullWidth
-                    required
-                    inputProps={{ min: 0, max: 100, step: 0.1 }}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">%</InputAdornment>
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    name="rewardPointCost"
-                    label="Reward Point Cost"
-                    type="number"
-                    value={formData.rewardPointCost}
-                    onChange={handleChange}
-                    error={!!errors.rewardPointCost}
-                    helperText={errors.rewardPointCost}
-                    fullWidth
-                    required
-                    inputProps={{ min: 0 }}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">pts</InputAdornment>
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    name="maxUsage"
-                    label="Max Usage"
-                    type="number"
-                    value={formData.maxUsage}
-                    onChange={handleChange}
-                    error={!!errors.maxUsage}
-                    helperText={errors.maxUsage}
-                    fullWidth
-                    required
-                    inputProps={{ min: 1 }}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">times</InputAdornment>
-                    }}
-                  />
-                </Grid>
-              </>
-            )}
           </Grid>
         </DialogContent>
 
@@ -485,4 +456,3 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
 };
 
 export default VoucherModal;
-

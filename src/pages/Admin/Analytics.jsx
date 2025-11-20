@@ -8,12 +8,11 @@ import {
   createVoucherApi,
   createBusinessVoucherApi,
   createLeaderboardVoucherApi,
-  createSystemVoucherApi,
   updateVoucherApi,
   getVoucherByIdApi,
   setVoucherNameFilter,
   resetVoucherFilters 
-} from '../../store/slices/adminSlice';
+} from '../../store/slices/voucherSlice';
 import { FaGift, FaPlus } from 'react-icons/fa';
 import { CiClock2 } from "react-icons/ci";
 import { SiTicktick } from "react-icons/si";
@@ -33,7 +32,7 @@ const Analytics = () => {
     error, 
     voucherPagination, 
     voucherFilters 
-  } = useSelector(state => state.admin);
+  } = useSelector(state => state.vouchers);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -292,13 +291,6 @@ const Analytics = () => {
             All Types ({vouchers.length})
           </button>
           <button 
-            className={`filter-tab ${typeFilter === "system" ? "active" : ""}`}
-            onClick={() => handleTypeFilterChange("system")}
-          >
-            <FaGift />
-            System ({vouchers.filter((item) => item.voucherType === "system").length})
-          </button>
-          <button 
             className={`filter-tab ${typeFilter === "business" ? "active" : ""}`}
             onClick={() => handleTypeFilterChange("business")}
           >
@@ -321,10 +313,10 @@ const Analytics = () => {
       ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className={`voucher-grid ${typeFilter === "leaderboard" ? "leaderboard" : ""}`}>
+        <div className={`voucher-grid ${typeFilter === "leaderboard" || typeFilter === "business" ? "leaderboard" : ""}`}>
           {(() => {
             const filteredData = getAllFilteredData();
-            const perPage = typeFilter === "leaderboard" ? 8 : 6;
+            const perPage = typeFilter === "leaderboard" || typeFilter === "business" ? 8 : 6;
             const startIndex = (currentPage - 1) * perPage;
             const endIndex = startIndex + perPage;
             return filteredData.slice(startIndex, endIndex).map((voucher) => (
@@ -342,7 +334,7 @@ const Analytics = () => {
       {/* Pagination */}
       {!isLoading && vouchers.length > 0 && (() => {
         const filteredData = getAllFilteredData();
-        const perPage = typeFilter === "leaderboard" ? 8 : 6;
+        const perPage = typeFilter === "leaderboard" || typeFilter === "business" ? 8 : 6;
         const filteredTotalPages = Math.ceil(filteredData.length / perPage);
         return (
           <Stack
@@ -383,8 +375,6 @@ const Analytics = () => {
                 dispatch(createBusinessVoucherApi(voucherData));
               } else if (voucherType === 'leaderboard') {
                 dispatch(createLeaderboardVoucherApi(voucherData));
-              } else if (voucherType === 'system') {
-                dispatch(createSystemVoucherApi(voucherData));
               } else {
                 // Fallback to generic create
                 dispatch(createVoucherApi(voucherData));
