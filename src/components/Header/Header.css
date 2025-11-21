@@ -50,25 +50,21 @@
 }
 
 .header-nav a:hover {
-  padding: 10px;
-  width: 100px;
-  height: 100px;
-  background-color: #006c1e;
-  color: white;
-  border-radius: 10px;
+  color: #006c1e;
+  text-decoration: none;
 }
 
 .cta button {
-  background-color: #006c1e;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+
+  color: black;
+
+
+
   cursor: pointer;
   font-size: 1rem;
 }
 
 .cta button:hover {
-  background-color: #004d15;
+  color: #006c1e;
 }
 

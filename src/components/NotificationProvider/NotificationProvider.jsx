@@ -1,0 +1,72 @@
+
+// src/components/NotificationProvider/NotificationProvider.jsx
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  setUnreadCount,
+  incrementUnread,
+} from "../../store/slices/notificationSlice";
+import {
+  connectSocket,
+  disconnectSocket,
+  onNotification,
+  offNotification,
+} from "../../utils/socket";
+import api from "../../apis/fetcher";
+import { getUserRole } from "../../utils/authUtils";
+
+export default function NotificationProvider({ children }) {
+  const dispatch = useDispatch();
+  // Dữ liệu user thực tế đang được lưu ở state.auth.currentUser
+  const authUser = useSelector((state) => state.auth.currentUser);
+
+  useEffect(() => {
+    console.log("[NP] NotificationProvider mounted. authUser =", authUser);
+
+    const userId =
+      authUser?.user?._id || authUser?.user?._uid || authUser?._id || null;
+    if (!userId) {
+      console.log("[NP] ❗ Không tìm thấy userId → không connect socket");
+      return;
+    }
+
+    const roleFromStore =
+      authUser?.user?.role || authUser?.role || getUserRole();
+    const mode =
+      (roleFromStore && roleFromStore.toLowerCase()) || "customer";
+
+    console.log("[NP] ✔ Bắt đầu connect socket với:", { userId, mode });
+    connectSocket(userId, mode);
+
+    // Lấy số thông báo chưa đọc ban đầu
+    api
+      .get(`/notifications/receiver/${userId}`)
+      .then((res) => {
+        console.log("[NP] API trả về notification:", res.data);
+        const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        console.log("[NP] Danh sách:", data);
+        const unread = data.filter((n) => !n.isRead).length;
+        console.log("[NP] Số chưa đọc:", unread);
+        dispatch(setUnreadCount(unread));
+      })
+      .catch((err) => {
+        console.error("[NP] Lỗi lấy notifications:", err);
+      });
+
+    // Khi nhận thông báo mới → tăng badge
+    const handleNewNotification = (payload) => {
+      console.log("[NP] Nhận thông báo mới:", payload);
+      dispatch(incrementUnread());
+    };
+    console.log("[NP] Đăng ký lắng nghe thông báo mới");
+
+    onNotification(handleNewNotification);
+
+    return () => {
+      offNotification(handleNewNotification);
+      disconnectSocket();
+    };
+  }, [authUser, dispatch]);
+
+  return <>{children}</>;
+}
