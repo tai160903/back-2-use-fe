@@ -52,7 +52,6 @@ export default function Notification({
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
     try {
-      console.log(id);
       socket?.emit?.("markAsRead", id);
     } catch (err) {
       console.warn("markAsRead emit failed", err);
@@ -68,10 +67,23 @@ export default function Notification({
     }
   };
 
+  const removeAllNotifications = () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to remove all notifications?"
+    );
+    if (!confirmed) return;
+    setNotifications([]);
+    try {
+      socket?.emit?.("deleteAllNotifications", { userId, mode: "customer" });
+    } catch (err) {
+      console.warn("deleteAllNotifications emit failed", err);
+    }
+  };
+
   const removeNotification = (id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     try {
-      socket?.emit?.("deleteNotification", { userId, notificationId: id });
+      socket?.emit?.("deleteNotification", id);
     } catch (err) {
       console.warn("deleteNotification emit failed", err);
     }
@@ -82,7 +94,7 @@ export default function Notification({
       prev.map((n) => (n.id === id ? { ...n, read: false } : n))
     );
     try {
-      socket?.emit?.("markAsUnread", { userId, notificationId: id });
+      socket?.emit?.("markAsUnread", id);
     } catch (err) {
       console.warn("markAsUnread emit failed", err);
     }
@@ -103,6 +115,9 @@ export default function Notification({
             <div className="actions">
               <button className="actionBtn" onClick={markAllRead}>
                 Mark all
+              </button>
+              <button className="actionBtn" onClick={removeAllNotifications}>
+                Remove all
               </button>
               <button
                 className="closeBtn"
