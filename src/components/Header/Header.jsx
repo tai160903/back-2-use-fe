@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, Link } from "react-router-dom";
 import "./Header.css";
 import Button from "@mui/material/Button";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { useState } from "react";
 import logoImage from "../../assets/image/Logo.png";
 import useAuth from "../../hooks/useAuth";
 import { logout } from "../../store/slices/authSlice";
@@ -17,6 +16,8 @@ import { TiClipboard } from "react-icons/ti";
 import { IoWalletOutline } from "react-icons/io5";
 import { CiUser } from "react-icons/ci";
 import { CiLogout } from "react-icons/ci";
+import Notification from "../Notification/Notification";
+import { io } from "socket.io-client";
 
 export default function Header() {
   const location = useLocation();
@@ -25,6 +26,8 @@ export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const userRole = currentUser ? getUserRole() : null;
+  const [notifications, setNotifications] = useState([]);
+  const socketRef = useRef(null);
 
   // Gọi API get profile khi component mount và có currentUser
   useEffect(() => {
@@ -32,6 +35,45 @@ export default function Header() {
       dispatch(getProfileApi());
     }
   }, [currentUser, userInfo?.data, dispatch]);
+
+  // Kết nối socket để lấy danh sách thông báo và lắng nghe realtime
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const userId = userInfo?._id;
+    if (!userId) return;
+
+    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:3000", {
+      transports: ["websocket"],
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("register", { userId });
+      socket.emit(
+        "findAllNotifications",
+        { userId, mode: "customer" },
+        (response) => {
+          if (Array.isArray(response)) {
+            setNotifications(response);
+          }
+        }
+      );
+    });
+
+    socket.on("notification:new", (payload) => {
+      setNotifications((prev) => [payload, ...prev]);
+    });
+
+    return () => {
+      try {
+        socket.disconnect();
+      } catch (err) {
+        console.warn("Socket disconnect error:", err);
+      }
+      socketRef.current = null;
+    };
+  }, [currentUser, userInfo?._id]);
 
   // Danh sách trang auth
   const loginPage = location.pathname === "/auth/login";
@@ -107,21 +149,34 @@ export default function Header() {
         <div className="cta">
           {currentUser ? (
             <>
-              <Avatar
-                src={userInfo?.avatar || ""}
-                alt={userInfo?.fullName || "User"}
-                onClick={handleMenuOpen}
-                sx={{
-                  cursor: "pointer",
-                  boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)",
-                  width: 40,
-                  height: 40,
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
                 }}
               >
-                {userInfo?.fullName
-                  ? userInfo.fullName.charAt(0).toUpperCase()
-                  : "U"}
-              </Avatar>
+                <Notification
+                  userId={userInfo?._id}
+                  initialNotifications={notifications}
+                  socket={socketRef.current}
+                />
+                <Avatar
+                  src={userInfo?.avatar || ""}
+                  alt={userInfo?.fullName || "User"}
+                  onClick={handleMenuOpen}
+                  sx={{
+                    cursor: "pointer",
+                    boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)",
+                    width: 40,
+                    height: 40,
+                  }}
+                >
+                  {userInfo?.fullName
+                    ? userInfo.fullName.charAt(0).toUpperCase()
+                    : "U"}
+                </Avatar>
+              </div>
 
               <Menu
                 anchorEl={anchorEl}
