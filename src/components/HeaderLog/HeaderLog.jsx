@@ -7,11 +7,15 @@ import { logout } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import { getUserRole } from "../../utils/authUtils";
-import { useEffect } from "react";
-import { getProfileApi, getProfileBusiness } from "../../store/slices/userSlice";
+import { useEffect, useState, useRef } from "react";
+import {
+  getProfileApi,
+  getProfileBusiness,
+} from "../../store/slices/userSlice";
 
-import { IoMdNotificationsOutline } from "react-icons/io";
 import { IoIosLogOut } from "react-icons/io";
+import Notification from "../Notification/Notification";
+import { io } from "socket.io-client";
 export default function HeaderLog() {
   const dispatch = useDispatch();
   const { userInfo, businessInfo } = useSelector((state) => state.user);
@@ -26,6 +30,51 @@ export default function HeaderLog() {
     }
   }, [dispatch, userRole]);
 
+  const [notifications, setNotifications] = useState([]);
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    const userId =
+      userRole === "business"
+        ? businessInfo?.data?.business?._id ||
+          businessInfo?.data?.business?._uid
+        : userInfo?._id;
+
+    if (!userId) return;
+
+    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:3000", {
+      transports: ["websocket"],
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("register", { userId });
+      socket.emit(
+        "findAllNotifications",
+        { userId, mode: userRole === "business" ? "business" : "customer" },
+        (response) => {
+          if (Array.isArray(response)) {
+            console.log(response);
+            setNotifications(response);
+          }
+        }
+      );
+    });
+
+    socket.on("notification:new", (payload) => {
+      setNotifications((prev) => [payload, ...prev]);
+    });
+
+    return () => {
+      try {
+        socket.disconnect();
+      } catch (err) {
+        console.warn("Socket disconnect error:", err);
+      }
+      socketRef.current = null;
+    };
+  }, [userInfo, businessInfo, userRole]);
+
   const handleLogout = () => {
     dispatch(logout());
     navigate(PATH.LOGIN);
@@ -35,10 +84,11 @@ export default function HeaderLog() {
   const renderCustomerInfo = () => (
     <>
       <Typography className="header-log-name" variant="h6" noWrap>
-        Welcome, {userInfo?.fullName || "User"} 
+        Welcome, {userInfo?.fullName || "User"}
       </Typography>
       <Typography className="header-log-balance">
-        <FaWallet className="mr-2" /> {userInfo?.wallet?.availableBalance || 0} {"VND"}
+        <FaWallet className="mr-2" /> {userInfo?.wallet?.availableBalance || 0}{" "}
+        {"VND"}
       </Typography>
     </>
   );
@@ -47,12 +97,12 @@ export default function HeaderLog() {
   const renderBusinessInfo = () => (
     <>
       <Typography className="header-log-name" variant="h6" noWrap>
-        Welcome, {businessInfo?.data?.business?.businessName || "Business"} 
+        Welcome, {businessInfo?.data?.business?.businessName || "Business"}
       </Typography>
       <Typography className="header-log-balance">
-        <FaWallet className="mr-2" /> {businessInfo?.data?.wallet?.availableBalance || 0} {"VND"}
+        <FaWallet className="mr-2" />{" "}
+        {businessInfo?.data?.wallet?.availableBalance || 0} {"VND"}
       </Typography>
-    
     </>
   );
 
@@ -65,34 +115,40 @@ export default function HeaderLog() {
               <Avatar
                 src={
                   userRole === "business"
-                    ? (
-                      businessInfo?.data?.business?.businessLogoUrl ||
+                    ? businessInfo?.data?.business?.businessLogoUrl ||
                       businessInfo?.data?.business?.avatar ||
                       ""
-                    )
-                    : (userInfo?.avatar || "")
+                    : userInfo?.avatar || ""
                 }
                 alt={
                   userRole === "business"
-                    ? (businessInfo?.data?.business?.businessName || "Business")
-                    : (userInfo?.fullName || "User")
+                    ? businessInfo?.data?.business?.businessName || "Business"
+                    : userInfo?.fullName || "User"
                 }
                 sx={{
                   marginRight: 2,
                   cursor: "pointer",
                 }}
-              >
-         
-              </Avatar>
+              ></Avatar>
               <div>
-                {userRole === "business" ? renderBusinessInfo() : renderCustomerInfo()}
+                {userRole === "business"
+                  ? renderBusinessInfo()
+                  : renderCustomerInfo()}
               </div>
             </div>
           </div>
           <div className="header-log-actions">
             <div className="header-log-icon-notificate">
-              <IoMdNotificationsOutline />
-              <span className="notification-badge">3</span>
+              <Notification
+                userId={
+                  userRole === "business"
+                    ? businessInfo?.data?.business?._id ||
+                      businessInfo?.data?.business?._uid
+                    : userInfo?._id
+                }
+                initialNotifications={notifications}
+                socket={socketRef.current}
+              />
             </div>
             <IoIosLogOut className="header-log-icon" onClick={handleLogout} />
           </div>

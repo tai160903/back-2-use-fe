@@ -7,7 +7,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import logoImage from "../../assets/image/Logo.png";
-import useAuth from "../../hooks/useAuth"; 
+import useAuth from "../../hooks/useAuth";
 import { logout } from "../../store/slices/authSlice";
 import { useSelector } from "react-redux";
 import { getProfileApi } from "../../store/slices/userSlice";
@@ -21,8 +21,7 @@ import { CiLogout } from "react-icons/ci";
 export default function Header() {
   const location = useLocation();
   const { currentUser, dispatch, navigate } = useAuth();
-  const {userInfo} = useSelector(state => state.user);
-  console.log("userInfo", userInfo);
+  const { userInfo } = useSelector((state) => state.user);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const userRole = currentUser ? getUserRole() : null;
@@ -33,7 +32,6 @@ export default function Header() {
       dispatch(getProfileApi());
     }
   }, [currentUser, userInfo?.data, dispatch]);
-
 
   // Danh sách trang auth
   const loginPage = location.pathname === "/auth/login";
@@ -140,7 +138,10 @@ export default function Header() {
                     handleMenuClose();
                   }}
                 >
-                  <CiUser style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}/>  Profile
+                  <CiUser
+                    style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
+                  />{" "}
+                  Profile
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
@@ -148,16 +149,23 @@ export default function Header() {
                     handleMenuClose();
                   }}
                 >
-                 <IoWalletOutline style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}/>  Wallet
+                  <IoWalletOutline
+                    style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
+                  />{" "}
+                  Wallet
                 </MenuItem>
                 {userRole === "customer" && (
                   <MenuItem onClick={handleBusinessRegistrationClick}>
-                    <TiClipboard style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }} />
+                    <TiClipboard
+                      style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
+                    />
                     Business Registration
                   </MenuItem>
                 )}
                 <MenuItem onClick={handleLogout}>
-                  <CiLogout style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }} />
+                  <CiLogout
+                    style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
+                  />
                   Logout
                 </MenuItem>
               </Menu>

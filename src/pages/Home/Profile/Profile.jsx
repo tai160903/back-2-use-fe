@@ -61,12 +61,11 @@ const schema = yup.object().shape({
 export default function Profile({ readOnly = false }) {
   const dispatch = useDispatch();
   const { userInfo, error } = useSelector((state) => state.user);
-  console.log("userInfo", userInfo);
   const user = userInfo;
 
   const wallet = userInfo?.wallet;
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Avatar upload states
   const [showAvatarPreview, setShowAvatarPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -94,7 +93,6 @@ export default function Profile({ readOnly = false }) {
 
   useEffect(() => {
     dispatch(getProfileApi());
-    
   }, [dispatch]);
 
   useEffect(() => {
@@ -139,11 +137,14 @@ export default function Profile({ readOnly = false }) {
   };
 
   // Handle address selection from AddressSelector
-  const handleAddressSelect = useCallback((addressData) => {
-    if (addressData && addressData.fullAddress) {
-      setValue("address", addressData.fullAddress);
-    }
-  }, [setValue]);
+  const handleAddressSelect = useCallback(
+    (addressData) => {
+      if (addressData && addressData.fullAddress) {
+        setValue("address", addressData.fullAddress);
+      }
+    },
+    [setValue]
+  );
 
   // Avatar upload handlers
   const handleAvatarClick = () => {
@@ -154,14 +155,14 @@ export default function Profile({ readOnly = false }) {
     const file = event.target.files[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
         return;
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
+        toast.error("File size must be less than 5MB");
         return;
       }
 
@@ -176,23 +177,27 @@ export default function Profile({ readOnly = false }) {
     if (!selectedFile) return;
 
     setIsUploadingAvatar(true);
-    
+
     try {
       // Cập nhật avatar ngay lập tức với preview URL để UX mượt mà
       dispatch(updateAvatarLocally(previewUrl));
-      
+
       const formData = new FormData();
-      formData.append('avatar', selectedFile);
-      
+      formData.append("avatar", selectedFile);
+
       await dispatch(uploadAvatarApi(formData)).unwrap();
-      
+
       dispatch(getProfileApi());
-      toast.success('Update avatar success');
+      toast.success("Update avatar success");
       setShowAvatarPreview(false);
       setSelectedFile(null);
       setPreviewUrl(null);
     } catch (error) {
-      toast.error(error.response ? error.response.data : error.message || 'Failed to update avatar');
+      toast.error(
+        error.response
+          ? error.response.data
+          : error.message || "Failed to update avatar"
+      );
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -203,8 +208,6 @@ export default function Profile({ readOnly = false }) {
     setSelectedFile(null);
     setIsUploadingAvatar(false);
   };
-
- 
 
   if (error) {
     return <div>Error: {error.message || error}</div>;
@@ -219,31 +222,43 @@ export default function Profile({ readOnly = false }) {
           <div className="profile-content">
             <div className="profile-info">
               <div className="profile-info-header">
-                <div className={`profile-avatar ${isUploadingAvatar ? 'loading' : ''}`} onClick={!readOnly && !isUploadingAvatar ? handleAvatarClick : undefined} style={{ cursor: readOnly ? 'default' : 'pointer' }}>
+                <div
+                  className={`profile-avatar ${
+                    isUploadingAvatar ? "loading" : ""
+                  }`}
+                  onClick={
+                    !readOnly && !isUploadingAvatar
+                      ? handleAvatarClick
+                      : undefined
+                  }
+                  style={{ cursor: readOnly ? "default" : "pointer" }}
+                >
                   <img
-                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      user?.fullName || "User"
-                    )}&background=0D8ABC&color=fff&size=128`}
+                    src={
+                      user?.avatar ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user?.fullName || "User"
+                      )}&background=0D8ABC&color=fff&size=128`
+                    }
                     alt="Avatar"
                   />
-                  {!readOnly && (
-                    isUploadingAvatar ? (
+                  {!readOnly &&
+                    (isUploadingAvatar ? (
                       <div className="avatar-loading-overlay">
-                        <CircularProgress size={30} sx={{ color: 'white' }} />
+                        <CircularProgress size={30} sx={{ color: "white" }} />
                       </div>
                     ) : (
                       <div className="avatar-overlay">
                         <CameraAltIcon className="camera-icon" />
                       </div>
-                    )
-                  )}
+                    ))}
                 </div>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                 />
                 <div className="profile-supInfor">
                   <Typography
@@ -386,12 +401,15 @@ export default function Profile({ readOnly = false }) {
                           <div className="profile-info-text-icons">
                             <AddLocationAltIcon />
                           </div>
-                          <div className="profile-info-text-des" style={{ width: "100%" }}>
+                          <div
+                            className="profile-info-text-des"
+                            style={{ width: "100%" }}
+                          >
                             <Typography>Address</Typography>
                             {isEditing ? (
                               <Box sx={{ marginTop: "8px" }}>
-                                <AddressSelector 
-                                  onAddressSelect={handleAddressSelect} 
+                                <AddressSelector
+                                  onAddressSelect={handleAddressSelect}
                                   variant="light"
                                 />
                                 {errors.address && (
@@ -404,9 +422,13 @@ export default function Profile({ readOnly = false }) {
                                   </Typography>
                                 )}
                               </Box>
-                                                         ) : (
-                               <span style={{ color: "black", fontWeight: "600" }}>{user?.address || "No address"}</span>
-                             )}
+                            ) : (
+                              <span
+                                style={{ color: "black", fontWeight: "600" }}
+                              >
+                                {user?.address || "No address"}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -537,9 +559,9 @@ export default function Profile({ readOnly = false }) {
                         fontWeight: "600",
                       }}
                     >
-                      {(wallet?.availableBalance || 0).toLocaleString('vi-VN')} VNĐ
+                      {(wallet?.availableBalance || 0).toLocaleString("vi-VN")}{" "}
+                      VNĐ
                     </Typography>
-               
                   </div>
                 </div>
                 <div className="profile-wallet-content">
@@ -582,9 +604,8 @@ export default function Profile({ readOnly = false }) {
                         fontWeight: "600",
                       }}
                     >
-                      {(0).toLocaleString('vi-VN')} VNĐ
+                      {(0).toLocaleString("vi-VN")} VNĐ
                     </Typography>
-                   
                   </div>
                 </div>
               </div>
@@ -787,12 +808,12 @@ export default function Profile({ readOnly = false }) {
         <div className="avatar-preview-modal">
           <div className="avatar-preview-content">
             <div className="avatar-preview-header">
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                 Preview Avatar
               </Typography>
               <Button
                 onClick={handleCancelUpload}
-                sx={{ minWidth: 'auto', padding: '8px' }}
+                sx={{ minWidth: "auto", padding: "8px" }}
               >
                 <CloseIcon />
               </Button>
@@ -809,7 +830,7 @@ export default function Profile({ readOnly = false }) {
                 variant="outlined"
                 onClick={handleCancelUpload}
                 disabled={isUploadingAvatar}
-                sx={{ marginRight: '10px' }}
+                sx={{ marginRight: "10px" }}
               >
                 Hủy
               </Button>
@@ -817,10 +838,14 @@ export default function Profile({ readOnly = false }) {
                 variant="contained"
                 onClick={handleConfirmUpload}
                 disabled={isUploadingAvatar}
-                sx={{ backgroundColor: '#ec5a0d' }}
-                startIcon={isUploadingAvatar ? <CircularProgress size={16} sx={{ color: 'white' }} /> : null}
+                sx={{ backgroundColor: "#ec5a0d" }}
+                startIcon={
+                  isUploadingAvatar ? (
+                    <CircularProgress size={16} sx={{ color: "white" }} />
+                  ) : null
+                }
               >
-                {isUploadingAvatar ? 'Uploading...' : 'Confirm'}
+                {isUploadingAvatar ? "Uploading..." : "Confirm"}
               </Button>
             </div>
           </div>
