@@ -147,6 +147,22 @@ export const getBusinessVoucherCodesApi = createAsyncThunk(
   }
 );
 
+// Update Voucher Template isDisabled Status API
+export const updateVoucherTemplateIsDisabledApi = createAsyncThunk(
+  "vouchers/updateVoucherTemplateIsDisabledApi",
+  async ({ voucherId, isDisabled }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(
+        `/admin/vouchers/${voucherId}/is-disabled`,
+        { isDisabled }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
 // Update Business Voucher isDisabled Status API
 export const updateBusinessVoucherIsDisabledApi = createAsyncThunk(
   "vouchers/updateBusinessVoucherIsDisabledApi",
@@ -164,6 +180,7 @@ export const updateBusinessVoucherIsDisabledApi = createAsyncThunk(
 );
 
 // ============ BUSINESS VOUCHER APIs ============
+  // GET /business-vouchers - Get list of business vouchers
 export const getBusinessVouchers = createAsyncThunk(
   "vouchers/getBusinessVouchers",
   async ({ tierLabel, minThreshold, page = 1, limit = 10 }, { rejectWithValue }) => {
@@ -176,6 +193,19 @@ export const getBusinessVouchers = createAsyncThunk(
       query.append("page", String(page));
       query.append("limit", String(limit));
       const response = await fetcher.get(`/business-vouchers?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
+// GET /business-vouchers/{businessVoucherId} - Get a specific business voucher
+export const getBusinessVoucherById = createAsyncThunk(
+  "vouchers/getBusinessVoucherById",
+  async (businessVoucherId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/business-vouchers/${businessVoucherId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response ? error.response.data : error.message);
@@ -257,7 +287,20 @@ export const getMyBusinessVouchers = createAsyncThunk(
   }
 );
 
-// Use a voucher code
+// GET /business-vouchers/voucher-codes/{voucherCodeId} - Get voucher code by ID
+export const getBusinessVoucherCodeById = createAsyncThunk(
+  "vouchers/getBusinessVoucherCodeById",
+  async (voucherCodeId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/business-vouchers/voucher-codes/${voucherCodeId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
+// POST /business-vouchers/voucher-codes/use - Use a voucher code
 export const useBusinessVoucherCode = createAsyncThunk(
   "vouchers/useBusinessVoucherCode",
   async ({ code }, { rejectWithValue }) => {
@@ -274,7 +317,7 @@ export const useBusinessVoucherCode = createAsyncThunk(
 // Get public vouchers for customer
 export const getCustomerVouchers = createAsyncThunk(
   "vouchers/getCustomerVouchers",
-  async ({ status = "active", page = 1, limit = 10 } = {}, { rejectWithValue }) => {
+  async ({ status, page = 1, limit = 10 } = {}, { rejectWithValue }) => {
     try {
       const query = new URLSearchParams();
       if (status) query.append("status", status);
@@ -291,9 +334,10 @@ export const getCustomerVouchers = createAsyncThunk(
 // Get my vouchers (customer owned)
 export const getMyCustomerVouchers = createAsyncThunk(
   "vouchers/getMyCustomerVouchers",
-  async ({ status = "redeemed", page = 1, limit = 10 } = {}, { rejectWithValue }) => {
+  async ({ voucherType, status = "redeemed", page = 1, limit = 10 } = {}, { rejectWithValue }) => {
     try {
       const query = new URLSearchParams();
+      if (voucherType) query.append("voucherType", voucherType);
       if (status) query.append("status", status);
       query.append("page", String(page));
       query.append("limit", String(limit));
@@ -372,6 +416,8 @@ const voucherSlice = createSlice({
     lastClaimResult: null,
     lastSetupResult: null,
     lastUseCodeResult: null,
+    currentBusinessVoucher: null,
+    currentVoucherCode: null,
     // Customer views
     customerVouchers: [],
     customerVoucherPagination: {
@@ -423,6 +469,57 @@ const voucherSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to create voucher");
+      })
+      // Create Business Voucher
+      .addCase(createBusinessVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createBusinessVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        if (payload.data) {
+          state.vouchers.unshift(payload.data);
+        }
+        toast.success(payload?.message || "Business voucher created successfully!");
+      })
+      .addCase(createBusinessVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create business voucher");
+      })
+      // Create Leaderboard Voucher
+      .addCase(createLeaderboardVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createLeaderboardVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        if (payload.data) {
+          state.vouchers.unshift(payload.data);
+        }
+        toast.success(payload?.message || "Leaderboard voucher created successfully!");
+      })
+      .addCase(createLeaderboardVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create leaderboard voucher");
+      })
+      // Create System Voucher
+      .addCase(createSystemVoucherApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createSystemVoucherApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        if (payload.data) {
+          state.vouchers.unshift(payload.data);
+        }
+        toast.success(payload?.message || "System voucher created successfully!");
+      })
+      .addCase(createSystemVoucherApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to create system voucher");
       })
       // Get All
       .addCase(getAllVouchersApi.pending, (state) => {
@@ -582,6 +679,42 @@ const voucherSlice = createSlice({
         toast.error(payload?.message || "Failed to fetch business voucher codes");
       })
       // Update Business Voucher isDisabled
+      // Update Voucher Template isDisabled
+      .addCase(updateVoucherTemplateIsDisabledApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateVoucherTemplateIsDisabledApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update current voucher if it's the one being updated
+        if (state.currentVoucher && payload?.data) {
+          const updatedId = payload?.data?._id || payload?.data?.id;
+          const currentId = state.currentVoucher._id || state.currentVoucher.id;
+          if (updatedId === currentId) {
+            state.currentVoucher = { ...state.currentVoucher, ...payload.data };
+          }
+        }
+        // Update voucher in the list if exists
+        if (payload?.data) {
+          const updatedId = payload?.data?._id || payload?.data?.id;
+          if (updatedId && state.vouchers) {
+            const index = state.vouchers.findIndex(
+              (v) => v._id === updatedId || v.id === updatedId
+            );
+            if (index !== -1) {
+              state.vouchers[index] = { ...state.vouchers[index], ...payload.data };
+            }
+          }
+        }
+        toast.success("Voucher template status updated successfully");
+      })
+      .addCase(updateVoucherTemplateIsDisabledApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to update voucher template status");
+      })
+      // Update Business Voucher isDisabled
       .addCase(updateBusinessVoucherIsDisabledApi.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -622,6 +755,20 @@ const voucherSlice = createSlice({
         };
       })
       .addCase(getBusinessVouchers.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      // Get business voucher by ID
+      .addCase(getBusinessVoucherById.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessVoucherById.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        // Store in currentVoucher or a specific field
+        state.currentVoucher = payload.data || payload;
+      })
+      .addCase(getBusinessVoucherById.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })
@@ -696,6 +843,20 @@ const voucherSlice = createSlice({
         };
       })
       .addCase(getMyBusinessVouchers.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      // Get voucher code by ID
+      .addCase(getBusinessVoucherCodeById.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessVoucherCodeById.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        // Store voucher code info if needed
+        state.currentVoucherCode = payload.data || payload;
+      })
+      .addCase(getBusinessVoucherCodeById.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })

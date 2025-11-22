@@ -19,6 +19,10 @@ import {
   Alert,
   Divider,
   CircularProgress,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  Chip,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -40,6 +44,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
     startDate: '',
     endDate: '',
     ecoRewardPolicyId: '',
+    isDisabled: false,
   });
 
   const [errors, setErrors] = useState({});
@@ -64,6 +69,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         startDate: voucher.startDate ? voucher.startDate.split('T')[0] : '',
         endDate: voucher.endDate ? voucher.endDate.split('T')[0] : '',
         ecoRewardPolicyId: voucher.ecoRewardPolicyId || '',
+        isDisabled: voucher.isDisabled !== undefined ? voucher.isDisabled : false,
       });
     } else {
       setSelectedVoucherType(voucherType || 'business');
@@ -77,6 +83,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         startDate: '',
         endDate: '',
         ecoRewardPolicyId: '',
+        isDisabled: false,
       });
     }
     setErrors({});
@@ -95,6 +102,13 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         [name]: ''
       }));
     }
+  };
+
+  const handleSwitchChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      isDisabled: !e.target.checked // Switch checked = true means isDisabled = false (enabled)
+    }));
   };
 
   const validate = () => {
@@ -146,7 +160,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
           baseCode: formData.baseCode,
           maxUsage: parseInt(formData.maxUsage),
           ecoRewardPolicyId: formData.ecoRewardPolicyId,
-          isDisabled: true,
+          isDisabled: formData.isDisabled,
         };
       } else if (selectedVoucherType === 'leaderboard') {
         submitData = {
@@ -379,6 +393,66 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
                       </Typography>
                     )}
                   </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      p: 2,
+                      borderRadius: 2,
+                      backgroundColor: 'rgba(34, 197, 94, 0.04)',
+                      border: '1px solid',
+                      borderColor: formData.isDisabled ? 'error.light' : 'success.light',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Chip
+                        label={formData.isDisabled ? 'Disabled' : 'Enabled'}
+                        color={formData.isDisabled ? 'error' : 'success'}
+                        size="small"
+                        sx={{ minWidth: '80px', fontWeight: 600 }}
+                      />
+                      <Box>
+                        <Typography variant="body1" fontWeight={600} sx={{ mb: 0.25 }}>
+                          Trạng thái hiển thị cho Business
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formData.isDisabled 
+                            ? 'Voucher sẽ bị ẩn, business không thể xem và claim' 
+                            : 'Voucher sẽ hiển thị, business có thể xem và claim'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Tooltip
+                      title={formData.isDisabled
+                        ? 'Click để enable voucher (business có thể xem và claim)'
+                        : 'Click để disable voucher (business không thể xem và claim)'}
+                      arrow
+                      placement="top"
+                    >
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!formData.isDisabled}
+                            onChange={handleSwitchChange}
+                            color="primary"
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: '#22c55e',
+                              },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: '#22c55e',
+                              },
+                            }}
+                          />
+                        }
+                        label=""
+                        sx={{ m: 0 }}
+                      />
+                    </Tooltip>
+                  </Box>
                 </Grid>
               </>
             )}
