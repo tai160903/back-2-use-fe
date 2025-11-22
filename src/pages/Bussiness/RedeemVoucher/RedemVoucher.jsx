@@ -1,133 +1,386 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaGift, FaCheckCircle, FaTimesCircle, FaCopy } from 'react-icons/fa';
-import { MdRedeem } from 'react-icons/md';
-import { IoIosSearch } from 'react-icons/io';
-import { BiDetail } from 'react-icons/bi';
+import { 
+  getBusinessVouchers,
+  getMyBusinessVouchers,
+  claimBusinessVoucher,
+  setupBusinessVoucher,
+  updateBusinessVoucher,
+  getBusinessVoucherDetail
+} from '../../../store/slices/voucherSlice';
+import { 
+  FaGift, 
+  FaCheckCircle, 
+  FaTimesCircle, 
+  FaCopy,
+  FaSpinner,
+  FaEdit,
+  FaRocket,
+  FaInfoCircle
+} from 'react-icons/fa';
+import { MdRedeem, MdSettings, MdPublish } from 'react-icons/md';
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Button, 
+  TextField,
+  Box,
+  Typography,
+  Chip,
+  Tabs,
+  Tab,
+  CircularProgress,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  Divider,
+  IconButton,
+  Grid,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { Pagination, Stack } from '@mui/material';
 import './RedemVoucher.css';
+import toast from 'react-hot-toast';
+
+// Helper function to format date
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
 
 export default function RedemVoucher() {
   const dispatch = useDispatch();
-  const [inputCode, setInputCode] = useState('');
-  const [filter, setFilter] = useState('ALL');
-  const [searchTerm, setSearchTerm] = useState('');
+  const { 
+    businessVouchers,
+    businessVoucherPagination,
+    myBusinessVouchers,
+    myBusinessVoucherPagination,
+    isLoading 
+  } = useSelector(state => state.vouchers);
 
-  // Sample voucher codes for demo
-  const sampleCodes = [
-    { code: 'REDEEM-VAL10', discount: '0%', used: '10,000 used' },
-    { code: 'OFFERREL-DEMO', discount: '0%', used: '0% used' },
-    { code: 'WELCOME-NEW', discount: '0%', used: '0% used' },
-  ];
+  // State for setup vouchers section
+  const [setupVouchers, setSetupVouchers] = useState([]);
+  const [setupVouchersPage, setSetupVouchersPage] = useState(1);
+  const [setupVouchersStatus, setSetupVouchersStatus] = useState(undefined); // Filter by status
+  const [setupVouchersIsPublished, setSetupVouchersIsPublished] = useState(undefined); // Filter by isPublished
 
-  // Mock data for voucher usage history
-  const usageHistory = [
-    {
-      id: 1,
-      customerName: 'John Doe',
-      customerId: 'CUST001',
-      code: 'REDEEM-VAL10',
-      dateTime: '3/20/2024\n10:30 AM',
-      voucherValue: '10%',
-      status: 'Success'
-    },
-    {
-      id: 2,
-      customerName: 'Jane Smith',
-      customerId: 'CUST002',
-      code: 'OFFERREL-DEMO',
-      dateTime: '3/15/2024\n02:15 PM',
-      voucherValue: '15%',
-      status: 'Success'
-    },
-    {
-      id: 3,
-      customerName: 'Mike Johnson',
-      customerId: 'CUST003',
-      code: 'INVALID-CODE',
-      dateTime: '3/15/2024\n11:45 AM',
-      voucherValue: 'N/A',
-      status: 'Failed'
-    },
-    {
-      id: 4,
-      customerName: 'Sarah Wilson',
-      customerId: 'CUST004',
-      code: 'EXPIRED-2024',
-      dateTime: '3/10/2024\n09:20 AM',
-      voucherValue: 'N/A',
-      status: 'Failed'
+  // Tab state
+  const [activeTab, setActiveTab] = useState(0); // 0: Available to Claim, 1: My Claimed Vouchers
+  
+  // Filter states
+  const [tierLabel, setTierLabel] = useState('');
+  const [minThreshold, setMinThreshold] = useState('');
+  const [myVouchersStatus, setMyVouchersStatus] = useState('claimed');
+  const [isPublished, setIsPublished] = useState(null);
+  
+  // Pagination
+  const [availablePage, setAvailablePage] = useState(1);
+  const [myVouchersPage, setMyVouchersPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Modal states
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
+  const [setupModalOpen, setSetupModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [voucherDetail, setVoucherDetail] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Setup form state
+  const [setupForm, setSetupForm] = useState({
+    discountPercent: '',
+    rewardPointCost: '',
+    startDate: '',
+    endDate: '',
+    isPublished: false
+  });
+
+  // Load available vouchers (isDisabled = false)
+  useEffect(() => {
+    if (activeTab === 0) {
+      dispatch(getBusinessVouchers({
+        tierLabel: tierLabel || undefined,
+        minThreshold: minThreshold ? Number(minThreshold) : undefined,
+        page: availablePage,
+        limit: itemsPerPage,
+      }));
     }
-  ];
+  }, [dispatch, activeTab, tierLabel, minThreshold, availablePage]);
 
-  // Mock data for active vouchers
-  const activeVouchers = [
-    {
-      id: 1,
-      voucherName: 'Summer Sale',
-      customerName: 'All Customers',
-      customerId: '-',
-      code: 'SUMMER-2024',
-      dateTime: '3/20/2024\n10:30 AM',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      voucherName: 'New User Bonus',
-      customerName: 'New Users',
-      customerId: '-',
-      code: 'NEWUSER-50',
-      dateTime: '3/18/2024\n02:00 PM',
-      status: 'Active'
-    },
-    {
-      id: 3,
-      voucherName: 'Flash Sale',
-      customerName: 'All Customers',
-      customerId: '-',
-      code: 'FLASH-20',
-      dateTime: '3/15/2024\n08:00 AM',
-      status: 'Active'
+  // Load my claimed vouchers - Load ngay từ đầu để hiển thị số lượng trong tab
+  useEffect(() => {
+    dispatch(getMyBusinessVouchers({
+      status: myVouchersStatus,
+      isPublished: isPublished !== null ? isPublished : undefined,
+      page: myVouchersPage,
+      limit: itemsPerPage,
+    }));
+  }, [dispatch, myVouchersStatus, isPublished, myVouchersPage]);
+
+  // Get voucher status helper function
+  const getVoucherStatus = (voucher) => {
+    if (voucher.isPublished) return 'published';
+    if (voucher.discountPercent && voucher.rewardPointCost && voucher.startDate && voucher.endDate) {
+      return 'setup';
     }
-  ];
-
-  const handleCopyCode = (code) => {
-    navigator.clipboard.writeText(code);
-    alert(`Code "${code}" copied to clipboard!`);
+    return 'claimed';
   };
 
-  const handleRedeemCode = () => {
-    if (!inputCode.trim()) {
-      alert('Please enter a voucher code');
+  // Load setup vouchers for separate section
+  const loadSetupVouchers = async () => {
+    try {
+      const result = await dispatch(getMyBusinessVouchers({
+        status: setupVouchersStatus, // Filter by status if set
+        isPublished: setupVouchersIsPublished !== undefined ? setupVouchersIsPublished : undefined, // Filter by isPublished if set
+        page: setupVouchersPage,
+        limit: 100,
+      })).unwrap();
+      
+      if (result?.data) {
+        // Filter only vouchers that are setup or published
+        const setup = result.data.filter(v => {
+          const status = getVoucherStatus(v);
+          return status === 'setup' || status === 'published';
+        });
+        setSetupVouchers(setup);
+      }
+    } catch (error) {
+      console.error('Failed to load setup vouchers:', error);
+    }
+  };
+
+  // Load setup vouchers on mount and when filters change
+  useEffect(() => {
+    loadSetupVouchers();
+  }, [setupVouchersStatus, setupVouchersIsPublished, setupVouchersPage]);
+
+  // Filter available vouchers (only show isDisabled = false)
+  const availableToClaim = businessVouchers?.filter(v => !v.isDisabled) || [];
+
+  // Handle tab change
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setAvailablePage(1);
+    setMyVouchersPage(1);
+  };
+
+  // Handle claim voucher
+  const handleOpenClaimModal = (voucher) => {
+    setSelectedVoucher(voucher);
+    setClaimModalOpen(true);
+  };
+
+  const handleCloseClaimModal = () => {
+    setClaimModalOpen(false);
+    setSelectedVoucher(null);
+  };
+
+  const handleClaimVoucher = async () => {
+    if (!selectedVoucher) return;
+
+    const voucherId = selectedVoucher._id || selectedVoucher.id;
+    if (!voucherId) {
+      toast.error('Không tìm thấy voucher ID');
       return;
     }
-    // TODO: Implement API call to redeem voucher
-    alert(`Redeeming code: ${inputCode}`);
-    setInputCode('');
+
+    try {
+      await dispatch(claimBusinessVoucher({
+        voucherId,
+        data: {
+          customName: selectedVoucher.name || '',
+          customDescription: selectedVoucher.description || ''
+        }
+      })).unwrap();
+      
+      handleCloseClaimModal();
+      // Refresh lists
+      dispatch(getBusinessVouchers({
+        tierLabel: tierLabel || undefined,
+        minThreshold: minThreshold ? Number(minThreshold) : undefined,
+        page: availablePage,
+        limit: itemsPerPage,
+      }));
+      dispatch(getMyBusinessVouchers({
+        status: myVouchersStatus,
+        isPublished: isPublished !== null ? isPublished : undefined,
+        page: myVouchersPage,
+        limit: itemsPerPage,
+      }));
+    } catch (error) {
+      // Error handled by thunk
+    }
   };
 
-  const getFilteredHistory = () => {
-    let filtered = [...usageHistory];
-    
-    if (filter === 'Business') {
-      filtered = filtered.filter(item => item.status === 'Success');
-    } else if (filter === 'Failed') {
-      filtered = filtered.filter(item => item.status === 'Failed');
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(item =>
-        item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.code.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return filtered;
+  // Handle setup voucher
+  const handleOpenSetupModal = (voucher, editMode = false) => {
+    setSelectedVoucher(voucher);
+    setIsEditMode(editMode);
+    setSetupForm({
+      discountPercent: voucher.discountPercent || '',
+      rewardPointCost: voucher.rewardPointCost || '',
+      startDate: voucher.startDate ? new Date(voucher.startDate).toISOString().split('T')[0] : '',
+      endDate: voucher.endDate ? new Date(voucher.endDate).toISOString().split('T')[0] : '',
+      isPublished: voucher.isPublished || false
+    });
+    setSetupModalOpen(true);
   };
 
-  const filteredHistory = getFilteredHistory();
-  const successCount = usageHistory.filter(item => item.status === 'Success').length;
-  const failedCount = usageHistory.filter(item => item.status === 'Failed').length;
+  const handleCloseSetupModal = () => {
+    setSetupModalOpen(false);
+    setSelectedVoucher(null);
+    setIsEditMode(false);
+    setSetupForm({
+      discountPercent: '',
+      rewardPointCost: '',
+      startDate: '',
+      endDate: '',
+      isPublished: false
+    });
+  };
+
+  // Handle view voucher details
+  const handleViewDetails = async (voucher) => {
+    const businessVoucherId = voucher._id || voucher.id;
+    if (!businessVoucherId) {
+      toast.error('Voucher ID not found');
+      return;
+    }
+
+    try {
+      setDetailModalOpen(true);
+      // Load voucher detail using the detail API
+      const detailResult = await dispatch(getBusinessVoucherDetail({
+        businessVoucherId,
+        page: 1,
+        limit: 100
+      })).unwrap();
+      
+      // Use voucher data from current voucher object and combine with detail
+      setVoucherDetail({
+        ...voucher, // Use existing voucher data
+        codes: detailResult.data || detailResult.codes || []
+      });
+    } catch (error) {
+      console.error('Failed to load voucher details:', error);
+      toast.error(error?.response?.data?.message || 'Failed to load voucher details');
+      setDetailModalOpen(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false);
+    setVoucherDetail(null);
+  };
+
+  const handleSetupVoucher = async () => {
+    if (!selectedVoucher) return;
+
+    const businessVoucherId = selectedVoucher._id || selectedVoucher.id;
+    if (!businessVoucherId) {
+      toast.error('Không tìm thấy business voucher ID');
+      return;
+    }
+
+    // Validate form
+    if (!setupForm.discountPercent || !setupForm.rewardPointCost || !setupForm.startDate || !setupForm.endDate) {
+      toast.error('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    try {
+      if (isEditMode) {
+        // Edit mode: use updateBusinessVoucher
+        await dispatch(updateBusinessVoucher({
+          id: businessVoucherId,
+          data: {
+            discountPercent: Number(setupForm.discountPercent),
+            rewardPointCost: Number(setupForm.rewardPointCost),
+            startDate: new Date(setupForm.startDate).toISOString(),
+            endDate: new Date(setupForm.endDate).toISOString(),
+            isPublished: setupForm.isPublished
+          }
+        })).unwrap();
+      } else {
+        // Setup mode: use setupBusinessVoucher
+        await dispatch(setupBusinessVoucher({
+          id: businessVoucherId,
+          data: {
+            discountPercent: Number(setupForm.discountPercent),
+            rewardPointCost: Number(setupForm.rewardPointCost),
+            startDate: new Date(setupForm.startDate).toISOString(),
+            endDate: new Date(setupForm.endDate).toISOString(),
+            isPublished: setupForm.isPublished // Use value from form
+          }
+        })).unwrap();
+      }
+      
+      handleCloseSetupModal();
+      // Refresh my vouchers
+      dispatch(getMyBusinessVouchers({
+        status: myVouchersStatus,
+        isPublished: isPublished !== null ? isPublished : undefined,
+        page: myVouchersPage,
+        limit: itemsPerPage,
+      }));
+      // Refresh setup vouchers
+      loadSetupVouchers();
+    } catch (error) {
+      // Error handled by thunk
+    }
+  };
+
+  // Handle publish voucher
+  const handlePublishVoucher = async (voucher) => {
+    const businessVoucherId = voucher._id || voucher.id;
+    if (!businessVoucherId) {
+      toast.error('Không tìm thấy business voucher ID');
+      return;
+    }
+
+    // Check if voucher is setup
+    if (!voucher.discountPercent || !voucher.rewardPointCost || !voucher.startDate || !voucher.endDate) {
+      toast.error('Vui lòng setup voucher trước khi publish');
+      return;
+    }
+
+    try {
+      await dispatch(updateBusinessVoucher({
+        id: businessVoucherId,
+        data: {
+          isPublished: true
+        }
+      })).unwrap();
+      
+      // Refresh my vouchers
+      dispatch(getMyBusinessVouchers({
+        status: myVouchersStatus,
+        isPublished: isPublished !== null ? isPublished : undefined,
+        page: myVouchersPage,
+        limit: itemsPerPage,
+      }));
+      // Refresh setup vouchers
+      loadSetupVouchers();
+    } catch (error) {
+      // Error handled by thunk
+    }
+  };
+
 
   return (
     <div className="redeem-voucher-page">
@@ -136,226 +389,1284 @@ export default function RedemVoucher() {
         <div className="redeem-title-section">
           <MdRedeem className="redeem-title-icon" />
           <div>
-            <h1 className="redeem-title">Redeem Voucher</h1>
+            <h1 className="redeem-title">Quản lý Voucher</h1>
             <p className="redeem-description">
-              Redeem voucher codes and view usage history
+              Claim, setup và publish voucher để customer có thể sử dụng
             </p>
           </div>
         </div>
       </div>
 
-      {/* Demo Voucher Codes Section */}
-      <div className="demo-codes-section">
-        <h3 className="section-title">
-          <FaGift className="section-icon" />
-          Demo Voucher Codes
-        </h3>
-        <p className="section-subtitle">
-          Use these sample codes to test the redemption functionality
-        </p>
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTab-root': {
+              fontSize: '16px',
+              fontWeight: 600,
+              textTransform: 'none',
+              color: '#6b7280',
+            },
+            '& .Mui-selected': {
+              color: '#22c55e',
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#22c55e',
+            }
+          }}
+        >
+          <Tab label={`Voucher có thể Claim (${businessVoucherPagination?.total || availableToClaim.length || 0})`} />
+          <Tab label={`Voucher đã Claim (${myBusinessVoucherPagination?.total || myBusinessVouchers?.length || 0})`} />
+        </Tabs>
+      </Box>
 
-        <div className="demo-codes-grid">
-          {sampleCodes.map((item, index) => (
-            <div key={index} className="demo-code-card">
-              <div className="demo-code-header">
-                <span className="demo-code-label">Code:</span>
-                <span className="demo-code-value">{item.code}</span>
-                <button
-                  className="copy-btn"
-                  onClick={() => handleCopyCode(item.code)}
-                  title="Copy code"
-                >
-                  <FaCopy />
-                </button>
+      {/* Available to Claim Tab */}
+      {activeTab === 0 && (
+        <div className="vouchers-section">
+          <div className="section-header">
+            <h3 className="section-title">
+              <FaGift className="section-icon" />
+              Voucher có thể Claim
+            </h3>
+           
+          </div>
+
+          {/* Filters */}
+          <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+            <TextField
+              label="Tier Label"
+              size="small"
+              value={tierLabel}
+              onChange={(e) => {
+                setTierLabel(e.target.value);
+                setAvailablePage(1);
+              }}
+              placeholder="Bronze, Silver, Gold, Diamond"
+              sx={{ 
+                minWidth: 200,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#22c55e',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#22c55e',
+                  },
+                },
+              }}
+            />
+            <TextField
+              label="Min Threshold"
+              type="number"
+              size="small"
+              value={minThreshold}
+              onChange={(e) => {
+                setMinThreshold(e.target.value);
+                setAvailablePage(1);
+              }}
+              placeholder="500"
+              sx={{ 
+                minWidth: 150,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#22c55e',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#22c55e',
+                  },
+                },
+              }}
+            />
+          </Box>
+
+          {/* Vouchers Grid */}
+          {isLoading && availablePage === 1 ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : availableToClaim.length > 0 ? (
+            <>
+              <div className="vouchers-grid">
+                {availableToClaim.map((voucher) => (
+                  <div key={voucher._id || voucher.id} className="voucher-card">
+                    <div className="voucher-card-header">
+                      <h4 className="voucher-name">{voucher.name || voucher.voucher?.name || 'Voucher'}</h4>
+                      <Chip 
+                        label="Có thể Claim" 
+                        size="small"
+                        sx={{ 
+                          fontWeight: 600,
+                          backgroundColor: '#d1fae5',
+                          color: '#065f46',
+                        }}
+                      />
+                    </div>
+                    <div className="voucher-card-body">
+                      <p className="voucher-description">
+                        {voucher.description || voucher.voucher?.description || 'Không có mô tả'}
+                      </p>
+                      {voucher.tierLabel && (
+                        <div className="voucher-detail">
+                          <span className="detail-label">Tier:</span>
+                          <span className="detail-value">{voucher.tierLabel}</span>
+                        </div>
+                      )}
+                      {voucher.minThreshold && (
+                        <div className="voucher-detail">
+                          <span className="detail-label">Min Threshold:</span>
+                          <span className="detail-value">{voucher.minThreshold} points</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="voucher-card-footer">
+                      <Button
+                        variant="contained"
+                        startIcon={<MdRedeem />}
+                        onClick={() => handleOpenClaimModal(voucher)}
+                        fullWidth
+                        sx={{
+                          backgroundColor: '#22c55e',
+                          fontWeight: 600,
+                          py: 1.2,
+                          fontSize: '0.9375rem',
+                          boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            backgroundColor: '#16a34a',
+                            boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
+                            transform: 'translateY(-2px)',
+                          }
+                        }}
+                      >
+                        Claim Voucher
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="demo-code-details">
-                <span className="demo-discount">{item.discount} Discount</span>
-                <span className="demo-usage">{item.used}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Input Voucher Code Section */}
-      <div className="input-code-section">
-        <h3 className="section-title">
-          <MdRedeem className="section-icon" />
-          Input Voucher Code
-        </h3>
-        <p className="section-subtitle">
-          Enter the customer's voucher code and click redeem to validate and process
-        </p>
-
-        <div className="input-code-container">
-          <input
-            type="text"
-            placeholder="Enter voucher code..."
-            value={inputCode}
-            onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-            className="voucher-input"
-          />
-          <button
-            className="redeem-btn"
-            onClick={handleRedeemCode}
-          >
-            <MdRedeem />
-            Redeem
-          </button>
-        </div>
-      </div>
-
-      {/* Voucher Usage History */}
-      <div className="usage-history-section">
-        <h3 className="section-title">
-          <FaGift className="section-icon" />
-          Voucher Usage History
-        </h3>
-        <p className="section-subtitle">
-          View the history of all voucher redemptions (attempts)
-        </p>
-
-        {/* Filter Tabs */}
-        <div className="history-filters">
-          <button
-            className={`filter-tab ${filter === 'ALL' ? 'active' : ''}`}
-            onClick={() => setFilter('ALL')}
-          >
-            ALL ({usageHistory.length})
-          </button>
-          <button
-            className={`filter-tab ${filter === 'Business' ? 'active' : ''}`}
-            onClick={() => setFilter('Business')}
-          >
-            Business ({successCount})
-          </button>
-          <button
-            className={`filter-tab ${filter === 'Failed' ? 'active' : ''}`}
-            onClick={() => setFilter('Failed')}
-          >
-            Failed ({failedCount})
-          </button>
-        </div>
-
-        {/* History Table */}
-        <div className="history-table-container">
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Customer Name (ID)</th>
-                <th>Code</th>
-                <th>Date & Time</th>
-                <th>Voucher Value</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredHistory.length > 0 ? (
-                filteredHistory.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="customer-info">
-                        <span className="customer-name">{item.customerName}</span>
-                        <span className="customer-id">ID: {item.customerId}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="code-badge">{item.code}</span>
-                    </td>
-                    <td>
-                      <div className="datetime-info">
-                        {item.dateTime.split('\n').map((line, i) => (
-                          <div key={i}>{line}</div>
-                        ))}
-                      </div>
-                    </td>
-                    <td>
-                      <span className="voucher-value">{item.voucherValue}</span>
-                    </td>
-                    <td>
-                      <span className={`status-badge ${item.status.toLowerCase()}`}>
-                        {item.status === 'Success' ? (
-                          <><FaCheckCircle /> Success</>
-                        ) : (
-                          <><FaTimesCircle /> Failed</>
-                        )}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="no-data">
-                    No voucher usage history found
-                  </td>
-                </tr>
+              {/* Pagination */}
+              {businessVoucherPagination?.totalPages > 1 && (
+                <Stack spacing={2} sx={{ mt: 3, display: 'flex', alignItems: 'center' }}>
+                  <Pagination
+                    count={businessVoucherPagination.totalPages}
+                    page={availablePage}
+                    onChange={(e, page) => setAvailablePage(page)}
+                    variant="outlined"
+                    shape="rounded"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        '&.Mui-selected': {
+                          backgroundColor: '#22c55e',
+                          color: 'white',
+                          '&:hover': {
+                            backgroundColor: '#16a34a',
+                          }
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        }
+                      }
+                    }}
+                  />
+                </Stack>
               )}
-            </tbody>
-          </table>
+            </>
+          ) : (
+            <Box sx={{ textAlign: 'center', p: 4, color: '#999' }}>
+              <FaGift style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
+              <Typography>Không có voucher nào có thể claim</Typography>
+            </Box>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* All Active Vouchers from Admin */}
-      <div className="active-vouchers-section">
-        <h3 className="section-title">
-          <FaGift className="section-icon" />
-          All Active Vouchers from Admin
-        </h3>
-        <p className="section-subtitle">
-          View all vouchers that are available for redemption
-        </p>
+      {/* My Claimed Vouchers Tab */}
+      {activeTab === 1 && (
+        <div className="vouchers-section">
+          <div className="section-header">
+            <h3 className="section-title">
+              <FaGift className="section-icon" />
+              Voucher đã Claim
+            </h3>
+            <p className="section-subtitle">
+              Quản lý các voucher đã claim: Setup → Publish
+            </p>
+          </div>
 
-        {/* Active Vouchers Table */}
-        <div className="active-table-container">
-          <table className="active-table">
-            <thead>
-              <tr>
-                <th>Voucher Name</th>
-                <th>Customer Name (ID)</th>
-                <th>Code</th>
-                <th>Date & Time</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activeVouchers.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <span className="voucher-name">{item.voucherName}</span>
-                  </td>
-                  <td>
-                    <div className="customer-info">
-                      <span className="customer-name">{item.customerName}</span>
-                      <span className="customer-id">{item.customerId}</span>
+          {/* Filters */}
+          <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Chip
+              label="Tất cả"
+              onClick={() => setIsPublished(null)}
+              sx={{ 
+                cursor: 'pointer',
+                backgroundColor: isPublished === null ? '#22c55e' : '#e5e7eb',
+                color: isPublished === null ? 'white' : '#374151',
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: isPublished === null ? '#16a34a' : '#d1d5db',
+                }
+              }}
+            />
+            <Chip
+              label="Đã Publish"
+              onClick={() => setIsPublished(true)}
+              sx={{ 
+                cursor: 'pointer',
+                backgroundColor: isPublished === true ? '#22c55e' : '#e5e7eb',
+                color: isPublished === true ? 'white' : '#374151',
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: isPublished === true ? '#16a34a' : '#d1d5db',
+                }
+              }}
+            />
+            <Chip
+              label="Chưa Publish"
+              onClick={() => setIsPublished(false)}
+              sx={{ 
+                cursor: 'pointer',
+                backgroundColor: isPublished === false ? '#22c55e' : '#e5e7eb',
+                color: isPublished === false ? 'white' : '#374151',
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: isPublished === false ? '#16a34a' : '#d1d5db',
+                }
+              }}
+            />
+          </Box>
+
+          {/* Vouchers Grid */}
+          {isLoading && myVouchersPage === 1 ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : myBusinessVouchers?.length > 0 ? (
+            <>
+              <div className="vouchers-grid">
+                {myBusinessVouchers.map((voucher) => {
+                  const status = getVoucherStatus(voucher);
+                  return (
+                    <div key={voucher._id || voucher.id} className="voucher-card">
+                      <div className="voucher-card-header">
+                        <h4 className="voucher-name">
+                          {voucher.customName || voucher.voucher?.name || 'Voucher'}
+                        </h4>
+                        <Chip 
+                          label={
+                            status === 'published' ? 'Đã Publish' :
+                            status === 'setup' ? 'Đã Setup' :
+                            'Đã Claim'
+                          }
+                          size="small"
+                          sx={{ 
+                            fontWeight: 600,
+                            backgroundColor: 
+                              status === 'published' ? '#d1fae5' :
+                              status === 'setup' ? '#fef3c7' :
+                              '#e5e7eb',
+                            color: 
+                              status === 'published' ? '#065f46' :
+                              status === 'setup' ? '#92400e' :
+                              '#374151',
+                          }}
+                        />
+                      </div>
+                      <div className="voucher-card-body">
+                        <p className="voucher-description">
+                          {voucher.customDescription || voucher.voucher?.description || 'Không có mô tả'}
+                        </p>
+                        {voucher.discountPercent && (
+                          <div className="voucher-detail">
+                            <span className="detail-label">Discount:</span>
+                            <span className="detail-value">{voucher.discountPercent}%</span>
+                          </div>
+                        )}
+                        {voucher.rewardPointCost && (
+                          <div className="voucher-detail">
+                            <span className="detail-label">Points:</span>
+                            <span className="detail-value">{voucher.rewardPointCost}</span>
+                          </div>
+                        )}
+                        {voucher.startDate && (
+                          <div className="voucher-detail">
+                            <span className="detail-label">Start:</span>
+                            <span className="detail-value">{formatDate(voucher.startDate)}</span>
+                          </div>
+                        )}
+                        {voucher.endDate && (
+                          <div className="voucher-detail">
+                            <span className="detail-label">End:</span>
+                            <span className="detail-value">{formatDate(voucher.endDate)}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="voucher-card-footer">
+                        <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
+                          {/* Action buttons row */}
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            {status === 'claimed' && (
+                              <Button
+                                variant="contained"
+                                startIcon={<MdSettings />}
+                                onClick={() => handleOpenSetupModal(voucher, false)}
+                                fullWidth
+                                sx={{
+                                  backgroundColor: '#f59e0b',
+                                  fontWeight: 600,
+                                  py: 1.2,
+                                  fontSize: '0.9375rem',
+                                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    backgroundColor: '#d97706',
+                                    boxShadow: '0 6px 16px rgba(245, 158, 11, 0.45)',
+                                    transform: 'translateY(-2px)',
+                                  }
+                                }}
+                              >
+                                Setup
+                              </Button>
+                            )}
+                            {status === 'setup' && (
+                              <>
+                                <Button
+                                  variant="contained"
+                                  startIcon={<FaEdit />}
+                                  onClick={() => handleOpenSetupModal(voucher, true)}
+                                  sx={{
+                                    backgroundColor: '#3b82f6',
+                                    fontWeight: 600,
+                                    py: 1.2,
+                                    fontSize: '0.9375rem',
+                                    flex: 1,
+                                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                      backgroundColor: '#2563eb',
+                                      boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                      transform: 'translateY(-2px)',
+                                    }
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  startIcon={<MdPublish />}
+                                  onClick={() => handlePublishVoucher(voucher)}
+                                  sx={{
+                                    backgroundColor: '#22c55e',
+                                    fontWeight: 600,
+                                    py: 1.2,
+                                    fontSize: '0.9375rem',
+                                    flex: 1,
+                                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                      backgroundColor: '#16a34a',
+                                      boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
+                                      transform: 'translateY(-2px)',
+                                    }
+                                  }}
+                                >
+                                  Publish
+                                </Button>
+                              </>
+                            )}
+                            {status === 'published' && (
+                              <Button
+                                variant="contained"
+                                startIcon={<FaEdit />}
+                                onClick={() => handleOpenSetupModal(voucher, true)}
+                                fullWidth
+                                sx={{
+                                  backgroundColor: '#3b82f6',
+                                  fontWeight: 600,
+                                  py: 1.2,
+                                  fontSize: '0.9375rem',
+                                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    backgroundColor: '#2563eb',
+                                    boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                    transform: 'translateY(-2px)',
+                                  }
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            )}
+                          </Box>
+                          {/* View Details button */}
+                          <Button
+                            variant="outlined"
+                            startIcon={<FaInfoCircle />}
+                            onClick={() => handleViewDetails(voucher)}
+                            fullWidth
+                            sx={{
+                              borderColor: '#6b7280',
+                              color: '#6b7280',
+                              fontWeight: 500,
+                              py: 0.8,
+                              fontSize: '0.875rem',
+                              '&:hover': {
+                                borderColor: '#22c55e',
+                                color: '#22c55e',
+                                backgroundColor: 'rgba(34, 197, 94, 0.04)',
+                              }
+                            }}
+                          >
+                            View Details
+                          </Button>
+                        </Box>
+                      </div>
                     </div>
-                  </td>
-                  <td>
-                    <span className="code-badge">{item.code}</span>
-                  </td>
-                  <td>
-                    <div className="datetime-info">
-                      {item.dateTime.split('\n').map((line, i) => (
-                        <div key={i}>{line}</div>
-                      ))}
-                    </div>
-                  </td>
-                  <td>
-                    <span className="status-badge active">
-                      <FaCheckCircle /> {item.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="action-btn view-btn">
-                      <BiDetail />
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  );
+                })}
+              </div>
+
+              {/* Pagination */}
+              {myBusinessVoucherPagination?.totalPages > 1 && (
+                <Stack spacing={2} sx={{ mt: 3, display: 'flex', alignItems: 'center' }}>
+                  <Pagination
+                    count={myBusinessVoucherPagination.totalPages}
+                    page={myVouchersPage}
+                    onChange={(e, page) => setMyVouchersPage(page)}
+                    variant="outlined"
+                    shape="rounded"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        '&.Mui-selected': {
+                          backgroundColor: '#22c55e',
+                          color: 'white',
+                          '&:hover': {
+                            backgroundColor: '#16a34a',
+                          }
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        }
+                      }
+                    }}
+                  />
+                </Stack>
+              )}
+            </>
+          ) : (
+            <Box sx={{ textAlign: 'center', p: 4, color: '#999' }}>
+              <FaGift style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
+              <Typography>Bạn chưa claim voucher nào</Typography>
+            </Box>
+          )}
         </div>
+      )}
+
+      {/* Claim Modal */}
+      <Dialog 
+        open={claimModalOpen} 
+        onClose={handleCloseClaimModal} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            color: 'white',
+            py: 2,
+            px: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5
+          }}
+        >
+          <MdRedeem style={{ fontSize: '24px' }} />
+          <Typography variant="h6" fontWeight="bold">Claim Voucher</Typography>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
+          {selectedVoucher && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1a1a1a' }}>
+                {selectedVoucher.name || selectedVoucher.voucher?.name || 'Voucher'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3, lineHeight: 1.6 }}>
+                {selectedVoucher.description || selectedVoucher.voucher?.description || 'Không có mô tả'}
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#374151', fontWeight: 500 }}>
+                Bạn có chắc chắn muốn claim voucher này không?
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 2 }}>
+          <Button 
+            onClick={handleCloseClaimModal}
+            variant="outlined"
+            sx={{
+              color: '#666',
+              borderColor: '#ccc',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              fontWeight: 500,
+              '&:hover': {
+                borderColor: '#999',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              }
+            }}
+          >
+            Hủy
+          </Button>
+          <Button 
+            onClick={handleClaimVoucher} 
+            variant="contained"
+            disabled={isLoading}
+            sx={{
+              backgroundColor: '#22c55e',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+              '&:hover': {
+                backgroundColor: '#16a34a',
+                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
+              }
+            }}
+          >
+            {isLoading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : 'Claim'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Setup Modal */}
+      <Dialog 
+        open={setupModalOpen} 
+        onClose={handleCloseSetupModal} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 12px 40px rgba(245, 158, 11, 0.2)',
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: isEditMode 
+              ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+              : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            color: 'white',
+            py: 2,
+            px: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5
+          }}
+        >
+          {isEditMode ? (
+            <FaEdit style={{ fontSize: '24px' }} />
+          ) : (
+            <MdSettings style={{ fontSize: '24px' }} />
+          )}
+          <Typography variant="h6" fontWeight="bold">
+            {isEditMode ? 'Edit Voucher' : 'Setup Voucher'}
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
+          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <TextField
+              label="Discount Percent (%)"
+              type="number"
+              fullWidth
+              value={setupForm.discountPercent}
+              onChange={(e) => setSetupForm({ ...setupForm, discountPercent: e.target.value })}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                },
+              }}
+            />
+            <TextField
+              label="Reward Point Cost"
+              type="number"
+              fullWidth
+              value={setupForm.rewardPointCost}
+              onChange={(e) => setSetupForm({ ...setupForm, rewardPointCost: e.target.value })}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                },
+              }}
+            />
+            <TextField
+              label="Start Date"
+              type="date"
+              fullWidth
+              value={setupForm.startDate}
+              onChange={(e) => setSetupForm({ ...setupForm, startDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                },
+              }}
+            />
+            <TextField
+              label="End Date"
+              type="date"
+              fullWidth
+              value={setupForm.endDate}
+              onChange={(e) => setSetupForm({ ...setupForm, endDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#f59e0b',
+                  },
+                },
+              }}
+            />
+            
+            <Divider sx={{ my: 1 }} />
+            
+            {/* Publish Toggle */}
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                p: 2.5,
+                borderRadius: 2,
+                backgroundColor: setupForm.isPublished ? 'rgba(34, 197, 94, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid',
+                borderColor: setupForm.isPublished ? '#22c55e' : '#f59e0b',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
+                <Chip
+                  label={setupForm.isPublished ? 'Published' : 'Unpublished'}
+                  size="small"
+                  sx={{ 
+                    minWidth: '90px', 
+                    fontWeight: 600,
+                    backgroundColor: setupForm.isPublished ? '#d1fae5' : '#fef3c7',
+                    color: setupForm.isPublished ? '#065f46' : '#92400e',
+                  }}
+                />
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1" fontWeight={600} sx={{ mb: 0.25 }}>
+                    Publish cho Customer
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {setupForm.isPublished 
+                      ? 'Voucher sẽ hiển thị và customer có thể sử dụng ngay' 
+                      : 'Voucher sẽ được setup nhưng chưa publish, customer chưa thể sử dụng'}
+                  </Typography>
+                </Box>
+              </Box>
+              <Tooltip
+                title={setupForm.isPublished
+                  ? 'Click để unpublish voucher (customer không thể sử dụng)'
+                  : 'Click để publish voucher (customer có thể sử dụng)'}
+                arrow
+                placement="top"
+              >
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={setupForm.isPublished}
+                      onChange={(e) => setSetupForm({ ...setupForm, isPublished: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#22c55e',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#22c55e',
+                        },
+                      }}
+                    />
+                  }
+                  label=""
+                  sx={{ m: 0 }}
+                />
+              </Tooltip>
+            </Box>
+            
+            {!setupForm.isPublished && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: -1, mb: 1 }}>
+                💡 Bạn có thể publish sau bằng cách click nút "Publish Voucher" trên voucher card.
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 2 }}>
+          <Button 
+            onClick={handleCloseSetupModal}
+            variant="outlined"
+            sx={{
+              color: '#666',
+              borderColor: '#ccc',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              fontWeight: 500,
+              '&:hover': {
+                borderColor: '#999',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              }
+            }}
+          >
+            Hủy
+          </Button>
+          <Button 
+            onClick={handleSetupVoucher} 
+            variant="contained"
+            disabled={isLoading}
+            sx={{
+              backgroundColor: '#f59e0b',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+              '&:hover': {
+                backgroundColor: '#d97706',
+                boxShadow: '0 6px 16px rgba(245, 158, 11, 0.45)',
+              }
+            }}
+          >
+            {isLoading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : (isEditMode ? 'Update' : 'Setup')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Voucher Detail Modal */}
+      <Dialog 
+        open={detailModalOpen} 
+        onClose={handleCloseDetailModal} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            color: 'white',
+            py: 2,
+            px: 3,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <FaInfoCircle style={{ fontSize: '24px' }} />
+            <Typography variant="h6" fontWeight="bold">Voucher Details</Typography>
+          </Box>
+          <IconButton
+            onClick={handleCloseDetailModal}
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : voucherDetail ? (
+            <Box>
+              {/* Voucher Info */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1a1a1a' }}>
+                  {voucherDetail.customName || voucherDetail.voucher?.name || voucherDetail.name || 'Voucher'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
+                  {voucherDetail.customDescription || voucherDetail.voucher?.description || voucherDetail.description || 'No description'}
+                </Typography>
+                
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  {voucherDetail.discountPercent && (
+                    <Grid item xs={6}>
+                      <Box sx={{ p: 2, borderRadius: 2, backgroundColor: 'rgba(34, 197, 94, 0.08)' }}>
+                        <Typography variant="caption" color="text.secondary">Discount</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#22c55e' }}>
+                          {voucherDetail.discountPercent}%
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
+                  {voucherDetail.rewardPointCost && (
+                    <Grid item xs={6}>
+                      <Box sx={{ p: 2, borderRadius: 2, backgroundColor: 'rgba(59, 130, 246, 0.08)' }}>
+                        <Typography variant="caption" color="text.secondary">Points Cost</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#3b82f6' }}>
+                          {voucherDetail.rewardPointCost}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
+                  {voucherDetail.startDate && (
+                    <Grid item xs={6}>
+                      <Box sx={{ p: 2, borderRadius: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
+                        <Typography variant="caption" color="text.secondary">Start Date</Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {formatDate(voucherDetail.startDate)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
+                  {voucherDetail.endDate && (
+                    <Grid item xs={6}>
+                      <Box sx={{ p: 2, borderRadius: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
+                        <Typography variant="caption" color="text.secondary">End Date</Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {formatDate(voucherDetail.endDate)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
+                  <Grid item xs={12}>
+                    <Box sx={{ p: 2, borderRadius: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
+                      <Typography variant="caption" color="text.secondary">Status</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                        <Chip
+                          label={voucherDetail.isPublished ? 'Published' : 'Not Published'}
+                          size="small"
+                          sx={{
+                            backgroundColor: voucherDetail.isPublished ? '#d1fae5' : '#fef3c7',
+                            color: voucherDetail.isPublished ? '#065f46' : '#92400e',
+                            fontWeight: 600,
+                          }}
+                        />
+                        <Chip
+                          label={getVoucherStatus(voucherDetail) === 'published' ? 'Published' : 
+                                 getVoucherStatus(voucherDetail) === 'setup' ? 'Setup' : 'Claimed'}
+                          size="small"
+                          sx={{
+                            backgroundColor: getVoucherStatus(voucherDetail) === 'published' ? '#d1fae5' :
+                                           getVoucherStatus(voucherDetail) === 'setup' ? '#fef3c7' : '#e5e7eb',
+                            color: getVoucherStatus(voucherDetail) === 'published' ? '#065f46' :
+                                  getVoucherStatus(voucherDetail) === 'setup' ? '#92400e' : '#374151',
+                            fontWeight: 600,
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Voucher Codes/Usage Details */}
+              {voucherDetail.codes && voucherDetail.codes.length > 0 && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Voucher Codes ({voucherDetail.codes.length})
+                  </Typography>
+                  <TableContainer component={Paper} sx={{ maxHeight: 300 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 700 }}>Code</TableCell>
+                          <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                          <TableCell sx={{ fontWeight: 700 }}>Used At</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {voucherDetail.codes.slice(0, 10).map((code, index) => (
+                          <TableRow key={index}>
+                            <TableCell sx={{ fontFamily: 'monospace' }}>
+                              {code.code || code}
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={code.status || 'active'}
+                                size="small"
+                                sx={{
+                                  backgroundColor: code.status === 'used' ? '#fee2e2' : '#d1fae5',
+                                  color: code.status === 'used' ? '#991b1b' : '#065f46',
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {code.usedAt ? formatDate(code.usedAt) : 'N/A'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  {voucherDetail.codes.length > 10 && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Showing first 10 of {voucherDetail.codes.length} codes
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography color="text.secondary">No details available</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button 
+            onClick={handleCloseDetailModal}
+            variant="contained"
+            sx={{
+              backgroundColor: '#22c55e',
+              px: 3,
+              py: 1,
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: '#16a34a',
+              }
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Setup Vouchers Section - Display all setup vouchers */}
+      <div className="vouchers-section" style={{ marginTop: '40px' }}>
+        <div className="section-header">
+          <h3 className="section-title">
+            <FaGift className="section-icon" />
+            Setup Vouchers ({setupVouchers.length})
+          </h3>
+          <p className="section-subtitle">
+            List of all vouchers that have been set up and can be published for customers to use
+          </p>
+        </div>
+
+        {/* Filter Tabs for Setup Vouchers */}
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Status Filter */}
+          <Box>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#6b7280' }}>
+              Filter by Status:
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Chip
+                label="All"
+                onClick={() => setSetupVouchersStatus(undefined)}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: setupVouchersStatus === undefined ? '#22c55e' : '#e5e7eb',
+                  color: setupVouchersStatus === undefined ? 'white' : '#374151',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: setupVouchersStatus === undefined ? '#16a34a' : '#d1d5db',
+                  }
+                }}
+              />
+              <Chip
+                label="Active"
+                onClick={() => setSetupVouchersStatus('active')}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: setupVouchersStatus === 'active' ? '#22c55e' : '#e5e7eb',
+                  color: setupVouchersStatus === 'active' ? 'white' : '#374151',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: setupVouchersStatus === 'active' ? '#16a34a' : '#d1d5db',
+                  }
+                }}
+              />
+              <Chip
+                label="Inactive"
+                onClick={() => setSetupVouchersStatus('inactive')}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: setupVouchersStatus === 'inactive' ? '#22c55e' : '#e5e7eb',
+                  color: setupVouchersStatus === 'inactive' ? 'white' : '#374151',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: setupVouchersStatus === 'inactive' ? '#16a34a' : '#d1d5db',
+                  }
+                }}
+              />
+              <Chip
+                label="Expired"
+                onClick={() => setSetupVouchersStatus('expired')}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: setupVouchersStatus === 'expired' ? '#22c55e' : '#e5e7eb',
+                  color: setupVouchersStatus === 'expired' ? 'white' : '#374151',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: setupVouchersStatus === 'expired' ? '#16a34a' : '#d1d5db',
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Publish Status Filter */}
+          <Box>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#6b7280' }}>
+              Filter by Publish:
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Chip
+                label="All"
+                onClick={() => setSetupVouchersIsPublished(undefined)}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: setupVouchersIsPublished === undefined ? '#22c55e' : '#e5e7eb',
+                  color: setupVouchersIsPublished === undefined ? 'white' : '#374151',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: setupVouchersIsPublished === undefined ? '#16a34a' : '#d1d5db',
+                  }
+                }}
+              />
+              <Chip
+                label="Published"
+                onClick={() => setSetupVouchersIsPublished(true)}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: setupVouchersIsPublished === true ? '#22c55e' : '#e5e7eb',
+                  color: setupVouchersIsPublished === true ? 'white' : '#374151',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: setupVouchersIsPublished === true ? '#16a34a' : '#d1d5db',
+                  }
+                }}
+              />
+              <Chip
+                label="Not Published"
+                onClick={() => setSetupVouchersIsPublished(false)}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: setupVouchersIsPublished === false ? '#22c55e' : '#e5e7eb',
+                  color: setupVouchersIsPublished === false ? 'white' : '#374151',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: setupVouchersIsPublished === false ? '#16a34a' : '#d1d5db',
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
+
+        {setupVouchers.length > 0 ? (
+          <div className="vouchers-grid">
+            {setupVouchers.map((voucher) => {
+              const status = getVoucherStatus(voucher);
+              return (
+                <div key={voucher._id || voucher.id} className="voucher-card">
+                  <div className="voucher-card-header">
+                    <h4 className="voucher-name">
+                      {voucher.customName || voucher.voucher?.name || 'Voucher'}
+                    </h4>
+                    <Chip 
+                      label={
+                        status === 'published' ? 'Đã Publish' :
+                        status === 'setup' ? 'Đã Setup' :
+                        'Đã Claim'
+                      }
+                      size="small"
+                      sx={{ 
+                        fontWeight: 600,
+                        backgroundColor: 
+                          status === 'published' ? '#d1fae5' :
+                          status === 'setup' ? '#fef3c7' :
+                          '#e5e7eb',
+                        color: 
+                          status === 'published' ? '#065f46' :
+                          status === 'setup' ? '#92400e' :
+                          '#374151',
+                      }}
+                    />
+                  </div>
+                  <div className="voucher-card-body">
+                    <p className="voucher-description">
+                      {voucher.customDescription || voucher.voucher?.description || 'No description'}
+                    </p>
+                    {voucher.discountPercent && (
+                      <div className="voucher-detail">
+                        <span className="detail-label">Discount:</span>
+                        <span className="detail-value">{voucher.discountPercent}%</span>
+                      </div>
+                    )}
+                    {voucher.rewardPointCost && (
+                      <div className="voucher-detail">
+                        <span className="detail-label">Points:</span>
+                        <span className="detail-value">{voucher.rewardPointCost}</span>
+                      </div>
+                    )}
+                    {voucher.startDate && (
+                      <div className="voucher-detail">
+                        <span className="detail-label">Start:</span>
+                        <span className="detail-value">{formatDate(voucher.startDate)}</span>
+                      </div>
+                    )}
+                    {voucher.endDate && (
+                      <div className="voucher-detail">
+                        <span className="detail-label">End:</span>
+                        <span className="detail-value">{formatDate(voucher.endDate)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="voucher-card-footer">
+                    <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
+                      {/* Action buttons row */}
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        {status === 'setup' && (
+                          <>
+                            <Button
+                              variant="contained"
+                              startIcon={<FaEdit />}
+                              onClick={() => handleOpenSetupModal(voucher, true)}
+                              sx={{
+                                backgroundColor: '#3b82f6',
+                                fontWeight: 600,
+                                py: 1.2,
+                                fontSize: '0.9375rem',
+                                flex: 1,
+                                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                  backgroundColor: '#2563eb',
+                                  boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                  transform: 'translateY(-2px)',
+                                }
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="contained"
+                              startIcon={<MdPublish />}
+                              onClick={() => handlePublishVoucher(voucher)}
+                              sx={{
+                                backgroundColor: '#22c55e',
+                                fontWeight: 600,
+                                py: 1.2,
+                                fontSize: '0.9375rem',
+                                flex: 1,
+                                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                  backgroundColor: '#16a34a',
+                                  boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
+                                  transform: 'translateY(-2px)',
+                                }
+                              }}
+                            >
+                              Publish
+                            </Button>
+                          </>
+                        )}
+                        {status === 'published' && (
+                          <Button
+                            variant="contained"
+                            startIcon={<FaEdit />}
+                            onClick={() => handleOpenSetupModal(voucher, true)}
+                            fullWidth
+                            sx={{
+                              backgroundColor: '#3b82f6',
+                              fontWeight: 600,
+                              py: 1.2,
+                              fontSize: '0.9375rem',
+                              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                backgroundColor: '#2563eb',
+                                boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                transform: 'translateY(-2px)',
+                              }
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        )}
+                      </Box>
+                      {/* View Details button */}
+                      <Button
+                        variant="outlined"
+                        startIcon={<FaInfoCircle />}
+                        onClick={() => handleViewDetails(voucher)}
+                        fullWidth
+                        sx={{
+                          borderColor: '#6b7280',
+                          color: '#6b7280',
+                          fontWeight: 500,
+                          py: 0.8,
+                          fontSize: '0.875rem',
+                          '&:hover': {
+                            borderColor: '#22c55e',
+                            color: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.04)',
+                          }
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </Box>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <Box sx={{ textAlign: 'center', p: 4, color: '#999' }}>
+            <FaGift style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
+            <Typography>
+              {setupVouchersStatus || setupVouchersIsPublished !== undefined 
+                ? 'No vouchers match the filter criteria' 
+                : 'No vouchers have been set up yet'}
+            </Typography>
+          </Box>
+        )}
       </div>
     </div>
   );

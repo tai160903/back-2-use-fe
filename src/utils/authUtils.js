@@ -25,11 +25,12 @@ export const getUserRole = () => {
     const user = getCurrentUser();
     if (!user) return null;
     
-    // Nếu role có trong user object
+    // Ưu tiên role từ user object (đây là role hiện tại user đang sử dụng)
     if (user.user?.role) {
         return user.user.role.trim().toLowerCase();
     }
     
+    // Fallback: lấy từ token nếu không có trong user object
     if (user.accessToken) {
         try {
             const tokenPayload = JSON.parse(atob(user.accessToken.split('.')[1]));
@@ -41,6 +42,20 @@ export const getUserRole = () => {
     }
     
     return null;
+};
+
+// Get role from token only (for checking token state)
+export const getTokenRole = () => {
+    const user = getCurrentUser();
+    if (!user || !user.accessToken) return null;
+    
+    try {
+        const tokenPayload = JSON.parse(atob(user.accessToken.split('.')[1]));
+        return tokenPayload.role?.trim().toLowerCase();
+    } catch (error) {
+        console.error("Error decoding JWT token:", error);
+        return null;
+    }
 };
 
 export const getRedirectPath = (role) => {
