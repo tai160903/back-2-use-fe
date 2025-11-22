@@ -133,6 +133,22 @@ export const googleRedirectAPI = createAsyncThunk(
   }
 );
 
+
+// Switch account type
+export const switchAccountTypeAPI = createAsyncThunk(
+  "auth/switchAccountTypeAPI",
+  async(data, {rejectWithValue})=> {
+    try {
+      const response = await fetcher.post("/auth/switch-role", data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+)
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -259,7 +275,22 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Đăng nhập bằng Google thất bại. Vui lòng thử lại.");
-      });
+      })
+      .addCase(switchAccountTypeAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(switchAccountTypeAPI.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentUser = payload.data;
+        localStorage.setItem("currentUser", JSON.stringify(payload.data));
+        toast.success(payload?.message || "Đổi loại tài khoản thành công.");
+      })     
+       .addCase(switchAccountTypeAPI.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Đổi loại tài khoản thất bại. Vui lòng thử lại.");
+      })
   },
 });
 export const { logout, login } = authSlice.actions;
