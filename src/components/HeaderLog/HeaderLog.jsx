@@ -3,10 +3,10 @@ import Typography from "@mui/material/Typography";
 import { FaWallet } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { PATH } from "../../routes/path";
-import { logout } from "../../store/slices/authSlice";
+import { logout, switchAccountTypeAPI } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
-import { getUserRole } from "../../utils/authUtils";
+import { getUserRole, getRedirectPath } from "../../utils/authUtils";
 import { useEffect, useState, useRef } from "react";
 import {
   getProfileApi,
@@ -14,6 +14,7 @@ import {
 } from "../../store/slices/userSlice";
 
 import { IoIosLogOut } from "react-icons/io";
+import { HiSwitchHorizontal } from "react-icons/hi";
 import Notification from "../Notification/Notification";
 import { io } from "socket.io-client";
 export default function HeaderLog() {
@@ -80,6 +81,26 @@ export default function HeaderLog() {
     navigate(PATH.LOGIN);
   };
 
+  const handleSwitchToCustomer = async () => {
+    if (userRole !== "business") return;
+
+    try {
+      const resultAction = await dispatch(
+        switchAccountTypeAPI({ role: "customer" })
+      );
+
+      if (switchAccountTypeAPI.fulfilled.match(resultAction)) {
+        const payload = resultAction.payload;
+        const newRole =
+          payload?.data?.user?.role?.trim().toLowerCase() || "customer";
+        const redirectPath = getRedirectPath(newRole);
+        navigate(redirectPath, { replace: true });
+      }
+    } catch (error) {
+      // lỗi đã được xử lý trong slice (toast), không cần làm thêm
+    }
+  };
+
   // Render thông tin cho customer
   const renderCustomerInfo = () => (
     <>
@@ -138,6 +159,17 @@ export default function HeaderLog() {
             </div>
           </div>
           <div className="header-log-actions">
+            {userRole === "business" && (
+              <div
+                className="header-log-switch"
+                onClick={handleSwitchToCustomer}
+              >
+                <HiSwitchHorizontal className="header-log-switch-icon" />
+                <span className="header-log-switch-text">
+                  Switch to Customer
+                </span>
+              </div>
+            )}
             <div className="header-log-icon-notificate">
               <Notification
                 userId={

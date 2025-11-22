@@ -7,15 +7,16 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import logoImage from "../../assets/image/Logo.png";
 import useAuth from "../../hooks/useAuth";
-import { logout } from "../../store/slices/authSlice";
+import { logout, switchAccountTypeAPI } from "../../store/slices/authSlice";
 import { useSelector } from "react-redux";
 import { getProfileApi } from "../../store/slices/userSlice";
-import { getUserRole } from "../../utils/authUtils";
+import { getUserRole, getRedirectPath } from "../../utils/authUtils";
 import { PATH } from "../../routes/path";
 import { TiClipboard } from "react-icons/ti";
 import { IoWalletOutline } from "react-icons/io5";
 import { CiUser } from "react-icons/ci";
 import { CiLogout } from "react-icons/ci";
+import { HiSwitchHorizontal } from "react-icons/hi";
 import Notification from "../Notification/Notification";
 import { io } from "socket.io-client";
 
@@ -52,7 +53,7 @@ export default function Header() {
       socket.emit("register", { userId });
       socket.emit(
         "findAllNotifications",
-        { userId, mode: "customer" },
+        { userId, mode: userRole || "customer" },
         (response) => {
           if (Array.isArray(response)) {
             setNotifications(response);
@@ -73,7 +74,7 @@ export default function Header() {
       }
       socketRef.current = null;
     };
-  }, [currentUser, userInfo?._id]);
+  }, [currentUser, userInfo?._id, userRole]);
 
   // Danh sách trang auth
   const loginPage = location.pathname === "/auth/login";
@@ -101,6 +102,38 @@ export default function Header() {
   const handleBusinessRegistrationClick = () => {
     navigate(PATH.BUSINESS_REGISTRATION_STATUS);
     handleMenuClose();
+  };
+
+  const handleSwitchAccountType = async () => {
+    if (!userRole) return;
+
+    const targetRole =
+      userRole === "customer"
+        ? "business"
+        : userRole === "business"
+        ? "customer"
+        : null;
+
+    if (!targetRole) return;
+
+    try {
+      const resultAction = await dispatch(
+        switchAccountTypeAPI({ role: targetRole })
+      );
+
+      if (switchAccountTypeAPI.fulfilled.match(resultAction)) {
+        const payload = resultAction.payload;
+        const newRole =
+          payload?.data?.user?.role?.trim().toLowerCase() || getUserRole();
+
+        if (newRole) {
+          const redirectPath = getRedirectPath(newRole);
+          navigate(redirectPath, { replace: true });
+        }
+      }
+    } finally {
+      handleMenuClose();
+    }
   };
 
   return (
@@ -215,6 +248,16 @@ export default function Header() {
                       style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
                     />
                     Business Registration
+                  </MenuItem>
+                )}
+                {(userRole === "customer" || userRole === "business") && (
+                  <MenuItem onClick={handleSwitchAccountType}>
+                    <HiSwitchHorizontal
+                      style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
+                    />
+                    {userRole === "customer"
+                      ? "Switch to Business"
+                      : "Switch to Customer"}
                   </MenuItem>
                 )}
                 <MenuItem onClick={handleLogout}>
