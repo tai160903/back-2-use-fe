@@ -4,9 +4,13 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import AddIcon from "@mui/icons-material/Add";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 import { FaCoins, FaLeaf, FaUsers, FaStar, FaRegStar } from "react-icons/fa";
 import { RiTruckLine, RiCustomerService2Line, RiArrowGoBackLine, RiShieldCheckLine } from "react-icons/ri";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, A11y } from "swiper/modules";
 import "swiper/css";
@@ -14,6 +18,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { PATH } from "../../../routes/path";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getLeaderBoardApiCustomer } from "../../../store/slices/leaderBoardSlice";
 
 import { IoQrCodeOutline } from "react-icons/io5";
 import image1 from "../../../assets/image/cup6.png";
@@ -27,6 +33,35 @@ import storeImg5 from "../../../assets/image/banner1.jpg";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { leaderBoard, isLoading } = useSelector((state) => state.leaderBoard);
+
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
+  const currentYear = currentDate.getFullYear();
+
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  const monthOptions = useMemo(
+    () => Array.from({ length: 12 }, (unused, index) => index + 1),
+    []
+  );
+  const yearOptions = useMemo(
+    () => Array.from({ length: 5 }, (unused, index) => currentYear - index),
+    [currentYear]
+  );
+
+  useEffect(() => {
+    dispatch(
+      getLeaderBoardApiCustomer({
+        month: selectedMonth,
+        year: selectedYear,
+        page: 1,
+        limit: 10,
+      })
+    );
+  }, [dispatch, selectedMonth, selectedYear]);
   const stores = useMemo(
     () => [
       { id: 1, name: "Green Leaf Cafe", rating: 4.8, image: storeImg1, address: "84 Greenway St, District 1, HCMC" },
@@ -69,15 +104,10 @@ export default function HomePage() {
     ],
     []
   );
-  const leaderboardTop = useMemo(
-    () =>
-      Array.from({ length: 10 }).map((_, i) => ({
-        id: i + 1,
-        name: `User ${i + 1}`,
-        points: 1000 - i * 7,
-      })),
-    []
-  );
+  const topTenLeaderBoard = useMemo(() => {
+    if (!Array.isArray(leaderBoard)) return [];
+    return leaderBoard.slice(0, 10);
+  }, [leaderBoard]);
   return (
     <div className="homePage">
       {/* Plant-themed Hero Section */}
@@ -303,12 +333,48 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-           {/* Leaderboard carousel under voucher */}
-           <section className="leaderboard-section">
+      {/* Leaderboard carousel under voucher */}
+      <section className="leaderboard-section">
         <div className="homePage-container">
           <div className="leaderboard-header">
-            <h2 className="leaderboard-title">Monthly Leaderboard · </h2>
-            <p className="leaderboard-sub">Top 10 users this month</p>
+            <h2 className="leaderboard-title">Monthly Leaderboard</h2>
+          </div>
+          <p className="leaderboard-sub leaderboard-sub--below">
+            Top 10 users for month {selectedMonth} / {selectedYear}
+          </p>
+
+          <div className="leaderboard-filters-bar">
+            <FormControl size="small" className="leaderboard-filter-control">
+              <InputLabel id="home-month-select-label">Month</InputLabel>
+              <Select
+                labelId="home-month-select-label"
+                value={selectedMonth}
+                label="Month"
+                onChange={(event) => setSelectedMonth(event.target.value)}
+              >
+                {monthOptions.map((monthValue) => (
+                  <MenuItem key={monthValue} value={monthValue}>
+                    Month {monthValue}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" className="leaderboard-filter-control">
+              <InputLabel id="home-year-select-label">Year</InputLabel>
+              <Select
+                labelId="home-year-select-label"
+                value={selectedYear}
+                label="Year"
+                onChange={(event) => setSelectedYear(event.target.value)}
+              >
+                {yearOptions.map((yearValue) => (
+                  <MenuItem key={yearValue} value={yearValue}>
+                    {yearValue}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </div>
 
           <Swiper
@@ -319,21 +385,46 @@ export default function HomePage() {
             spaceBetween={16}
             slidesPerView={1}
             breakpoints={{
-              640: { slidesPerView: 2 },
-              980: { slidesPerView: 3 },
-              1280: { slidesPerView: 4 },
+              640: { slidesPerView: 1 },
+              980: { slidesPerView: 2 },
+              1280: { slidesPerView: 3 },
             }}
           >
-            {leaderboardTop.map((u, i) => (
-              <SwiperSlide key={u.id}>
-                <div className={`lb-card rank-${i + 1}`}>
-                  <div className="lb-medal">{i + 1}</div>
-                  <div className="lb-avatar" />
-                  <div className="lb-name">{u.name}</div>
-                  <div className="lb-points">{u.points} pts</div>
+            {isLoading && topTenLeaderBoard.length === 0 ? (
+              <SwiperSlide>
+                <div className="lb-card lb-loading">
+                  <div className="lb-name">Loading leaderboard...</div>
+                  <div className="lb-points">Please wait a moment.</div>
                 </div>
               </SwiperSlide>
-            ))}
+            ) : topTenLeaderBoard.length === 0 ? (
+              <SwiperSlide >
+                <div className="lb-card lb-empty" >
+                  <div className="lb-name">No rankings yet this month</div>
+                  <div className="lb-points">
+                    Be the first to borrow and return responsibly to appear here.
+                  </div>
+                </div>
+              </SwiperSlide>
+            ) : (
+              topTenLeaderBoard.map((entry, index) => {
+                const displayName =
+                  (entry.customerId && entry.customerId.fullName) ||
+                  `User #${entry.rank ?? index + 1}`;
+                return (
+                  <SwiperSlide key={entry._id || entry.id || index}>
+                    <div className={`lb-card rank-${index + 1}`}>
+                      <div className="lb-medal">{entry.rank ?? index + 1}</div>
+                      <div className="lb-avatar" />
+                      <div className="lb-name">{displayName}</div>
+                      <div className="lb-points">
+                        {entry.rankingPoints ?? 0} pts
+                      </div>
+                    </div>
+                  </SwiperSlide>
+                );
+              })
+            )}
           </Swiper>
 
           <div className="leaderboard-actions">

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useForm, useFieldArray } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import {
   Box,
   Container,
@@ -15,8 +18,6 @@ import {
   Divider,
   Grid,
   Paper,
-  Alert,
-  Snackbar,
   Select,
   MenuItem,
   FormControl,
@@ -35,32 +36,30 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   Settings as SettingsIcon,
   Security,
   Notifications,
-  Language,
   Palette,
   Storage,
-  Email,
   AdminPanelSettings,
   Save,
   Refresh,
   EmojiEvents,
   Add,
   Edit,
-  Delete,
   Close,
+  Delete,
 } from "@mui/icons-material";
 import {
   getLeaderboardPoliciesApi,
   createLeaderboardPolicyApi,
   updateLeaderboardPolicyApi,
-  getRewardSettingsApi,
-  createRewardSettingApi,
-  updateRewardSettingApi,
-  toggleRewardSettingApi,
+  getSystemSettingsApi,
+  upsertSystemSettingApi,
+  updateSystemSettingApi,
 } from "../../store/slices/adminSlice";
 import { getAllVouchersApi } from "../../store/slices/voucherSlice";
 import "./AdminDashboard.css";
@@ -75,12 +74,10 @@ function TabPanel({ children, value, index }) {
 
 export default function Settings() {
   const dispatch = useDispatch();
-  const { leaderboardPolicies, rewardSettings, isLoading } = useSelector(state => state.admin);
+  const { leaderboardPolicies, rewardSettings, isLoading, systemSettings: systemSettingsFromApi } = useSelector(state => state.admin);
   const { vouchers } = useSelector(state => state.vouchers);
   
   const [activeTab, setActiveTab] = useState(0);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
-  
   // Leaderboard Policy States
   const [policyModalOpen, setPolicyModalOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState(null);
@@ -100,18 +97,7 @@ export default function Settings() {
     rankTo: '',
   });
   
-  // Reward Setting States
-  const [rewardSettingModalOpen, setRewardSettingModalOpen] = useState(false);
-  const [editingRewardSetting, setEditingRewardSetting] = useState(null);
-  const [rewardSettingFormData, setRewardSettingFormData] = useState({
-    rewardSuccess: 0,
-    rewardLate: 0,
-    rewardFailed: 0,
-    rankingSuccess: 0,
-    rankingLate: 0,
-    rankingFailedPenalty: 0,
-  });
-  
+  // Reward Setting States (tạm thời chưa dùng)
   // General Settings State
   const [generalSettings, setGeneralSettings] = useState({
     siteName: "Back2Use Platform",
@@ -149,13 +135,190 @@ export default function Settings() {
     autoApproval: false,
   });
 
+  // Normalize system settings list from API
+  const systemSettingsList = Array.isArray(systemSettingsFromApi)
+    ? systemSettingsFromApi
+    : [];
+
+  // System Setting Upsert State (React Hook Form + Yup)
+  const [systemSettingModalOpen, setSystemSettingModalOpen] = useState(false);
+  const [editingSystemSetting, setEditingSystemSetting] = useState(null);
+  const [originalValueCount, setOriginalValueCount] = useState(0);
+
+  const systemSettingSchema = yup.object().shape({
+    category: yup.string().required("Category is required"),
+    key: yup.string().required("Key is required"),
+    description: yup.string().nullable(),
+    valuePairs: yup
+      .array()
+      .of(
+        yup.object().shape({
+          key: yup.string().required("Value key is required"),
+          value: yup
+            .mixed()
+            .test(
+              "not-empty",
+              "Value is required",
+              (val) => val !== undefined && val !== null && `${val}`.trim() !== ""
+            ),
+        })
+      )
+      .min(1, "At least one value pair is required"),
+  });
+
+  const {
+    control: systemSettingControl,
+    handleSubmit: handleSystemSettingSubmit,
+    reset: resetSystemSettingForm,
+    register: systemSettingRegister,
+    formState: { errors: systemSettingErrors },
+  } = useForm({
+    resolver: yupResolver(systemSettingSchema),
+    defaultValues: {
+      category: "reward",
+      key: "",
+      description: "",
+      valuePairs: [{ key: "", value: "" }],
+    },
+  });
+
+  const {
+    fields: systemSettingValueFields,
+    append: appendSystemSettingValueRow,
+    remove: removeSystemSettingValueRow,
+  } = useFieldArray({
+    control: systemSettingControl,
+    name: "valuePairs",
+  });
+
+  const handleDeleteSystemSetting = (setting) => {
+    console.log("Delete system setting:", setting);
+  };
+
+  // System Setting upsert handlers
+  const handleOpenSystemSettingModal = (setting = null) => {
+    if (setting) {
+      setEditingSystemSetting(setting);
+      const entries = Object.entries(setting.value || {});
+      setOriginalValueCount(entries.length);
+      resetSystemSettingForm({
+        category: setting.category || "reward",
+        key: setting.key || "",
+        description: setting.description || "",
+        valuePairs:
+          entries.length > 0
+            ? entries.map(([k, v]) => ({
+                key: k,
+                value: v ?? "",
+              }))
+            : [{ key: "", value: "" }],
+      });
+    } else {
+      setEditingSystemSetting(null);
+      setOriginalValueCount(0);
+      resetSystemSettingForm({
+        category: "reward",
+        key: "",
+        description: "",
+        valuePairs: [{ key: "", value: "" }],
+      });
+    }
+    setSystemSettingModalOpen(true);
+  };
+
+  const handleCloseSystemSettingModal = () => {
+    setSystemSettingModalOpen(false);
+    setEditingSystemSetting(null);
+  };
+
+  const handleAddSystemSettingValueRow = () => {
+    appendSystemSettingValueRow({ key: "", value: "" });
+  };
+
+  const handleRemoveSystemSettingValueRow = (indexToRemove) => {
+    if (systemSettingValueFields.length <= 1) return;
+    removeSystemSettingValueRow(indexToRemove);
+  };
+
+  const handleSubmitSystemSetting = async (formData) => {
+    try {
+      const formCategory = formData.category;
+      const formKey = formData.key;
+      const description = formData.description;
+      const valuePairs = formData.valuePairs || [];
+
+      // Khi edit, luôn dùng category/key gốc để tránh 404 do đổi key/category
+      const category = editingSystemSetting?.category || formCategory;
+      const key = editingSystemSetting?.key || formKey;
+
+      if (editingSystemSetting) {
+        // Edit mode: chỉ call API cho những value thực sự thay đổi
+        const originalValue = editingSystemSetting?.value || {};
+
+        const promises = valuePairs
+          .map((row) => {
+            const path = row.key.trim();
+            if (!path) return null;
+
+            const raw = row.value;
+            const numeric = raw === "" ? 0 : Number(raw);
+            const finalValue = Number.isNaN(numeric) ? raw : numeric;
+
+            const oldRaw = originalValue[path];
+
+            const isSame =
+              oldRaw !== undefined && `${oldRaw}` === `${finalValue}`;
+
+            if (isSame) return null; // không thay đổi → không call API
+
+            return dispatch(
+              updateSystemSettingApi({ category, key, path, value: finalValue })
+            ).unwrap();
+          })
+          .filter(Boolean);
+
+        await Promise.all(promises);
+      } else {
+        // Create mode: use upsertSystemSettingApi with full value object
+        const valueObject = {};
+        valuePairs.forEach((row) => {
+          const k = row.key.trim();
+          if (!k) return;
+          const raw = row.value;
+          const numeric = raw === "" ? 0 : Number(raw);
+          valueObject[k] = Number.isNaN(numeric) ? raw : numeric;
+        });
+
+        const payload = {
+          category,
+          key,
+          description,
+          value: valueObject,
+        };
+
+        await dispatch(upsertSystemSettingApi(payload)).unwrap();
+      }
+
+      setSystemSettingModalOpen(false);
+      setEditingSystemSetting(null);
+      dispatch(getSystemSettingsApi());
+    } catch (error) {
+      console.error("Failed to save system setting:", error);
+    }
+  };
+
   // Load data on mount
   useEffect(() => {
     if (activeTab === 0) {
       dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
       dispatch(getAllVouchersApi({ page: 1, limit: 100 }));
     } else if (activeTab === 1) {
-      dispatch(getRewardSettingsApi());
+      // dispatch(getRewardSettingsApi());
+      // Gọi thêm API hệ thống khi ở tab Reward Setting
+   
+    } else if (activeTab === 5) {
+      // Gọi API hệ thống khi vào tab "Hệ thống"
+      dispatch(getSystemSettingsApi());
     }
   }, [dispatch, activeTab]);
 
@@ -173,7 +336,12 @@ export default function Settings() {
       dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
       dispatch(getAllVouchersApi({ page: 1, limit: 100 }));
     } else if (newValue === 1) {
-      dispatch(getRewardSettingsApi());
+      // dispatch(getRewardSettingsApi());
+      // Gọi thêm API hệ thống khi chuyển sang tab Reward Setting
+      dispatch(getSystemSettingsApi());
+    } else if (newValue === 5) {
+      // Gọi API hệ thống khi chuyển sang tab "Hệ thống"
+      dispatch(getSystemSettingsApi());
     }
   };
 
@@ -238,17 +406,8 @@ export default function Settings() {
       }
       handleClosePolicyModal();
       dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
-      setSnackbar({
-        open: true,
-        message: editingPolicy ? "Policy updated successfully!" : "Policy created successfully!",
-        severity: "success",
-      });
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: error?.message || "Failed to save policy",
-        severity: "error",
-      });
+      console.error("Failed to save policy:", error);
     }
   };
 
@@ -284,100 +443,36 @@ export default function Settings() {
     dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
   };
 
-  // Reward Setting Handlers
-  const handleOpenRewardSettingModal = (setting = null) => {
-    if (setting) {
-      setEditingRewardSetting(setting);
-      setRewardSettingFormData({
-        rewardSuccess: setting.rewardSuccess || 0,
-        rewardLate: setting.rewardLate || 0,
-        rewardFailed: setting.rewardFailed || 0,
-        rankingSuccess: setting.rankingSuccess || 0,
-        rankingLate: setting.rankingLate || 0,
-        rankingFailedPenalty: setting.rankingFailedPenalty || 0,
-      });
-    } else {
-      setEditingRewardSetting(null);
-      setRewardSettingFormData({
-        rewardSuccess: 0,
-        rewardLate: 0,
-        rewardFailed: 0,
-        rankingSuccess: 0,
-        rankingLate: 0,
-        rankingFailedPenalty: 0,
-      });
-    }
-    setRewardSettingModalOpen(true);
-  };
-
-  const handleCloseRewardSettingModal = () => {
-    setRewardSettingModalOpen(false);
-    setEditingRewardSetting(null);
-    setRewardSettingFormData({
-      rewardSuccess: 0,
-      rewardLate: 0,
-      rewardFailed: 0,
-      rankingSuccess: 0,
-      rankingLate: 0,
-      rankingFailedPenalty: 0,
-    });
-  };
-
-  const handleRewardSettingFormChange = (e) => {
-    const { name, value } = e.target;
-    setRewardSettingFormData(prev => ({
-      ...prev,
-      [name]: value === '' ? 0 : Number(value)
-    }));
-  };
-
-  const handleSubmitRewardSetting = async () => {
-    try {
-      if (editingRewardSetting) {
-        await dispatch(updateRewardSettingApi({
-          id: editingRewardSetting._id || editingRewardSetting.id,
-          settingData: rewardSettingFormData
-        })).unwrap();
-      } else {
-        await dispatch(createRewardSettingApi(rewardSettingFormData)).unwrap();
-      }
-      handleCloseRewardSettingModal();
-      dispatch(getRewardSettingsApi());
-    } catch (error) {
-      console.error('Error saving reward setting:', error);
-    }
-  };
-
-  const handleToggleRewardSetting = async (settingId) => {
-    try {
-      await dispatch(toggleRewardSettingApi(settingId)).unwrap();
-      dispatch(getRewardSettingsApi());
-    } catch (error) {
-      console.error('Error toggling reward setting:', error);
-    }
-  };
-
-  const handleSaveSettings = () => {
-    // Here you would typically make an API call to save settings
-    setSnackbar({
-      open: true,
-      message: "Cài đặt đã được lưu thành công!",
-      severity: "success",
-    });
-  };
-
-  const handleResetSettings = () => {
-    setSnackbar({
-      open: true,
-      message: "Cài đặt đã được đặt lại về giá trị mặc định",
-      severity: "info",
-    });
-  };
+  // Reward Setting Handlers (hiện tại chưa dùng - giữ placeholder nếu cần sau này)
 
   return (
-    <div className="adminDashboard">
+    <div className="admin-dashboard">
+      {/* Header */}
+      <div className="dashboard-header">
+        <div className="header-content">
+          <div className="header-left">
+            <SettingsIcon className="header-icon" />
+            <div>
+              <h1 className="dashboard-title">System Settings</h1>
+              <p className="dashboard-subtitle">
+                Manage reward policies, security configuration, and platform options.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Settings Content */}
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 8, position: "relative", zIndex: 1 }}>
+      <Container
+        maxWidth={false}
+        sx={{
+          mt: 2,
+          mb: 8,
+          position: "relative",
+          zIndex: 1,
+          maxWidth: "18000px",
+        }}
+      >
         <Paper 
           elevation={4} 
           sx={{ 
@@ -392,7 +487,7 @@ export default function Settings() {
               borderBottom: 2, 
               borderColor: "divider", 
               bgcolor: "background.paper",
-              background: "linear-gradient(to right, #fafafa 0%, #ffffff 100%)",
+              background: "linear-gradient(to right, #f5f7f6 0%, #ffffff 100%)",
             }}
           >
             <Tabs
@@ -411,26 +506,26 @@ export default function Settings() {
                   borderRadius: "8px 8px 0 0",
                   transition: "all 0.3s ease",
                   "&:hover": {
-                    bgcolor: "rgba(106, 27, 154, 0.05)",
+                    bgcolor: "rgba(18, 66, 42, 0.06)",
                   },
                   "&.Mui-selected": {
-                    color: "#6a1b9a",
+                    color: "#12422a",
                   },
                 },
                 "& .MuiTabs-indicator": {
                   height: 3,
                   borderRadius: "3px 3px 0 0",
-                  background: "linear-gradient(90deg, #6a1b9a 0%, #9c27b0 100%)",
+                  background: "linear-gradient(90deg, #12422a 0%, #0d2e1c 100%)",
                 },
               }}
             >
               <Tab icon={<EmojiEvents />} iconPosition="start" label="LeaderBoard Reward Policy" />
               <Tab icon={<AdminPanelSettings />} iconPosition="start" label="Reward Setting" />
-              <Tab icon={<SettingsIcon />} iconPosition="start" label="Cài đặt chung" />
-              <Tab icon={<Security />} iconPosition="start" label="Bảo mật" />
-              <Tab icon={<Notifications />} iconPosition="start" label="Thông báo" />
-              <Tab icon={<Storage />} iconPosition="start" label="Hệ thống" />
-              <Tab icon={<Palette />} iconPosition="start" label="Giao diện" />
+              <Tab icon={<SettingsIcon />} iconPosition="start" label="General Settings" />
+              <Tab icon={<Security />} iconPosition="start" label="Security" />
+              <Tab icon={<Notifications />} iconPosition="start" label="Notifications" />
+              <Tab icon={<Storage />} iconPosition="start" label="System" />
+              <Tab icon={<Palette />} iconPosition="start" label="Appearance" />
             </Tabs>
           </Box>
 
@@ -533,8 +628,8 @@ export default function Settings() {
                   startIcon={<Add />}
                   onClick={() => handleOpenPolicyModal()}
                   sx={{
-                    background: "linear-gradient(45deg, #6a1b9a 30%, #9c27b0 90%)",
-                    boxShadow: "0 4px 12px 2px rgba(156, 39, 176, .3)",
+                    background: "linear-gradient(45deg, #12422a 30%, #0d2e1c 90%)",
+                    boxShadow: "0 4px 12px 2px rgba(18, 66, 42, .35)",
                   }}
                 >
                   Create Policy
@@ -589,7 +684,7 @@ export default function Settings() {
                             <IconButton
                               size="small"
                               onClick={() => handleOpenPolicyModal(policy)}
-                              sx={{ color: "#6a1b9a" }}
+                              sx={{ color: "#12422a" }}
                             >
                               <Edit fontSize="small" />
                             </IconButton>
@@ -610,119 +705,163 @@ export default function Settings() {
               </TableContainer>
             </TabPanel>
 
-            {/* Reward Setting Tab */}
+              {/* Reward Setting Tab */}
             <TabPanel value={activeTab} index={1}>
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight={700} sx={{ color: "#2c3e50" }}>
                   Reward Setting
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.05rem" }}>
-                  Quản lý cài đặt phần thưởng cho hệ thống
+                  Manage reward settings for the system
                 </Typography>
               </Box>
 
-              {/* Actions */}
-              <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" fontWeight={600}>
-                  Settings ({rewardSettings?.length || 0})
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => handleOpenRewardSettingModal()}
-                  sx={{
-                    background: "linear-gradient(45deg, #6a1b9a 30%, #9c27b0 90%)",
-                    boxShadow: "0 4px 12px 2px rgba(156, 39, 176, .3)",
-                  }}
+              {/* System Settings from API */}
+              <Card
+                sx={{
+                  mb: 4,
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: "#ffffff",
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                  border: "1px solid #e0e0e0",
+                }}
+              >
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  sx={{ mb: 2.5, gap: 2 }}
                 >
-                  Create Setting
-                </Button>
-              </Box>
+                  <Box>
+                    <Typography variant="h6" fontWeight={700} sx={{ color: "#12422a" }}>
+                      Reward configuration from system
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Data is synchronized from backend and used to calculate points and rewards.
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => handleOpenSystemSettingModal()}
+                    sx={{
+                      background: "linear-gradient(45deg, #12422a 30%, #0d2e1c 90%)",
+                      boxShadow: "0 4px 12px 2px rgba(18, 66, 42, .35)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Add configuration
+                  </Button>
+                </Stack>
 
-              {/* Settings Table */}
-              <TableContainer component={Paper} sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                      <TableCell><strong>Reward Success</strong></TableCell>
-                      <TableCell><strong>Reward Late</strong></TableCell>
-                      <TableCell><strong>Reward Failed</strong></TableCell>
-                      <TableCell><strong>Ranking Success</strong></TableCell>
-                      <TableCell><strong>Ranking Late</strong></TableCell>
-                      <TableCell><strong>Ranking Failed Penalty</strong></TableCell>
-                      <TableCell><strong>Status</strong></TableCell>
-                      <TableCell align="center"><strong>Actions</strong></TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {isLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                          <CircularProgress />
-                        </TableCell>
-                      </TableRow>
-                    ) : rewardSettings && rewardSettings.length > 0 ? (
-                      rewardSettings.map((setting) => (
-                        <TableRow key={setting._id || setting.id} hover>
-                          <TableCell>{setting.rewardSuccess || 0}</TableCell>
-                          <TableCell>{setting.rewardLate || 0}</TableCell>
-                          <TableCell>{setting.rewardFailed || 0}</TableCell>
-                          <TableCell>{setting.rankingSuccess || 0}</TableCell>
-                          <TableCell>{setting.rankingLate || 0}</TableCell>
-                          <TableCell>{setting.rankingFailedPenalty || 0}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={setting.isActive !== false ? 'Active' : 'Inactive'}
-                              color={setting.isActive !== false ? 'success' : 'default'}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Stack direction="row" spacing={1} justifyContent="center">
+                <Grid container spacing={2} alignItems="stretch">
+                  {systemSettingsList.length > 0 ? (
+                    systemSettingsList.map((setting, index) => (
+                      <Grid
+                        item
+                        size={{ xs: 12, md: 12 }} 
+                        key={setting._id || setting.id || setting.key || index}
+                        sx={{ display: "flex" }}
+                      >
+                        <Box
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            minHeight: 140,
+                            p: 2.5,
+                            borderRadius: 2,
+                            border: "1px solid #e0e0e0",
+                            bgcolor: "#ffffff",
+                            display: "flex",
+                            alignItems: "flex-start",
+                            justifyContent: "space-between",
+                            gap: 2,
+                          }}
+                        >
+                          <Box sx={{ minWidth: 220 }}>
+                            <Typography
+                              variant="subtitle2"
+                              fontWeight={700}
+                          
+                            >
+                              {setting.category || "System Policy"}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                              sx={{ mt: 0.5 }}
+                            >
+                              {setting.description || setting.key}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "stretch",
+                              gap: 1.5,
+                              mt: 0.5,
+                              width: "100%",
+                              maxWidth: 360,
+                            }}
+                          >
+                            <Grid container spacing={1}>
+                              {Object.entries(setting.value || {}).map(([key, val]) => (
+                                <Grid item xs={12} sm={6} key={key}>
+                                  <Chip
+                                    label={`${key}: ${val}`}
+                                    size="small"
+                                    sx={{
+                                      width: "100%",
+                                      justifyContent: "flex-start",
+                                    }}
+                                    color={key.toLowerCase().includes("failed") ? "error" : "success"}
+                                    variant="outlined"
+                                  />
+                                </Grid>
+                              ))}
+                            </Grid>
+                            <Stack direction="row" spacing={1}>
                               <IconButton
                                 size="small"
-                                onClick={() => handleOpenRewardSettingModal(setting)}
-                                sx={{ color: "#6a1b9a" }}
+                                sx={{ color: "#12422a" }}
+                                onClick={() => handleOpenSystemSettingModal(setting)}
                               >
                                 <Edit fontSize="small" />
                               </IconButton>
                               <IconButton
                                 size="small"
-                                onClick={() => handleToggleRewardSetting(setting._id || setting.id)}
-                                sx={{ color: setting.isActive !== false ? "#f44336" : "#4caf50" }}
+                                sx={{ color: "#f44336" }}
+                                onClick={() => handleDeleteSystemSetting(setting)}
                               >
-                                {setting.isActive !== false ? (
-                                  <Close fontSize="small" />
-                                ) : (
-                                  <Refresh fontSize="small" />
-                                )}
+                                <Delete fontSize="small" />
                               </IconButton>
                             </Stack>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            No reward settings found
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                          </Box>
+                        </Box>
+                      </Grid>
+                    ))
+                  ) : (
+                    <Grid item xs={12}>
+                      <Typography variant="body2" color="text.secondary">
+                        Chưa có cấu hình hệ thống nào được trả về từ API.
+                      </Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </Card>
             </TabPanel>
 
             {/* General Settings Tab */}
             <TabPanel value={activeTab} index={2}>
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight={700} sx={{ color: "#2c3e50" }}>
-                  Cài đặt chung
+                  General Settings
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.05rem" }}>
-                  Cấu hình thông tin cơ bản và tùy chọn nền tảng
+                  Configure basic information and platform preferences
                 </Typography>
               </Box>
 
@@ -731,7 +870,7 @@ export default function Settings() {
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <TextField
                       fullWidth
-                      label="Tên Website"
+                      label="Website Name"
                       value={generalSettings.siteName}
                       onChange={(e) =>
                         setGeneralSettings({ ...generalSettings, siteName: e.target.value })
@@ -741,7 +880,7 @@ export default function Settings() {
                         "& .MuiOutlinedInput-root": {
                           bgcolor: "#f8f9fa",
                           "&:hover fieldset": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         },
                       }}
@@ -752,7 +891,7 @@ export default function Settings() {
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <TextField
                       fullWidth
-                      label="Email liên hệ"
+                      label="Contact Email"
                       type="email"
                       value={generalSettings.contactEmail}
                       onChange={(e) =>
@@ -763,7 +902,7 @@ export default function Settings() {
                         "& .MuiOutlinedInput-root": {
                           bgcolor: "#f8f9fa",
                           "&:hover fieldset": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         },
                       }}
@@ -774,7 +913,7 @@ export default function Settings() {
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <TextField
                       fullWidth
-                      label="Mô tả Website"
+                      label="Website Description"
                       multiline
                       rows={4}
                       value={generalSettings.siteDescription}
@@ -786,7 +925,7 @@ export default function Settings() {
                         "& .MuiOutlinedInput-root": {
                           bgcolor: "#f8f9fa",
                           "&:hover fieldset": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         },
                       }}
@@ -799,18 +938,18 @@ export default function Settings() {
                       <InputLabel>Múi giờ</InputLabel>
                       <Select
                         value={generalSettings.timezone}
-                        label="Múi giờ"
+                        label="Timezone"
                         onChange={(e) =>
                           setGeneralSettings({ ...generalSettings, timezone: e.target.value })
                         }
                         sx={{
                           bgcolor: "#f8f9fa",
                           "&:hover .MuiOutlinedInput-notchedOutline": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         }}
                       >
-                        <MenuItem value="Asia/Ho_Chi_Minh">Châu Á/Hồ Chí Minh (GMT+7)</MenuItem>
+                        <MenuItem value="Asia/Ho_Chi_Minh">Asia/Ho Chi Minh (GMT+7)</MenuItem>
                         <MenuItem value="UTC">UTC (GMT+0)</MenuItem>
                         <MenuItem value="America/New_York">America/New York (EST)</MenuItem>
                         <MenuItem value="Europe/London">Europe/London (GMT)</MenuItem>
@@ -821,21 +960,21 @@ export default function Settings() {
                 <Grid item xs={12} md={6}>
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <FormControl fullWidth>
-                      <InputLabel>Ngôn ngữ mặc định</InputLabel>
+                      <InputLabel>Default Language</InputLabel>
                       <Select
                         value={generalSettings.language}
-                        label="Ngôn ngữ mặc định"
+                        label="Default Language"
                         onChange={(e) =>
                           setGeneralSettings({ ...generalSettings, language: e.target.value })
                         }
                         sx={{
                           bgcolor: "#f8f9fa",
                           "&:hover .MuiOutlinedInput-notchedOutline": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         }}
                       >
-                        <MenuItem value="vi">Tiếng Việt</MenuItem>
+                        <MenuItem value="vi">Vietnamese</MenuItem>
                         <MenuItem value="en">English</MenuItem>
                         <MenuItem value="fr">Français</MenuItem>
                       </Select>
@@ -845,12 +984,11 @@ export default function Settings() {
                 <Grid item xs={12}>
                   <Card 
                     sx={{ 
-                      bgcolor: "white", 
+                      bgcolor: "#ffffff", 
                       p: 4, 
                       borderRadius: 2, 
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: "2px solid #fff3e0",
-                      background: "linear-gradient(135deg, #fff9e6 0%, #ffffff 100%)",
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     <FormControlLabel
@@ -873,10 +1011,10 @@ export default function Settings() {
                       label={
                         <Box>
                           <Typography variant="h6" fontWeight={600} sx={{ color: "#e65100" }}>
-                            Chế độ bảo trì
+                            Maintenance Mode
                           </Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            Tạm thời vô hiệu hóa quyền truy cập công khai vào nền tảng
+                            Temporarily disable public access to the platform
                           </Typography>
                         </Box>
                       }
@@ -890,10 +1028,10 @@ export default function Settings() {
             <TabPanel value={activeTab} index={3}>
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight={700} sx={{ color: "#2c3e50" }}>
-                  Cài đặt bảo mật
+                  Security Settings
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.05rem" }}>
-                  Quản lý xác thực và kiểm soát truy cập hệ thống
+                  Manage authentication and access control for the system
                 </Typography>
               </Box>
 
@@ -901,12 +1039,11 @@ export default function Settings() {
                 <Grid item xs={12}>
                   <Card 
                     sx={{ 
-                      bgcolor: "white", 
+                      bgcolor: "#ffffff", 
                       p: 4, 
                       borderRadius: 2,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: "2px solid #e8eaf6",
-                      background: "linear-gradient(135deg, #f3e5f5 0%, #ffffff 100%)",
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     <Stack spacing={3}>
@@ -919,21 +1056,21 @@ export default function Settings() {
                             }
                             sx={{
                               "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: "#6a1b9a",
+                                color: "#12422a",
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                backgroundColor: "#6a1b9a",
+                                backgroundColor: "#12422a",
                               },
                             }}
                           />
                         }
                         label={
                           <Box>
-                            <Typography variant="h6" fontWeight={600} sx={{ color: "#4a148c" }}>
-                              Xác thực hai yếu tố (2FA)
+                            <Typography variant="h6" fontWeight={600} sx={{ color: "#12422a" }}>
+                              Two-factor Authentication (2FA)
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                              Yêu cầu 2FA cho tất cả tài khoản quản trị viên
+                              Require 2FA for all administrator accounts
                             </Typography>
                           </Box>
                         }
@@ -945,19 +1082,19 @@ export default function Settings() {
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <TextField
                       fullWidth
-                      label="Thời gian chờ phiên (phút)"
+                      label="Session timeout (minutes)"
                       type="number"
                       value={securitySettings.sessionTimeout}
                       onChange={(e) =>
                         setSecuritySettings({ ...securitySettings, sessionTimeout: e.target.value })
                       }
-                      helperText="Tự động đăng xuất sau thời gian không hoạt động"
+                      helperText="Automatically log out after inactivity"
                       variant="outlined"
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           bgcolor: "#f8f9fa",
                           "&:hover fieldset": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         },
                       }}
@@ -968,19 +1105,19 @@ export default function Settings() {
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <TextField
                       fullWidth
-                      label="Thời hạn mật khẩu (ngày)"
+                      label="Password expiry (days)"
                       type="number"
                       value={securitySettings.passwordExpiry}
                       onChange={(e) =>
                         setSecuritySettings({ ...securitySettings, passwordExpiry: e.target.value })
                       }
-                      helperText="Buộc thay đổi mật khẩu sau"
+                      helperText="Force password change after this period"
                       variant="outlined"
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           bgcolor: "#f8f9fa",
                           "&:hover fieldset": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         },
                       }}
@@ -991,19 +1128,19 @@ export default function Settings() {
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <TextField
                       fullWidth
-                      label="Số lần đăng nhập tối đa"
+                      label="Maximum login attempts"
                       type="number"
                       value={securitySettings.maxLoginAttempts}
                       onChange={(e) =>
                         setSecuritySettings({ ...securitySettings, maxLoginAttempts: e.target.value })
                       }
-                      helperText="Khóa tài khoản sau số lần thất bại"
+                      helperText="Lock account after this number of failed attempts"
                       variant="outlined"
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           bgcolor: "#f8f9fa",
                           "&:hover fieldset": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         },
                       }}
@@ -1014,15 +1151,15 @@ export default function Settings() {
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <TextField
                       fullWidth
-                      label="Danh sách IP cho phép"
+                      label="Allowed IP list"
                       multiline
                       rows={4}
                       value={securitySettings.ipWhitelist}
                       onChange={(e) =>
                         setSecuritySettings({ ...securitySettings, ipWhitelist: e.target.value })
                       }
-                      placeholder="Nhập địa chỉ IP được phép (mỗi dòng một IP)"
-                      helperText="Để trống để cho phép tất cả các IP"
+                      placeholder="Enter allowed IP addresses (one per line)"
+                      helperText="Leave empty to allow all IPs"
                       variant="outlined"
                       sx={{
                         "& .MuiOutlinedInput-root": {
@@ -1039,13 +1176,13 @@ export default function Settings() {
             </TabPanel>
 
             {/* Notifications Settings Tab */}
-            <TabPanel value={activeTab} index={3}>
+            <TabPanel value={activeTab} index={4}>
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight={700} sx={{ color: "#2c3e50" }}>
-                  Cài đặt thông báo
+                  Notification Settings
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.05rem" }}>
-                  Cấu hình tùy chọn thông báo email và hệ thống
+                  Configure email and system notification preferences
                 </Typography>
               </Box>
 
@@ -1053,12 +1190,11 @@ export default function Settings() {
                 <Grid item xs={12}>
                   <Card 
                     sx={{ 
-                      bgcolor: "white", 
+                      bgcolor: "#ffffff", 
                       p: 4, 
                       borderRadius: 2,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: "2px solid #e3f2fd",
-                      background: "linear-gradient(135deg, #e1f5fe 0%, #ffffff 100%)",
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     <Stack spacing={3}>
@@ -1086,10 +1222,10 @@ export default function Settings() {
                           label={
                             <Box>
                               <Typography variant="h6" fontWeight={600} sx={{ color: "#01579b" }}>
-                                Thông báo Email
+                                Email Notifications
                               </Typography>
                               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                Bật tất cả thông báo qua email
+                                Enable all notifications via email
                               </Typography>
                             </Box>
                           }
@@ -1114,7 +1250,7 @@ export default function Settings() {
                             }
                             label={
                               <Typography variant="body2" fontWeight={500}>
-                                Cảnh báo đăng ký doanh nghiệp mới
+                                New business registration alerts
                               </Typography>
                             }
                           />
@@ -1134,7 +1270,7 @@ export default function Settings() {
                             }
                             label={
                               <Typography variant="body2" fontWeight={500}>
-                                Nhắc nhở phê duyệt đang chờ
+                                Pending approval reminders
                               </Typography>
                             }
                           />
@@ -1154,7 +1290,7 @@ export default function Settings() {
                             }
                             label={
                               <Typography variant="body2" fontWeight={500}>
-                                Cảnh báo và lỗi hệ thống
+                                System alerts and errors
                               </Typography>
                             }
                           />
@@ -1174,7 +1310,7 @@ export default function Settings() {
                             }
                             label={
                               <Typography variant="body2" fontWeight={500}>
-                                Báo cáo hoạt động hàng tuần
+                                Weekly activity reports
                               </Typography>
                             }
                           />
@@ -1190,10 +1326,10 @@ export default function Settings() {
             <TabPanel value={activeTab} index={5}>
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight={700} sx={{ color: "#2c3e50" }}>
-                  Cài đặt hệ thống
+                  System Configuration
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.05rem" }}>
-                  Cấu hình hành vi hệ thống và cài đặt hiệu suất
+                  Configure system behavior and performance settings
                 </Typography>
               </Box>
 
@@ -1201,12 +1337,11 @@ export default function Settings() {
                 <Grid item xs={12} md={6}>
                   <Card 
                     sx={{ 
-                      bgcolor: "white", 
+                      bgcolor: "#ffffff", 
                       p: 3, 
                       borderRadius: 2,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: "2px solid #e8f5e9",
-                      background: "linear-gradient(135deg, #f1f8e9 0%, #ffffff 100%)",
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                      border: "1px solid #e0e0e0",
                       minHeight: 140,
                       display: "flex",
                       alignItems: "center",
@@ -1232,10 +1367,10 @@ export default function Settings() {
                       label={
                         <Box>
                           <Typography variant="h6" fontWeight={600} sx={{ color: "#2e7d32" }}>
-                            Bật Cache
+                            Enable Cache
                           </Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            Cải thiện hiệu suất với bộ nhớ đệm
+                            Improve performance with caching
                           </Typography>
                         </Box>
                       }
@@ -1245,12 +1380,11 @@ export default function Settings() {
                 <Grid item xs={12} md={6}>
                   <Card 
                     sx={{ 
-                      bgcolor: "white", 
+                      bgcolor: "#ffffff", 
                       p: 3, 
                       borderRadius: 2,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: "2px solid #ffebee",
-                      background: "linear-gradient(135deg, #ffebee 0%, #ffffff 100%)",
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                      border: "1px solid #e0e0e0",
                       minHeight: 140,
                       display: "flex",
                       alignItems: "center",
@@ -1276,10 +1410,10 @@ export default function Settings() {
                       label={
                         <Box>
                           <Typography variant="h6" fontWeight={600} sx={{ color: "#c62828" }}>
-                            Chế độ Debug
+                            Debug Mode
                           </Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            Hiển thị thông báo lỗi chi tiết
+                            Show detailed error messages
                           </Typography>
                         </Box>
                       }
@@ -1289,23 +1423,23 @@ export default function Settings() {
                 <Grid item xs={12} md={6}>
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <FormControl fullWidth>
-                      <InputLabel>Mức độ Log</InputLabel>
+                      <InputLabel>Log Level</InputLabel>
                       <Select
                         value={systemSettings.logLevel}
-                        label="Mức độ Log"
+                        label="Log Level"
                         onChange={(e) =>
                           setSystemSettings({ ...systemSettings, logLevel: e.target.value })
                         }
                         sx={{
                           bgcolor: "#f8f9fa",
                           "&:hover .MuiOutlinedInput-notchedOutline": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         }}
                       >
-                        <MenuItem value="error">Lỗi</MenuItem>
-                        <MenuItem value="warning">Cảnh báo</MenuItem>
-                        <MenuItem value="info">Thông tin</MenuItem>
+                        <MenuItem value="error">Error</MenuItem>
+                        <MenuItem value="warning">Warning</MenuItem>
+                        <MenuItem value="info">Info</MenuItem>
                         <MenuItem value="debug">Debug</MenuItem>
                       </Select>
                     </FormControl>
@@ -1314,24 +1448,24 @@ export default function Settings() {
                 <Grid item xs={12} md={6}>
                   <Card sx={{ bgcolor: "white", p: 3, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                     <FormControl fullWidth>
-                      <InputLabel>Tần suất sao lưu</InputLabel>
+                      <InputLabel>Backup frequency</InputLabel>
                       <Select
                         value={systemSettings.backupFrequency}
-                        label="Tần suất sao lưu"
+                        label="Backup frequency"
                         onChange={(e) =>
                           setSystemSettings({ ...systemSettings, backupFrequency: e.target.value })
                         }
                         sx={{
                           bgcolor: "#f8f9fa",
                           "&:hover .MuiOutlinedInput-notchedOutline": {
-                            borderColor: "#6a1b9a",
+                            borderColor: "#12422a",
                           },
                         }}
                       >
-                        <MenuItem value="hourly">Mỗi giờ</MenuItem>
-                        <MenuItem value="daily">Hàng ngày</MenuItem>
-                        <MenuItem value="weekly">Hàng tuần</MenuItem>
-                        <MenuItem value="monthly">Hàng tháng</MenuItem>
+                        <MenuItem value="hourly">Hourly</MenuItem>
+                        <MenuItem value="daily">Daily</MenuItem>
+                        <MenuItem value="weekly">Weekly</MenuItem>
+                        <MenuItem value="monthly">Monthly</MenuItem>
                       </Select>
                     </FormControl>
                   </Card>
@@ -1349,20 +1483,19 @@ export default function Settings() {
                     }}
                   >
                     <Typography variant="h6" fontWeight={600} gutterBottom>
-                      Cài đặt tự động phê duyệt
+                      Auto approval configuration
                     </Typography>
                     <Typography variant="body2">
-                      Cẩn thận khi bật tính năng này. Nó sẽ tự động chấp thuận mà không cần xem xét thủ công.
+                      Be careful when enabling this feature. It will automatically approve without manual review.
                     </Typography>
                   </Alert>
                   <Card 
                     sx={{ 
-                      bgcolor: "white", 
+                      bgcolor: "#ffffff", 
                       p: 4, 
                       borderRadius: 2,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: "2px solid #fff3e0",
-                      background: "linear-gradient(135deg, #fff9e6 0%, #ffffff 100%)",
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     <FormControlLabel
@@ -1385,10 +1518,10 @@ export default function Settings() {
                       label={
                         <Box>
                           <Typography variant="h6" fontWeight={600} sx={{ color: "#e65100" }}>
-                            Tự động phê duyệt đăng ký doanh nghiệp
+                            Auto-approve business registrations
                           </Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            Tự động phê duyệt đăng ký doanh nghiệp mới mà không cần xem xét thủ công
+                            Automatically approve new business registrations without manual review
                           </Typography>
                         </Box>
                       }
@@ -1402,10 +1535,10 @@ export default function Settings() {
             <TabPanel value={activeTab} index={6}>
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight={700} sx={{ color: "#2c3e50" }}>
-                  Cài đặt giao diện
+                  Appearance Settings
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.05rem" }}>
-                  Tùy chỉnh giao diện và cảm nhận của bảng điều khiển quản trị
+                  Customize the look and feel of the admin dashboard
                 </Typography>
               </Box>
 
@@ -1422,11 +1555,11 @@ export default function Settings() {
                     }}
                   >
                     <Typography variant="h6" fontWeight={600} gutterBottom>
-                      Tính năng sắp ra mắt
+                      Feature coming soon
                     </Typography>
                     <Typography variant="body2">
-                      Các tùy chọn tùy chỉnh giao diện sẽ sớm ra mắt. Điều này sẽ cho phép bạn tùy chỉnh
-                      chủ đề, màu sắc và các yếu tố thương hiệu.
+                      Appearance customization options will be available soon. This will allow you to adjust
+                      themes, colors, and branding elements.
                     </Typography>
                   </Alert>
                 </Grid>
@@ -1441,11 +1574,11 @@ export default function Settings() {
                     }}
                   >
                     <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
-                      Chủ đề hiện tại
+                      Current Theme
                     </Typography>
                     <Stack direction="row" spacing={2} flexWrap="wrap">
                       <Chip 
-                        label="Chế độ sáng" 
+                        label="Light mode" 
                         color="primary" 
                         variant="outlined"
                         sx={{ 
@@ -1456,7 +1589,7 @@ export default function Settings() {
                         }}
                       />
                       <Chip 
-                        label="Màu mặc định" 
+                        label="Default colors" 
                         color="default" 
                         variant="outlined"
                         sx={{ 
@@ -1473,8 +1606,8 @@ export default function Settings() {
                           py: 2.5, 
                           px: 2,
                           fontWeight: 600,
-                          bgcolor: "#f3e5f5",
-                          color: "#6a1b9a",
+                        bgcolor: "#e8f5e8",
+                        color: "#12422a",
                         }}
                       />
                     </Stack>
@@ -1483,64 +1616,6 @@ export default function Settings() {
               </Grid>
             </TabPanel>
 
-            {/* Action Buttons */}
-            <Box 
-              sx={{ 
-                mt: 5, 
-                pt: 4,
-                borderTop: "2px solid #e0e0e0",
-                display: "flex", 
-                gap: 3, 
-                justifyContent: "flex-end",
-                flexWrap: "wrap",
-              }}
-            >
-              <Button
-                variant="outlined"
-                startIcon={<Refresh />}
-                onClick={handleResetSettings}
-                size="large"
-                sx={{
-                  px: 4,
-                  py: 1.5,
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  borderWidth: 2,
-                  borderColor: "#9e9e9e",
-                  color: "#616161",
-                  "&:hover": {
-                    borderWidth: 2,
-                    borderColor: "#6a1b9a",
-                    color: "#6a1b9a",
-                    bgcolor: "#f3e5f5",
-                  },
-                }}
-              >
-                Đặt lại mặc định
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Save />}
-                onClick={handleSaveSettings}
-                size="large"
-                sx={{
-                  px: 5,
-                  py: 1.5,
-                  fontSize: "1.05rem",
-                  fontWeight: 700,
-                  background: "linear-gradient(45deg, #6a1b9a 30%, #9c27b0 90%)",
-                  boxShadow: "0 4px 12px 2px rgba(156, 39, 176, .3)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    background: "linear-gradient(45deg, #7b1fa2 30%, #ab47bc 90%)",
-                    boxShadow: "0 6px 16px 3px rgba(156, 39, 176, .4)",
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                Lưu thay đổi
-              </Button>
-            </Box>
           </Box>
         </Paper>
       </Container>
@@ -1554,13 +1629,13 @@ export default function Settings() {
         PaperProps={{
           sx: {
             borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(106, 27, 154, 0.2)',
+            boxShadow: '0 12px 40px rgba(18, 66, 42, 0.25)',
           },
         }}
       >
         <DialogTitle
           sx={{
-            background: 'linear-gradient(135deg, #6a1b9a 0%, #9c27b0 100%)',
+            background: 'linear-gradient(135deg, #12422a 0%, #0d2e1c 100%)',
             color: 'white',
             py: 2.5,
             px: 3,
@@ -1704,8 +1779,8 @@ export default function Settings() {
             variant="contained"
             disabled={isLoading}
             sx={{
-              background: "linear-gradient(45deg, #6a1b9a 30%, #9c27b0 90%)",
-              boxShadow: "0 4px 12px 2px rgba(156, 39, 176, .3)",
+              background: "linear-gradient(45deg, #12422a 30%, #0d2e1c 90%)",
+              boxShadow: "0 4px 12px 2px rgba(18, 66, 42, .35)",
             }}
           >
             {isLoading ? <CircularProgress size={24} /> : (editingPolicy ? 'Update' : 'Create')}
@@ -1713,185 +1788,193 @@ export default function Settings() {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      {/* Reward Setting Modal */}
+      {/* System Setting Upsert Modal */}
       <Dialog
-        open={rewardSettingModalOpen}
-        onClose={handleCloseRewardSettingModal}
+        open={systemSettingModalOpen}
+        onClose={handleCloseSystemSettingModal}
         maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
             borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(106, 27, 154, 0.2)',
+            boxShadow: "0 12px 40px rgba(18, 66, 42, 0.25)",
           },
         }}
       >
         <DialogTitle
           sx={{
-            background: 'linear-gradient(135deg, #6a1b9a 0%, #9c27b0 100%)',
-            color: 'white',
+            background: "linear-gradient(135deg, #12422a 0%, #0d2e1c 100%)",
+            color: "white",
             py: 2.5,
             px: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            position: 'relative',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "relative",
             zIndex: 1,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <AdminPanelSettings sx={{ fontSize: 28 }} />
             <Typography variant="h6" fontWeight={700}>
-              {editingRewardSetting ? 'Edit Reward Setting' : 'Create Reward Setting'}
+              {editingSystemSetting ? "Edit System Reward Policy" : "Create System Reward Policy"}
             </Typography>
           </Box>
           <IconButton
-            onClick={handleCloseRewardSettingModal}
-            sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' } }}
+            onClick={handleCloseSystemSettingModal}
+            sx={{ color: "white", "&:hover": { bgcolor: "rgba(255, 255, 255, 0.1)" } }}
           >
             <Close />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 4, pb: 3, px: 4, mt: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Reward Success"
-                type="number"
-                name="rewardSuccess"
-                value={rewardSettingFormData.rewardSuccess}
-                onChange={handleRewardSettingFormChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0 }}
-              />
-            </Grid>
+        <form onSubmit={handleSystemSettingSubmit(handleSubmitSystemSetting)}>
+          <DialogContent sx={{ pt: 4, pb: 3, px: 4, mt: 1 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Category"
+                  {...systemSettingRegister("category")}
+                  disabled={!!editingSystemSetting}
+                  helperText={
+                    systemSettingErrors.category?.message || 'For example: "reward"'
+                  }
+                  error={!!systemSettingErrors.category}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Key"
+                  {...systemSettingRegister("key")}
+                  disabled={!!editingSystemSetting}
+                  helperText={
+                    systemSettingErrors.key?.message || 'For example: "reward_policy"'
+                  }
+                  error={!!systemSettingErrors.key}
+                />
+              </Grid>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Reward Late"
-                type="number"
-                name="rewardLate"
-                value={rewardSettingFormData.rewardLate}
-                onChange={handleRewardSettingFormChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0 }}
-              />
-            </Grid>
+              <Grid item xs={12}>
+                <Divider sx={{ my: 1 }} />
+             
+              </Grid>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Reward Failed"
-                type="number"
-                name="rewardFailed"
-                value={rewardSettingFormData.rewardFailed}
-                onChange={handleRewardSettingFormChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0 }}
-              />
-            </Grid>
+              {systemSettingValueFields.map((field, index) => (
+                <Grid item xs={12} key={field.id}>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={5}>
+                      <TextField
+                        fullWidth
+                        label="Parameter key"
+                        placeholder="rewardSuccess, rankingLate..."
+                        {...systemSettingRegister(`valuePairs.${index}.key`)}
+                        disabled={!!editingSystemSetting && index < originalValueCount}
+                        error={
+                          !!systemSettingErrors.valuePairs?.[index]?.key
+                        }
+                        helperText={
+                          systemSettingErrors.valuePairs?.[index]?.key?.message
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={5}>
+                      <TextField
+                        fullWidth
+                        label="Value"
+                        type="number"
+                      {...systemSettingRegister(`valuePairs.${index}.value`)}
+                        error={
+                          !!systemSettingErrors.valuePairs?.[index]?.value
+                        }
+                        helperText={
+                          systemSettingErrors.valuePairs?.[index]?.value
+                            ?.message
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <Stack direction="row" spacing={1}>
+                        {systemSettingValueFields.length > 1 && !editingSystemSetting && (
+                          <IconButton
+                            size="small"
+                            sx={{ color: "#f44336" }}
+                            onClick={() =>
+                              handleRemoveSystemSettingValueRow(index)
+                            }
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              ))}
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Ranking Success"
-                type="number"
-                name="rankingSuccess"
-                value={rewardSettingFormData.rankingSuccess}
-                onChange={handleRewardSettingFormChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0 }}
-              />
-            </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="outlined"
+                  startIcon={<Add />}
+                  onClick={handleAddSystemSettingValueRow}
+                  sx={{ mt: 1 }}
+                >
+                  Add value row
+                </Button>
+              </Grid>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Ranking Late"
-                type="number"
-                name="rankingLate"
-                value={rewardSettingFormData.rankingLate}
-                onChange={handleRewardSettingFormChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0 }}
-              />
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  multiline
+                  rows={3}
+                  {...systemSettingRegister("description")}
+                  error={!!systemSettingErrors.description}
+                  helperText={systemSettingErrors.description?.message}
+                />
+              </Grid>
             </Grid>
+          </DialogContent>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Ranking Failed Penalty"
-                type="number"
-                name="rankingFailedPenalty"
-                value={rewardSettingFormData.rankingFailedPenalty}
-                onChange={handleRewardSettingFormChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0 }}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 4, pb: 3, gap: 2 }}>
-          <Button
-            onClick={handleCloseRewardSettingModal}
-            variant="outlined"
-            sx={{
-              px: 3,
-              py: 1,
-              borderColor: '#9e9e9e',
-              color: '#616161',
-              '&:hover': {
-                borderColor: '#6a1b9a',
-                color: '#6a1b9a',
-                bgcolor: '#f3e5f5',
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmitRewardSetting}
-            variant="contained"
-            sx={{
-              px: 4,
-              py: 1,
-              background: 'linear-gradient(45deg, #6a1b9a 30%, #9c27b0 90%)',
-              boxShadow: '0 4px 12px 2px rgba(156, 39, 176, .3)',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #7b1fa2 30%, #ab47bc 90%)',
-              },
-            }}
-          >
-            {editingRewardSetting ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
+          <DialogActions sx={{ px: 4, pb: 3, gap: 2 }}>
+            <Button
+              onClick={handleCloseSystemSettingModal}
+              variant="outlined"
+              sx={{
+                px: 3,
+                py: 1,
+                borderColor: "#12422a",
+                color: "#12422a",
+                "&:hover": {
+                  borderColor: "#0d2e1c",
+                  color: "#0d2e1c",
+                  bgcolor: "rgba(18, 66, 42, 0.06)",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                px: 4,
+                py: 1,
+                background: "linear-gradient(45deg, #12422a 30%, #0d2e1c 90%)",
+                boxShadow: "0 4px 12px 2px rgba(18, 66, 42, .35)",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #0d2e1c 30%, #12422a 90%)",
+                },
+              }}
+            >
+              {editingSystemSetting ? "Update" : "Create"}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
+
     </div>
   );
 }
