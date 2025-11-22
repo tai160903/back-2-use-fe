@@ -363,24 +363,34 @@ const Analytics = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           voucher={editingVoucher}
-          onSubmit={(voucherData, voucherType) => {
-            if (editingVoucher) {
-              dispatch(updateVoucherApi({
-                voucherId: editingVoucher._id,
-                voucherData
-              }));
-            } else {
-              // Call appropriate API based on voucher type
-              if (voucherType === 'business') {
-                dispatch(createBusinessVoucherApi(voucherData));
-              } else if (voucherType === 'leaderboard') {
-                dispatch(createLeaderboardVoucherApi(voucherData));
+          onSubmit={async (voucherData, voucherType) => {
+            try {
+              if (editingVoucher) {
+                await dispatch(updateVoucherApi({
+                  voucherId: editingVoucher._id,
+                  voucherData
+                })).unwrap();
               } else {
-                // Fallback to generic create
-                dispatch(createVoucherApi(voucherData));
+                // Call appropriate API based on voucher type
+                if (voucherType === 'business') {
+                  await dispatch(createBusinessVoucherApi(voucherData)).unwrap();
+                } else if (voucherType === 'leaderboard') {
+                  await dispatch(createLeaderboardVoucherApi(voucherData)).unwrap();
+                } else {
+                  // Fallback to generic create
+                  await dispatch(createVoucherApi(voucherData)).unwrap();
+                }
+                // Refresh voucher list after successful creation
+                dispatch(getAllVouchersApi({
+                  page: 1,
+                  limit: 100,
+                }));
               }
+              handleCloseModal();
+            } catch (error) {
+              // Error is handled by the thunk (toast notification)
+              console.error('Failed to save voucher:', error);
             }
-            handleCloseModal();
           }}
         />
       )}

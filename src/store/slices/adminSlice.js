@@ -314,6 +314,50 @@ export const toggleRewardSettingApi = createAsyncThunk(
 );
 
 
+// System Settings APIs
+export const getSystemSettingsApi = createAsyncThunk(
+  "admin/getSystemSettingsApi",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/admin/system-setting");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
+export const upsertSystemSettingApi = createAsyncThunk(
+  "admin/upsertSystemSettingApi",
+  async (settingData, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post("/admin/system-setting/upsert", settingData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
+export const updateSystemSettingApi = createAsyncThunk(
+  "admin/updateSystemSettingApi",
+  async ({ category, key, path, value }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(
+        `/admin/system-setting/${category}/${key}/value`,
+        { path, value }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+
+
 
 const adminSlice = createSlice({
   name: "admin",
@@ -369,6 +413,7 @@ const adminSlice = createSlice({
     businessFilters: {
       isBlocked: null, // null = all, true = blocked, false = unblocked
     },
+    systemSettings: [],
   },
   reducers: {
     clearError: (state) => {
@@ -600,7 +645,7 @@ const adminSlice = createSlice({
       })
       
       // Get Business Statistics
-      .addCase(getBusinessStatsApi.pending, (state) => {
+      .addCase(getBusinessStatsApi.pending, () => {
         // Don't set loading state for stats fetch
       })
       .addCase(getBusinessStatsApi.fulfilled, (state, { payload }) => {
@@ -918,7 +963,103 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to toggle reward setting");
-      });
+      })
+      // System Settings
+      .addCase(getSystemSettingsApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getSystemSettingsApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        const data = payload?.data ?? payload ?? [];
+        state.systemSettings = Array.isArray(data) ? data : [data];
+      })
+      .addCase(getSystemSettingsApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch system settings");
+      })
+      .addCase(upsertSystemSettingApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(upsertSystemSettingApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        const updated = payload?.data ?? payload;
+        if (!updated) return;
+
+        const updatedId = updated._id || updated.id;
+        const updatedKey = updated.key;
+
+        if (!Array.isArray(state.systemSettings)) {
+          state.systemSettings = [];
+        }
+
+        let index = -1;
+        if (updatedId) {
+          index = state.systemSettings.findIndex(
+            (item) => item._id === updatedId || item.id === updatedId
+          );
+        }
+        if (index === -1 && updatedKey) {
+          index = state.systemSettings.findIndex((item) => item.key === updatedKey);
+        }
+
+        if (index !== -1) {
+          state.systemSettings[index] = updated;
+        } else {
+          state.systemSettings.unshift(updated);
+        }
+
+        toast.success(payload?.message || "System setting saved successfully!");
+      })
+      .addCase(upsertSystemSettingApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to save system setting");
+      })
+      .addCase(updateSystemSettingApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateSystemSettingApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+
+        const updated = payload?.data ?? payload;
+        if (!updated) return;
+
+        const updatedId = updated._id || updated.id;
+        const updatedKey = updated.key;
+
+        if (!Array.isArray(state.systemSettings)) {
+          state.systemSettings = [];
+        }
+
+        let index = -1;
+        if (updatedId) {
+          index = state.systemSettings.findIndex(
+            (item) => item._id === updatedId || item.id === updatedId
+          );
+        }
+        if (index === -1 && updatedKey) {
+          index = state.systemSettings.findIndex((item) => item.key === updatedKey);
+        }
+
+        if (index !== -1) {
+          state.systemSettings[index] = updated;
+        }
+
+        toast.success(payload?.message || "System setting updated successfully!");
+      })
+      .addCase(updateSystemSettingApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to update system setting");
+      })
+  
   },
 });
 
