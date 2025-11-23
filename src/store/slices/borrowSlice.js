@@ -186,7 +186,12 @@ const borrowSlice = createSlice({
         .addCase(getTransactionHistoryApi.fulfilled, (state, {payload}) => {
             state.isLoading = false
             state.error = null
-            state.borrow = payload
+            // Backend trả về dạng { items: [...], total, page, limit }
+            // Trong UI đang mong đợi 1 mảng transaction nên lấy ra items
+            const items = Array.isArray(payload)
+                ? payload
+                : payload?.items || []
+            state.borrow = items
         })
         .addCase(getTransactionHistoryApi.rejected, (state, {payload}) => {
             state.isLoading = false
@@ -199,7 +204,10 @@ const borrowSlice = createSlice({
         .addCase(getTransactionHistoryBusinessApi.fulfilled, (state, {payload}) => {
             state.isLoading = false
             state.error = null
-            state.borrow = payload
+            const items = Array.isArray(payload)
+                ? payload
+                : payload?.items || []
+            state.borrow = items
         })
         .addCase(getTransactionHistoryBusinessApi.rejected, (state, {payload}) => {
             state.isLoading = false
