@@ -13,7 +13,7 @@ import {
   IoPersonOutline,
   IoStorefrontOutline,
 } from "react-icons/io5";
-import { MdOutlineAccountBalanceWallet, MdRedeem } from "react-icons/md";
+import { MdOutlineAccountBalanceWallet, MdRedeem, MdPayment, MdShoppingCart, MdSubscriptions } from "react-icons/md";
 import { CiStar } from "react-icons/ci";
 import { GoHistory } from "react-icons/go";
 import { TiMessages } from "react-icons/ti";
@@ -82,9 +82,9 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
       "my-customer-history": <GoHistory className="navbar-icon" />,
       inventory: <LuStore className="navbar-icon" />,
       materials: <FiPackage className="navbar-icon" />,
-      transaction: <GoHistory className="navbar-icon" />,
-      "online-borrow-orders": <FiPackage className="navbar-icon" />,
-      subscriptions: <FiPackage className="navbar-icon" />,
+      transaction: <MdPayment className="navbar-icon" />,
+      "online-borrow-orders": <MdShoppingCart className="navbar-icon" />,
+      subscriptions: <MdSubscriptions className="navbar-icon" />,
       "reedem-rewards": <AiOutlineGift className="navbar-icon" />,
       wallet: <MdOutlineAccountBalanceWallet className="navbar-icon" />,
       logout: <CiLogout className="navbar-icon" />,

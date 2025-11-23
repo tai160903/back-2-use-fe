@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   getBusinessVouchers,
@@ -44,7 +44,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { Pagination, Stack } from '@mui/material';
@@ -132,6 +136,19 @@ export default function RedemVoucher() {
     }));
   }, [dispatch, myVouchersStatus, isPublished, myVouchersPage]);
 
+  // Load ALL claimed vouchers (without filter) to check if vouchers are already claimed
+  // This is needed to properly check if a voucher in "Available to Claim" has been claimed
+  // Load this ALWAYS, not just when activeTab === 0, to ensure data is available
+  useEffect(() => {
+    // Load all claimed vouchers to check against available vouchers
+    dispatch(getMyBusinessVouchers({
+      status: undefined, // Load all statuses
+      isPublished: undefined, // Load all published states
+      page: 1,
+      limit: 100, // Load enough to check all claimed vouchers
+    }));
+  }, [dispatch]);
+
   // Get voucher status helper function
   const getVoucherStatus = (voucher) => {
     if (voucher.isPublished) return 'published';
@@ -169,8 +186,135 @@ export default function RedemVoucher() {
     loadSetupVouchers();
   }, [setupVouchersStatus, setupVouchersIsPublished, setupVouchersPage]);
 
+  // Get list of voucher IDs that have already been claimed by this business
+  // This must be defined BEFORE availableToClaim since availableToClaim uses it
+  const claimedVoucherIds = useMemo(() => {
+    if (!myBusinessVouchers || !Array.isArray(myBusinessVouchers)) {
+      return new Set();
+    }
+    
+    // Extract voucher template IDs from claimed vouchers
+    // myBusinessVouchers structure: { voucher: { _id: templateId }, ... }
+    const ids = myBusinessVouchers
+      .map((v, index) => {
+        // Try multiple possible locations for the voucher template ID
+        const templateId = 
+          v.voucher?._id || 
+          v.voucher?.id || 
+          v.voucherId || 
+          v.voucherTemplateId ||
+          v._id || // Sometimes the business voucher might have the template ID directly
+          v.id;
+        
+        const idString = templateId ? String(templateId) : null;
+        
+        // Detailed debug log
+        console.log(`[Claimed Voucher ${index}]`, {
+          fullVoucher: v,
+          voucherObject: v.voucher,
+          extractedId: idString,
+          possibleIds: {
+            'v.voucher?._id': v.voucher?._id,
+            'v.voucher?.id': v.voucher?.id,
+            'v.voucherId': v.voucherId,
+            'v.voucherTemplateId': v.voucherTemplateId,
+            'v._id': v._id,
+            'v.id': v.id,
+          }
+        });
+        
+        return idString;
+      })
+      .filter(Boolean);
+    
+    console.log('=== Claimed Voucher IDs Summary ===');
+    console.log('myBusinessVouchers count:', myBusinessVouchers.length);
+    console.log('Extracted claimed template IDs:', Array.from(ids));
+    
+    return new Set(ids);
+  }, [myBusinessVouchers]);
+
   // Filter available vouchers (only show isDisabled = false)
-  const availableToClaim = businessVouchers?.filter(v => !v.isDisabled) || [];
+  // Also filter out vouchers that have already been claimed by this business
+  const availableToClaim = useMemo(() => {
+    if (!businessVouchers || !Array.isArray(businessVouchers)) {
+      return [];
+    }
+    
+    // First filter by isDisabled
+    let filtered = businessVouchers.filter(v => !v.isDisabled);
+    
+    console.log('=== Available Vouchers Filtering ===');
+    console.log('Total businessVouchers:', businessVouchers.length);
+    console.log('After isDisabled filter:', filtered.length);
+    console.log('Claimed voucher IDs set:', Array.from(claimedVoucherIds));
+    
+    // Then filter out vouchers that have already been claimed
+    if (claimedVoucherIds.size > 0) {
+      filtered = filtered.filter(voucher => {
+        const voucherId = String(voucher._id || voucher.id || '');
+        const isClaimed = claimedVoucherIds.has(voucherId);
+        
+        console.log(`Checking voucher:`, {
+          voucherId,
+          voucherName: voucher.name || 'Unknown',
+          isClaimed,
+          voucherData: voucher,
+          claimedIds: Array.from(claimedVoucherIds),
+          match: claimedVoucherIds.has(voucherId)
+        });
+        
+        if (isClaimed) {
+          console.log(`❌ Filtering out claimed voucher: ${voucherId} (${voucher.name || 'Unknown'})`);
+        } else {
+          console.log(`✅ Keeping available voucher: ${voucherId} (${voucher.name || 'Unknown'})`);
+        }
+        
+        return !isClaimed;
+      });
+    }
+
+    console.log('✅ Final available to claim after filtering:', filtered.length, 'vouchers');
+    return filtered;
+  }, [businessVouchers, claimedVoucherIds]);
+
+  // Get unique tier labels from available vouchers
+  const availableTierLabels = useMemo(() => {
+    if (!businessVouchers || !Array.isArray(businessVouchers)) {
+      return [];
+    }
+    const labels = businessVouchers
+      .map(v => v.tierLabel)
+      .filter(Boolean)
+      .filter((label, index, self) => self.indexOf(label) === index) // Remove duplicates
+      .sort();
+    return labels;
+  }, [businessVouchers]);
+
+  // Check if a voucher has already been claimed
+  const isVoucherClaimed = (voucher) => {
+    if (!voucher) return false;
+    
+    // Get the voucher template ID from the available voucher
+    // businessVouchers structure: { _id: templateId, name, ... }
+    const voucherId = String(voucher._id || voucher.id || '');
+    if (!voucherId || voucherId === 'undefined' || voucherId === 'null') {
+      console.log('Voucher has no valid ID:', voucher);
+      return false;
+    }
+    
+    // Check if this ID exists in claimed vouchers
+    const isClaimed = claimedVoucherIds.has(voucherId);
+    
+    console.log(`Checking voucher ${voucherId} (${voucher.name || 'Unknown'}):`, {
+      voucherId,
+      isClaimed,
+      claimedIds: Array.from(claimedVoucherIds),
+      voucherData: voucher
+    });
+    
+    return isClaimed;
+  };
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -181,6 +325,16 @@ export default function RedemVoucher() {
 
   // Handle claim voucher
   const handleOpenClaimModal = (voucher) => {
+    if (!voucher) return;
+    
+    // Double check if voucher is already claimed before opening modal
+    // This is a safety check - button should already be disabled
+    if (isVoucherClaimed(voucher)) {
+      console.warn('Attempted to claim already claimed voucher:', voucher._id || voucher.id);
+      // Don't show toast, just silently return
+      return;
+    }
+    
     setSelectedVoucher(voucher);
     setClaimModalOpen(true);
   };
@@ -426,37 +580,58 @@ export default function RedemVoucher() {
       {activeTab === 0 && (
         <div className="vouchers-section">
           <div className="section-header">
-            <h3 className="section-title">
-              <FaGift className="section-icon" />
+        <h3 className="section-title">
+          <FaGift className="section-icon" />
               Voucher có thể Claim
-            </h3>
+        </h3>
            
           </div>
 
           {/* Filters */}
           <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-            <TextField
-              label="Tier Label"
-              size="small"
-              value={tierLabel}
-              onChange={(e) => {
-                setTierLabel(e.target.value);
-                setAvailablePage(1);
-              }}
-              placeholder="Bronze, Silver, Gold, Diamond"
-              sx={{ 
-                minWidth: 200,
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel 
+                id="tier-label-select-label"
+                sx={{
+                  '&.Mui-focused': {
+                    color: '#22c55e',
+                  },
+                }}
+              >
+                Tier Label
+              </InputLabel>
+              <Select
+                labelId="tier-label-select-label"
+                id="tier-label-select"
+                value={tierLabel}
+                label="Tier Label"
+                onChange={(e) => {
+                  setTierLabel(e.target.value);
+                  setAvailablePage(1);
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#d1d5db',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: '#22c55e',
                   },
-                  '&.Mui-focused fieldset': {
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                     borderColor: '#22c55e',
                   },
-                },
-              }}
-            />
-            <TextField
+                }}
+              >
+                <MenuItem value="">
+                  <em>All Tiers</em>
+                </MenuItem>
+                {availableTierLabels.map((label) => (
+                  <MenuItem key={label} value={label}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {/* <TextField
               label="Min Threshold"
               type="number"
               size="small"
@@ -477,7 +652,7 @@ export default function RedemVoucher() {
                   },
                 },
               }}
-            />
+            /> */}
           </Box>
 
           {/* Vouchers Grid */}
@@ -488,63 +663,141 @@ export default function RedemVoucher() {
           ) : availableToClaim.length > 0 ? (
             <>
               <div className="vouchers-grid">
-                {availableToClaim.map((voucher) => (
-                  <div key={voucher._id || voucher.id} className="voucher-card">
-                    <div className="voucher-card-header">
-                      <h4 className="voucher-name">{voucher.name || voucher.voucher?.name || 'Voucher'}</h4>
-                      <Chip 
-                        label="Có thể Claim" 
-                        size="small"
-                        sx={{ 
-                          fontWeight: 600,
-                          backgroundColor: '#d1fae5',
-                          color: '#065f46',
-                        }}
-                      />
-                    </div>
-                    <div className="voucher-card-body">
-                      <p className="voucher-description">
-                        {voucher.description || voucher.voucher?.description || 'Không có mô tả'}
-                      </p>
-                      {voucher.tierLabel && (
-                        <div className="voucher-detail">
-                          <span className="detail-label">Tier:</span>
-                          <span className="detail-value">{voucher.tierLabel}</span>
-                        </div>
-                      )}
-                      {voucher.minThreshold && (
-                        <div className="voucher-detail">
-                          <span className="detail-label">Min Threshold:</span>
-                          <span className="detail-value">{voucher.minThreshold} points</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="voucher-card-footer">
-                      <Button
-                        variant="contained"
-                        startIcon={<MdRedeem />}
-                        onClick={() => handleOpenClaimModal(voucher)}
-                        fullWidth
-                        sx={{
-                          backgroundColor: '#22c55e',
-                          fontWeight: 600,
-                          py: 1.2,
-                          fontSize: '0.9375rem',
-                          boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            backgroundColor: '#16a34a',
-                            boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
-                            transform: 'translateY(-2px)',
-                          }
-                        }}
-                      >
-                        Claim Voucher
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                {availableToClaim.map((voucher) => {
+                  // Check if voucher is claimed - this should always return false since we filtered
+                  // But we keep this check as a safety measure
+                  const isClaimed = isVoucherClaimed(voucher);
+                  
+                  // If somehow a claimed voucher got through, don't render it
+                  if (isClaimed) {
+                    console.error('ERROR: Claimed voucher found in availableToClaim list!', voucher);
+                    return null;
+                  }
+                  
+                  return (
+                    <div 
+                      key={voucher._id || voucher.id} 
+                      className="voucher-card"
+                      style={{
+                        opacity: isClaimed ? 0.7 : 1,
+                        pointerEvents: isClaimed ? 'none' : 'auto',
+                        cursor: isClaimed ? 'not-allowed' : 'default',
+                        userSelect: isClaimed ? 'none' : 'auto',
+                      }}
+                      onClick={(e) => {
+                        if (isClaimed) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.warn('Click blocked on claimed voucher');
+                        }
+                      }}
+                    >
+                      <div className="voucher-card-header">
+                        <h4 className="voucher-name">{voucher.name || voucher.voucher?.name || 'Voucher'}</h4>
+                        <Chip 
+                          label={isClaimed ? "Already Claimed" : "Available to Claim"} 
+                          size="small"
+                          sx={{ 
+                            fontWeight: 600,
+                            backgroundColor: isClaimed ? '#fee2e2' : '#d1fae5',
+                            color: isClaimed ? '#991b1b' : '#065f46',
+                          }}
+                        />
               </div>
+                      <div className="voucher-card-body">
+                        <p className="voucher-description">
+                          {voucher.description || voucher.voucher?.description || 'Không có mô tả'}
+                        </p>
+                        {voucher.tierLabel && (
+                          <div className="voucher-detail">
+                            <span className="detail-label">Tier:</span>
+                            <span className="detail-value">{voucher.tierLabel}</span>
+              </div>
+                        )}
+                        {voucher.minThreshold && (
+                          <div className="voucher-detail">
+                            <span className="detail-label">Min Threshold:</span>
+                            <span className="detail-value">{voucher.minThreshold} points</span>
+            </div>
+                        )}
+        </div>
+                      <div className="voucher-card-footer">
+                        {isClaimed ? (
+                          <Button
+                            variant="contained"
+                            disabled
+                            fullWidth
+                            sx={{
+                              backgroundColor: '#9ca3af',
+                              fontWeight: 600,
+                              py: 1.2,
+                              fontSize: '0.9375rem',
+                              cursor: 'not-allowed',
+                              '&:disabled': {
+                                backgroundColor: '#9ca3af',
+                                color: '#ffffff',
+                              }
+                            }}
+                          >
+                            Already Claimed
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="contained"
+                            startIcon={!isClaimed ? <MdRedeem /> : null}
+                            onClick={(e) => {
+                              // CRITICAL: Block all clicks if voucher is claimed
+                              if (isClaimed) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.warn('❌ BLOCKED: Attempted to claim already claimed voucher:', voucher._id || voucher.id);
+                                return false;
+                              }
+                              
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              // Final safety check
+                              const finalCheck = isVoucherClaimed(voucher);
+                              if (finalCheck) {
+                                console.warn('❌ BLOCKED: Final check failed - voucher is claimed');
+                                return false;
+                              }
+                              
+                              handleOpenClaimModal(voucher);
+                            }}
+                            fullWidth
+                            disabled={isClaimed}
+                            sx={{
+                              backgroundColor: isClaimed ? '#9ca3af' : '#22c55e',
+                              fontWeight: 600,
+                              py: 1.2,
+                              fontSize: '0.9375rem',
+                              boxShadow: isClaimed ? 'none' : '0 4px 12px rgba(34, 197, 94, 0.35)',
+                              transition: 'all 0.3s ease',
+                              cursor: isClaimed ? 'not-allowed' : 'pointer',
+                              pointerEvents: isClaimed ? 'none' : 'auto',
+                              '&:hover': {
+                                backgroundColor: isClaimed ? '#9ca3af' : '#16a34a',
+                                boxShadow: isClaimed ? 'none' : '0 6px 16px rgba(34, 197, 94, 0.45)',
+                                transform: isClaimed ? 'none' : 'translateY(-2px)',
+                              },
+                              '&:disabled': {
+                                backgroundColor: '#9ca3af',
+                                color: '#ffffff',
+                                cursor: 'not-allowed',
+                                pointerEvents: 'none',
+                              }
+                            }}
+                          >
+                            {isClaimed ? 'Already Claimed' : 'Claim Voucher'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+      </div>
 
               {/* Pagination */}
               {businessVoucherPagination?.totalPages > 1 && (
@@ -586,11 +839,11 @@ export default function RedemVoucher() {
       {activeTab === 1 && (
         <div className="vouchers-section">
           <div className="section-header">
-            <h3 className="section-title">
-              <FaGift className="section-icon" />
+        <h3 className="section-title">
+          <FaGift className="section-icon" />
               Voucher đã Claim
-            </h3>
-            <p className="section-subtitle">
+        </h3>
+        <p className="section-subtitle">
               Quản lý các voucher đã claim: Setup → Publish
             </p>
           </div>
@@ -737,16 +990,16 @@ export default function RedemVoucher() {
                                   startIcon={<FaEdit />}
                                   onClick={() => handleOpenSetupModal(voucher, true)}
                                   sx={{
-                                    backgroundColor: '#3b82f6',
+                                    backgroundColor: '#22c55e',
                                     fontWeight: 600,
                                     py: 1.2,
                                     fontSize: '0.9375rem',
                                     flex: 1,
-                                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
                                     transition: 'all 0.3s ease',
                                     '&:hover': {
-                                      backgroundColor: '#2563eb',
-                                      boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                      backgroundColor: '#16a34a',
+                                      boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
                                       transform: 'translateY(-2px)',
                                     }
                                   }}
@@ -783,15 +1036,15 @@ export default function RedemVoucher() {
                                 onClick={() => handleOpenSetupModal(voucher, true)}
                                 fullWidth
                                 sx={{
-                                  backgroundColor: '#3b82f6',
+                                  backgroundColor: '#22c55e',
                                   fontWeight: 600,
                                   py: 1.2,
                                   fontSize: '0.9375rem',
-                                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
                                   transition: 'all 0.3s ease',
                                   '&:hover': {
-                                    backgroundColor: '#2563eb',
-                                    boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                    backgroundColor: '#16a34a',
+                                    boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
                                     transform: 'translateY(-2px)',
                                   }
                                 }}
@@ -822,11 +1075,11 @@ export default function RedemVoucher() {
                             View Details
                           </Button>
                         </Box>
+        </div>
                       </div>
-                    </div>
                   );
                 })}
-              </div>
+                      </div>
 
               {/* Pagination */}
               {myBusinessVoucherPagination?.totalPages > 1 && (
@@ -889,7 +1142,7 @@ export default function RedemVoucher() {
           }}
         >
           <MdRedeem style={{ fontSize: '24px' }} />
-          <Typography variant="h6" fontWeight="bold">Claim Voucher</Typography>
+          <Box component="span" sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>Claim Voucher</Box>
         </DialogTitle>
         <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
           {selectedVoucher && (
@@ -956,15 +1209,13 @@ export default function RedemVoucher() {
         PaperProps={{
           sx: {
             borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(245, 158, 11, 0.2)',
+            boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
           }
         }}
       >
         <DialogTitle
           sx={{
-            background: isEditMode 
-              ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-              : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
             color: 'white',
             py: 2,
             px: 3,
@@ -994,10 +1245,10 @@ export default function RedemVoucher() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                 },
               }}
@@ -1012,10 +1263,10 @@ export default function RedemVoucher() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                 },
               }}
@@ -1031,10 +1282,10 @@ export default function RedemVoucher() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                 },
               }}
@@ -1050,10 +1301,10 @@ export default function RedemVoucher() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#f59e0b',
+                    borderColor: '#22c55e',
                   },
                 },
               }}
@@ -1069,9 +1320,9 @@ export default function RedemVoucher() {
                 justifyContent: 'space-between',
                 p: 2.5,
                 borderRadius: 2,
-                backgroundColor: setupForm.isPublished ? 'rgba(34, 197, 94, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                backgroundColor: setupForm.isPublished ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.08)',
                 border: '1px solid',
-                borderColor: setupForm.isPublished ? '#22c55e' : '#f59e0b',
+                borderColor: '#22c55e',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
@@ -1081,8 +1332,8 @@ export default function RedemVoucher() {
                   sx={{ 
                     minWidth: '90px', 
                     fontWeight: 600,
-                    backgroundColor: setupForm.isPublished ? '#d1fae5' : '#fef3c7',
-                    color: setupForm.isPublished ? '#065f46' : '#92400e',
+                    backgroundColor: setupForm.isPublished ? '#d1fae5' : '#fee2e2',
+                    color: setupForm.isPublished ? '#065f46' : '#991b1b',
                   }}
                 />
                 <Box sx={{ flex: 1 }}>
@@ -1155,15 +1406,15 @@ export default function RedemVoucher() {
             variant="contained"
             disabled={isLoading}
             sx={{
-              backgroundColor: '#f59e0b',
+              backgroundColor: '#22c55e',
               px: 3,
               py: 1,
               fontSize: '0.9375rem',
               fontWeight: 600,
-              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
               '&:hover': {
-                backgroundColor: '#d97706',
-                boxShadow: '0 6px 16px rgba(245, 158, 11, 0.45)',
+                backgroundColor: '#16a34a',
+                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
               }
             }}
           >
@@ -1376,11 +1627,11 @@ export default function RedemVoucher() {
       {/* Setup Vouchers Section - Display all setup vouchers */}
       <div className="vouchers-section" style={{ marginTop: '40px' }}>
         <div className="section-header">
-          <h3 className="section-title">
-            <FaGift className="section-icon" />
+        <h3 className="section-title">
+          <FaGift className="section-icon" />
             Setup Vouchers ({setupVouchers.length})
-          </h3>
-          <p className="section-subtitle">
+        </h3>
+        <p className="section-subtitle">
             List of all vouchers that have been set up and can be published for customers to use
           </p>
         </div>
@@ -1526,7 +1777,7 @@ export default function RedemVoucher() {
                           '#374151',
                       }}
                     />
-                  </div>
+                    </div>
                   <div className="voucher-card-body">
                     <p className="voucher-description">
                       {voucher.customDescription || voucher.voucher?.description || 'No description'}
@@ -1535,13 +1786,13 @@ export default function RedemVoucher() {
                       <div className="voucher-detail">
                         <span className="detail-label">Discount:</span>
                         <span className="detail-value">{voucher.discountPercent}%</span>
-                      </div>
+                    </div>
                     )}
                     {voucher.rewardPointCost && (
                       <div className="voucher-detail">
                         <span className="detail-label">Points:</span>
                         <span className="detail-value">{voucher.rewardPointCost}</span>
-                      </div>
+        </div>
                     )}
                     {voucher.startDate && (
                       <div className="voucher-detail">
@@ -1567,16 +1818,16 @@ export default function RedemVoucher() {
                               startIcon={<FaEdit />}
                               onClick={() => handleOpenSetupModal(voucher, true)}
                               sx={{
-                                backgroundColor: '#3b82f6',
+                                backgroundColor: '#22c55e',
                                 fontWeight: 600,
                                 py: 1.2,
                                 fontSize: '0.9375rem',
                                 flex: 1,
-                                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
-                                  backgroundColor: '#2563eb',
-                                  boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                  backgroundColor: '#16a34a',
+                                  boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
                                   transform: 'translateY(-2px)',
                                 }
                               }}
@@ -1613,15 +1864,15 @@ export default function RedemVoucher() {
                             onClick={() => handleOpenSetupModal(voucher, true)}
                             fullWidth
                             sx={{
-                              backgroundColor: '#3b82f6',
+                              backgroundColor: '#22c55e',
                               fontWeight: 600,
                               py: 1.2,
                               fontSize: '0.9375rem',
-                              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
                               transition: 'all 0.3s ease',
                               '&:hover': {
-                                backgroundColor: '#2563eb',
-                                boxShadow: '0 6px 16px rgba(59, 130, 246, 0.45)',
+                                backgroundColor: '#16a34a',
+                                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
                                 transform: 'translateY(-2px)',
                               }
                             }}
