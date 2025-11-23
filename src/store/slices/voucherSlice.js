@@ -926,6 +926,9 @@ const voucherSlice = createSlice({
       .addCase(redeemCustomerVoucher.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+        // Display error message to user
+        const errorMessage = payload?.message || payload?.error || "Failed to redeem voucher. Please try again.";
+        toast.error(errorMessage);
       });
   },
 });

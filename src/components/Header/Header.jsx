@@ -19,11 +19,13 @@ import { CiLogout } from "react-icons/ci";
 import { HiSwitchHorizontal } from "react-icons/hi";
 import Notification from "../Notification/Notification";
 import { io } from "socket.io-client";
+import { getHistoryBusinessForm } from "../../store/slices/bussinessSlice";
 
 export default function Header() {
   const location = useLocation();
   const { currentUser, dispatch, navigate } = useAuth();
   const { userInfo } = useSelector((state) => state.user);
+  const { businessFormHistory } = useSelector((state) => state.businesses);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const userRole = currentUser ? getUserRole() : null;
@@ -36,6 +38,24 @@ export default function Header() {
       dispatch(getProfileApi());
     }
   }, [currentUser, userInfo?.data, dispatch]);
+
+  // Load business registration history to check if user has approved business
+  useEffect(() => {
+    if (currentUser && userRole === "customer") {
+      dispatch(getHistoryBusinessForm({ limit: 10, page: 1 }));
+    }
+  }, [currentUser, userRole, dispatch]);
+
+  // Check if user has approved business registration
+  const hasApprovedBusiness = React.useMemo(() => {
+    if (!businessFormHistory || !Array.isArray(businessFormHistory)) {
+      return false;
+    }
+    // Check if there's any business registration with status "approved"
+    return businessFormHistory.some(
+      (form) => form?.status?.toLowerCase() === "approved"
+    );
+  }, [businessFormHistory]);
 
   // Kết nối socket để lấy danh sách thông báo và lắng nghe realtime
   useEffect(() => {
@@ -250,14 +270,22 @@ export default function Header() {
                     Business Registration
                   </MenuItem>
                 )}
-                {(userRole === "customer" || userRole === "business") && (
+                {/* Only show "Switch to Business" if user has approved business registration */}
+                {userRole === "customer" && hasApprovedBusiness && (
                   <MenuItem onClick={handleSwitchAccountType}>
                     <HiSwitchHorizontal
                       style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
                     />
-                    {userRole === "customer"
-                      ? "Switch to Business"
-                      : "Switch to Customer"}
+                    Switch to Business
+                  </MenuItem>
+                )}
+                {/* Show "Switch to Customer" if user is currently in business mode */}
+                {userRole === "business" && (
+                  <MenuItem onClick={handleSwitchAccountType}>
+                    <HiSwitchHorizontal
+                      style={{ marginRight: 8, fontSize: 18, color: "#3a704e" }}
+                    />
+                    Switch to Customer
                   </MenuItem>
                 )}
                 <MenuItem onClick={handleLogout}>

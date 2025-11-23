@@ -72,37 +72,100 @@ export default function Voucher() {
   }, [dispatch]);
 
   // Load customer vouchers (All Vouchers) - Always load to ensure Featured Vouchers has data
+  // This is critical for Featured Vouchers section which shows leaderboard vouchers to all users
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (!currentUser) return;
 
-    // Chỉ gọi API nếu đang ở customer mode
+    // Check if user can access customer features
     const tokenRole = getUserRole();
-    if (tokenRole !== 'customer') {
-      console.warn('Not in customer mode, skipping voucher load');
+    const userRole = currentUser.user?.role?.trim().toLowerCase();
+    
+    // If user is not a customer and cannot switch to customer, skip
+    // But if user has customer role (even if currently in business mode), try to load
+    if (tokenRole && tokenRole !== 'customer' && userRole !== 'customer') {
+      console.warn('User is not a customer, skipping voucher load');
       return;
     }
     
-    // Always load customer vouchers (even in My Vouchers tab) to ensure Featured Vouchers has data
-    dispatch(getCustomerVouchers({
-      status: activeTab === 0 ? (statusFilter || undefined) : undefined, // Only apply filter in All Vouchers tab
-      page: activeTab === 0 ? currentPage : 1, // Use currentPage only in All Vouchers tab
-      limit: vouchersPerPage,
-    })).catch((error) => {
-      console.error('Error loading customer vouchers:', error);
-      if (error?.response?.status === 403) {
-        // Nếu bị 403, có thể role chưa sync, thử switch lại
-        const userRole = currentUser.user?.role?.trim().toLowerCase();
-        if (userRole === 'customer') {
-          dispatch(switchAccountTypeAPI({ role: 'customer' })).then(() => {
-            window.location.reload();
-          });
-        } else {
-          toast.error('You do not have permission. Please log in again.');
+    // If user is in business mode but has customer role, try to load anyway
+    // The API might still work, or we'll handle 403 error by switching to customer mode
+    const shouldLoad = tokenRole === 'customer' || userRole === 'customer';
+    
+    if (shouldLoad) {
+      // Always load customer vouchers (even in My Vouchers tab) to ensure Featured Vouchers has data
+      // Load with higher limit in My Vouchers tab to ensure we get leaderboard vouchers
+      // This ensures Featured Vouchers always has data regardless of which tab or account is active
+      dispatch(getCustomerVouchers({
+        status: activeTab === 0 ? (statusFilter || undefined) : undefined, // Only apply filter in All Vouchers tab
+        page: activeTab === 0 ? currentPage : 1, // Use currentPage only in All Vouchers tab
+        limit: activeTab === 0 ? vouchersPerPage : 50, // Load more in My Vouchers tab to ensure we get leaderboard vouchers
+      })).catch((error) => {
+        console.error('Error loading customer vouchers:', error);
+        if (error?.response?.status === 403) {
+          // Nếu bị 403, có thể role chưa sync, thử switch lại
+          if (userRole === 'customer') {
+            dispatch(switchAccountTypeAPI({ role: 'customer' })).then(() => {
+              // Retry loading after switching
+              dispatch(getCustomerVouchers({
+                status: activeTab === 0 ? (statusFilter || undefined) : undefined,
+                page: activeTab === 0 ? currentPage : 1,
+                limit: activeTab === 0 ? vouchersPerPage : 50,
+              }));
+            });
+          } else {
+            console.warn('User does not have customer role, cannot load vouchers');
+          }
         }
-      }
-    });
+      });
+    }
   }, [dispatch, statusFilter, currentPage, activeTab]);
+  
+  // Reload customer vouchers when user changes (to ensure Featured Vouchers always has data)
+  // Featured Vouchers (leaderboard vouchers) should be visible to ALL users who have customer role
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    
+    // Check if user can access customer features (either currently customer or can switch to customer)
+    const tokenRole = getUserRole();
+    const userRole = currentUser.user?.role?.trim().toLowerCase();
+    
+    // Only skip if user is definitely not a customer (e.g., admin only)
+    // If user has customer role or can switch to customer, load vouchers for Featured section
+    if (tokenRole && tokenRole !== 'customer' && userRole !== 'customer') {
+      // User is not a customer and cannot switch to customer, skip
+      return;
+    }
+    
+    // Reload customer vouchers when component mounts or user changes
+    // This ensures Featured Vouchers (leaderboard vouchers) are always available for all users with customer role
+    // Load without filter to get all vouchers including leaderboard vouchers
+    const userId = currentUser.user?._id || currentUser.user?.id;
+    if (userId && (tokenRole === 'customer' || userRole === 'customer')) {
+      // Load all vouchers without status filter to ensure we get leaderboard vouchers
+      // This is separate from the main load to ensure Featured Vouchers always has data
+      // Try to load even if current role is business (user might have customer role too)
+      dispatch(getCustomerVouchers({
+        status: undefined, // Load all statuses to get leaderboard vouchers
+        page: 1,
+        limit: 50, // Load enough to get leaderboard vouchers
+      })).catch((error) => {
+        console.error('Error loading customer vouchers for Featured section:', error);
+        // If error is 403 and user has customer role, try switching to customer mode
+        if (error?.response?.status === 403 && userRole === 'customer') {
+          dispatch(switchAccountTypeAPI({ role: 'customer' })).then(() => {
+            // Retry loading after switching
+            dispatch(getCustomerVouchers({
+              status: undefined,
+              page: 1,
+              limit: 50,
+            }));
+          });
+        }
+      });
+    }
+  }, [dispatch]); // Run on mount - will reload when component remounts after account change
 
   // Load my customer vouchers - Load tất cả để kiểm tra redeemed status cho All Vouchers tab
   useEffect(() => {
@@ -363,37 +426,28 @@ export default function Voucher() {
 
   // Get top featured vouchers (Leaderboard vouchers) - Always show, prioritize All Vouchers data
   const featuredVouchers = useMemo(() => {
-    // Always try to get from customerVouchers first (All Vouchers) for consistency
-    // If not available, fallback to myCustomerVouchers
+    // Always prioritize customerVouchers (All Vouchers) for leaderboard vouchers
+    // This ensures Featured Vouchers always shows leaderboard vouchers available to all users
     let sourceVouchers = customerVouchers;
     let isFromMyVouchers = false;
     
-    // If customerVouchers is empty or no leaderboard vouchers found, try myCustomerVouchers
-    if (!sourceVouchers || sourceVouchers.length === 0) {
-      sourceVouchers = myCustomerVouchers;
-      isFromMyVouchers = true;
+    // Filter leaderboard vouchers from customerVouchers first (available to all)
+    let leaderboardVouchers = [];
+    
+    if (sourceVouchers && sourceVouchers.length > 0) {
+      leaderboardVouchers = sourceVouchers
+        .filter(voucher => {
+          // Check for leaderboard type in flat structure
+          return voucher.voucherType === 'leaderboard';
+        })
+        .slice(0, 10); // Get first 10 leaderboard vouchers
     }
     
-    if (!sourceVouchers || sourceVouchers.length === 0) return [];
-    
-    // Filter leaderboard vouchers from source
-    let leaderboardVouchers = sourceVouchers
-      .filter(voucher => {
-        // Check if it's from myCustomerVouchers (nested structure) or customerVouchers (flat structure)
-        if (isFromMyVouchers || activeTab === 1) {
-          return voucher.voucher?.voucherType === 'leaderboard' || 
-                 voucher.voucherType === 'leaderboard' ||
-                 voucher.voucherInfo?.voucherType === 'leaderboard';
-        }
-        // For All Vouchers tab
-        return voucher.voucherType === 'leaderboard';
-      })
-      .slice(0, 10); // Get first 10 leaderboard vouchers
-    
-    // If no leaderboard vouchers found in current source, try the other source
-    if (leaderboardVouchers.length === 0 && !isFromMyVouchers && myCustomerVouchers && myCustomerVouchers.length > 0) {
+    // If no leaderboard vouchers found in customerVouchers, try myCustomerVouchers as fallback
+    if (leaderboardVouchers.length === 0 && myCustomerVouchers && myCustomerVouchers.length > 0) {
       leaderboardVouchers = myCustomerVouchers
         .filter(voucher => {
+          // Check for leaderboard type in nested structure
           return voucher.voucher?.voucherType === 'leaderboard' || 
                  voucher.voucherType === 'leaderboard' ||
                  voucher.voucherInfo?.voucherType === 'leaderboard';
