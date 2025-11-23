@@ -826,6 +826,9 @@ const voucherSlice = createSlice({
       .addCase(claimBusinessVoucher.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+        // Display error message to user
+        const errorMessage = payload?.message || payload?.error || "Failed to claim voucher. Please try again.";
+        toast.error(errorMessage);
       })
       // Get my business vouchers
       .addCase(getMyBusinessVouchers.pending, (state) => {

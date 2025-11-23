@@ -304,6 +304,24 @@ const Material = () => {
               onChange={handlePageChange}
               variant="outlined"
               shape="rounded"
+              color="primary"
+              showFirstButton
+              showLastButton
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  "&.Mui-selected": {
+                    backgroundColor: "#12422a",
+                    color: "#ffffff",
+                    fontWeight: 600,
+                    "&:hover": {
+                      backgroundColor: "#0d2e1c",
+                    },
+                  },
+                  "&:hover": {
+                    backgroundColor: "rgba(18, 66, 42, 0.1)",
+                  },
+                },
+              }}
             />
           </Stack>
         );
