@@ -311,7 +311,7 @@ export default function HomePage() {
                 Grab exclusive discount codes for partner stores. Collect now and
                 redeem when borrowing reusable cups and containers.
               </p>
-              <button className="voucher-cta">Collect now</button>
+              <button className="voucher-cta" onClick={() => navigate(PATH.VOUCHERS)}>Collect now</button>
             </div>
             <div className="promo-right">
               <div className="voucher-lists">
