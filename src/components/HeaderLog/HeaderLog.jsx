@@ -35,11 +35,7 @@ export default function HeaderLog() {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    const userId =
-      userRole === "business"
-        ? businessInfo?.data?.business?._id ||
-          businessInfo?.data?.business?._uid
-        : userInfo?._id;
+    const userId = userInfo?._id;
 
     if (!userId) return;
 
