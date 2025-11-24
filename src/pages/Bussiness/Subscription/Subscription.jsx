@@ -161,8 +161,32 @@ export default function Subscription() {
   };
 
   // Lấy gói hiện tại để đánh dấu và hiển thị ngày bắt đầu/kết thúc
-  const activeSubscription = businessInfo?.data?.activeSubscription;
+  const rawActiveSubscription = businessInfo?.data?.activeSubscription;
+  // BE có thể trả về activeSubscription là mảng, nên chuẩn hóa lại về 1 bản ghi
+  const activeSubscription = Array.isArray(rawActiveSubscription)
+    ? (rawActiveSubscription.find((item) => item?.status === 'active') || rawActiveSubscription[0])
+    : rawActiveSubscription || null;
   const currentDate = new Date();
+
+  // Tính số ngày còn lại của gói hiện tại
+  const activeStartDate = activeSubscription?.startDate ? new Date(activeSubscription.startDate) : null;
+  const activeEndDate = activeSubscription?.endDate ? new Date(activeSubscription.endDate) : null;
+  const isSubscriptionCurrentlyActive =
+    !!activeSubscription &&
+    !!activeStartDate &&
+    !!activeEndDate &&
+    activeSubscription.status === 'active' &&
+    activeStartDate <= currentDate &&
+    activeEndDate > currentDate;
+
+  let remainingDays = null;
+  if (isSubscriptionCurrentlyActive) {
+    const diffMs = activeEndDate - currentDate;
+    remainingDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  }
+
+  // Nếu đang có gói active và còn hơn 3 ngày thì khóa không cho mua thêm
+  const isPurchaseLocked = isSubscriptionCurrentlyActive && (remainingDays === null || remainingDays > 3);
 
   const formatPrice = (priceInVND) => {
     if (priceInVND === 0) return 'FREE';
@@ -196,7 +220,7 @@ export default function Subscription() {
                 </div>
               </div>
             );
-          })()}  {/* Không hiển thị banner tổng, chỉ hiển thị ngày bắt đầu/kết thúc trên thẻ gói hiện tại */}
+          })()}
           <div className='subscription-packages-grid'>
             {isLoading ? (
               <Typography>Loading...</Typography>
@@ -204,12 +228,17 @@ export default function Subscription() {
               subscription.data.subscriptions
                 .filter((subscriptionPackage) => !subscriptionPackage.isDeleted && subscriptionPackage.isActive)
                 .map((subscriptionPackage) => {
-                  const startDateObject = activeSubscription?.startDate ? new Date(activeSubscription.startDate) : null;
-                  const endDateObject = activeSubscription?.endDate ? new Date(activeSubscription.endDate) : null;
-                  const isCurrentlyActive = startDateObject && endDateObject ? startDateObject <= currentDate && endDateObject > currentDate : false;
+                  const startDateObject = activeStartDate;
+                  const endDateObject = activeEndDate;
+                  const isCurrentlyActive = isSubscriptionCurrentlyActive && startDateObject && endDateObject;
                   const isCurrentPlan = isCurrentlyActive && activeSubscription?.subscriptionId?._id === subscriptionPackage._id;
                   const isTrialPackage = (subscriptionPackage.isTrial);
                   const isTrialDisabled = isTrialPackage && hasUsedTrial;
+                  const isButtonDisabled =
+                    isLoading ||
+                    isCurrentPlan ||
+                    isTrialDisabled ||
+                    isPurchaseLocked;
                   return (
                   <div
                     key={subscriptionPackage._id}
@@ -256,7 +285,7 @@ export default function Subscription() {
                       <Button
                         className={subscriptionPackage.isTrial ? 'btn-trial' : 'btn-select'}
                         onClick={() => handleSelectSubscription(subscriptionPackage)}
-                        disabled={isLoading || isCurrentPlan || isTrialDisabled}
+                        disabled={isButtonDisabled}
                         style={isCurrentPlan ? { background: '#e9ecef', color: '#6c757d', cursor: 'not-allowed' } : undefined}
                       >
                         {isCurrentPlan

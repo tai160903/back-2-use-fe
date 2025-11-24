@@ -53,11 +53,9 @@ export default function InventoryManagement() {
   const navigate = useNavigate();
   const { 
     approvedMaterials, 
-    materialLoading,
     productGroups,
     productGroupLoading,
-    productGroupError,
-    products
+    productGroupError
   } = useSelector((state) => state.businesses);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -577,61 +575,46 @@ export default function InventoryManagement() {
           timeout: 400,
         }}
         PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
-            overflow: 'hidden',
-            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-            maxHeight: '90vh'
-          }
+          className: 'add-product-dialog',
         }}
       >
-        <DialogTitle
-          sx={{
-            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-            color: 'white',
-            py: 1.5,
-            px: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <InventoryIcon sx={{ fontSize: 28 }} />
-            <Box>
-              <Typography variant="subtitle1" component="div" fontWeight={700} sx={{ fontFamily: 'inherit' }}>
-                {editMode ? 'Edit Product Type' : 'Create New Product Type'}
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block', fontFamily: 'inherit' }}>
-                {editMode ? 'Update your product type details' : 'Create a new product type for your packaging items'}
-              </Typography>
+        <DialogTitle className="dialog-title-section">
+          <Box className="dialog-header">
+            <Box className="header-left">
+              <Box className="header-title-section">
+                <InventoryIcon className="header-icon" />
+                <Box>
+                  <Typography variant="h6" component="div" className="dialog-title">
+                    {editMode ? 'Edit Product Type' : 'Create New Product Type'}
+                  </Typography>
+                  <Typography variant="body2" className="dialog-subtitle">
+                    {editMode
+                      ? 'Update your product type details'
+                      : 'Create a new product type for your packaging items'}
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
+            <IconButton
+              onClick={handleCloseDialog}
+              size="small"
+              className="close-button"
+            >
+              <CloseIcon />
+            </IconButton>
           </Box>
-          <IconButton
-            onClick={handleCloseDialog}
-            size="small"
-            sx={{
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.2)'
-              }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
         </DialogTitle>
 
-        <form onSubmit={handleSubmit}>
-          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+        <form onSubmit={handleSubmit} className="dialog-form">
+          <DialogContent className="dialog-content-custom">
             <Grid container spacing={2}>
               {/* Product Type Name Field */}
-              <Grid item xs={12} md={7}>
+              <Grid item size={4}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: '#2E7D32',
+                      color: '#12422a',
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
@@ -655,7 +638,7 @@ export default function InventoryManagement() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <CategoryIcon sx={{ color: '#4CAF50' }} />
+                        <CategoryIcon sx={{ color: '#12422a' }} />
                       </InputAdornment>
                     ),
                   }}
@@ -675,12 +658,12 @@ export default function InventoryManagement() {
               </Grid>
 
               {/* Material Select Field */}
-              <Grid item xs={12} md={5}>
+              <Grid item size={4}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: '#2E7D32',
+                      color: '#12422a',
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
@@ -728,65 +711,13 @@ export default function InventoryManagement() {
                   )}
                 </FormControl>
               </Grid>
-
-              {/* Description Field */}
-              <Grid item xs={12}>
+                   {/* Upload Image Field */}
+              <Grid item size={4}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: '#2E7D32',
-                      fontWeight: 600,
-                      mb: 0.75,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.75
-                    }}
-                  >
-                    <DescriptionIcon sx={{ fontSize: 16 }} />
-                    Description <span style={{ color: '#f44336' }}>*</span>
-                  </Typography>
-                </Box>
-                <TextField
-                  fullWidth
-                  placeholder="Brief description of this product type"
-                  name="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
-                  multiline
-                  minRows={3}
-                  variant="outlined"
-                  size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
-                        <DescriptionIcon sx={{ color: '#4CAF50', fontSize: 18 }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      '&:hover fieldset': {
-                        borderColor: '#4CAF50',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#4CAF50',
-                        borderWidth: 2,
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-
-              {/* Upload Image Field */}
-              <Grid item xs={12}>
-                <Box sx={{ mb: 0.5 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#2E7D32',
+                      color: '#12422a',
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
@@ -843,6 +774,59 @@ export default function InventoryManagement() {
                 </Typography>
               </Grid>
 
+              {/* Description Field */}
+              <Grid item size={12}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#12422a',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <DescriptionIcon sx={{ fontSize: 16 }} />
+                    Description <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="Brief description of this product type"
+                  name="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  required
+                  multiline
+                  minRows={3}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
+                        <DescriptionIcon sx={{ color: '#12422a', fontSize: 18 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+         
+
               {/* Info Box */}
               <Grid item xs={12}>
                 <Box
@@ -859,7 +843,7 @@ export default function InventoryManagement() {
                 >
                   <Box
                     sx={{
-                      backgroundColor: '#4CAF50',
+                      backgroundColor: '#12422a',
                       borderRadius: '50%',
                       p: 1,
                       display: 'flex',
@@ -872,10 +856,10 @@ export default function InventoryManagement() {
                     <InventoryIcon sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ color: '#2E7D32', fontWeight: 700, mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ color: '#12422a', fontWeight: 700, mb: 0.5 }}>
                       📦 Product Type Management
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#1B5E20', lineHeight: 1.5, display: 'block' }}>
+                    <Typography variant="caption" sx={{ color: '#12422a', lineHeight: 1.5, display: 'block' }}>
                       Create a product type to organize your reusable packaging items. Each product type can have multiple sizes and items. 
                       All items of this type will share the same image and material.
                     </Typography>
@@ -884,64 +868,20 @@ export default function InventoryManagement() {
               </Grid>
             </Grid>
           </DialogContent>
-
-          <Divider />
-
-          <DialogActions
-            sx={{
-              px: 2,
-              py: 1.5,
-              gap: 2,
-              backgroundColor: 'rgba(76, 175, 80, 0.02)',
-              display: 'flex',
-              justifyContent: 'space-between'
-            }}
-          >
+          <DialogActions className="dialog-actions-custom">
             <Button
               onClick={handleCloseDialog}
-              variant="outlined"
               startIcon={<CloseIcon fontSize="small" />}
-              sx={{
-                color: '#666',
-                borderColor: '#ccc',
-                px: 2,
-                py: 0.75,
-                fontSize: '0.9rem',
-                borderWidth: 1.5,
-                fontWeight: 500,
-                '&:hover': {
-                  borderColor: '#999',
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                  borderWidth: 1.5,
-                }
-              }}
+              className="cancel-button"
               size="small"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              variant="contained"
               startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
               disabled={!formData.typeName || !formData.materialId || productGroupLoading}
-              sx={{
-                backgroundColor: '#4CAF50',
-                px: 2,
-                py: 0.75,
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  backgroundColor: '#388E3C',
-                  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.45)',
-                  transform: 'translateY(-2px)',
-                },
-                '&:disabled': {
-                  backgroundColor: '#d1d5db',
-                  color: '#9ca3af',
-                }
-              }}
+              className="create-button"
               size="small"
             >
               {productGroupLoading ? (

@@ -30,8 +30,10 @@ export default function NotificationProvider({ children }) {
       return;
     }
 
+    // Ưu tiên role lấy từ token/localStorage (getUserRole)
+    // để đồng bộ với các chỗ khác trong app (Header, fetcher, ...)
     const roleFromStore =
-      authUser?.user?.role || authUser?.role || getUserRole();
+      getUserRole() || authUser?.user?.role || authUser?.role;
     const mode =
       (roleFromStore && roleFromStore.toLowerCase()) || "customer";
 
@@ -45,7 +47,13 @@ export default function NotificationProvider({ children }) {
         console.log("[NP] API trả về notification:", res.data);
         const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
         console.log("[NP] Danh sách:", data);
-        const unread = data.filter((n) => !n.isRead).length;
+        // chỉ tính unread cho đúng role (nếu backend trả về mixed)
+        const unread = data.filter(
+          (n) =>
+            !n.isRead &&
+            (!n?.receiverType ||
+              n.receiverType.toLowerCase() === mode)
+        ).length;
         console.log("[NP] Số chưa đọc:", unread);
         dispatch(setUnreadCount(unread));
       })
@@ -53,9 +61,15 @@ export default function NotificationProvider({ children }) {
         console.error("[NP] Lỗi lấy notifications:", err);
       });
 
-    // Khi nhận thông báo mới → tăng badge
+    // Khi nhận thông báo mới → tăng badge (theo đúng role)
     const handleNewNotification = (payload) => {
       console.log("[NP] Nhận thông báo mới:", payload);
+      if (
+        payload?.receiverType &&
+        payload.receiverType.toLowerCase() !== mode
+      ) {
+        return;
+      }
       dispatch(incrementUnread());
     };
     console.log("[NP] Đăng ký lắng nghe thông báo mới");

@@ -17,6 +17,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { PATH } from "../../../routes/path";
+import { isAuthenticated } from "../../../utils/authUtils";
 import { getDetailsProductById } from "../../../store/slices/storeSilce";
 
 export default function ProductDetail() {
@@ -30,32 +33,29 @@ export default function ProductDetail() {
   const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
+    // Nếu chưa đăng nhập thì thông báo lỗi và chuyển về trang đăng nhập
+    if (!isAuthenticated()) {
+      toast.error("Please login to view product details");
+      navigate(PATH.LOGIN, { replace: true });
+      return;
+    }
+
     if (productId) {
-      dispatch(getDetailsProductById({ productGroupId: productId, page: 1, limit: 100000 }));
+      dispatch(
+        getDetailsProductById({
+          productGroupId: productId,
+          page: 1,
+          limit: 100000,
+        })
+      );
       setClientPage(1);
       setSizeFilter("All");
     }
-  }, [dispatch, productId]);
+  }, [dispatch, productId, navigate]);
 
   useEffect(() => {
     setClientPage(1);
   }, [sizeFilter]);
-
-
-  const formatDate = (isoString) => {
-    if (!isoString) return "—";
-    try {
-      return new Date(isoString).toLocaleString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return isoString;
-    }
-  };
 
   if (isLoadingDetailsProduct) {
     return (

@@ -36,8 +36,10 @@ export default function HeaderLog() {
 
   useEffect(() => {
     const userId = userInfo?._id;
-
     if (!userId) return;
+
+    const mode =
+      userRole === "business" ? "business" : "customer";
 
     const socket = io(import.meta.env.VITE_API_URL || "http://localhost:3000", {
       transports: ["websocket"],
@@ -45,20 +47,42 @@ export default function HeaderLog() {
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      socket.emit("register", { userId });
+      // đăng ký kèm mode
+      socket.emit("register", { userId, mode });
       socket.emit(
         "findAllNotifications",
-        { userId, mode: userRole === "business" ? "business" : "customer" },
+        { userId, mode },
         (response) => {
           if (Array.isArray(response)) {
+            const filtered = response.filter(
+              (n) =>
+                !n?.receiverType ||
+                n.receiverType.toLowerCase() === mode
+            );
             console.log(response);
-            setNotifications(response);
+            setNotifications(filtered);
           }
         }
       );
     });
 
+    socket.on("notification", (payload) => {
+      if (
+        payload?.receiverType &&
+        payload.receiverType.toLowerCase() !== mode
+      ) {
+        return;
+      }
+      setNotifications((prev) => [payload, ...prev]);
+    });
+
     socket.on("notification:new", (payload) => {
+      if (
+        payload?.receiverType &&
+        payload.receiverType.toLowerCase() !== mode
+      ) {
+        return;
+      }
       setNotifications((prev) => [payload, ...prev]);
     });
 
@@ -176,6 +200,9 @@ export default function HeaderLog() {
                 }
                 initialNotifications={notifications}
                 socket={socketRef.current}
+                mode={
+                  userRole === "business" ? "business" : "customer"
+                }
               />
             </div>
             <IoIosLogOut className="header-log-icon" onClick={handleLogout} />

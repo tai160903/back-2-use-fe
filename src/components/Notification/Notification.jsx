@@ -12,6 +12,8 @@ export default function Notification({
   userId,
   initialNotifications = [],
   socket = null,
+  // role hiện tại của user: "customer" | "business"
+  mode = "customer",
 }) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -61,7 +63,8 @@ export default function Notification({
   const markAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
-      socket?.emit?.("markAllAsRead", { userId });
+      // gửi kèm mode để BE chỉ đánh dấu đã đọc cho đúng role
+      socket?.emit?.("markAllAsRead", { userId, mode });
     } catch (err) {
       console.warn("markAllAsRead emit failed", err);
     }
@@ -74,7 +77,8 @@ export default function Notification({
     if (!confirmed) return;
     setNotifications([]);
     try {
-      socket?.emit?.("deleteAllNotifications", { userId, mode: "customer" });
+      // dùng đúng mode hiện tại thay vì fix cứng "customer"
+      socket?.emit?.("deleteAllNotifications", { userId, mode });
     } catch (err) {
       console.warn("deleteAllNotifications emit failed", err);
     }
