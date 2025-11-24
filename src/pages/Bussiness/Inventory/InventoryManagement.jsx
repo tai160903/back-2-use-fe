@@ -43,8 +43,8 @@ import {
   getApprovedMaterials, 
   createProductGroup, 
   getMyProductGroups,
-  getProducts
 } from '../../../store/slices/bussinessSlice';
+import { getBusinessProductsByGroup } from '../../../store/slices/storeSilce';
 import { PATH } from '../../../routes/path';
 import './InventoryManagement.css';
 
@@ -85,7 +85,7 @@ export default function InventoryManagement() {
   // Load all products for all product groups to calculate available/non-available counts
   useEffect(() => {
     if (productGroups.length > 0) {
-      // Load products for all product groups
+      // Load products for all product groups using new API
       const loadProductsForGroups = async () => {
         const productsMap = {};
         
@@ -93,9 +93,13 @@ export default function InventoryManagement() {
           const pgId = pg.id || pg._id;
           if (pgId) {
             try {
-              const result = await dispatch(getProducts({ productGroupId: pgId, page: 1, limit: 10000 })).unwrap();
-              const productsList = Array.isArray(result.data) ? result.data : (result.data ? [result.data] : (Array.isArray(result) ? result : []));
-              productsMap[pgId] = productsList;
+              const result = await dispatch(getBusinessProductsByGroup({ 
+                productGroupId: pgId, 
+                page: 1, 
+                limit: 1000 
+              })).unwrap();
+              const productsList = result?.data?.products || result?.products || result?.data || [];
+              productsMap[pgId] = Array.isArray(productsList) ? productsList : [];
             } catch (error) {
               console.error(`Error loading products for group ${pgId}:`, error);
               productsMap[pgId] = [];

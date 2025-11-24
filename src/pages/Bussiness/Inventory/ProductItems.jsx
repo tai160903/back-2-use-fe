@@ -4,9 +4,6 @@ import {
   Box,
   Typography,
   Button,
-  Card,
-  CardContent,
-  Grid,
   TextField,
   InputAdornment,
   IconButton,
@@ -24,6 +21,13 @@ import {
   Paper,
   CircularProgress,
   Pagination,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Grid,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -42,10 +46,11 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import {
   getMyProductGroups,
-  getProducts,
   createProducts,
   getProductSizes,
+  updateProduct,
 } from '../../../store/slices/bussinessSlice';
+import { getBusinessProductsByGroup } from '../../../store/slices/storeSilce';
 import { PATH } from '../../../routes/path';
 import toast from 'react-hot-toast';
 import './ProductItems.css';
@@ -57,11 +62,17 @@ export default function ProductItems() {
 
   const {
     productGroups,
-    products,
-    productLoading,
-    productError,
     productSizes,
   } = useSelector((state) => state.businesses);
+  
+  const {
+    businessProducts,
+    isLoadingBusinessProducts,
+    error: productError,
+  } = useSelector((state) => state.store);
+  
+  const products = businessProducts?.products || [];
+  const productLoading = isLoadingBusinessProducts;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
@@ -72,13 +83,22 @@ export default function ProductItems() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [itemDetailDialogOpen, setItemDetailDialogOpen] = useState(false);
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const itemsPerPage = 15;
   const [formData, setFormData] = useState({
     productSizeId: '',
     amount: 1,
   });
+  const [editFormData, setEditFormData] = useState({
+    status: 'available',
+    condition: 'good',
+    lastConditionNote: '',
+    lastConditionImage: '',
+  });
   const [formErrors, setFormErrors] = useState({});
+  const [editFormErrors, setEditFormErrors] = useState({});
 
   // Get current product group
   const productGroup = productGroups.find(
@@ -104,9 +124,13 @@ export default function ProductItems() {
     if (productGroupId) {
       dispatch(getProductSizes({ productGroupId, page: 1, limit: 100 }));
     }
-    // Load products for this product group
+    // Load products for this product group using new API
     if (productGroupId) {
-      dispatch(getProducts({ productGroupId, page: 1, limit: 1000 }));
+      dispatch(getBusinessProductsByGroup({ 
+        productGroupId, 
+        page: 1, 
+        limit: 1000 
+      }));
     }
   }, [dispatch, productGroupId]);
 
@@ -195,8 +219,75 @@ export default function ProductItems() {
   };
 
   const handleEdit = (item) => {
-    // TODO: Implement edit functionality
-    console.log('Edit item:', item);
+    setEditingItem(item);
+    setEditFormData({
+      status: item.status || 'available',
+      condition: item.product?.condition || 'good',
+      lastConditionNote: item.product?.lastConditionNote || '',
+      lastConditionImage: item.product?.lastConditionImage || '',
+    });
+    setEditFormErrors({});
+    setOpenEditDialog(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setEditingItem(null);
+    setEditFormData({
+      status: 'available',
+      condition: 'good',
+      lastConditionNote: '',
+      lastConditionImage: '',
+    });
+    setEditFormErrors({});
+  };
+
+  const validateEditForm = () => {
+    const errors = {};
+    if (!editFormData.status) {
+      errors.status = 'Status is required';
+    }
+    if (!editFormData.condition) {
+      errors.condition = 'Condition is required';
+    }
+    setEditFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmitEdit = async (e) => {
+    e.preventDefault();
+    if (!validateEditForm() || !editingItem) {
+      return;
+    }
+
+    try {
+      const productId = editingItem.id || editingItem.product?._id || editingItem.product?.id;
+      if (!productId) {
+        toast.error('Product ID not found');
+        return;
+      }
+
+      const updateData = {
+        status: editFormData.status,
+        condition: editFormData.condition,
+        ...(editFormData.lastConditionNote && { lastConditionNote: editFormData.lastConditionNote }),
+        ...(editFormData.lastConditionImage && { lastConditionImage: editFormData.lastConditionImage }),
+      };
+
+      await dispatch(updateProduct({ id: productId, productData: updateData })).unwrap();
+      toast.success('Product updated successfully');
+      
+      // Reload products
+      dispatch(getBusinessProductsByGroup({ productGroupId, page: 1, limit: 1000 }));
+      
+      handleCloseEditDialog();
+    } catch (error) {
+      const errorMessage =
+        error?.message ||
+        error?.data?.message ||
+        'Failed to update product';
+      toast.error(errorMessage);
+    }
   };
 
   const handleDelete = (item) => {
@@ -276,8 +367,8 @@ export default function ProductItems() {
       await dispatch(createProducts(productData)).unwrap();
       toast.success(`Successfully created ${formData.amount} product(s)`);
       
-      // Reload products
-      dispatch(getProducts({ productGroupId, page: 1, limit: 1000 }));
+      // Reload products using new API
+      dispatch(getBusinessProductsByGroup({ productGroupId, page: 1, limit: 1000 }));
       
       handleCloseAddDialog();
     } catch (error) {
@@ -530,7 +621,7 @@ export default function ProductItems() {
         </Box>
       )}
 
-      {/* Product Items Grid */}
+      {/* Product Items List */}
       {!productLoading && (
         <>
           {filteredItems.length === 0 ? (
@@ -541,132 +632,129 @@ export default function ProductItems() {
             </Box>
           ) : (
             <>
-              <Box
-                className="items-grid"
+              <TableContainer 
+                component={Paper} 
+                className="items-list-container"
                 sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)',
-                    md: 'repeat(3, 1fr)',
+                  maxHeight: '600px',
+                  overflowY: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
                   },
-                  gap: '32px',
-                  width: '100%',
-                  margin: '0',
-                  padding: '0',
+                  '&::-webkit-scrollbar-track': {
+                    background: '#f1f1f1',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#888',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                    background: '#555',
+                  },
                 }}
               >
-                {paginatedItems.map((item) => (
-                <Box key={item.id} sx={{ display: 'flex', width: '100%' }}>
-                  <Card
-                    className="item-card"
-                    sx={{ width: '100%', cursor: 'pointer' }}
-                    onClick={() => handleOpenItemDetails(item)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        handleOpenItemDetails(item);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%', '&:last-child': { pb: 3 } }}>
-                      <Box className="card-header">
-                        <Box className="card-title-section">
-                          <InventoryIcon className="card-icon" />
-                          <Box>
-                            <Typography variant="h6" className="card-title">
+                <Table>
+                  <TableHead>
+                    <TableRow className="table-header-row">
+                      <TableCell className="table-header-cell">Product</TableCell>
+                      <TableCell className="table-header-cell">QR Code</TableCell>
+                      <TableCell className="table-header-cell">Size</TableCell>
+                      <TableCell className="table-header-cell">Material</TableCell>
+                      <TableCell className="table-header-cell">Created</TableCell>
+                      <TableCell className="table-header-cell">Uses</TableCell>
+                      <TableCell className="table-header-cell">Deposit</TableCell>
+                      <TableCell className="table-header-cell">Status</TableCell>
+                      <TableCell className="table-header-cell" align="center">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedItems.map((item) => (
+                      <TableRow
+                        key={item.id}
+                        className="table-row"
+                        onClick={() => handleOpenItemDetails(item)}
+                        sx={{
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: '#f9fafb',
+                          },
+                        }}
+                      >
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <InventoryIcon sx={{ color: '#16a34a', fontSize: 20 }} />
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
                               {productGroup.name}
                             </Typography>
-                            {item.size && (
-                              <Typography variant="body2" className="card-subtitle">
-                                {item.size}
-                              </Typography>
-                            )}
                           </Box>
-                        </Box>
-                        <Box className="card-actions">
-                          <IconButton
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <QrCodeIcon sx={{ color: '#6b7280', fontSize: 18 }} />
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                              {item.qrCode}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">{item.size || '—'}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">{item.material || getMaterialName() || '—'}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CalendarIcon sx={{ color: '#6b7280', fontSize: 16 }} />
+                            <Typography variant="body2">{formatDate(item.createdAt)}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">{item.uses || '0'}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
+                            ${item.deposit?.toFixed(2) || '0.00'}/day
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={item.status === 'available' ? 'Ready to rent' : 'Not Available'}
+                            className={`status-chip ${item.status === 'available' ? 'available' : 'non-available'}`}
                             size="small"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleEdit(item);
-                            }}
-                            className="edit-button"
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleDelete(item);
-                            }}
-                            className="delete-button"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </Box>
-
-                      <Box className="card-details">
-                        <Box className="detail-row">
-                          <QrCodeIcon className="detail-icon" />
-                          <Typography variant="body2" className="detail-label">
-                            QR Code:
-                          </Typography>
-                          <Typography variant="body2" className="detail-value">
-                            {item.qrCode}
-                          </Typography>
-                        </Box>
-                        <Box className="detail-row">
-                          <Typography variant="body2" className="detail-label">
-                            Material:
-                          </Typography>
-                          <Typography variant="body2" className="detail-value">
-                            {item.material || getMaterialName()}
-                          </Typography>
-                        </Box>
-                        <Box className="detail-row">
-                          <CalendarIcon className="detail-icon" />
-                          <Typography variant="body2" className="detail-label">
-                            Created:
-                          </Typography>
-                          <Typography variant="body2" className="detail-value">
-                            {formatDate(item.createdAt)}
-                          </Typography>
-                        </Box>
-                        <Box className="detail-row">
-                          <Typography variant="body2" className="detail-label">
-                            Uses:
-                          </Typography>
-                          <Typography variant="body2" className="detail-value">
-                            {item.uses || '/'}
-                          </Typography>
-                        </Box>
-                        <Box className="detail-row">
-                          <Typography variant="body2" className="detail-label">
-                            Deposit:
-                          </Typography>
-                          <Typography variant="body2" className="detail-value deposit">
-                            ${item.deposit?.toFixed(2)}/day
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      <Box className="card-status">
-                        <Chip
-                          label={item.status === 'available' ? 'Ready to rent' : 'Not Available'}
-                          className={`status-chip ${item.status === 'available' ? 'available' : 'non-available'}`}
-                          size="small"
-                        />
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Box>
-                ))}
-              </Box>
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                            <IconButton
+                              size="small"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleEdit(item);
+                              }}
+                              className="edit-button"
+                              sx={{ padding: '4px' }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDelete(item);
+                              }}
+                              className="delete-button"
+                              sx={{ padding: '4px' }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
               {/* Item Details Dialog */}
               <Dialog
@@ -922,7 +1010,7 @@ export default function ProductItems() {
               </Dialog>
 
               {/* Pagination */}
-              {totalPages > 1 && (
+              {filteredItems.length > 0 && (
                 <Box
                   sx={{
                     display: 'flex',
@@ -1400,6 +1488,364 @@ export default function ProductItems() {
                 </Box>
               ) : (
                 `Create ${formData.amount || 0} Product(s)`
+              )}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      <Dialog
+        open={openEditDialog}
+        onClose={handleCloseEditDialog}
+        maxWidth="md"
+        fullWidth
+        TransitionProps={{
+          timeout: 400,
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
+            overflow: 'hidden',
+            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+            color: 'white',
+            py: 1.5,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <EditIcon sx={{ fontSize: 28 }} />
+            <Box>
+              <Typography variant="subtitle1" component="div" fontWeight={700} sx={{ fontFamily: 'inherit' }}>
+                Edit Product
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block', fontFamily: 'inherit' }}>
+                Update product status and condition
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={handleCloseEditDialog}
+            size="small"
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <form onSubmit={handleSubmitEdit}>
+          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+            {editingItem && (
+              <Grid container spacing={2}>
+                {/* Product Info */}
+                <Grid item xs={12}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: 2,
+                      border: '1px solid #e0e0e0',
+                      mb: 1,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#374151' }}>
+                      Product Information
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                      <strong>QR Code:</strong> {editingItem.qrCode}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
+                      <strong>Product:</strong> {productGroup?.name || 'N/A'}
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                {/* Status Field */}
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ mb: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#2E7D32',
+                        fontWeight: 600,
+                        mb: 0.75,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75
+                      }}
+                    >
+                      Status <span style={{ color: '#f44336' }}>*</span>
+                    </Typography>
+                  </Box>
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    error={!!editFormErrors.status}
+                    required
+                  >
+                    <Select
+                      value={editFormData.status}
+                      onChange={(e) => {
+                        setEditFormData({ ...editFormData, status: e.target.value });
+                        if (editFormErrors.status) {
+                          setEditFormErrors({ ...editFormErrors, status: '' });
+                        }
+                      }}
+                      sx={{
+                        backgroundColor: 'white',
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#4CAF50',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#4CAF50',
+                          borderWidth: 2,
+                        },
+                      }}
+                    >
+                      <MenuItem value="available">Available</MenuItem>
+                      <MenuItem value="non-available">Non-available</MenuItem>
+                    </Select>
+                    {editFormErrors.status && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                        {editFormErrors.status}
+                      </Typography>
+                    )}
+                  </FormControl>
+                </Grid>
+
+                {/* Condition Field */}
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ mb: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#2E7D32',
+                        fontWeight: 600,
+                        mb: 0.75,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75
+                      }}
+                    >
+                      Condition <span style={{ color: '#f44336' }}>*</span>
+                    </Typography>
+                  </Box>
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    error={!!editFormErrors.condition}
+                    required
+                  >
+                    <Select
+                      value={editFormData.condition}
+                      onChange={(e) => {
+                        setEditFormData({ ...editFormData, condition: e.target.value });
+                        if (editFormErrors.condition) {
+                          setEditFormErrors({ ...editFormErrors, condition: '' });
+                        }
+                      }}
+                      sx={{
+                        backgroundColor: 'white',
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#4CAF50',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#4CAF50',
+                          borderWidth: 2,
+                        },
+                      }}
+                    >
+                      <MenuItem value="good">Good</MenuItem>
+                      <MenuItem value="fair">Fair</MenuItem>
+                      <MenuItem value="poor">Poor</MenuItem>
+                      <MenuItem value="damaged">Damaged</MenuItem>
+                    </Select>
+                    {editFormErrors.condition && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                        {editFormErrors.condition}
+                      </Typography>
+                    )}
+                  </FormControl>
+                </Grid>
+
+                {/* Last Condition Note Field */}
+                <Grid item xs={12}>
+                  <Box sx={{ mb: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#2E7D32',
+                        fontWeight: 600,
+                        mb: 0.75,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75
+                      }}
+                    >
+                      <DescriptionIcon sx={{ fontSize: 16 }} />
+                      Condition Note
+                    </Typography>
+                  </Box>
+                  <TextField
+                    fullWidth
+                    placeholder="e.g., Good condition, no damage"
+                    value={editFormData.lastConditionNote}
+                    onChange={(e) => {
+                      setEditFormData({ ...editFormData, lastConditionNote: e.target.value });
+                    }}
+                    multiline
+                    minRows={3}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'white',
+                        '&:hover fieldset': {
+                          borderColor: '#4CAF50',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#4CAF50',
+                          borderWidth: 2,
+                        },
+                      },
+                    }}
+                  />
+                  <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: '#666' }}>
+                    Optional: Add a note about the product's current condition
+                  </Typography>
+                </Grid>
+
+                {/* Last Condition Image Field */}
+                <Grid item xs={12}>
+                  <Box sx={{ mb: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#2E7D32',
+                        fontWeight: 600,
+                        mb: 0.75,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75
+                      }}
+                    >
+                      Condition Image URL
+                    </Typography>
+                  </Box>
+                  <TextField
+                    fullWidth
+                    placeholder="https://cloudinary.com/image.jpg"
+                    value={editFormData.lastConditionImage}
+                    onChange={(e) => {
+                      setEditFormData({ ...editFormData, lastConditionImage: e.target.value });
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'white',
+                        '&:hover fieldset': {
+                          borderColor: '#4CAF50',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#4CAF50',
+                          borderWidth: 2,
+                        },
+                      },
+                    }}
+                  />
+                  <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: '#666' }}>
+                    Optional: URL to an image showing the product's current condition
+                  </Typography>
+                </Grid>
+              </Grid>
+            )}
+          </DialogContent>
+
+          <Divider />
+
+          <DialogActions
+            sx={{
+              px: 2,
+              py: 1.5,
+              gap: 2,
+              backgroundColor: 'rgba(76, 175, 80, 0.02)',
+              display: 'flex',
+              justifyContent: 'space-between'
+            }}
+          >
+            <Button
+              onClick={handleCloseEditDialog}
+              variant="outlined"
+              startIcon={<CloseIcon fontSize="small" />}
+              sx={{
+                color: '#666',
+                borderColor: '#ccc',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                borderWidth: 1.5,
+                fontWeight: 500,
+                '&:hover': {
+                  borderColor: '#999',
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  borderWidth: 1.5,
+                }
+              }}
+              size="small"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<EditIcon fontSize="small" />}
+              disabled={productLoading}
+              sx={{
+                backgroundColor: '#4CAF50',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: '#388E3C',
+                  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.45)',
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  backgroundColor: '#d1d5db',
+                  color: '#9ca3af',
+                }
+              }}
+              size="small"
+            >
+              {productLoading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={16} color="inherit" />
+                  Updating...
+                </Box>
+              ) : (
+                'Update Product'
               )}
             </Button>
           </DialogActions>

@@ -33,6 +33,7 @@ import {
   Straighten as SizeIcon,
   AttachMoney as MoneyIcon,
   Description as DescriptionIcon,
+  Scale as ScaleIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -64,6 +65,7 @@ export default function ProductSizeManagement() {
   const [formData, setFormData] = useState({
     sizeName: '',
     basePrice: '',
+    weight: '',
     description: '',
   });
   const [formErrors, setFormErrors] = useState({});
@@ -97,6 +99,7 @@ export default function ProductSizeManagement() {
     setFormData({
       sizeName: '',
       basePrice: '',
+      weight: '',
       description: '',
     });
     setFormErrors({});
@@ -110,6 +113,7 @@ export default function ProductSizeManagement() {
     setFormData({
       sizeName: '',
       basePrice: '',
+      weight: '',
       description: '',
     });
     setFormErrors({});
@@ -121,6 +125,7 @@ export default function ProductSizeManagement() {
     setFormData({
       sizeName: size.sizeName || '',
       basePrice: size.basePrice || '',
+      weight: size.weight || '',
       description: size.description || '',
     });
     setFormErrors({});
@@ -164,6 +169,7 @@ export default function ProductSizeManagement() {
       const sizeData = {
         sizeName: formData.sizeName.trim(),
         basePrice: Number(formData.basePrice),
+        weight: formData.weight ? Number(formData.weight) : undefined,
         description: formData.description.trim(),
       };
 
@@ -320,6 +326,17 @@ export default function ProductSizeManagement() {
                         {formatPrice(size.basePrice)}
                       </Typography>
                     </Box>
+                    {size.weight && (
+                      <Box className="detail-row">
+                        <ScaleIcon className="detail-icon" />
+                        <Typography variant="body2" className="detail-label">
+                          Weight:
+                        </Typography>
+                        <Typography variant="body2" className="detail-value">
+                          {size.weight} g
+                        </Typography>
+                      </Box>
+                    )}
                     <Box className="detail-row">
                       <Typography variant="body2" className="detail-label">
                         Description:
@@ -479,6 +496,71 @@ export default function ProductSizeManagement() {
                     startAdornment: (
                       <InputAdornment position="start">
                         <MoneyIcon sx={{ color: '#12422a' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#12422a',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#12422a',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Weight Field */}
+              <Grid item size={6}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#12422a',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                    }}
+                  >
+                    <ScaleIcon sx={{ fontSize: 16 }} />
+                    Weight (grams)
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., 500"
+                  name="weight"
+                  type="number"
+                  value={formData.weight}
+                  onChange={(e) => {
+                    setFormData({ ...formData, weight: e.target.value });
+                    if (formErrors.weight) {
+                      setFormErrors({ ...formErrors, weight: '' });
+                    }
+                  }}
+                  variant="outlined"
+                  size="small"
+                  error={!!formErrors.weight}
+                  helperText={
+                    formErrors.weight || 'Enter the weight in grams (optional)'
+                  }
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <ScaleIcon sx={{ color: '#12422a' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Typography variant="caption" sx={{ color: '#666' }}>
+                          g
+                        </Typography>
                       </InputAdornment>
                     ),
                   }}
