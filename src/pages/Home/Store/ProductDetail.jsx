@@ -30,6 +30,8 @@ export default function ProductDetail() {
   const dispatch = useDispatch();
   const { detailsProduct, isLoadingDetailsProduct, error } = useSelector((state) => state.store);
   const [sizeFilter, setSizeFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("all"); // all | available | non-available
+  const [conditionFilter, setConditionFilter] = useState("all"); // all | good | damaged | expired | lost
   const [clientPage, setClientPage] = useState(1);
   const clientPageSize = 10;
   const [selectedItem, setSelectedItem] = useState(null);
@@ -39,7 +41,7 @@ export default function ProductDetail() {
   const { isLoading: isBorrowLoading } = useSelector((state) => state.borrow || { isLoading: false });
 
   useEffect(() => {
-
+    // Bảo vệ route: bắt buộc đăng nhập
     if (!isAuthenticated()) {
       toast.error("Please login to view product details");
       navigate(PATH.LOGIN, { replace: true });
@@ -47,17 +49,22 @@ export default function ProductDetail() {
     }
 
     if (productId) {
+      const apiStatus = statusFilter === "all" ? undefined : statusFilter;
+      const apiCondition = conditionFilter === "all" ? undefined : conditionFilter;
+
       dispatch(
         getDetailsProductById({
           productGroupId: productId,
           page: 1,
           limit: 100000,
+          status: apiStatus,
+          condition: apiCondition,
         })
       );
       setClientPage(1);
       setSizeFilter("All");
     }
-  }, [dispatch, productId, navigate]);
+  }, [dispatch, productId, navigate, statusFilter, conditionFilter]);
 
   useEffect(() => {
     setClientPage(1);
@@ -242,28 +249,50 @@ export default function ProductDetail() {
       <div className="pd-items">
         <div className="pd-items-header">
           <Typography className="pd-items-title">All QR codes</Typography>
-         
         </div>
-        <div className="pd-filter-inline">
+        <div className="pd-filters-row">
+          <div className="pd-filter-group">
             <span className="pd-filter-label">Filter by size</span>
-            <div className="pd-size-chips">
-              <button
-                className={`pd-chip ${sizeFilter === "All" ? "active" : ""}`}
-                onClick={() => setSizeFilter("All")}
-              >
-                <span>All</span>
-              </button>
+            <select
+              className="pd-filter-select"
+              value={sizeFilter}
+              onChange={(e) => setSizeFilter(e.target.value)}
+            >
+              <option value="All">All</option>
               {sizeOptions.map((option) => (
-                <button
-                  key={option}
-                  className={`pd-chip ${sizeFilter === option ? "active" : ""}`}
-                  onClick={() => setSizeFilter(option)}
-                >
-                  <span>{option}</span>
-                </button>
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
+          <div className="pd-filter-group">
+            <span className="pd-filter-label">Filter by product status</span>
+            <select
+              className="pd-filter-select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="available">available</option>
+              <option value="non-available">non-available</option>
+            </select>
+          </div>
+          <div className="pd-filter-group">
+            <span className="pd-filter-label">Filter by product condition</span>
+            <select
+              className="pd-filter-select"
+              value={conditionFilter}
+              onChange={(e) => setConditionFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="good">good</option>
+              <option value="damaged">damaged</option>
+              <option value="expired">expired</option>
+              <option value="lost">lost</option>
+            </select>
+          </div>
+        </div>
         <div className="pd-items-list">
           {paginatedItems.map((item) => {
             const sizeName = item?.productSizeId?.sizeName || "—";
