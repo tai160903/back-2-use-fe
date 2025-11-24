@@ -153,6 +153,20 @@ export const cancelBorrowTransactionCustomerApi = createAsyncThunk(
 );
 
 
+// borrow product online
+export const borrowProductOnlineApi = createAsyncThunk(
+    "borrow/borrowProductOnlineApi",
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.post("/borrow-transactions", data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+
 const borrowSlice = createSlice({
     name: "borrow",
     initialState: {
@@ -295,6 +309,19 @@ const borrowSlice = createSlice({
         })
         .addCase(getDetailsBorrowTransactionBusinessApi.rejected, (state, {payload}) => {
             state.isDetailLoading = false
+            state.error = payload
+        })
+        .addCase(borrowProductOnlineApi.pending, (state) => {
+            state.isLoading = true
+            state.error = null
+        })
+        .addCase(borrowProductOnlineApi.fulfilled, (state, {payload}) => {
+            state.isLoading = false
+            state.error = null
+            state.borrowDetail = payload
+        })
+        .addCase(borrowProductOnlineApi.rejected, (state, {payload}) => {
+            state.isLoading = false
             state.error = payload
         })
     }
