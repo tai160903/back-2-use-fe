@@ -346,66 +346,51 @@ export default function ProductSizeManagement() {
           timeout: 400,
         }}
         PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
-            overflow: 'hidden',
-            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-            maxHeight: '90vh'
-          }
+          className: 'add-size-dialog',
         }}
       >
-        <DialogTitle
-          sx={{
-            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-            color: 'white',
-            py: 1.5,
-            px: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <SizeIcon sx={{ fontSize: 28 }} />
-            <Box>
-              <Typography variant="subtitle1" component="div" fontWeight={700} sx={{ fontFamily: 'inherit' }}>
-                {editMode ? 'Edit Product Size' : 'Create New Product Size'}
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block', fontFamily: 'inherit' }}>
-                {editMode ? 'Update your product size details' : `Add a new size for ${productGroup.name || 'Product Type'}`}
-              </Typography>
+        <DialogTitle className="dialog-title-section">
+          <Box className="dialog-header">
+            <Box className="header-left">
+              <Box className="header-title-section">
+                <SizeIcon className="header-icon" />
+                <Box>
+                  <Typography variant="h6" component="div" className="dialog-title">
+                    {editMode ? 'Edit Product Size' : 'Create New Product Size'}
+                  </Typography>
+                  <Typography variant="body2" className="dialog-subtitle">
+                    {editMode
+                      ? 'Update your product size details'
+                      : `Add a new size for ${productGroup.name || 'Product Type'}`}
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
+            <IconButton
+              onClick={handleCloseDialog}
+              size="small"
+              className="close-button"
+            >
+              <CloseIcon />
+            </IconButton>
           </Box>
-          <IconButton
-            onClick={handleCloseDialog}
-            size="small"
-            sx={{
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.2)'
-              }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
         </DialogTitle>
 
-        <form onSubmit={handleSubmit}>
-          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+        <form onSubmit={handleSubmit} className="dialog-form">
+          <DialogContent className="dialog-content-custom">
             <Grid container spacing={2}>
               {/* Size Name Field */}
-              <Grid item xs={12} md={7}>
+              <Grid item size={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: '#2E7D32',
+                      color: '#12422a',
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 0.75
+                      gap: 0.75,
                     }}
                   >
                     <SizeIcon sx={{ fontSize: 16 }} />
@@ -427,11 +412,14 @@ export default function ProductSizeManagement() {
                   variant="outlined"
                   size="small"
                   error={!!formErrors.sizeName}
-                  helperText={formErrors.sizeName || 'Enter a clear size name (e.g., Small, Medium, Large)'}
+                  helperText={
+                    formErrors.sizeName ||
+                    'Enter a clear size name (e.g., Small, Medium, Large)'
+                  }
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SizeIcon sx={{ color: '#4CAF50' }} />
+                        <SizeIcon sx={{ color: '#12422a' }} />
                       </InputAdornment>
                     ),
                   }}
@@ -439,10 +427,10 @@ export default function ProductSizeManagement() {
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
                       '&:hover fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                         borderWidth: 2,
                       },
                     },
@@ -451,17 +439,17 @@ export default function ProductSizeManagement() {
               </Grid>
 
               {/* Base Price Field */}
-              <Grid item xs={12} md={5}>
+              <Grid item size={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: '#2E7D32',
+                      color: '#12422a',
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 0.75
+                      gap: 0.75,
                     }}
                   >
                     <MoneyIcon sx={{ fontSize: 16 }} />
@@ -484,11 +472,13 @@ export default function ProductSizeManagement() {
                   variant="outlined"
                   size="small"
                   error={!!formErrors.basePrice}
-                  helperText={formErrors.basePrice || 'Enter the base price in VND'}
+                  helperText={
+                    formErrors.basePrice || 'Enter the base price in VND'
+                  }
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <MoneyIcon sx={{ color: '#4CAF50' }} />
+                        <MoneyIcon sx={{ color: '#12422a' }} />
                       </InputAdornment>
                     ),
                   }}
@@ -496,10 +486,10 @@ export default function ProductSizeManagement() {
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
                       '&:hover fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                         borderWidth: 2,
                       },
                     },
@@ -508,17 +498,17 @@ export default function ProductSizeManagement() {
               </Grid>
 
               {/* Description Field */}
-              <Grid item xs={12}>
+              <Grid item size={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      color: '#2E7D32',
+                      color: '#12422a',
                       fontWeight: 600,
                       mb: 0.75,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 0.75
+                      gap: 0.75,
                     }}
                   >
                     <DescriptionIcon sx={{ fontSize: 16 }} />
@@ -542,11 +532,19 @@ export default function ProductSizeManagement() {
                   variant="outlined"
                   size="small"
                   error={!!formErrors.description}
-                  helperText={formErrors.description || 'Provide detailed information about this size'}
+                  helperText={
+                    formErrors.description ||
+                    'Provide detailed information about this size'
+                  }
                   InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
-                        <DescriptionIcon sx={{ color: '#4CAF50', fontSize: 18 }} />
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: 'flex-start', mt: 1.2 }}
+                      >
+                        <DescriptionIcon
+                          sx={{ color: '#12422a', fontSize: 18 }}
+                        />
                       </InputAdornment>
                     ),
                   }}
@@ -554,10 +552,10 @@ export default function ProductSizeManagement() {
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
                       '&:hover fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#4CAF50',
+                        borderColor: '#12422a',
                         borderWidth: 2,
                       },
                     },
@@ -570,36 +568,49 @@ export default function ProductSizeManagement() {
                 <Box
                   sx={{
                     p: 2,
-                    background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(46, 125, 50, 0.05) 100%)',
+                    background:
+                      'linear-gradient(135deg, rgba(18, 66, 42, 0.08) 0%, rgba(18, 66, 42, 0.02) 100%)',
                     borderRadius: 2,
-                    border: '2px solid rgba(76, 175, 80, 0.3)',
+                    border: '2px solid rgba(18, 66, 42, 0.25)',
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 1.5,
-                    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.1)'
+                    boxShadow: '0 2px 8px rgba(18, 66, 42, 0.1)',
                   }}
                 >
                   <Box
                     sx={{
-                      backgroundColor: '#4CAF50',
+                      backgroundColor: '#12422a',
                       borderRadius: '50%',
                       p: 1,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       minWidth: '36px',
-                      height: '36px'
+                      height: '36px',
                     }}
                   >
                     <SizeIcon sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ color: '#2E7D32', fontWeight: 700, mb: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: '#12422a', fontWeight: 700, mb: 0.5 }}
+                    >
                       📦 Product Size Management
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#1B5E20', lineHeight: 1.5, display: 'block' }}>
-                      Create different sizes for your product group. Each size can have its own base price and description.
-                      Customers will be able to choose from these sizes when renting your products.
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: '#12422a',
+                        lineHeight: 1.5,
+                        display: 'block',
+                      }}
+                    >
+                      Create different sizes for your product group. Each size
+                      can have its own base price and description. Customers
+                      will be able to choose from these sizes when renting your
+                      products.
                     </Typography>
                   </Box>
                 </Box>
@@ -607,63 +618,26 @@ export default function ProductSizeManagement() {
             </Grid>
           </DialogContent>
 
-          <Divider />
-
-          <DialogActions
-            sx={{
-              px: 2,
-              py: 1.5,
-              gap: 2,
-              backgroundColor: 'rgba(76, 175, 80, 0.02)',
-              display: 'flex',
-              justifyContent: 'space-between'
-            }}
-          >
+          <DialogActions className="dialog-actions-custom">
             <Button
               onClick={handleCloseDialog}
-              variant="outlined"
               startIcon={<CloseIcon fontSize="small" />}
-              sx={{
-                color: '#666',
-                borderColor: '#ccc',
-                px: 2,
-                py: 0.75,
-                fontSize: '0.9rem',
-                borderWidth: 1.5,
-                fontWeight: 500,
-                '&:hover': {
-                  borderColor: '#999',
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                  borderWidth: 1.5,
-                }
-              }}
+              className="cancel-button"
               size="small"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              variant="contained"
-              startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
+              startIcon={
+                editMode ? (
+                  <EditIcon fontSize="small" />
+                ) : (
+                  <AddIcon fontSize="small" />
+                )
+              }
               disabled={productSizeLoading}
-              sx={{
-                backgroundColor: '#4CAF50',
-                px: 2,
-                py: 0.75,
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  backgroundColor: '#388E3C',
-                  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.45)',
-                  transform: 'translateY(-2px)',
-                },
-                '&:disabled': {
-                  backgroundColor: '#d1d5db',
-                  color: '#9ca3af',
-                }
-              }}
+              className="create-button"
               size="small"
             >
               {productSizeLoading

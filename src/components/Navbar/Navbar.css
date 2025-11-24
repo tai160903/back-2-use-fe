@@ -126,5 +126,11 @@
 
 .navbar-item:hover .navbar-icon { color: #007c00 !important; }
 
-/* Reduce default MUI ListItem height */
-.navbar .MuiListItem-root { min-height: 44px; }
+/* Khoảng cách giữa icon và chữ trong menu */
+.navbar .MuiListItemIcon-root {
+  min-width: auto !important;
+  margin-right: 15px;
+}
+
+/* Chiều cao tối thiểu cho mỗi item trong menu */
+.navbar .MuiListItem-root { min-height: 60px; }

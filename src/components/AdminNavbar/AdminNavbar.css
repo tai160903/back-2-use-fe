@@ -87,8 +87,14 @@
   padding: 8px 12px !important; 
 }
 
-/* Reduce default MUI ListItem height */
-.navbar .MuiListItem-root { min-height: 40px; }
+/* Khoảng cách giữa icon và chữ */
+.navbar .MuiListItemIcon-root {
+  min-width: auto !important;
+  margin-right: 15px;
+}
+
+/* Chiều cao tối thiểu cho mỗi item trong menu */
+.navbar .MuiListItem-root { min-height: 60px; }
 
 /* Reduce icon size */
 .navbar-icon {

@@ -60,9 +60,9 @@ export default function Header() {
   // Kết nối socket để lấy danh sách thông báo và lắng nghe realtime
   useEffect(() => {
     if (!currentUser) return;
-
     const userId = userInfo?._id;
     if (!userId) return;
+    const mode = (userRole || "customer").toLowerCase();
 
     const socket = io(import.meta.env.VITE_API_URL || "http://localhost:3000", {
       transports: ["websocket"],
@@ -70,19 +70,44 @@ export default function Header() {
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      socket.emit("register", { userId });
+      // Đăng ký kèm mode để BE biết đang ở role nào
+      socket.emit("register", { userId, mode });
       socket.emit(
         "findAllNotifications",
-        { userId, mode: userRole || "customer" },
+        { userId, mode },
         (response) => {
           if (Array.isArray(response)) {
-            setNotifications(response);
+            // lọc an toàn theo receiverType (tránh lẫn role)
+            const filtered = response.filter(
+              (n) =>
+                !n?.receiverType ||
+                n.receiverType.toLowerCase() === mode
+            );
+            setNotifications(filtered);
           }
         }
       );
     });
 
+    // Lắng nghe realtime; backend hiện emit "notification"
+    socket.on("notification", (payload) => {
+      if (
+        payload?.receiverType &&
+        payload.receiverType.toLowerCase() !== mode
+      ) {
+        return;
+      }
+      setNotifications((prev) => [payload, ...prev]);
+    });
+
+    // fallback nếu backend vẫn dùng "notification:new"
     socket.on("notification:new", (payload) => {
+      if (
+        payload?.receiverType &&
+        payload.receiverType.toLowerCase() !== mode
+      ) {
+        return;
+      }
       setNotifications((prev) => [payload, ...prev]);
     });
 
@@ -213,6 +238,7 @@ export default function Header() {
                   userId={userInfo?._id}
                   initialNotifications={notifications}
                   socket={socketRef.current}
+                  mode={(userRole || "customer").toLowerCase()}
                 />
                 <Avatar
                   src={userInfo?.avatar || ""}

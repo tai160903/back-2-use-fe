@@ -693,7 +693,7 @@ export default function Materials() {
           <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
              <Grid container spacing={2}>
               {/* Material Name Field */}
-              <Grid item xs={12} md={7}>
+              <Grid item size={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography 
                     variant="body2" 
@@ -746,7 +746,7 @@ export default function Materials() {
               {/* Note: Business request does not require reuse limit */}
 
               {/* Description Field */}
-              <Grid item xs={12}>
+              <Grid item size={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography 
                     variant="body2" 

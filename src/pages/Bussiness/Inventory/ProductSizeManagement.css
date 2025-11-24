@@ -181,12 +181,16 @@
 
 /* Dialog Styles */
 .add-size-dialog {
-  border-radius: 12px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
 }
 
 .dialog-title-section {
   padding: 24px 24px 16px 24px !important;
   border-bottom: 1px solid #e5e7eb;
+  background-color: #12422a;
+  color: #ffffff;
 }
 
 .dialog-header {
@@ -199,27 +203,28 @@
 .dialog-title {
   font-size: 20px !important;
   font-weight: 700 !important;
-  color: #1a1a1a !important;
+  color: #ffffff !important;
   margin-bottom: 4px !important;
 }
 
 .dialog-subtitle {
   font-size: 14px !important;
-  color: #6b7280 !important;
+  color: rgba(255, 255, 255, 0.8) !important;
   margin: 0 !important;
 }
 
 .close-button {
-  color: #6b7280 !important;
+  color: #ffffff !important;
   padding: 4px !important;
 }
 
 .close-button:hover {
-  background-color: #f3f4f6 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .dialog-content-custom {
   padding: 24px !important;
+  background-color: #f9fafb;
 }
 
 .dialog-form {
@@ -239,6 +244,7 @@
   padding: 16px 24px 24px 24px !important;
   border-top: 1px solid #e5e7eb;
   gap: 12px;
+  background-color: #f9fafb;
 }
 
 .cancel-button {
@@ -256,21 +262,24 @@
 }
 
 .create-button {
-  background-color: #12422a !important;
+  background: linear-gradient(135deg, #12422a 0%, #0d2e1c 100%) !important;
   color: #ffffff !important;
   text-transform: none !important;
-  padding: 10px 20px !important;
+  padding: 10px 24px !important;
   font-weight: 600 !important;
   border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(18, 66, 42, 0.3) !important;
 }
 
 .create-button:hover {
-  background-color: #0d2e1c !important;
+  background: linear-gradient(135deg, #0f3d26 0%, #0b2416 100%) !important;
+  box-shadow: 0 6px 16px rgba(18, 66, 42, 0.4) !important;
 }
 
 .create-button:disabled {
   background-color: #d1d5db !important;
   color: #9ca3af !important;
+  box-shadow: none !important;
 }
 
 /* Responsive */

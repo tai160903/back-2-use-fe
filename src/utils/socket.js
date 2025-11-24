@@ -47,7 +47,9 @@ export function onNotification(callback) {
     console.warn("[WS] ❗ onNotification gọi nhưng socket chưa được tạo");
     return;
   }
-  console.log("[WS] ✔ Đăng ký lắng nghe notification:new");
+  console.log("[WS] ✔ Đăng ký lắng nghe notification");
+  // backend có thể emit "notification" hoặc "notification:new"
+  socket.on("notification", callback);
   socket.on("notification:new", callback);
 }
 
@@ -57,7 +59,8 @@ export function offNotification(callback) {
     console.warn("[WS] ❗ offNotification gọi nhưng socket chưa được tạo");
     return;
   }
-  console.log("[WS] ✔ Bỏ lắng nghe notification:new");
+  console.log("[WS] ✔ Bỏ lắng nghe notification");
+  socket.off("notification", callback);
   socket.off("notification:new", callback);
 }
 

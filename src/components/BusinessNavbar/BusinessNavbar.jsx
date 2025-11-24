@@ -43,7 +43,6 @@ import { LuStore } from "react-icons/lu";
 const businessSidebarItems = [
   { id: "business-dashboard", label: "Dashboard", path: PATH.BUSINESS },
   { id: "profile", label: "Profile", path: PATH.BUSINESS_PROFILE },
-  { id: "my-customer-history", label: "My History", path: PATH.BUSINESS_MY_CUSTOMER_HISTORY },
   { id: "inventory", label: "Inventory Management", path: PATH.BUSINESS_INVENTORY },
   { id: "materials", label: "Materials", path: PATH.BUSINESS_MATERIALS },
   { id: "transaction", label: "Transaction", path: PATH.BUSINESS_TRANSACTION },
@@ -79,7 +78,6 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
     const icons = {
       "business-dashboard": <IoHomeOutline className="navbar-icon" />,
       profile: <IoPersonOutline className="navbar-icon" />,
-      "my-customer-history": <GoHistory className="navbar-icon" />,
       inventory: <LuStore className="navbar-icon" />,
       materials: <FiPackage className="navbar-icon" />,
       transaction: <MdPayment className="navbar-icon" />,
