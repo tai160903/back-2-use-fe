@@ -60,6 +60,29 @@ export const getDetailsProductById = createAsyncThunk(
     }
   )
 
+// get all products for business by group
+export const getBusinessProductsByGroup = createAsyncThunk(
+    "store/getBusinessProductsByGroup",
+    async ({ productGroupId, page = 1, limit = 10, status, search }, { rejectWithValue }) => {
+      try {
+        let url = `/products/group/${productGroupId}?page=${page}&limit=${limit}`;
+        
+        if (status) {
+          url += `&status=${status}`;
+        }
+        
+        if (search) {
+          url += `&search=${encodeURIComponent(search)}`;
+        }
+        
+        const response = await fetcher.get(url);
+        return response.data;
+      } catch (error) {
+        return rejectWithValue(error.response ? error.response.data : error.message);
+      }
+    }
+  )
+
 
 const storeSlice = createSlice({
 name: "store",
@@ -68,6 +91,7 @@ initialState: {
     nearbyStores: [], 
     storeDetail: null,
     detailsProduct: { products: [], total: 0, currentPage: 1, totalPages: 0 },
+    businessProducts: { products: [], total: 0, currentPage: 1, totalPages: 0 },
     totalPages: 0,
     total: 0,
     currentPage: 1,
@@ -75,6 +99,7 @@ initialState: {
     isLoadingNearby: false,
     isLoadingStoreDetail: false,
     isLoadingDetailsProduct: false,
+    isLoadingBusinessProducts: false,
     error: null,
 },
 reducers: {
@@ -137,6 +162,24 @@ extraReducers: (builder) => {
     })
     .addCase(getDetailsProductById.rejected, (state, {payload}) => {
         state.isLoadingDetailsProduct = false;
+        state.error = payload;
+    })
+    .addCase(getBusinessProductsByGroup.pending, (state) => {
+        state.isLoadingBusinessProducts = true;
+        state.error = null;
+    })
+    .addCase(getBusinessProductsByGroup.fulfilled, (state, {payload}) => {
+        state.isLoadingBusinessProducts = false;
+        state.error = null;
+        state.businessProducts = {
+            products: payload.data || payload.products || [],
+            total: payload.total || 0,
+            currentPage: payload.currentPage || payload.page || 1,
+            totalPages: payload.totalPages || 0,
+        };
+    })
+    .addCase(getBusinessProductsByGroup.rejected, (state, {payload}) => {
+        state.isLoadingBusinessProducts = false;
         state.error = payload;
     })
 }

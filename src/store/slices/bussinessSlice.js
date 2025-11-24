@@ -373,6 +373,22 @@ export const getProductByQRCode = createAsyncThunk(
   }
 );
 
+// Update product by ID
+// Request body: { status, lastConditionNote, lastConditionImage, condition }
+export const updateProduct = createAsyncThunk(
+  "businesses/updateProduct",
+  async ({ id, productData }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.patch(`/products/${id}`, productData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 
 
 const businessSlice = createSlice({
@@ -733,6 +749,36 @@ const businessSlice = createSlice({
         state.productError = null;
       })
       .addCase(getProductByQRCode.rejected, (state, { payload }) => {
+        state.productLoading = false;
+        state.productError = payload;
+      })
+      .addCase(updateProduct.pending, (state) => {
+        state.productLoading = true;
+        state.productError = null;
+      })
+      .addCase(updateProduct.fulfilled, (state, { payload }) => {
+        state.productLoading = false;
+        const updatedProduct = payload.data || payload;
+        const updatedId = updatedProduct._id || updatedProduct.id;
+        
+        // Update product in products array
+        if (updatedId) {
+          const index = state.products.findIndex(
+            (p) => (p._id || p.id) === updatedId
+          );
+          if (index !== -1) {
+            state.products[index] = { ...state.products[index], ...updatedProduct };
+          }
+        }
+        
+        // Update currentProduct if it matches
+        if (state.currentProduct && (state.currentProduct._id || state.currentProduct.id) === updatedId) {
+          state.currentProduct = { ...state.currentProduct, ...updatedProduct };
+        }
+        
+        state.productError = null;
+      })
+      .addCase(updateProduct.rejected, (state, { payload }) => {
         state.productLoading = false;
         state.productError = payload;
       })
