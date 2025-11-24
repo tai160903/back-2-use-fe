@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Pagination from "@mui/material/Pagination";
+import TextField from "@mui/material/TextField";
 import "./ProductDetail.css";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import PaidRoundedIcon from "@mui/icons-material/PaidRounded";
@@ -21,6 +22,7 @@ import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
 import { isAuthenticated } from "../../../utils/authUtils";
 import { getDetailsProductById } from "../../../store/slices/storeSilce";
+import { borrowProductOnlineApi } from "../../../store/slices/borrowSlice";
 
 export default function ProductDetail() {
   const navigate = useNavigate();
@@ -31,9 +33,13 @@ export default function ProductDetail() {
   const [clientPage, setClientPage] = useState(1);
   const clientPageSize = 10;
   const [selectedItem, setSelectedItem] = useState(null);
+  const [borrowDialogOpen, setBorrowDialogOpen] = useState(false);
+  const [borrowPayload, setBorrowPayload] = useState(null);
+  const [borrowDays, setBorrowDays] = useState(1);
+  const { isLoading: isBorrowLoading } = useSelector((state) => state.borrow || { isLoading: false });
 
   useEffect(() => {
-    // Nếu chưa đăng nhập thì thông báo lỗi và chuyển về trang đăng nhập
+
     if (!isAuthenticated()) {
       toast.error("Please login to view product details");
       navigate(PATH.LOGIN, { replace: true });
@@ -120,6 +126,64 @@ export default function ProductDetail() {
   const metaBasePrice = sampleItemForMeta?.productSizeId?.basePrice || 0;
   const metaDeposit = sampleItemForMeta?.productSizeId?.depositValue || 0;
   const metaSize = sampleItemForMeta?.productSizeId?.sizeName || sizeOptions[0] || "—";
+
+  const handleOpenBorrowDialog = (item) => {
+    if (!item) return;
+
+    const businessId =
+      item.businessId ||
+      item.productGroupId?.businessId?._id ||
+      item.productGroupId?.businessId ||
+      null;
+
+    const depositValue = item?.productSizeId?.depositValue || 0;
+
+    if (!businessId) {
+      toast.error("Store information for this product was not found");
+      return;
+    }
+
+    const basePayload = {
+      productId: item._id,
+      businessId,
+      durationInDays: 30,
+      depositValue,
+      type: "online",
+    };
+
+    setBorrowPayload(basePayload);
+    setBorrowDays(30);
+    setBorrowDialogOpen(true);
+  };
+
+  const handleConfirmBorrowOnline = async () => {
+    if (!borrowPayload) return;
+
+    const days = Number(borrowDays);
+    if (!days || days <= 0) {
+      toast.error("Please enter a valid number of days");
+      return;
+    }
+
+    const payloadToSend = {
+      ...borrowPayload,
+      durationInDays: days,
+      type: "online",
+    };
+
+    try {
+      await dispatch(borrowProductOnlineApi(payloadToSend)).unwrap();
+      toast.success("Online borrow request created successfully");
+      setBorrowDialogOpen(false);
+      navigate(PATH.TRANSACTION_HISTORY, { replace: true });
+    } catch (err) {
+      const message =
+        err?.data?.message ||
+        err?.message ||
+        "Online borrow failed, please try again";
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="productDetail">
@@ -273,6 +337,81 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {/* Online borrow modal */}
+      <Dialog
+        open={borrowDialogOpen}
+        onClose={() => setBorrowDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ m: 0, p: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Inventory2RoundedIcon fontSize="small" />
+            <span style={{ fontWeight: 700, color: "#164c34" }}>
+              Borrow product online
+            </span>
+          </div>
+          <IconButton
+            aria-label="close"
+            onClick={() => setBorrowDialogOpen(false)}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {borrowPayload && (
+            <div className="pd-detail" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                Borrow information
+              </Typography>
+
+              <div className="pd-detail-row">
+                <span className="pd-meta-label">Deposit:</span>
+                <span className="pd-detail-value">
+                  {borrowPayload.depositValue.toLocaleString("vi-VN")}đ
+                </span>
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                  Borrow days
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
+                  fullWidth
+                  value={borrowDays}
+                  onChange={(e) => setBorrowDays(e.target.value)}
+                  inputProps={{ min: 1 }}
+                  helperText="Enter the number of days you want to borrow (>= 1 day)"
+                />
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Borrow type: <strong>online</strong>
+                </Typography>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setBorrowDialogOpen(false)}>Close</Button>
+          <Button
+            onClick={handleConfirmBorrowOnline}
+            variant="contained"
+            disabled={isBorrowLoading}
+            sx={{
+              backgroundColor: "#12422a",
+              "&:hover": { backgroundColor: "#0c351c" },
+            }}
+          >
+            {isBorrowLoading ? "Processing..." : "Confirm borrow"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Modal chi tiết sản phẩm */}
       <Dialog
         open={Boolean(selectedItem)}
@@ -330,8 +469,22 @@ export default function ProductDetail() {
                 <div className="pd-modal-qr-box">
                   <img src={selectedItem.qrCode} alt={`QR ${selectedItem.serialNumber}`} />
                 </div>
-              
+
                 <div className="pd-qr-serial">{selectedItem.serialNumber}</div>
+
+                <div style={{ marginTop: 16 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => handleOpenBorrowDialog(selectedItem)}
+                    sx={{
+                      backgroundColor: "#12422a",
+                      "&:hover": { backgroundColor: "#0c351c" },
+                    }}
+                  >
+                    Borrow online
+                  </Button>
+                </div>
               </div>
             </div>
           )}

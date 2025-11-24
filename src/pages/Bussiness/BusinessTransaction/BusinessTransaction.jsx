@@ -179,6 +179,8 @@ function SuccessCard({ item }) {
   if (rawType === "return_failed") typeLabel = "Return Failed";
 
   const fee = item.totalChargeFee || item.fee || 0;
+  const rewardPoints = item.rewardPointChanged || 0;
+  const legitPoints = item.rankingPointChanged || 0;
 
   return (
     <Box className="borrow-card-success" p={2} mb={2} borderRadius="10px">
@@ -271,17 +273,25 @@ function SuccessCard({ item }) {
               </div>
               <div className="borrow-rewardPoint">
                 <Typography>
-                  Reward Points: {}
+                  Reward Points:{" "}
                   <span style={{ color: "#365bbf", fontWeight: "600" }}>
-                    + {}15 points
+                    {rewardPoints > 0
+                      ? `+${rewardPoints}`
+                      : rewardPoints}{" "}
+                    points
                   </span>
                 </Typography>
               </div>
               <div className="borrow-legitPoint">
                 <Typography>
-                  Legit Points: {}
-                  <span style={{ color: "#8200de", fontWeight: "600" }}>
-                    + {}30 points
+                  Legit Points:{" "}
+                  <span
+                    style={{
+                      color: legitPoints < 0 ? "#df4d56" : "#8200de",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
                   </span>
                 </Typography>
               </div>
@@ -304,16 +314,48 @@ function SuccessCard({ item }) {
 }
 
 function FailedCard({ item }) {
+  const product = item.productId || {};
+  const productGroup = product.productGroupId || {};
+  const materialObj = productGroup.materialId || {};
+  const sizeObj = product.productSizeId || {};
+
+  const name = productGroup.name || "Unknown Item";
+  const image =
+    productGroup.imageUrl ||
+    product.imageUrl ||
+    "https://via.placeholder.com/150";
+  const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
+  const material = materialObj.materialName || "N/A";
+  const size = sizeObj.sizeName;
+
+  const toVNDate = (d) =>
+    d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
+
+  const date = toVNDate(item.borrowDate || item.createdAt);
+  const due = toVNDate(item.dueDate);
+  const deposit = item.depositAmount || 0;
+  const status = item.status || "unknown";
+
+  const rawType = item.borrowTransactionType;
+  let typeLabel = rawType;
+  if (rawType === "borrow") typeLabel = "Borrow";
+  if (rawType === "return_success") typeLabel = "Return Success";
+  if (rawType === "return_failed") typeLabel = "Return Failed";
+
+  const fee = item.totalChargeFee || item.fee || 0;
+  const rewardPoints = item.rewardPointChanged || 0;
+  const legitPoints = item.rankingPointChanged || 0;
+
   return (
     <Box className="borrow-card-failed" p={2} mb={2} borderRadius="10px">
       <div className="borrow-container">
         <div className="borrow-content-title">
           <Typography className="borrow-content-type">
-            <FaArrowUpLong className="borrow-content-icons" /> {item.type}
+            <FaArrowUpLong className="borrow-content-icons" /> {typeLabel}
           </Typography>
           <div className="borrow-content-status-wrapper">
             <Typography className="borrow-content-status-failed">
-              {item.status}
+              {status}
             </Typography>
           </div>
         </div>
@@ -321,33 +363,35 @@ function FailedCard({ item }) {
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <div className="borrow-content-info">
               <img
-              src={item.image || "https://via.placeholder.com/150"}
-              alt={item.name}
+                src={image}
+                alt={name}
                 className="borrow-content-image"
               />
               <div style={{ marginLeft: "20px", color: "#8c8987" }}>
                 <Typography variant="h6" className="borrow-content-name">
-                  {item.name}
-                  <div className="borrow-content-count">{item.count}</div>
+                  {name}
+                  {size && (
+                    <div className="borrow-content-count">{size}</div>
+                  )}
                 </Typography>
                 <Typography variant="body2" className="borrow-content-qr">
-                  <MdOutlineQrCode2 /> {item.qr}
+                  <MdOutlineQrCode2 /> {qr}
                 </Typography>
                 <Typography variant="body2" className="borrow-content-material">
-                  <FiBox /> Material: {item.material}
+                  <FiBox /> Material: {material}
                 </Typography>
                 <div className="borrow-content-time">
                   <Typography
                     variant="body2"
                     className="borrow-content-material"
                   >
-                    <RiCalendarScheduleLine /> Borrowed: {item.date}
+                    <RiCalendarScheduleLine /> Borrowed: {date}
                   </Typography>
                   <Typography
                     variant="body2"
                     className="borrow-content-material"
                   >
-                    <RiCalendarScheduleLine /> Due: {item.due}
+                    <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
                 </div>
                 {/* Overdue đưa ngay dưới info */}
@@ -361,7 +405,10 @@ function FailedCard({ item }) {
                     <Typography>
                       <Typography>Late fee: $2.00 | </Typography>
                     </Typography>
-                    <Typography> Total returned: ${item.fee}</Typography>
+                    <Typography>
+                      {" "}
+                      Total returned: {fee.toLocaleString("vi-VN")} VNĐ
+                    </Typography>
                   </div>
                 </div>
               </div>
@@ -370,7 +417,7 @@ function FailedCard({ item }) {
               <Typography sx={{ marginLeft: "10px" }}>
                 Deposit:{" "}
                 <span style={{ color: "#36c775", fontWeight: "bold" }}>
-                  {item.deposit} $
+                  {deposit.toLocaleString("vi-VN")} VNĐ
                 </span>
               </Typography>
 
@@ -378,16 +425,16 @@ function FailedCard({ item }) {
                 <Typography>
                   Receive Money: {}
                   <span style={{ color: "#c64b4f", fontWeight: "bold" }}>
-                    {item.deposit} $
+                    {deposit.toLocaleString("vi-VN")} VNĐ
                   </span>
                 </Typography>
               </div>
 
               <div className="borrow-legitPoint-failed">
                 <Typography>
-                  Legit Points: {}
+                  Legit Points:{" "}
                   <span style={{ color: "#df4d56", fontWeight: "600" }}>
-                    - {}30 points
+                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
                   </span>
                 </Typography>
               </div>

@@ -168,6 +168,9 @@ function SuccessCard({ item }) {
   const deposit = item.depositAmount || 0;
   const status = item.status || "unknown";
 
+  const rewardPoints = item.rewardPointChanged || 0;
+  const legitPoints = item.rankingPointChanged || 0;
+
   const rawType = item.borrowTransactionType;
   let typeLabel = rawType;
   if (rawType === "borrow") typeLabel = "Borrow";
@@ -232,6 +235,24 @@ function SuccessCard({ item }) {
                 </span>
               </Typography>
 
+              <div className="borrow-rewardPoint">
+                <Typography>
+                  Reward Points:{" "}
+                  <span style={{ color: "#365bbf", fontWeight: "600" }}>
+                    {rewardPoints > 0 ? `+${rewardPoints}` : rewardPoints} points
+                  </span>
+                </Typography>
+              </div>
+
+              <div className="borrow-legitPoint">
+                <Typography>
+                  Legit Points:{" "}
+                  <span style={{ color: "#8200de", fontWeight: "600" }}>
+                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
+                  </span>
+                </Typography>
+              </div>
+
               <div className="borrow-receivePoint">
                 <Typography>
                   Receive Money:
@@ -284,6 +305,9 @@ function FailedCard({ item }) {
   const due = toVNDate(item.dueDate);
   const deposit = item.depositAmount || 0;
   const status = item.status || "unknown";
+
+  const rewardPoints = item.rewardPointChanged || 0;
+  const legitPoints = item.rankingPointChanged || 0;
 
   const rawType = item.borrowTransactionType;
   let typeLabel = rawType;
@@ -359,13 +383,30 @@ function FailedCard({ item }) {
                 </Typography>
               </div>
 
+              <div className="borrow-rewardPoint">
+                <Typography>
+                  Reward Points:{" "}
+                  <span style={{ color: "#365bbf", fontWeight: "600" }}>
+                    {rewardPoints > 0 ? `+${rewardPoints}` : rewardPoints} points
+                  </span>
+                </Typography>
+              </div>
+
+              <div className="borrow-legitPoint">
+                <Typography>
+                  Legit Points:{" "}
+                  <span
+                    style={{
+                      color: legitPoints < 0 ? "#df4d56" : "#8200de",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
+                  </span>
+                </Typography>
+              </div>
+
               <div style={{ display: "flex", gap: "10px" }}>
-                <Button
-                  className="borrow-content-btn"
-                  onClick={item.onViewDetails}
-                >
-                  <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
-                </Button>
                 <Button className="borrow-content-btn">
                   <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
                   Details
