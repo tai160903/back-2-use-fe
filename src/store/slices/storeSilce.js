@@ -47,12 +47,22 @@ export const getStoreById = createAsyncThunk(
     }
 )
 
-// get details product by id
+// get details product by id (hỗ trợ filter status & condition)
 export const getDetailsProductById = createAsyncThunk(
     "businesses/getDetailsProductById",
-    async ({ productGroupId,page,limit}, { rejectWithValue }) => {
+    async ({ productGroupId, page, limit, status, condition }, { rejectWithValue }) => {
       try {
-        const response = await fetcher.get(`/products/customer/${productGroupId}?page=${page}&limit=${limit}`);
+        // Xây dựng query string linh hoạt, chỉ thêm các param có giá trị
+        const params = new URLSearchParams();
+        if (page !== undefined && page !== null) params.append("page", page);
+        if (limit !== undefined && limit !== null) params.append("limit", limit);
+        if (status) params.append("status", status);
+        if (condition) params.append("condition", condition);
+
+        const queryString = params.toString();
+        const url = `/products/customer/${productGroupId}${queryString ? `?${queryString}` : ""}`;
+
+        const response = await fetcher.get(url);
         return response.data;
       } catch (error) {
         return rejectWithValue(error.response ? error.response.data : error.message);
