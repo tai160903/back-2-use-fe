@@ -166,6 +166,22 @@ export const borrowProductOnlineApi = createAsyncThunk(
     }
 );
 
+// extend borrow product 
+export const extendBorrowProductApi = createAsyncThunk(
+    "borrow/extendBorrowProductApi",
+    async ({ id, additionalDays }, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.patch(
+                `/borrow-transactions/customer/extend/${id}`,
+                { additionalDays }
+            );
+            return response.data?.data || response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 
 const borrowSlice = createSlice({
     name: "borrow",
@@ -200,8 +216,6 @@ const borrowSlice = createSlice({
         .addCase(getTransactionHistoryApi.fulfilled, (state, {payload}) => {
             state.isLoading = false
             state.error = null
-            // Backend trả về dạng { items: [...], total, page, limit }
-            // Trong UI đang mong đợi 1 mảng transaction nên lấy ra items
             const items = Array.isArray(payload)
                 ? payload
                 : payload?.items || []
@@ -321,6 +335,26 @@ const borrowSlice = createSlice({
             state.borrowDetail = payload
         })
         .addCase(borrowProductOnlineApi.rejected, (state, {payload}) => {
+            state.isLoading = false
+            state.error = payload
+        })
+        .addCase(extendBorrowProductApi.pending, (state) => {
+            state.isLoading = true
+            state.error = null
+        })
+        .addCase(extendBorrowProductApi.fulfilled, (state, {payload}) => {
+            state.isLoading = false
+            state.error = null
+            const updatedTransaction = payload || null
+            state.borrowDetail = updatedTransaction
+
+            if (updatedTransaction && updatedTransaction._id) {
+                state.borrow = state.borrow.map((item) =>
+                    item._id === updatedTransaction._id ? updatedTransaction : item
+                )
+            }
+        })
+        .addCase(extendBorrowProductApi.rejected, (state, {payload}) => {
             state.isLoading = false
             state.error = payload
         })

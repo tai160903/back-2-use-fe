@@ -18,6 +18,7 @@ export default function useDeposit(walletId) {
   } = useSelector((state) => state.wallet);
 
   const [addAmount, setAddAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("vnpay"); 
 
   //   function deposit money
   const handleDeposit = async (e) => {
@@ -35,6 +36,7 @@ export default function useDeposit(walletId) {
         depositeMoneyApi({
           walletId,
           amount: parseFloat(addAmount),
+          paymentMethod,
         })
       ).unwrap();
       setAddAmount("");
@@ -47,7 +49,14 @@ export default function useDeposit(walletId) {
   };
 
   useEffect(() => {
-    if (depositResult && depositResult.vnpayUrl) {
+    if (depositResult) {
+      const paymentUrl =
+        depositResult.paymentUrl ||
+        depositResult.vnpayUrl ||
+        depositResult.momoUrl;
+
+      if (!paymentUrl) return;
+
       // Lưu thông tin giao dịch pending
       localStorage.setItem(
         "pendingDeposit",
@@ -55,13 +64,14 @@ export default function useDeposit(walletId) {
           walletId,
           amount: addAmount,
           orderId: depositResult.orderId || Date.now().toString(),
+          paymentMethod,
         })
       );
 
-      // Redirect đến VNPay
-      window.location.href = depositResult.vnpayUrl;
+      // Redirect đến cổng thanh toán tương ứng
+      window.location.href = paymentUrl;
     }
-  }, [depositResult, walletId, addAmount]);
+  }, [depositResult, walletId, addAmount, paymentMethod]);
 
   const resetDeposit = () => {
     setAddAmount("");
@@ -76,5 +86,7 @@ export default function useDeposit(walletId) {
     depositError,
     depositResult,
     resetDeposit,
+    paymentMethod,
+    setPaymentMethod,
   };
 }

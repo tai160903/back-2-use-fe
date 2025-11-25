@@ -6,10 +6,12 @@ import { getUserRole } from "../../utils/authUtils";
 // deposite money
 export const depositeMoneyApi = createAsyncThunk(
   "wallet/depositeMoneyApi",
-  async ({ walletId, amount }, { rejectWithValue }) => {
+  async ({ walletId, amount, paymentMethod }, { rejectWithValue }) => {
     try {
       const response = await fetcher.post(`/wallets/${walletId}/deposit`, {
         amount: parseInt(amount),
+      
+        paymentMethod,
       });
       return response.data;
     } catch (error) {
@@ -116,7 +118,20 @@ const walletSlice = createSlice({
         console.log("Deposit API response:", payload);
         state.isLoading = false;
         state.error = null;
-        state.depositResult = { vnpayUrl: payload.url };
+        // Normalize different possible response shapes from BE for multiple gateways
+        const paymentUrl =
+          payload?.paymentUrl ||
+          payload?.url ||
+          payload?.vnpayUrl ||
+          payload?.momoUrl ||
+          null;
+
+        state.depositResult = {
+          vnpayUrl: payload?.vnpayUrl || payload?.url || null,
+          momoUrl: payload?.momoUrl || null,
+          paymentUrl,
+          paymentMethod: payload?.paymentMethod || payload?.provider || null,
+        };
       })
       .addCase(depositeMoneyApi.rejected, (state, { payload }) => {
         state.isLoading = false;

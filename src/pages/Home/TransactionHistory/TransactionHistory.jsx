@@ -27,11 +27,14 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { MdOutlineFeedback } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
+import { useUserInfo } from "../../../hooks/useUserInfo";
 import {
   getTransactionHistoryApi,
   getDetailsBorrowTransactionCustomerApi,
   cancelBorrowTransactionCustomerApi,
+  extendBorrowProductApi,
 } from "../../../store/slices/borrowSlice";
+import toast from "react-hot-toast";
 
 function BorrowCard({ item }) {
   const product = item.productId || {};
@@ -134,6 +137,15 @@ function BorrowCard({ item }) {
                     onClick={item.onCancel}
                   >
                     Cancel
+                  </Button>
+                )}
+                {item.status === "borrowing" && item.onExtend && (
+                  <Button
+                    className="borrow-content-btn"
+                    color="primary"
+                    onClick={item.onExtend}
+                  >
+                    Extend
                   </Button>
                 )}
               </div>
@@ -425,6 +437,7 @@ export default function TransactionHistory() {
   const { borrow, isLoading, borrowDetail, isDetailLoading } = useSelector(
     (state) => state.borrow
   );
+  const { refetch: refetchUserInfo } = useUserInfo();
 
   // trạng thái filter
   const [status, setStatus] = useState("");
@@ -433,6 +446,9 @@ export default function TransactionHistory() {
   const [openDetail, setOpenDetail] = useState(false);
   const [openCancel, setOpenCancel] = useState(false);
   const [selectedCancelId, setSelectedCancelId] = useState(null);
+  const [openExtend, setOpenExtend] = useState(false);
+  const [selectedExtendId, setSelectedExtendId] = useState(null);
+  const [extendDays, setExtendDays] = useState("");
 
   const transactions = Array.isArray(borrow) ? borrow : [];
 
@@ -482,6 +498,51 @@ export default function TransactionHistory() {
     await dispatch(cancelBorrowTransactionCustomerApi(selectedCancelId));
     setOpenCancel(false);
     setSelectedCancelId(null);
+  };
+
+  const handleOpenExtend = (id) => {
+    setSelectedExtendId(id);
+    setExtendDays("");
+    setOpenExtend(true);
+  };
+
+  const handleCloseExtend = () => {
+    setOpenExtend(false);
+    setSelectedExtendId(null);
+    setExtendDays("");
+  };
+
+  const handleConfirmExtend = async () => {
+    if (!selectedExtendId) return;
+
+    const daysNumber = Number(extendDays);
+    if (!Number.isFinite(daysNumber) || daysNumber <= 0) {
+      toast.error("Please enter a valid number of days.");
+      return;
+    }
+
+    try {
+      await dispatch(
+        extendBorrowProductApi({
+          id: selectedExtendId,
+          additionalDays: daysNumber,
+        })
+      ).unwrap();
+      // Refresh user & wallet info so wallet balance updates without page reload
+      refetchUserInfo();
+      toast.success("Borrow product extended successfully");
+    } catch (error) {
+      const backendMessage =
+        error?.message ||
+        error?.error ||
+        (typeof error === "string" ? error : null) ||
+        "Failed to extend borrowing period.";
+
+      toast.error(backendMessage);
+    }
+    setOpenExtend(false);
+    setSelectedExtendId(null);
+    setExtendDays("");
   };
 
   const filteredData = transactions;
@@ -612,6 +673,7 @@ export default function TransactionHistory() {
                 ...item,
                 onViewDetails: () => handleViewDetails(item._id),
                 onCancel: () => handleOpenCancel(item._id),
+                onExtend: () => handleOpenExtend(item._id),
               };
               if (item.borrowTransactionType === "borrow")
                 return <BorrowCard key={item._id} item={cardProps} />;
@@ -835,6 +897,43 @@ export default function TransactionHistory() {
               disabled={isLoading}
             >
               {isLoading ? "Canceling..." : "Yes, cancel"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Extend borrow popup */}
+        <Dialog
+          open={openExtend}
+          onClose={handleCloseExtend}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>Extend borrowing period</DialogTitle>
+          <DialogContent dividers>
+            <Typography>
+              Please enter the number of additional days you want to extend.
+            </Typography>
+            <TextField
+              type="number"
+              label="Additional days"
+              fullWidth
+              margin="normal"
+              value={extendDays}
+              onChange={(e) => setExtendDays(e.target.value)}
+              inputProps={{ min: 1 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseExtend} disabled={isLoading}>
+              Close
+            </Button>
+            <Button
+              onClick={handleConfirmExtend}
+              color="primary"
+              variant="contained"
+              disabled={isLoading}
+            >
+              {isLoading ? "Extending..." : "Confirm"}
             </Button>
           </DialogActions>
         </Dialog>

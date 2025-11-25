@@ -42,6 +42,8 @@ export default function WalletCustomer() {
     depositLoading,
     depositError,
     resetDeposit,
+    paymentMethod,
+    setPaymentMethod,
   } = useDeposit(walletId);
 
   const {
@@ -164,26 +166,8 @@ export default function WalletCustomer() {
 
 
 
-  // const depositsData = [
-  //   {
-  //     id: "TXN-ADD-001",
-  //     date: "20/01/2024",
-  //     type: "Visa ****1234",
-  //     description: "Add Funds via Credit Card",
-  //     amount: "+100.000 VNĐ",
-  //     status: "completed",
-  //   },
-  //   {
-  //     id: "TXN-ADD-002",
-  //     date: "05/01/2024",
-  //     type: "PayPal",
-  //     description: "Add Funds via PayPal",
-  //     amount: "+75.000 VNĐ",
-  //     status: "completed",
-  //   },
-  // ];
+  
 
-  // Get real transaction data
   const realTransactionData = transactionHistory ? formatTransactionData(transactionHistory) : [];
   
   // Filter logic
@@ -602,7 +586,7 @@ export default function WalletCustomer() {
       <ModalWallet
         open={openAddFunds}
         handleClose={handleCloseAddFunds}
-        title="Deposit to wallet via VNPay"
+        title="Deposit to wallet"
         description="Enter the amount you want to deposit (VND)"
         amount={addAmount}
         setAmount={setAddAmount}
@@ -612,6 +596,8 @@ export default function WalletCustomer() {
         error={depositError}
         walletId={walletId}
         currency="VND"
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
       />
       <ModalWallet
         open={openWithdraw}
