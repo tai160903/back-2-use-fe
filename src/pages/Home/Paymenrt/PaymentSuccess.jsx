@@ -40,10 +40,29 @@ export default function PaymentSuccess() {
         setTransactionDetail(res?.data || null);
       })
       .catch((e) => {
-        setError(typeof e === "string" ? e : e?.message || "Không thể tải chi tiết giao dịch");
+        setError(
+          typeof e === "string"
+            ? e
+            : e?.message || "Unable to load transaction details"
+        );
       })
       .finally(() => setLoading(false));
   }, [dispatch, searchParams]);
+
+  const resolveMethodLabel = () => {
+    const raw =
+      transactionDetail?.paymentMethod ||
+      transactionDetail?.referenceType ||
+      transactionDetail?.provider;
+
+    if (!raw) return undefined;
+
+    const lower = String(raw).toLowerCase();
+    if (lower === "vnpay") return "VNPay";
+    if (lower === "momo") return "MoMo";
+    if (lower === "manual") return "Manual";
+    return raw;
+  };
 
   const transactionData = {
     amount: transactionDetail?.amount,
@@ -54,7 +73,7 @@ export default function PaymentSuccess() {
     time: transactionDetail?.createdAt
       ? new Date(transactionDetail.createdAt).toLocaleTimeString("vi-VN")
       : undefined,
-    method: transactionDetail?.referenceType === "manual" ? "VNPay" : transactionDetail?.referenceType,
+    method: resolveMethodLabel(),
     transactionType: transactionDetail?.transactionType,
     status: transactionDetail?.status,
     direction: transactionDetail?.direction,
@@ -102,7 +121,7 @@ export default function PaymentSuccess() {
           <Box sx={{ p: 6 }}>
             {loading && (
               <Typography variant="body2" sx={{ mb: 2 }}>
-                Đang tải chi tiết giao dịch...
+                Loading transaction details...
               </Typography>
             )}
             {error && (

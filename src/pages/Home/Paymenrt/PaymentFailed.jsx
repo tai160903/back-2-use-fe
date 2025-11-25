@@ -43,6 +43,19 @@ export default function PaymentFailure() {
   const date = detail?.createdAt ? new Date(detail.createdAt).toLocaleDateString("vi-VN") : "";
   const time = detail?.createdAt ? new Date(detail.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : "";
 
+  const methodLabel = (() => {
+    const raw =
+      detail?.paymentMethod ||
+      detail?.referenceType ||
+      detail?.provider;
+    if (!raw) return "Unknown";
+    const lower = String(raw).toLowerCase();
+    if (lower === "vnpay") return "VNPay";
+    if (lower === "momo") return "MoMo";
+    if (lower === "manual") return "Manual";
+    return raw;
+  })();
+
   const wallet = getUserRole() === "business" ? "/business/wallet" : "/walllet_customer";
   const code = searchParams.get("code") || "24";
 
@@ -54,17 +67,18 @@ export default function PaymentFailure() {
           <Box sx={{ bgcolor: "#d32f2f", color: "white", p: 4, textAlign: "center" }}>
             <MdError size={60} />
             <Typography variant="h4" sx={{ mt: 2, fontWeight: 600 }}>
-              Thanh toán thất bại
+              Payment Failed
             </Typography>
             <Typography variant="body1" sx={{ mt: 1, opacity: 0.9 }}>
-              Mã lỗi: {code} - {code === "24" ? "Bạn đã hủy giao dịch" : "Lỗi không xác định"}
+              Error code: {code} -{" "}
+              {code === "24" ? "You canceled the transaction" : "Unknown error"}
             </Typography>
           </Box>
 
           <Box sx={{ p: 5 }}>
             {loading && (
               <Typography textAlign="center" color="text.secondary">
-                Đang tải chi tiết...
+                Loading transaction details...
               </Typography>
             )}
 
@@ -75,20 +89,29 @@ export default function PaymentFailure() {
                     {format(detail.amount)} VND
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Số tiền nạp
+                    Top-up amount
                   </Typography>
                 </Box>
 
                 <Box sx={{ bgcolor: "#fafafa", borderRadius: 2, p: 3 }}>
                   <Typography variant="body2" fontWeight="bold" gutterBottom>
-                    Chi tiết giao dịch
+                    Transaction details
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   <Box sx={{ "& > div": { display: "flex", justifyContent: "space-between", py: 1 } }}>
-                    <div><strong>Mã GD:</strong> <code>{detail._id}</code></div>
-                    <div><strong>Phương thức:</strong> VNPay</div>
-                    <div><strong>Thời gian:</strong> {date} {time}</div>
-                    <div><strong>Trạng thái:</strong> <span style={{color: "#d32f2f"}}>Thất bại</span></div>
+                    <div>
+                      <strong>Transaction ID:</strong> <code>{detail._id}</code>
+                    </div>
+                    <div>
+                      <strong>Method:</strong> {methodLabel}
+                    </div>
+                    <div>
+                      <strong>Time:</strong> {date} {time}
+                    </div>
+                    <div>
+                      <strong>Status:</strong>{" "}
+                      <span style={{ color: "#d32f2f" }}>Failed</span>
+                    </div>
                   </Box>
                 </Box>
               </>
@@ -102,7 +125,7 @@ export default function PaymentFailure() {
                 startIcon={<FaRedo />}
                 onClick={() => navigate(wallet)}
               >
-                Thử nạp lại
+                Try again
               </Button>
               <Button
                 variant="outlined"
@@ -110,12 +133,13 @@ export default function PaymentFailure() {
                 startIcon={<FaReceipt />}
                 onClick={() => navigate(wallet)}
               >
-                Xem lịch sử
+                View transaction history
               </Button>
             </Box>
 
             <Alert severity="warning" sx={{ mt: 3 }}>
-              <strong>Gợi ý:</strong> Kiểm tra số dư, bật 3D Secure, hoặc thử thẻ khác.
+              <strong>Tips:</strong> Check your balance, enable 3D Secure, or try
+              another card/payment method.
             </Alert>
           </Box>
         </Paper>
