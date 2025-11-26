@@ -52,8 +52,11 @@ import CustomerLegacyData from "../pages/Bussiness/CustomerLegacyData/CustomerLe
 import InventoryManagement from "../pages/Bussiness/Inventory/InventoryManagement";
 import ProductItems from "../pages/Bussiness/Inventory/ProductItems";
 import ProductSizeManagement from "../pages/Bussiness/Inventory/ProductSizeManagement";
+import StaffManagement from "../pages/Bussiness/StaffManagement/StaffManagement";
 import EcoReward from "../pages/Admin/EcoReward/EcoReward";
 import LeaderBoard from "../pages/Admin/LeaderBoard/LeaderBoard";
+import StaffLayout from "../layouts/StaffLayout/StaffLayout";
+import StaffDashboard from "../pages/Staff/StaffDashboard/StaffDashboard";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -285,14 +288,6 @@ export default function useRouterElements() {
           ),
         },
         {
-          path: PATH.BUSINESS_ONLINE_BORROW_ORDERS,
-          element: (
-            <ProtectedRoute allowedRoles={["business"]}>
-              <OnlineBorrowOrders />
-            </ProtectedRoute>
-          ),
-        },
-        {
           path: PATH.BUSINESS_MY_CUSTOMER_HISTORY,
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
@@ -332,9 +327,38 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
-        
-      
-        
+        {
+          path: PATH.BUSINESS_STAFF,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <StaffManagement />
+            </ProtectedRoute>
+          ),
+        },
+      ],
+    },
+
+    // Staff routes
+    {
+      path: PATH.STAFF,
+      element: <StaffLayout />,
+      children: [
+        {
+          index: true,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <StaffDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.STAFF_ONLINE_BORROW_ORDERS,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <OnlineBorrowOrders />
+            </ProtectedRoute>
+          ),
+        },
       ],
     },
 

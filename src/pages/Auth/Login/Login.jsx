@@ -75,6 +75,8 @@ export default function Login() {
             navigate(PATH.HOME, { replace: true });
           } else if (userType === "business") {
             navigate(PATH.BUSINESS, { replace: true });
+          } else if (userType === "staff") {
+            navigate(PATH.STAFF, { replace: true });
           } else if (userType === "admin" || userType === "administrator") {
             navigate(PATH.ADMIN, { replace: true });
           } else {
