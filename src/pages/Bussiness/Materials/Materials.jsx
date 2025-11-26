@@ -11,8 +11,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tabs,
-  Tab,
   Chip,
   Alert,
   CircularProgress,
@@ -27,6 +25,8 @@ import {
   TableRow,
   InputAdornment,
   Divider,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -58,7 +58,6 @@ export default function Materials() {
     (state) => state.businesses
   );
 
-  const [activeTab, setActiveTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -67,6 +66,17 @@ export default function Materials() {
   const [editMode, setEditMode] = useState(false);
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
   const [searchQuery, setSearchQuery] = useState('');
+  const [myMaterialsPage, setMyMaterialsPage] = useState(1);
+  const [activePage, setActivePage] = useState(1);
+  const [rejectedPage, setRejectedPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setMyMaterialsPage(1);
+    setActivePage(1);
+    setRejectedPage(1);
+  }, [searchQuery]);
   const [formData, setFormData] = useState({
     materialName: '',
     description: '',
@@ -90,15 +100,28 @@ export default function Materials() {
     rejected: rejectedMaterials.filter(matchesSearch),
   };
 
+  // Pagination helpers
+  const getPaginatedData = (data, page, itemsPerPage) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = (data, itemsPerPage) => {
+    return Math.max(1, Math.ceil(data.length / itemsPerPage));
+  };
+
+  // Paginated data
+  const paginatedMy = getPaginatedData(filtered.my, myMaterialsPage, itemsPerPage);
+  const paginatedActive = getPaginatedData(filtered.approved, activePage, itemsPerPage);
+  const paginatedRejected = getPaginatedData(filtered.rejected, rejectedPage, itemsPerPage);
+
   // Load materials on component mount
   useEffect(() => {
     dispatch(getMyMaterials());
     dispatch(getApprovedMaterials());
   }, [dispatch]);
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
 
   const handleOpenDialog = () => {
     setEditMode(false);
@@ -269,71 +292,154 @@ export default function Materials() {
   const renderMaterialsTable = (materials, showActions = false, useIsActive = false) => {
     const hasReuse = Array.isArray(materials) && materials.some(m => m?.maximumReuse || m?.reuseLimit);
     return (
-    <TableContainer component={Paper} sx={{ mt: 1.5, border: '1px solid #e5e7eb', borderRadius: 2 }}>
-      <Table size="small">
+    <TableContainer 
+      component={Paper} 
+      elevation={0}
+      sx={{ 
+        mt: 1.5, 
+        border: '1px solid #e5e7eb', 
+        borderRadius: 2,
+        backgroundColor: 'white',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+      }}
+    >
+      <Table>
         <TableHead>
-          <TableRow>
-            <TableCell sx={{ py: 1 }}>Material Name</TableCell>
-            {hasReuse && <TableCell sx={{ py: 1 }}>Maximum Reuse</TableCell>}
-            <TableCell sx={{ py: 1 }}>Description</TableCell>
-            <TableCell sx={{ py: 1 }}>Status</TableCell>
-            {showActions && <TableCell sx={{ py: 1, width: 120 }}>Actions</TableCell>}
+          <TableRow sx={{ backgroundColor: '#f9fafb' }}>
+            <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+              Material Name
+            </TableCell>
+            {hasReuse && (
+              <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+                Maximum Reuse
+              </TableCell>
+            )}
+            <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+              Description
+            </TableCell>
+            <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+              Status
+            </TableCell>
+            {showActions && (
+              <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem', width: 140, textAlign: 'center' }}>
+                Actions
+              </TableCell>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
           {materials.map((material, index) => (
-            <TableRow key={material.id || index}>
-              <TableCell sx={{ py: 0.75 }}>
-                <Typography variant="body2" fontWeight={600} sx={{ fontFamily: 'inherit' }}>
-                  {material.materialName || material.requestedMaterialName}
-                </Typography>
+            <TableRow 
+              key={material.id || index}
+              sx={{
+                '&:hover': {
+                  backgroundColor: '#f9fafb',
+                },
+                '&:last-child td': {
+                  borderBottom: 'none'
+                }
+              }}
+            >
+              <TableCell sx={{ py: 1.75 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 1.5,
+                      backgroundColor: '#f0f9f4',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <CategoryIcon sx={{ fontSize: 20, color: '#12422a' }} />
+                  </Box>
+                  <Typography variant="body2" fontWeight={600} sx={{ fontFamily: 'inherit', color: '#1a1a1a' }}>
+                    {material.materialName || material.requestedMaterialName}
+                  </Typography>
+                </Box>
               </TableCell>
               {hasReuse && (
-                <TableCell sx={{ py: 0.75 }}>
-                  <Typography variant="body2" sx={{ fontFamily: 'inherit' }}>
+                <TableCell sx={{ py: 1.75 }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'inherit', color: '#6b7280' }}>
                     {(material.maximumReuse || material.reuseLimit || '-')} {material.maximumReuse || material.reuseLimit ? 'times' : ''}
                   </Typography>
                 </TableCell>
               )}
-              <TableCell sx={{ py: 0.75 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'inherit' }}>
+              <TableCell sx={{ py: 1.75, maxWidth: 400 }}>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    fontFamily: 'inherit',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                  }}
+                >
                   {material.description}
                 </Typography>
               </TableCell>
-              <TableCell sx={{ py: 0.75 }}>
+              <TableCell sx={{ py: 1.75 }}>
                 {useIsActive ? getStatusChip(material?.isActive ? 'active' : 'unactive') : getStatusChip(material.status || 'pending')}
               </TableCell>
               {showActions && (
-                <TableCell sx={{ py: 0.5 }}>
-                  <Tooltip title="View Details">
-                    <IconButton 
-                      size="small"
-                      onClick={() => handleViewMaterial(material)}
-                      sx={{ color: '#2E7D32' }}
-                    >
-                      <ViewIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton 
-                      size="small"
-                      onClick={() => handleEditMaterial(material)}
-                      sx={{ color: '#66BB6A' }}
-                      disabled={material.status === 'approved'}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton 
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteMaterial(material)}
-                      disabled={material.status === 'approved'}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
+                <TableCell sx={{ py: 1.75 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                    <Tooltip title="View Details">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleViewMaterial(material)}
+                        sx={{ 
+                          color: '#12422a',
+                          '&:hover': {
+                            backgroundColor: '#f0f9f4',
+                          }
+                        }}
+                      >
+                        <ViewIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleEditMaterial(material)}
+                        disabled={material.status === 'approved'}
+                        sx={{ 
+                          color: '#16a34a',
+                          '&:hover': {
+                            backgroundColor: '#f0f9f4',
+                          },
+                          '&.Mui-disabled': {
+                            color: '#d1d5db'
+                          }
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleDeleteMaterial(material)}
+                        disabled={material.status === 'approved'}
+                        sx={{ 
+                          color: '#ef4444',
+                          '&:hover': {
+                            backgroundColor: '#fef2f2',
+                          },
+                          '&.Mui-disabled': {
+                            color: '#d1d5db'
+                          }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </TableCell>
               )}
             </TableRow>
@@ -345,67 +451,178 @@ export default function Materials() {
 
   const renderMaterialsCards = (materials, showActions = false, useIsActive = false) => {
     return (
-      <Grid container spacing={2} className="materials-grid">
+      <Grid container spacing={2.5} className="materials-grid">
         {materials.map((material, index) => (
           <Grid item xs={12} sm={6} md={4} key={material.id || index}>
-            <Card className="material-card" elevation={0}>
-              <CardContent>
-                <Box className="card-header" sx={{ mb: 1.5 }}>
-                  <Box className="card-title-section">
-                    <CategoryIcon className="card-icon" />
-                    <Box>
-                      <Typography className="card-title">
+            <Card 
+              className="material-card" 
+              elevation={0}
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                border: '1px solid #e5e7eb',
+                borderRadius: 2,
+                backgroundColor: 'white',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                  transform: 'translateY(-4px)',
+                  borderColor: '#12422a',
+                }
+              }}
+            >
+              <CardContent sx={{ p: 2.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box className="card-header" sx={{ mb: 2 }}>
+                  <Box className="card-title-section" sx={{ flex: 1 }}>
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 1.5,
+                        backgroundColor: '#f0f9f4',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mr: 1.5,
+                      }}
+                    >
+                      <CategoryIcon sx={{ fontSize: 24, color: '#12422a' }} />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography 
+                        className="card-title"
+                        sx={{
+                          fontSize: '1.125rem',
+                          fontWeight: 700,
+                          color: '#1a1a1a',
+                          mb: 0.5,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
                         {material.materialName || material.requestedMaterialName}
                       </Typography>
-                      <Typography className="card-subtitle">
-                        {useIsActive ? 'Status' : 'Status'}
-                      </Typography>
+                      <Box sx={{ mt: 1 }}>
+                        {useIsActive ? getStatusChip(material?.isActive ? 'active' : 'unactive') : getStatusChip(material.status || 'pending')}
+                      </Box>
                     </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    {showActions && (
-                      <>
-                        <Tooltip title="View Details">
-                          <IconButton size="small" onClick={() => handleViewMaterial(material)} className="view-button">
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit">
-                          <IconButton size="small" onClick={() => handleEditMaterial(material)} disabled={material.status === 'approved'} className="edit-button">
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton size="small" onClick={() => handleDeleteMaterial(material)} disabled={material.status === 'approved'} className="delete-button">
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </>
-                    )}
-                  </Box>
+                  {showActions && (
+                    <Box sx={{ display: 'flex', gap: 0.5, ml: 1 }}>
+                      <Tooltip title="View Details">
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleViewMaterial(material)} 
+                          sx={{
+                            color: '#12422a',
+                            '&:hover': {
+                              backgroundColor: '#f0f9f4',
+                            }
+                          }}
+                        >
+                          <ViewIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit">
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleEditMaterial(material)} 
+                          disabled={material.status === 'approved'}
+                          sx={{
+                            color: '#16a34a',
+                            '&:hover': {
+                              backgroundColor: '#f0f9f4',
+                            },
+                            '&.Mui-disabled': {
+                              color: '#d1d5db'
+                            }
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleDeleteMaterial(material)} 
+                          disabled={material.status === 'approved'}
+                          sx={{
+                            color: '#ef4444',
+                            '&:hover': {
+                              backgroundColor: '#fef2f2',
+                            },
+                            '&.Mui-disabled': {
+                              color: '#d1d5db'
+                            }
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  )}
                 </Box>
 
-                <Box className="card-details">
-                  <Box className="detail-row">
-                    <Typography className="detail-label">Description</Typography>
-                    <Typography className="detail-value">
+                <Box className="card-details" sx={{ flex: 1 }}>
+                  <Box className="detail-row" sx={{ mb: 1.5 }}>
+                    <Typography 
+                      className="detail-label"
+                      sx={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: '#6b7280',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        mb: 0.5,
+                      }}
+                    >
+                      Description
+                    </Typography>
+                    <Typography 
+                      className="detail-value"
+                      sx={{
+                        fontSize: '0.875rem',
+                        color: '#374151',
+                        lineHeight: 1.6,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
                       {material.description || '-'}
                     </Typography>
                   </Box>
                   {(material.maximumReuse || material.reuseLimit) && (
-                    <Box className="detail-row">
-                      <Typography className="detail-label">Reuse</Typography>
-                      <Typography className="detail-value">
+                    <Box className="detail-row" sx={{ mb: 1.5 }}>
+                      <Typography 
+                        className="detail-label"
+                        sx={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          mb: 0.5,
+                        }}
+                      >
+                        Maximum Reuse
+                      </Typography>
+                      <Typography 
+                        className="detail-value"
+                        sx={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          fontWeight: 600,
+                        }}
+                      >
                         {(material.maximumReuse || material.reuseLimit)} times
                       </Typography>
                     </Box>
                   )}
-                  <Box className="detail-row">
-                    <Typography className="detail-label">Status</Typography>
-                    <Box className="detail-value">
-                      {useIsActive ? getStatusChip(material?.isActive ? 'active' : 'unactive') : getStatusChip(material.status || 'pending')}
-                    </Box>
-                  </Box>
                 </Box>
               </CardContent>
             </Card>
@@ -416,24 +633,171 @@ export default function Materials() {
   };
 
   return (
-    <Box className="materials-page" sx={{ p: 2.5, fontFamily: 'inherit' }}>
-      {/* Header */}
-      <Box className="materials-header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h5" component="h1" fontWeight={700} sx={{ color: '#12422a', fontFamily: 'inherit', letterSpacing: 0.2 }}>
-            Materials
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
-            Manage your business materials
-          </Typography>
+    <Box className="materials-page" sx={{ p: 3, fontFamily: 'inherit', backgroundColor: '#f5f7fa' }}>
+      {/* Header Section */}
+      <Box className="materials-header" sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: 2,
+                backgroundColor: '#12422a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(18, 66, 42, 0.25)',
+              }}
+            >
+              <EcoIcon sx={{ fontSize: 32, color: 'white' }} />
+            </Box>
+            <Box>
+              <Typography 
+                variant="h4" 
+                component="h1" 
+                fontWeight={700} 
+                sx={{ 
+                  color: '#1a1a1a', 
+                  fontFamily: 'inherit', 
+                  letterSpacing: '-0.02em',
+                  mb: 0.5
+                }}
+              >
+                Materials Management
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#6b7280', fontSize: '0.95rem' }}>
+                Manage and track your eco-friendly materials inventory
+              </Typography>
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenDialog}
+            sx={{ 
+              borderRadius: 2,
+              backgroundColor: '#12422a',
+              px: 3,
+              py: 1.25,
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              boxShadow: '0 4px 12px rgba(18, 66, 42, 0.3)',
+              '&:hover': {
+                backgroundColor: '#0d2e1c',
+                boxShadow: '0 6px 16px rgba(18, 66, 42, 0.4)',
+                transform: 'translateY(-2px)',
+              },
+              transition: 'all 0.3s ease'
+            }}
+            className="add-button"
+          >
+            Add New Material
+          </Button>
         </Box>
-        <Box className="materials-toolbar" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+        {/* Statistics Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 3 }}>
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                My Active Materials 
+              </Typography>
+              <CategoryIcon sx={{ fontSize: 20, color: '#9ca3af' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#1a1a1a', fontWeight: 700 }}>
+              {myMaterials.length}
+            </Typography>
+          </Paper>
+
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                Active Materials
+              </Typography>
+              <ApprovedIcon sx={{ fontSize: 20, color: '#16a34a' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#16a34a', fontWeight: 700 }}>
+              {approvedMaterials.length}
+            </Typography>
+          </Paper>
+
+
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                Rejected
+              </Typography>
+              <DeleteIcon sx={{ fontSize: 20, color: '#ef4444' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#ef4444', fontWeight: 700 }}>
+              {rejectedMaterials.length}
+            </Typography>
+          </Paper>
+        </Box>
+
+        {/* Search and View Toggle */}
+        <Box className="materials-toolbar" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <TextField
             size="small"
-            placeholder="Search materials..."
+            placeholder="Search materials by name or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
+            sx={{
+              minWidth: 320,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'white',
+                borderRadius: 2,
+                '&:hover fieldset': {
+                  borderColor: '#12422a',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#12422a',
+                  borderWidth: 2,
+                },
+              },
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -442,44 +806,42 @@ export default function Materials() {
               ),
             }}
           />
-          <Tooltip title="List">
-            <span>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, backgroundColor: 'white', borderRadius: 2, p: 0.5, border: '1px solid #e5e7eb' }}>
+            <Tooltip title="List View">
               <IconButton
                 className={`view-toggle ${viewMode === 'table' ? 'active' : ''}`}
                 onClick={() => setViewMode('table')}
                 size="small"
+                sx={{
+                  borderRadius: 1.5,
+                  color: viewMode === 'table' ? '#12422a' : '#6b7280',
+                  backgroundColor: viewMode === 'table' ? '#f0f9f4' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: viewMode === 'table' ? '#e0f2e9' : '#f9fafb',
+                  },
+                }}
               >
                 <ViewListIcon />
               </IconButton>
-            </span>
-          </Tooltip>
-          <Tooltip title="Cards">
-            <span>
+            </Tooltip>
+            <Tooltip title="Card View">
               <IconButton
                 className={`view-toggle ${viewMode === 'cards' ? 'active' : ''}`}
                 onClick={() => setViewMode('cards')}
                 size="small"
+                sx={{
+                  borderRadius: 1.5,
+                  color: viewMode === 'cards' ? '#12422a' : '#6b7280',
+                  backgroundColor: viewMode === 'cards' ? '#f0f9f4' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: viewMode === 'cards' ? '#e0f2e9' : '#f9fafb',
+                  },
+                }}
               >
                 <ViewModuleIcon />
               </IconButton>
-            </span>
-          </Tooltip>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenDialog}
-            sx={{ 
-              borderRadius: 1.5,
-              backgroundColor: '#12422a',
-              '&:hover': {
-                backgroundColor: '#0d2e1c'
-              }
-            }}
-            size="small"
-            className="add-button"
-          >
-            Add New Material
-          </Button>
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
 
@@ -490,146 +852,381 @@ export default function Materials() {
         </Alert>
       )}
 
-      {/* Tabs */}
-      <Paper sx={{ mb: 2, borderRadius: 2 }} className="materials-tabs">
-        <Tabs 
-          value={activeTab} 
-          onChange={handleTabChange} 
-          variant="fullWidth"
-          textColor="inherit"
-          sx={{
-            '& .MuiTab-root': {
-              color: '#6b7280',
-              minHeight: 44,
-              fontSize: 14,
-              fontFamily: 'inherit',
-              '&.Mui-selected': {
-                color: '#12422a',
-                fontWeight: 'bold'
-              }
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#12422a'
-            }
-          }}
-        >
-          <Tab label={`My Materials (${myMaterials.length})`} />
-          <Tab label={`Active Materials (${approvedMaterials.length})`} />
-          <Tab label={`Pending Materials (${pendingMaterials.length})`} />
-          <Tab label={`Rejected Materials (${rejectedMaterials.length})`} />
-        </Tabs>
-      </Paper>
 
-      {/* Tab Content */}
-      <Box sx={{ mt: 2 }}>
+      {/* Main Content */}
+      <Box>
         {materialLoading ? (
-           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress sx={{ color: '#4CAF50' }} />
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 6 }}>
+            <CircularProgress sx={{ color: '#12422a' }} />
           </Box>
         ) : (
           <>
-            {activeTab === 0 && (
-              <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
-                  My Materials
-                </Typography>
+            {/* My Materials Section - Main */}
+            <Paper
+              elevation={0}
+              sx={{
+                mb: 3,
+                borderRadius: 2,
+                backgroundColor: 'white',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{
+                  p: 2.5,
+                  borderBottom: '1px solid #e5e7eb',
+                  backgroundColor: '#f9fafb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 1.5,
+                      backgroundColor: '#12422a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <CategoryIcon sx={{ fontSize: 22, color: 'white' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 700, mb: 0.25 }}>
+                      My Materials
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                      Materials you have created ({filtered.my.length})
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+              <Box sx={{ p: 2.5 }}>
                 {filtered.my.length === 0 ? (
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No materials created yet
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Create your first material to get started
-                      </Typography>
-                      <Button 
-                        variant="outlined" 
-                        onClick={handleOpenDialog}
-                        sx={{
-                          color: '#12422a',
-                          borderColor: '#12422a',
-                          '&:hover': {
-                            borderColor: '#0d2e1c',
-                            backgroundColor: 'rgba(18, 66, 42, 0.08)'
-                          }
-                        }}
-                         size="small"
-                      >
-                        Create Material
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <Box sx={{ textAlign: 'center', py: 6, px: 3 }}>
+                    <Box
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        backgroundColor: '#f0f9f4',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mx: 'auto',
+                        mb: 2,
+                      }}
+                    >
+                      <EcoIcon sx={{ fontSize: 40, color: '#12422a' }} />
+                    </Box>
+                    <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 600, mb: 1 }}>
+                      No materials created yet
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#6b7280', mb: 3, maxWidth: 400, mx: 'auto' }}>
+                      Start building your eco-friendly materials inventory by creating your first material request
+                    </Typography>
+                    <Button 
+                      variant="contained" 
+                      onClick={handleOpenDialog}
+                      startIcon={<AddIcon />}
+                      sx={{
+                        backgroundColor: '#12422a',
+                        px: 3,
+                        py: 1.25,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        boxShadow: '0 4px 12px rgba(18, 66, 42, 0.3)',
+                        '&:hover': {
+                          backgroundColor: '#0d2e1c',
+                          boxShadow: '0 6px 16px rgba(18, 66, 42, 0.4)',
+                        }
+                      }}
+                    >
+                      Create Your First Material
+                    </Button>
+                  </Box>
                 ) : (
-                  viewMode === 'table' ? renderMaterialsTable(filtered.my, true) : renderMaterialsCards(filtered.my, true)
+                  <>
+                    {viewMode === 'table' ? renderMaterialsTable(paginatedMy, true) : renderMaterialsCards(paginatedMy, true)}
+                    {getTotalPages(filtered.my, itemsPerPage) > 1 && (
+                      <Stack spacing={2} sx={{ mt: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Pagination
+                          count={getTotalPages(filtered.my, itemsPerPage)}
+                          page={myMaterialsPage}
+                          onChange={(event, value) => setMyMaterialsPage(value)}
+                          variant="outlined"
+                          shape="rounded"
+                          color="primary"
+                          showFirstButton
+                          showLastButton
+                          sx={{
+                            '& .MuiPaginationItem-root': {
+                              '&.Mui-selected': {
+                                backgroundColor: '#12422a',
+                                color: '#ffffff',
+                                fontWeight: 600,
+                                '&:hover': {
+                                  backgroundColor: '#0d2e1c',
+                                },
+                              },
+                              '&:hover': {
+                                backgroundColor: 'rgba(18, 66, 42, 0.1)',
+                              },
+                            },
+                          }}
+                        />
+                      </Stack>
+                    )}
+                  </>
                 )}
               </Box>
-            )}
+            </Paper>
 
-            {activeTab === 1 && (
-              <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
-                  Active Materials
-                </Typography>
-                {filtered.approved.length === 0 ? (
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No approved materials available
+            {/* Active and Rejected Materials - Side by Side */}
+            <Grid container spacing={3}>
+              {/* Active Materials Section */}
+              <Grid item xs={12} md={6}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    borderRadius: 2,
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                    overflow: 'hidden',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 500,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderBottom: '1px solid #e5e7eb',
+                      backgroundColor: '#f0fdf4',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1.5,
+                        backgroundColor: '#16a34a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <ApprovedIcon sx={{ fontSize: 22, color: 'white' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 700, mb: 0.25 }}>
+                        Active Materials
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Approved materials will appear here once they are reviewed
+                      <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                        Approved and available ({filtered.approved.length})
                       </Typography>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  viewMode === 'table' ? renderMaterialsTable(filtered.approved, false, true) : renderMaterialsCards(filtered.approved, false, true)
-                )}
-              </Box>
-            )}
+                    </Box>
+                  </Box>
+                  <Box sx={{ p: 2.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    {filtered.approved.length === 0 ? (
+                      <Box sx={{ textAlign: 'center', py: 4, px: 2, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Box
+                          sx={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: '50%',
+                            backgroundColor: '#f0f9f4',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mx: 'auto',
+                            mb: 1.5,
+                          }}
+                        >
+                          <ApprovedIcon sx={{ fontSize: 30, color: '#16a34a' }} />
+                        </Box>
+                        <Typography variant="body1" sx={{ color: '#1a1a1a', fontWeight: 600, mb: 0.5 }}>
+                          No approved materials
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                          Approved materials will appear here
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <>
+                        <Box sx={{ flex: 1, overflowY: 'auto', mb: 2 }}>
+                          {viewMode === 'table' ? (
+                            renderMaterialsTable(paginatedActive, false, true)
+                          ) : (
+                            renderMaterialsCards(paginatedActive, false, true)
+                          )}
+                        </Box>
+                        {getTotalPages(filtered.approved, itemsPerPage) > 1 && (
+                          <Stack spacing={2} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 'auto' }}>
+                            <Pagination
+                              count={getTotalPages(filtered.approved, itemsPerPage)}
+                              page={activePage}
+                              onChange={(event, value) => setActivePage(value)}
+                              variant="outlined"
+                              shape="rounded"
+                              color="primary"
+                              size="small"
+                              showFirstButton
+                              showLastButton
+                              sx={{
+                                '& .MuiPaginationItem-root': {
+                                  '&.Mui-selected': {
+                                    backgroundColor: '#16a34a',
+                                    color: '#ffffff',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                      backgroundColor: '#15803d',
+                                    },
+                                  },
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                                  },
+                                },
+                              }}
+                            />
+                          </Stack>
+                        )}
+                      </>
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
 
-            {activeTab === 2 && (
-              <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
-                  Pending Materials
-                </Typography>
-                {filtered.pending.length === 0 ? (
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No pending materials
+              {/* Rejected Materials Section */}
+              <Grid item xs={12} md={6}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    borderRadius: 2,
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                    overflow: 'hidden',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 500,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderBottom: '1px solid #e5e7eb',
+                      backgroundColor: '#fef2f2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1.5,
+                        backgroundColor: '#ef4444',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <DeleteIcon sx={{ fontSize: 22, color: 'white' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ color: '#1a1a1a', fontWeight: 700, mb: 0.25 }}>
+                        Rejected Materials
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Your pending material requests will appear here
+                      <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                        Materials that were rejected ({filtered.rejected.length})
                       </Typography>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  viewMode === 'table' ? renderMaterialsTable(filtered.pending, true) : renderMaterialsCards(filtered.pending, true)
-                )}
-              </Box>
-            )}
-
-            {activeTab === 3 && (
-              <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#12422a', fontWeight: 700, fontFamily: 'inherit' }}>
-                  Rejected Materials
-                </Typography>
-                {filtered.rejected.length === 0 ? (
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No rejected materials
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Materials that are rejected will appear here
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  viewMode === 'table' ? renderMaterialsTable(filtered.rejected, true) : renderMaterialsCards(filtered.rejected, true)
-                )}
-              </Box>
-            )}
+                    </Box>
+                  </Box>
+                  <Box sx={{ p: 2.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    {filtered.rejected.length === 0 ? (
+                      <Box sx={{ textAlign: 'center', py: 4, px: 2, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Box
+                          sx={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: '50%',
+                            backgroundColor: '#fef2f2',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mx: 'auto',
+                            mb: 1.5,
+                          }}
+                        >
+                          <DeleteIcon sx={{ fontSize: 30, color: '#ef4444' }} />
+                        </Box>
+                        <Typography variant="body1" sx={{ color: '#1a1a1a', fontWeight: 600, mb: 0.5 }}>
+                          No rejected materials
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                          Rejected materials will appear here with reasons
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <>
+                        <Box sx={{ flex: 1, overflowY: 'auto', mb: 2 }}>
+                          {viewMode === 'table' ? (
+                            renderMaterialsTable(paginatedRejected, true)
+                          ) : (
+                            renderMaterialsCards(paginatedRejected, true)
+                          )}
+                        </Box>
+                        {getTotalPages(filtered.rejected, itemsPerPage) > 1 && (
+                          <Stack spacing={2} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 'auto' }}>
+                            <Pagination
+                              count={getTotalPages(filtered.rejected, itemsPerPage)}
+                              page={rejectedPage}
+                              onChange={(event, value) => setRejectedPage(value)}
+                              variant="outlined"
+                              shape="rounded"
+                              color="primary"
+                              size="small"
+                              showFirstButton
+                              showLastButton
+                              sx={{
+                                '& .MuiPaginationItem-root': {
+                                  '&.Mui-selected': {
+                                    backgroundColor: '#ef4444',
+                                    color: '#ffffff',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                      backgroundColor: '#dc2626',
+                                    },
+                                  },
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                  },
+                                },
+                              }}
+                            />
+                          </Stack>
+                        )}
+                      </>
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
+            </Grid>
           </>
         )}
       </Box>
@@ -693,7 +1290,7 @@ export default function Materials() {
           <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
              <Grid container spacing={2}>
               {/* Material Name Field */}
-              <Grid item size={12}>
+              <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography 
                     variant="body2" 
@@ -746,7 +1343,7 @@ export default function Materials() {
               {/* Note: Business request does not require reuse limit */}
 
               {/* Description Field */}
-              <Grid item size={12}>
+              <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography 
                     variant="body2" 
