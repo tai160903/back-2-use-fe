@@ -37,6 +37,9 @@ import {
   Category as CategoryIcon,
   Description as DescriptionIcon,
   Image as ImageIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -298,49 +301,207 @@ export default function InventoryManagement() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Calculate statistics
+  const totalProductTypes = productTypes.length;
+  const totalAvailable = productTypes.reduce((sum, p) => sum + p.available, 0);
+  const totalNonAvailable = productTypes.reduce((sum, p) => sum + p.nonAvailable, 0);
+  const totalItems = totalAvailable + totalNonAvailable;
+
   return (
-    <Box className="inventory-management">
-      {/* Header */}
-      <Box className="inventory-header">
-        <Box className="header-left">
-          <Box className="header-title-section">
-            <InventoryIcon className="header-icon" />
+    <Box className="inventory-management" sx={{ p: 3, fontFamily: 'inherit', backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
+      {/* Header Section */}
+      <Box className="inventory-header" sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: 2,
+                backgroundColor: '#12422a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(18, 66, 42, 0.25)',
+              }}
+            >
+              <InventoryIcon sx={{ fontSize: 32, color: 'white' }} />
+            </Box>
             <Box>
-              <Typography variant="h4" className="header-title">
+              <Typography 
+                variant="h4" 
+                component="h1" 
+                fontWeight={700} 
+                sx={{ 
+                  color: '#1a1a1a', 
+                  fontFamily: 'inherit',
+                  mb: 0.5
+                }}
+              >
                 Inventory Management
               </Typography>
-              <Typography variant="body2" className="header-subtitle">
+              <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
                 Manage your store's reusable packaging inventory
               </Typography>
             </Box>
           </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenDialog}
+            sx={{
+              backgroundColor: '#12422a',
+              color: '#ffffff',
+              textTransform: 'none',
+              fontWeight: 600,
+              padding: '12px 24px',
+              borderRadius: 2,
+              boxShadow: '0 4px 12px rgba(18, 66, 42, 0.3)',
+              '&:hover': {
+                backgroundColor: '#0d2e1c',
+                boxShadow: '0 6px 16px rgba(18, 66, 42, 0.4)',
+                transform: 'translateY(-2px)',
+              },
+              transition: 'all 0.3s ease',
+            }}
+          >
+            Add Product Type
+          </Button>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenDialog}
-          className="add-button"
-        >
-           Add Product Type
-        </Button>
-      </Box>
 
-      {/* Search Bar */}
-      <Box className="search-section">
-        <TextField
-          fullWidth
-          placeholder="Search by type name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          className="search-input"
-        />
+        {/* Statistics Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mb: 3 }}>
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                Total Product Types
+              </Typography>
+              <CategoryIcon sx={{ fontSize: 20, color: '#12422a' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#1a1a1a', fontWeight: 700 }}>
+              {totalProductTypes}
+            </Typography>
+          </Paper>
+
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                Total Items
+              </Typography>
+              <TrendingUpIcon sx={{ fontSize: 20, color: '#12422a' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#1a1a1a', fontWeight: 700 }}>
+              {totalItems}
+            </Typography>
+          </Paper>
+
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                Available
+              </Typography>
+              <CheckCircleIcon sx={{ fontSize: 20, color: '#16a34a' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#16a34a', fontWeight: 700 }}>
+              {totalAvailable}
+            </Typography>
+          </Paper>
+
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                Non-Available
+              </Typography>
+              <CancelIcon sx={{ fontSize: 20, color: '#ef4444' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#ef4444', fontWeight: 700 }}>
+              {totalNonAvailable}
+            </Typography>
+          </Paper>
+        </Box>
+
+        {/* Search Bar */}
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            fullWidth
+            placeholder="Search by type name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{
+              backgroundColor: 'white',
+              borderRadius: 2,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '&:hover fieldset': {
+                  borderColor: '#12422a',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#12422a',
+                  borderWidth: 2,
+                },
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: '#9ca3af' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
       </Box>
 
       {/* Product Types Grid */}
@@ -395,7 +556,16 @@ export default function InventoryManagement() {
                   width: '100%',
                   display: 'flex', 
                   flexDirection: 'column',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  borderRadius: 2,
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                    transform: 'translateY(-4px)',
+                    borderColor: '#12422a',
+                  }
                 }}
               >
                 <CardContent 
@@ -403,33 +573,54 @@ export default function InventoryManagement() {
                     flexGrow: 1, 
                     display: 'flex', 
                     flexDirection: 'column',
-                    padding: '16px !important',
+                    p: 2.5,
                     width: '100%'
                   }}
                 >
-                  <Box className="card-header">
-                    <Box className="card-title-section">
-                      <InventoryIcon className="card-icon" sx={{ flexShrink: 0 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, flex: 1, minWidth: 0 }}>
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 1.5,
+                          backgroundColor: '#f0f9f4',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <InventoryIcon sx={{ fontSize: 24, color: '#12422a' }} />
+                      </Box>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography 
                           variant="h6" 
-                          className="card-title"
                           sx={{
+                            fontSize: '1.125rem',
+                            fontWeight: 700,
+                            color: '#1a1a1a',
+                            mb: 0.5,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             wordBreak: 'break-word',
-                            overflowWrap: 'break-word'
+                            overflowWrap: 'break-word',
+                            lineHeight: 1.4,
                           }}
                         >
                           {product.typeName}
                         </Typography>
                         <Typography 
                           variant="body2" 
-                          className="card-subtitle"
                           sx={{
+                            fontSize: '0.75rem',
+                            color: '#6b7280',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            fontWeight: 500,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
@@ -439,14 +630,19 @@ export default function InventoryManagement() {
                         </Typography>
                       </Box>
                     </Box>
-                    <Box className="card-actions" sx={{ flexShrink: 0 }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                       <IconButton
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/business/inventory/${product.id}/sizes`);
                         }}
-                        className="manage-sizes-button"
+                        sx={{
+                          color: '#0d9488',
+                          '&:hover': {
+                            backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                          },
+                        }}
                         title="Manage Sizes"
                       >
                         <SizeIcon fontSize="small" />
@@ -457,7 +653,12 @@ export default function InventoryManagement() {
                           e.stopPropagation();
                           handleEdit(product);
                         }}
-                        className="edit-button"
+                        sx={{
+                          color: '#12422a',
+                          '&:hover': {
+                            backgroundColor: 'rgba(18, 66, 42, 0.1)',
+                          },
+                        }}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
@@ -467,22 +668,39 @@ export default function InventoryManagement() {
                           e.stopPropagation();
                           handleDelete(product);
                         }}
-                        className="delete-button"
+                        sx={{
+                          color: '#ef4444',
+                          '&:hover': {
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                          },
+                        }}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Box>
                   </Box>
 
-                  <Box className="card-details" sx={{ flexGrow: 1 }}>
-                    <Box className="detail-row">
-                      <Typography variant="body2" className="detail-label">
-                        Description:
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flexGrow: 1 }}>
+                    <Box>
+                      <Typography 
+                        variant="body2" 
+                        sx={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          mb: 0.5,
+                        }}
+                      >
+                        Description
                       </Typography>
                       <Typography 
                         variant="body2" 
-                        className="detail-value"
                         sx={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          lineHeight: 1.6,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           display: '-webkit-box',
@@ -492,17 +710,29 @@ export default function InventoryManagement() {
                           overflowWrap: 'break-word'
                         }}
                       >
-                        {product.description || 'không'}
+                        {product.description || 'No description'}
                       </Typography>
                     </Box>
-                    <Box className="detail-row">
-                      <Typography variant="body2" className="detail-label">
-                        Material:
+                    <Box>
+                      <Typography 
+                        variant="body2" 
+                        sx={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          mb: 0.5,
+                        }}
+                      >
+                        Material
                       </Typography>
                       <Typography 
                         variant="body2" 
-                        className="detail-value"
                         sx={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          fontWeight: 500,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
@@ -511,21 +741,43 @@ export default function InventoryManagement() {
                         {product.material}
                       </Typography>
                     </Box>
-                    <Box className="detail-row">
-                      <Typography variant="body2" className="detail-label" sx={{ color: '#374151' }}>
-                        Available:
-                      </Typography>
-                      <Typography variant="body2" className="detail-value" sx={{ color: '#16a34a', fontWeight: 600 }}>
-                        {product.available}
-                      </Typography>
-                    </Box>
-                    <Box className="detail-row">
-                      <Typography variant="body2" className="detail-label" sx={{ color: '#374151' }}>
-                        Non-available:
-                      </Typography>
-                      <Typography variant="body2" className="detail-value" sx={{ color: '#dc2626', fontWeight: 600 }}>
-                        {product.nonAvailable}
-                      </Typography>
+                    <Box sx={{ display: 'flex', gap: 3, mt: 'auto', pt: 1.5, borderTop: '1px solid #f3f4f6' }}>
+                      <Box>
+                        <Typography 
+                          variant="body2" 
+                          sx={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#6b7280',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            mb: 0.5,
+                          }}
+                        >
+                          Available
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: '#16a34a', fontWeight: 700, fontSize: '1.25rem' }}>
+                          {product.available}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography 
+                          variant="body2" 
+                          sx={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#6b7280',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            mb: 0.5,
+                          }}
+                        >
+                          Non-Available
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: '#ef4444', fontWeight: 700, fontSize: '1.25rem' }}>
+                          {product.nonAvailable}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
                 </CardContent>
@@ -613,7 +865,7 @@ export default function InventoryManagement() {
           <DialogContent className="dialog-content-custom">
             <Grid container spacing={2}>
               {/* Product Type Name Field */}
-              <Grid item size={4}>
+              <Grid item xs={4}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -662,7 +914,7 @@ export default function InventoryManagement() {
               </Grid>
 
               {/* Material Select Field */}
-              <Grid item size={4}>
+              <Grid item xs={4}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -716,7 +968,7 @@ export default function InventoryManagement() {
                 </FormControl>
               </Grid>
                    {/* Upload Image Field */}
-              <Grid item size={4}>
+              <Grid item xs={4}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -779,7 +1031,7 @@ export default function InventoryManagement() {
               </Grid>
 
               {/* Description Field */}
-              <Grid item size={12}>
+              <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"

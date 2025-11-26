@@ -22,6 +22,8 @@ import {
   Divider,
   Alert,
   Paper,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -69,6 +71,8 @@ export default function ProductSizeManagement() {
     description: '',
   });
   const [formErrors, setFormErrors] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   // Get current product group
   const productGroup = productGroups.find(
@@ -84,10 +88,22 @@ export default function ProductSizeManagement() {
 
   useEffect(() => {
     // Load product sizes when productGroupId is available
+    // Load all sizes first, then paginate on client side
     if (productGroupId) {
-      dispatch(getProductSizes({ productGroupId, page: 1, limit: 100 }));
+      dispatch(getProductSizes({ productGroupId, page: 1, limit: 1000 }));
     }
   }, [dispatch, productGroupId]);
+
+  // Client-side pagination
+  const totalPages = Math.ceil(productSizes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSizes = productSizes.slice(startIndex, endIndex);
+
+  // Reset to page 1 when productSizes change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [productSizes.length]);
 
   const handleBack = () => {
     navigate(PATH.BUSINESS_INVENTORY);
@@ -194,7 +210,7 @@ export default function ProductSizeManagement() {
       }
 
       // Reload product sizes
-      dispatch(getProductSizes({ productGroupId, page: 1, limit: 100 }));
+      dispatch(getProductSizes({ productGroupId, page: 1, limit: 1000 }));
       handleCloseDialog();
     } catch (error) {
       const errorMessage =
@@ -284,8 +300,9 @@ export default function ProductSizeManagement() {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3} className="sizes-grid">
-          {productSizes.map((size) => (
+        <>
+          <Grid container spacing={3} className="sizes-grid">
+            {paginatedSizes.map((size) => (
             <Grid item xs={12} sm={6} md={4} key={size.id || size._id}>
               <Card className="size-card">
                 <CardContent>
@@ -318,30 +335,85 @@ export default function ProductSizeManagement() {
 
                   <Box className="card-details">
                     <Box className="detail-row">
-                      <MoneyIcon className="detail-icon" />
-                      <Typography variant="body2" className="detail-label">
-                        Base Price:
-                      </Typography>
-                      <Typography variant="body2" className="detail-value price">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <MoneyIcon sx={{ fontSize: 18, color: '#16a34a', flexShrink: 0 }} />
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#6b7280',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                          }}
+                        >
+                          Base Price
+                        </Typography>
+                      </Box>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          color: '#16a34a', 
+                          fontWeight: 700,
+                          fontSize: '1.125rem',
+                        }}
+                      >
                         {formatPrice(size.basePrice)}
                       </Typography>
                     </Box>
                     {size.weight && (
                       <Box className="detail-row">
-                        <ScaleIcon className="detail-icon" />
-                        <Typography variant="body2" className="detail-label">
-                          Weight:
-                        </Typography>
-                        <Typography variant="body2" className="detail-value">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                          <ScaleIcon sx={{ fontSize: 18, color: '#12422a', flexShrink: 0 }} />
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: '#6b7280',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                            }}
+                          >
+                            Weight
+                          </Typography>
+                        </Box>
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            color: '#374151',
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                          }}
+                        >
                           {size.weight} g
                         </Typography>
                       </Box>
                     )}
                     <Box className="detail-row">
-                      <Typography variant="body2" className="detail-label">
-                        Description:
-                      </Typography>
-                      <Typography variant="body2" className="detail-value">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <DescriptionIcon sx={{ fontSize: 18, color: '#12422a', flexShrink: 0 }} />
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#6b7280',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                          }}
+                        >
+                          Description
+                        </Typography>
+                      </Box>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#374151',
+                          fontSize: '0.875rem',
+                          lineHeight: 1.6,
+                        }}
+                      >
                         {size.description}
                       </Typography>
                     </Box>
@@ -350,7 +422,54 @@ export default function ProductSizeManagement() {
               </Card>
             </Grid>
           ))}
-        </Grid>
+          </Grid>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                mt: 4,
+                mb: 2
+              }}
+            >
+              <Stack spacing={2}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(event, value) => {
+                    setCurrentPage(value);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  variant="outlined"
+                  shape="rounded"
+                  color="primary"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                      '&.Mui-selected': {
+                        backgroundColor: '#12422a !important',
+                        color: '#ffffff !important',
+                        fontWeight: 600,
+                        '&:hover': {
+                          backgroundColor: '#0d2e1c !important',
+                        },
+                      },
+                      '&:hover': {
+                        backgroundColor: 'rgba(18, 66, 42, 0.1) !important',
+                      },
+                    },
+                  }}
+                />
+              </Stack>
+            </Box>
+          )}
+        </>
       )}
 
       {/* Add/Edit Dialog */}
@@ -397,7 +516,7 @@ export default function ProductSizeManagement() {
           <DialogContent className="dialog-content-custom">
             <Grid container spacing={2}>
               {/* Size Name Field */}
-              <Grid item size={6}>
+              <Grid item xs={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -456,7 +575,7 @@ export default function ProductSizeManagement() {
               </Grid>
 
               {/* Base Price Field */}
-              <Grid item size={6}>
+              <Grid item xs={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -515,7 +634,7 @@ export default function ProductSizeManagement() {
               </Grid>
 
               {/* Weight Field */}
-              <Grid item size={6}>
+              <Grid item xs={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"

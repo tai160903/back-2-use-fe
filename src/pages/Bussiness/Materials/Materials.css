@@ -1,78 +1,111 @@
-/* Materials page - align with Business inventory look & feel */
+/* Materials Management Page - Professional Enterprise Design */
 .materials-page {
   padding: 24px 32px;
-  background-color: #f8f9fa;
+  background-color: #f5f7fa;
   min-height: 100vh;
 }
 
 .materials-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
+/* Statistics Cards */
+.materials-header .MuiPaper-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Search Input */
 .materials-toolbar .search-input {
   background-color: #ffffff;
-  border-radius: 8px;
-  min-width: 260px;
+  border-radius: 12px;
+  min-width: 320px;
 }
 
+.materials-toolbar .search-input .MuiOutlinedInput-root {
+  border-radius: 12px;
+}
+
+/* View Toggle Buttons */
 .view-toggle {
-  border-radius: 8px !important;
-  color: #374151 !important;
+  border-radius: 12px !important;
+  transition: all 0.2s ease !important;
 }
 
 .view-toggle.active {
-  background-color: #e5e7eb !important;
+  background-color: #f0f9f4 !important;
+  color: #12422a !important;
 }
 
+/* Tabs */
 .materials-tabs {
   border-radius: 12px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
 }
 
+.materials-tabs .MuiTabs-root {
+  min-height: 56px;
+}
+
+.materials-tabs .MuiTab-root {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  min-height: 56px !important;
+  padding: 12px 24px !important;
+}
+
+.materials-tabs .MuiTab-root.Mui-selected {
+  color: #12422a !important;
+  font-weight: 600 !important;
+}
+
+.materials-tabs .MuiTabs-indicator {
+  height: 3px !important;
+  border-radius: 3px 3px 0 0 !important;
+  background-color: #12422a !important;
+}
+
+/* Add Button */
 .add-button {
   background-color: #12422a !important;
   color: #ffffff !important;
   text-transform: none !important;
   font-weight: 600 !important;
-  padding: 10px 16px !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+  padding: 12px 24px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(18, 66, 42, 0.3) !important;
+  transition: all 0.3s ease !important;
 }
 
 .add-button:hover {
   background-color: #0d2e1c !important;
+  box-shadow: 0 6px 16px rgba(18, 66, 42, 0.4) !important;
+  transform: translateY(-2px) !important;
 }
 
-.cancel-button {
-  border-radius: 8px !important;
-  text-transform: none !important;
-}
-
-.create-button {
-  border-radius: 8px !important;
-  text-transform: none !important;
-}
-
+/* Materials Grid */
 .materials-grid {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
+/* Material Card */
 .material-card {
   border-radius: 12px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-  transition: all 0.3s ease !important;
-  height: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  height: 100% !important;
+  border: 1px solid #e5e7eb !important;
+  background-color: #ffffff !important;
 }
 
 .material-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-4px) !important;
+  border-color: #12422a !important;
 }
 
+/* Card Header */
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -81,48 +114,246 @@
 
 .card-title-section {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .card-icon {
-  font-size: 20px;
-  color: #16a34a;
+  font-size: 24px;
+  color: #12422a;
+  flex-shrink: 0;
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
+  line-height: 1.4;
 }
 
 .card-subtitle {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #6b7280;
-  margin-top: 2px;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
+/* Card Details */
 .card-details {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .detail-row {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .detail-label {
   font-weight: 600;
-  color: #374151;
-  min-width: 92px;
+  color: #6b7280;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .detail-value {
-  color: #6b7280;
-  flex: 1;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
+/* Table Styles */
+.materials-page .MuiTableContainer-root {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
 
+.materials-page .MuiTableHead-root {
+  background-color: #f9fafb;
+}
+
+.materials-page .MuiTableHead-root .MuiTableCell-root {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.materials-page .MuiTableBody-root .MuiTableRow-root {
+  transition: background-color 0.2s ease;
+}
+
+.materials-page .MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: #f9fafb;
+}
+
+.materials-page .MuiTableBody-root .MuiTableCell-root {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Empty State */
+.materials-page .MuiPaper-root[style*="text-align: center"] {
+  border-radius: 12px;
+}
+
+/* Dialog Styles */
+.materials-page .MuiDialog-paper {
+  border-radius: 16px !important;
+}
+
+/* Status Chips */
+.materials-page .MuiChip-root {
+  font-weight: 600;
+  font-size: 0.75rem;
+  height: 28px;
+  border-radius: 6px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .materials-header .MuiGrid-root {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .materials-page {
+    padding: 16px 20px;
+  }
+
+  .materials-header .MuiGrid-root {
+    grid-template-columns: 1fr !important;
+  }
+
+  .materials-toolbar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .materials-toolbar .search-input {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .materials-tabs .MuiTab-root {
+    font-size: 0.75rem !important;
+    padding: 12px 8px !important;
+    min-width: auto !important;
+  }
+
+  .materials-tabs .MuiTab-root .MuiBox-root {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .materials-tabs .MuiTab-root .MuiBox-root span {
+    font-size: 0.7rem;
+  }
+
+  .materials-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .materials-page {
+    padding: 12px 16px;
+  }
+
+  .materials-header .MuiBox-root:first-of-type {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px;
+  }
+
+  .add-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Loading State */
+.materials-page .MuiCircularProgress-root {
+  color: #12422a;
+}
+
+/* Error Alert */
+.materials-page .MuiAlert-root {
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Action Buttons in Table */
+.materials-page .MuiIconButton-root {
+  transition: all 0.2s ease;
+}
+
+.materials-page .MuiIconButton-root:hover {
+  transform: scale(1.1);
+}
+
+/* Card Action Buttons */
+.view-button,
+.edit-button,
+.delete-button {
+  transition: all 0.2s ease;
+}
+
+.view-button:hover {
+  background-color: #f0f9f4 !important;
+  color: #12422a !important;
+}
+
+.edit-button:hover {
+  background-color: #f0f9f4 !important;
+  color: #16a34a !important;
+}
+
+.delete-button:hover {
+  background-color: #fef2f2 !important;
+  color: #ef4444 !important;
+}
+
+/* Smooth Transitions */
+.materials-page * {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus States */
+.materials-page .MuiButton-root:focus-visible,
+.materials-page .MuiIconButton-root:focus-visible {
+  outline: 2px solid #12422a;
+  outline-offset: 2px;
+}
+
+/* Scrollbar Styling for Table */
+.materials-page .MuiTableContainer-root::-webkit-scrollbar {
+  height: 8px;
+}
+
+.materials-page .MuiTableContainer-root::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.materials-page .MuiTableContainer-root::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.materials-page .MuiTableContainer-root::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
