@@ -100,6 +100,27 @@ export const reviewMaterialApi = createAsyncThunk(
   }
 );
 
+// Get Material Requests API
+export const getMaterialRequestsApi = createAsyncThunk(
+  "admin/getMaterialRequestsApi",
+  async ({ status, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/materials/material-requests?page=${page}&limit=${limit}`;
+      
+      if (status && status !== 'all') {
+        url += `&status=${status}`;
+      }
+      
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // Get Business Statistics API
 export const getBusinessStatsApi = createAsyncThunk(
   "admin/getBusinessStatsApi",
@@ -364,6 +385,7 @@ const adminSlice = createSlice({
   initialState: {
     materials: [],
     currentMaterial: null,
+    materialRequests: [],
     businesses: [],
     currentBusiness: null,
     leaderboardRewards: [],
@@ -374,6 +396,13 @@ const adminSlice = createSlice({
     isLoading: false,
     error: null,
     pagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
+    },
+    materialRequestPagination: {
       page: 1,
       limit: 10,
       total: 0,
@@ -585,6 +614,18 @@ const adminSlice = createSlice({
         const updatedStatus = updated.status;
 
         if (updatedId) {
+          // Remove from materialRequests if it was a request
+          const requestIndex = state.materialRequests.findIndex(
+            (request) => request._id === updatedId || request.id === updatedId
+          );
+          if (requestIndex !== -1) {
+            state.materialRequests.splice(requestIndex, 1);
+            // Update pagination total
+            if (state.materialRequestPagination.total > 0) {
+              state.materialRequestPagination.total -= 1;
+            }
+          }
+
           // Update the material status in the list
           const index = state.materials.findIndex(
             (material) => material._id === updatedId || material.id === updatedId
@@ -605,6 +646,9 @@ const adminSlice = createSlice({
             if (updated.depositPercent !== undefined) {
               state.materials[index].depositPercent = updated.depositPercent;
             }
+          } else if (updatedStatus === 'approved') {
+            // If approved, add to materials list if not already there
+            state.materials.unshift(updated);
           }
 
           if (
@@ -642,6 +686,29 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to review material");
+      })
+      
+      // Get Material Requests
+      .addCase(getMaterialRequestsApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getMaterialRequestsApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.materialRequests = payload.data || [];
+        // Update pagination with response data
+        state.materialRequestPagination = {
+          ...state.materialRequestPagination,
+          total: payload.total || 0,
+          currentPage: payload.currentPage || 1,
+          totalPages: payload.totalPages || 0,
+        };
+      })
+      .addCase(getMaterialRequestsApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch material requests");
       })
       
       // Get Business Statistics

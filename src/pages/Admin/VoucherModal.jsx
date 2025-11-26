@@ -33,7 +33,8 @@ import { getEcoRewardApi } from '../../store/slices/ecoRewardSlice';
 const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
   const dispatch = useDispatch();
   const { items: ecoRewardPolicies, status: ecoRewardStatus } = useSelector((state) => state.ecoreward);
-  const [selectedVoucherType, setSelectedVoucherType] = useState(voucherType || 'business');
+  // Always use leaderboard type for admin-created vouchers
+  const selectedVoucherType = 'leaderboard';
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -49,16 +50,10 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
 
   const [errors, setErrors] = useState({});
 
-  // Load eco reward policies when modal opens and voucher type is business
-  useEffect(() => {
-    if (isOpen && selectedVoucherType === 'business') {
-      dispatch(getEcoRewardApi({ page: 1, limit: 100 }));
-    }
-  }, [isOpen, selectedVoucherType, dispatch]);
+  // No need to load eco reward policies for leaderboard vouchers
 
   useEffect(() => {
     if (voucher) {
-      setSelectedVoucherType(voucher.voucherType || 'business');
       setFormData({
         name: voucher.name || '',
         description: voucher.description || '',
@@ -68,11 +63,10 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         maxUsage: voucher.maxUsage || '',
         startDate: voucher.startDate ? voucher.startDate.split('T')[0] : '',
         endDate: voucher.endDate ? voucher.endDate.split('T')[0] : '',
-        ecoRewardPolicyId: voucher.ecoRewardPolicyId || '',
+        ecoRewardPolicyId: '',
         isDisabled: voucher.isDisabled !== undefined ? voucher.isDisabled : false,
       });
     } else {
-      setSelectedVoucherType(voucherType || 'business');
       setFormData({
         name: '',
         description: '',
@@ -87,7 +81,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
       });
     }
     setErrors({});
-  }, [voucher, isOpen, voucherType]);
+  }, [voucher, isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -150,28 +144,15 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      // Prepare data based on voucher type
-      let submitData = {};
+      // Prepare data for leaderboard vouchers
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        discountPercent: parseFloat(formData.discountPercent),
+        baseCode: formData.baseCode,
+      };
       
-      if (selectedVoucherType === 'business') {
-        submitData = {
-          name: formData.name,
-          description: formData.description,
-          baseCode: formData.baseCode,
-          maxUsage: parseInt(formData.maxUsage),
-          ecoRewardPolicyId: formData.ecoRewardPolicyId,
-          isDisabled: formData.isDisabled,
-        };
-      } else if (selectedVoucherType === 'leaderboard') {
-        submitData = {
-          name: formData.name,
-          description: formData.description,
-          discountPercent: parseFloat(formData.discountPercent),
-          baseCode: formData.baseCode,
-        };
-      }
-      
-      onSubmit(submitData, selectedVoucherType);
+      onSubmit(submitData);
     }
   };
 
@@ -209,7 +190,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
               {voucher ? 'Edit Voucher' : 'Create New Voucher'}
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
-              {voucher ? 'Update voucher information' : 'Add a new voucher to the system'}
+              {voucher ? 'Update leaderboard voucher information' : 'Create a new leaderboard voucher for top-ranked customers'}
             </Typography>
           </Box>
         </Box>
@@ -230,21 +211,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
           <Grid container spacing={2.5}>
-            {!voucher && (
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Voucher Type</InputLabel>
-                  <Select
-                    value={selectedVoucherType}
-                    label="Voucher Type"
-                    onChange={(e) => setSelectedVoucherType(e.target.value)}
-                  >
-                    <MenuItem value="business">Business Voucher</MenuItem>
-                    <MenuItem value="leaderboard">Leaderboard Voucher</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            )}
+            {/* Voucher type is fixed to leaderboard for admin-created vouchers */}
 
             <Grid item xs={12} md={7}>
               <TextField
@@ -287,7 +254,8 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
               />
             </Grid>
 
-            {selectedVoucherType === 'business' && (
+            {/* Business voucher fields removed - only leaderboard vouchers for admin */}
+            {false && selectedVoucherType === 'business' && (
               <>
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -457,25 +425,24 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
               </>
             )}
 
-            {selectedVoucherType === 'leaderboard' && (
-              <Grid item xs={12} md={6}>
-                <TextField
-                  name="discountPercent"
-                  label="Discount Percent (%)"
-                  type="number"
-                  value={formData.discountPercent}
-                  onChange={handleChange}
-                  error={!!errors.discountPercent}
-                  helperText={errors.discountPercent}
-                  fullWidth
-                  required
-                  inputProps={{ min: 0, max: 100, step: 0.1 }}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">%</InputAdornment>
-                  }}
-                />
-              </Grid>
-            )}
+            {/* Leaderboard Voucher Fields - Always shown */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="discountPercent"
+                label="Discount Percent (%)"
+                type="number"
+                value={formData.discountPercent}
+                onChange={handleChange}
+                error={!!errors.discountPercent}
+                helperText={errors.discountPercent || 'Discount percentage for top-ranked customers'}
+                fullWidth
+                required
+                inputProps={{ min: 0, max: 100, step: 0.1 }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>
+                }}
+              />
+            </Grid>
 
           </Grid>
         </DialogContent>

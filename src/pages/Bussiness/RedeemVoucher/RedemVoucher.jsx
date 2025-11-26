@@ -82,6 +82,10 @@ export default function RedemVoucher() {
   const [setupVouchersPage, setSetupVouchersPage] = useState(1);
   const [setupVouchersStatus, setSetupVouchersStatus] = useState(undefined); // Filter by status
   const [setupVouchersIsPublished, setSetupVouchersIsPublished] = useState(undefined); // Filter by isPublished
+  
+  // State to store ALL claimed vouchers (for checking if voucher is claimed)
+  // This is separate from myBusinessVouchers to avoid being overwritten by filters
+  const [allClaimedVouchers, setAllClaimedVouchers] = useState([]);
 
   // Tab state
   const [activeTab, setActiveTab] = useState(0); // 0: Available to Claim, 1: My Claimed Vouchers
@@ -141,12 +145,26 @@ export default function RedemVoucher() {
   // Load this ALWAYS, not just when activeTab === 0, to ensure data is available
   useEffect(() => {
     // Load all claimed vouchers to check against available vouchers
-    dispatch(getMyBusinessVouchers({
-      status: undefined, // Load all statuses
-      isPublished: undefined, // Load all published states
-      page: 1,
-      limit: 100, // Load enough to check all claimed vouchers
-    }));
+    const loadAllClaimed = async () => {
+      try {
+        const result = await dispatch(getMyBusinessVouchers({
+          status: undefined, // Load all statuses
+          isPublished: undefined, // Load all published states
+          page: 1,
+          limit: 100, // Load enough to check all claimed vouchers
+        })).unwrap();
+        
+        // Store in separate state to avoid being overwritten
+        const claimedList = result?.data || result || [];
+        const finalList = Array.isArray(claimedList) ? claimedList : [];
+        setAllClaimedVouchers(finalList);
+      } catch (error) {
+        console.error('[All Claimed Vouchers] Error loading:', error);
+        setAllClaimedVouchers([]);
+      }
+    };
+    
+    loadAllClaimed();
   }, [dispatch]);
 
   // Get voucher status helper function
@@ -188,51 +206,109 @@ export default function RedemVoucher() {
 
   // Get list of voucher IDs that have already been claimed by this business
   // This must be defined BEFORE availableToClaim since availableToClaim uses it
+  // Use allClaimedVouchers instead of myBusinessVouchers to avoid filter conflicts
   const claimedVoucherIds = useMemo(() => {
-    if (!myBusinessVouchers || !Array.isArray(myBusinessVouchers)) {
+    // Use allClaimedVouchers state which contains ALL claimed vouchers
+    const vouchersToCheck = allClaimedVouchers.length > 0 ? allClaimedVouchers : (myBusinessVouchers || []);
+    
+    if (!vouchersToCheck || !Array.isArray(vouchersToCheck) || vouchersToCheck.length === 0) {
       return new Set();
     }
     
     // Extract voucher template IDs from claimed vouchers
-    // myBusinessVouchers structure: { voucher: { _id: templateId }, ... }
-    const ids = myBusinessVouchers
+    // Structure can be: { voucher: { _id: templateId }, ... } or { voucherId: templateId, ... }
+    const ids = vouchersToCheck
       .map((v, index) => {
         // Try multiple possible locations for the voucher template ID
-        const templateId = 
-          v.voucher?._id || 
-          v.voucher?.id || 
-          v.voucherId || 
-          v.voucherTemplateId ||
-          v._id || // Sometimes the business voucher might have the template ID directly
-          v.id;
+        // Priority: voucher._id > voucher.id > voucherId > voucherTemplateId > voucher (if it's a string/ID)
+        let templateId = null;
+        let extractedFrom = 'unknown';
         
-        const idString = templateId ? String(templateId) : null;
-        
-        // Detailed debug log
-        console.log(`[Claimed Voucher ${index}]`, {
-          fullVoucher: v,
-          voucherObject: v.voucher,
-          extractedId: idString,
-          possibleIds: {
-            'v.voucher?._id': v.voucher?._id,
-            'v.voucher?.id': v.voucher?.id,
-            'v.voucherId': v.voucherId,
-            'v.voucherTemplateId': v.voucherTemplateId,
-            'v._id': v._id,
-            'v.id': v.id,
+        // Check nested voucher object first
+        if (v.voucher) {
+          if (v.voucher._id) {
+            templateId = v.voucher._id;
+            extractedFrom = 'v.voucher._id';
+          } else if (v.voucher.id) {
+            templateId = v.voucher.id;
+            extractedFrom = 'v.voucher.id';
+          } else if (typeof v.voucher === 'string') {
+            // If voucher is a string ID directly
+            templateId = v.voucher;
+            extractedFrom = 'v.voucher (string)';
+          } else if (v.voucher.toString && typeof v.voucher.toString === 'function') {
+            // Try toString if it's an object
+            const str = v.voucher.toString();
+            if (str && str.length > 10) {
+              templateId = str;
+              extractedFrom = 'v.voucher.toString()';
+            }
           }
-        });
+        }
+        
+        // Check direct fields
+        if (!templateId) {
+          if (v.voucherId) {
+            templateId = v.voucherId;
+            extractedFrom = 'v.voucherId';
+          } else if (v.voucherTemplateId) {
+            templateId = v.voucherTemplateId;
+            extractedFrom = 'v.voucherTemplateId';
+          } else if (v.templateId) {
+            templateId = v.templateId;
+            extractedFrom = 'v.templateId';
+          } else if (v.voucher && typeof v.voucher === 'string') {
+            templateId = v.voucher;
+            extractedFrom = 'v.voucher (direct string)';
+          }
+        }
+        
+        // If still no ID, check all keys that might contain ID
+        // BUT: Skip v._id and v.id as they are likely business voucher IDs, not template IDs
+        if (!templateId && v) {
+          const allKeys = Object.keys(v);
+          const keysToSkip = ['_id', 'id', '__v', 'createdAt', 'updatedAt', 'businessId', 'business', 'customName', 'customDescription', 'discountPercent', 'rewardPointCost', 'startDate', 'endDate', 'isPublished', 'status'];
+          
+          // Look for keys that might contain template ID
+          for (const key of allKeys) {
+            // Skip common business voucher fields
+            if (keysToSkip.includes(key)) continue;
+            
+            const value = v[key];
+            
+            // Skip if it's the business voucher ID itself
+            if ((key === '_id' || key === 'id') && value === v._id) continue;
+            
+            // Check if value looks like an ID (string with length > 10)
+            if (typeof value === 'string' && value.length > 10 && /^[a-f0-9]{24}$/i.test(value)) {
+              // Looks like MongoDB ObjectId - but need to verify it's not the business voucher ID
+              // Only use if it's different from v._id
+              if (value !== String(v._id || v.id || '')) {
+                templateId = value;
+                extractedFrom = `v.${key}`;
+                break;
+              }
+            } else if (value && typeof value === 'object' && value._id) {
+              // Nested object with _id
+              const nestedId = String(value._id);
+              // Only use if it's different from business voucher ID
+              if (nestedId !== String(v._id || v.id || '')) {
+                templateId = nestedId;
+                extractedFrom = `v.${key}._id`;
+                break;
+              }
+            }
+          }
+        }
+        
+        const idString = templateId ? String(templateId).trim() : null;
         
         return idString;
       })
       .filter(Boolean);
     
-    console.log('=== Claimed Voucher IDs Summary ===');
-    console.log('myBusinessVouchers count:', myBusinessVouchers.length);
-    console.log('Extracted claimed template IDs:', Array.from(ids));
-    
     return new Set(ids);
-  }, [myBusinessVouchers]);
+  }, [allClaimedVouchers, myBusinessVouchers]);
 
   // Filter available vouchers (only show isDisabled = false)
   // Also filter out vouchers that have already been claimed by this business
@@ -244,39 +320,42 @@ export default function RedemVoucher() {
     // First filter by isDisabled
     let filtered = businessVouchers.filter(v => !v.isDisabled);
     
-    console.log('=== Available Vouchers Filtering ===');
-    console.log('Total businessVouchers:', businessVouchers.length);
-    console.log('After isDisabled filter:', filtered.length);
-    console.log('Claimed voucher IDs set:', Array.from(claimedVoucherIds));
-    
     // Then filter out vouchers that have already been claimed
-    if (claimedVoucherIds.size > 0) {
-      filtered = filtered.filter(voucher => {
-        const voucherId = String(voucher._id || voucher.id || '');
-        const isClaimed = claimedVoucherIds.has(voucherId);
-        
-        console.log(`Checking voucher:`, {
-          voucherId,
-          voucherName: voucher.name || 'Unknown',
-          isClaimed,
-          voucherData: voucher,
-          claimedIds: Array.from(claimedVoucherIds),
-          match: claimedVoucherIds.has(voucherId)
-        });
-        
-        if (isClaimed) {
-          console.log(`❌ Filtering out claimed voucher: ${voucherId} (${voucher.name || 'Unknown'})`);
-        } else {
-          console.log(`✅ Keeping available voucher: ${voucherId} (${voucher.name || 'Unknown'})`);
+    // businessVouchers structure: { _id: templateId, name, ... }
+    filtered = filtered.filter(voucher => {
+      // Get the template ID from business voucher
+      const voucherTemplateId = String(voucher._id || voucher.id || '').trim();
+      
+      if (!voucherTemplateId || voucherTemplateId === 'undefined' || voucherTemplateId === 'null' || voucherTemplateId === '') {
+        // If no valid ID, keep it (might be a new voucher)
+        return true;
+      }
+      
+      // Check if this template ID exists in claimed vouchers
+      // Try both exact match and string comparison
+      const isClaimed = claimedVoucherIds.has(voucherTemplateId);
+      
+      // Also check if any claimed ID matches (case-insensitive, trimmed)
+      let isClaimedAlternative = false;
+      if (!isClaimed && claimedVoucherIds.size > 0) {
+        const normalizedVoucherId = voucherTemplateId.toLowerCase().trim();
+        for (const claimedId of claimedVoucherIds) {
+          const normalizedClaimedId = String(claimedId).toLowerCase().trim();
+          if (normalizedVoucherId === normalizedClaimedId) {
+            isClaimedAlternative = true;
+            break;
+          }
         }
-        
-        return !isClaimed;
-      });
-    }
+      }
+      
+      const finalIsClaimed = isClaimed || isClaimedAlternative;
+      
+      // Return false if claimed (filter it out)
+      return !finalIsClaimed;
+    });
 
-    console.log('✅ Final available to claim after filtering:', filtered.length, 'vouchers');
     return filtered;
-  }, [businessVouchers, claimedVoucherIds]);
+  }, [businessVouchers, claimedVoucherIds, allClaimedVouchers]);
 
   // Get unique tier labels from available vouchers
   const availableTierLabels = useMemo(() => {
@@ -299,19 +378,11 @@ export default function RedemVoucher() {
     // businessVouchers structure: { _id: templateId, name, ... }
     const voucherId = String(voucher._id || voucher.id || '');
     if (!voucherId || voucherId === 'undefined' || voucherId === 'null') {
-      console.log('Voucher has no valid ID:', voucher);
       return false;
     }
     
     // Check if this ID exists in claimed vouchers
     const isClaimed = claimedVoucherIds.has(voucherId);
-    
-    console.log(`Checking voucher ${voucherId} (${voucher.name || 'Unknown'}):`, {
-      voucherId,
-      isClaimed,
-      claimedIds: Array.from(claimedVoucherIds),
-      voucherData: voucher
-    });
     
     return isClaimed;
   };
@@ -327,11 +398,13 @@ export default function RedemVoucher() {
   const handleOpenClaimModal = (voucher) => {
     if (!voucher) return;
     
-    // Double check if voucher is already claimed before opening modal
+    // CRITICAL: Double check if voucher is already claimed before opening modal
     // This is a safety check - button should already be disabled
-    if (isVoucherClaimed(voucher)) {
-      console.warn('Attempted to claim already claimed voucher:', voucher._id || voucher.id);
-      // Don't show toast, just silently return
+    const voucherTemplateId = String(voucher._id || voucher.id || '');
+    const isClaimed = voucherTemplateId && claimedVoucherIds.has(voucherTemplateId);
+    
+    if (isClaimed) {
+      toast.error('Voucher này đã được claim rồi');
       return;
     }
     
@@ -363,13 +436,29 @@ export default function RedemVoucher() {
       })).unwrap();
       
       handleCloseClaimModal();
-      // Refresh lists
+      
+      // CRITICAL: Refresh ALL claimed vouchers first to update claimedVoucherIds
+      // This must be done before refreshing businessVouchers
+      const claimedResult = await dispatch(getMyBusinessVouchers({
+        status: undefined, // Load all statuses
+        isPublished: undefined, // Load all published states
+        page: 1,
+        limit: 100, // Load enough to check all claimed vouchers
+      })).unwrap();
+      
+      // Update allClaimedVouchers state
+      const claimedList = claimedResult?.data || claimedResult || [];
+      setAllClaimedVouchers(Array.isArray(claimedList) ? claimedList : []);
+      
+      // Then refresh available vouchers list
       dispatch(getBusinessVouchers({
         tierLabel: tierLabel || undefined,
         minThreshold: minThreshold ? Number(minThreshold) : undefined,
         page: availablePage,
         limit: itemsPerPage,
       }));
+      
+      // Also refresh my vouchers list for the "My Claimed Vouchers" tab
       dispatch(getMyBusinessVouchers({
         status: myVouchersStatus,
         isPublished: isPublished !== null ? isPublished : undefined,
@@ -457,6 +546,15 @@ export default function RedemVoucher() {
       return;
     }
 
+    // Helper function to convert date string to ISO string without timezone issues
+    const convertDateToISO = (dateString) => {
+      if (!dateString) return '';
+      // If dateString is already in YYYY-MM-DD format, append time to avoid timezone shift
+      // Create date at midnight UTC to preserve the selected date
+      const date = new Date(dateString + 'T00:00:00.000Z');
+      return date.toISOString();
+    };
+
     try {
       if (isEditMode) {
         // Edit mode: use updateBusinessVoucher
@@ -465,8 +563,8 @@ export default function RedemVoucher() {
           data: {
             discountPercent: Number(setupForm.discountPercent),
             rewardPointCost: Number(setupForm.rewardPointCost),
-            startDate: new Date(setupForm.startDate).toISOString(),
-            endDate: new Date(setupForm.endDate).toISOString(),
+            startDate: convertDateToISO(setupForm.startDate),
+            endDate: convertDateToISO(setupForm.endDate),
             isPublished: setupForm.isPublished
           }
         })).unwrap();
@@ -477,8 +575,8 @@ export default function RedemVoucher() {
           data: {
             discountPercent: Number(setupForm.discountPercent),
             rewardPointCost: Number(setupForm.rewardPointCost),
-            startDate: new Date(setupForm.startDate).toISOString(),
-            endDate: new Date(setupForm.endDate).toISOString(),
+            startDate: convertDateToISO(setupForm.startDate),
+            endDate: convertDateToISO(setupForm.endDate),
             isPublished: setupForm.isPublished // Use value from form
           }
         })).unwrap();
@@ -571,7 +669,7 @@ export default function RedemVoucher() {
             }
           }}
         >
-          <Tab label={`Voucher có thể Claim (${businessVoucherPagination?.total || availableToClaim.length || 0})`} />
+          <Tab label={`Voucher có thể Claim (${availableToClaim.length || 0})`} />
           <Tab label={`Voucher đã Claim (${myBusinessVoucherPagination?.total || myBusinessVouchers?.length || 0})`} />
         </Tabs>
       </Box>
@@ -664,13 +762,12 @@ export default function RedemVoucher() {
             <>
               <div className="vouchers-grid">
                 {availableToClaim.map((voucher) => {
-                  // Check if voucher is claimed - this should always return false since we filtered
-                  // But we keep this check as a safety measure
-                  const isClaimed = isVoucherClaimed(voucher);
+                  // CRITICAL: Double check if voucher is claimed
+                  const voucherTemplateId = String(voucher._id || voucher.id || '');
+                  const isClaimed = voucherTemplateId && claimedVoucherIds.has(voucherTemplateId);
                   
-                  // If somehow a claimed voucher got through, don't render it
+                  // If claimed, don't render at all
                   if (isClaimed) {
-                    console.error('ERROR: Claimed voucher found in availableToClaim list!', voucher);
                     return null;
                   }
                   
@@ -679,16 +776,17 @@ export default function RedemVoucher() {
                       key={voucher._id || voucher.id} 
                       className="voucher-card"
                       style={{
-                        opacity: isClaimed ? 0.7 : 1,
+                        // Extra safety: disable pointer events if somehow claimed
                         pointerEvents: isClaimed ? 'none' : 'auto',
+                        opacity: isClaimed ? 0.5 : 1,
                         cursor: isClaimed ? 'not-allowed' : 'default',
-                        userSelect: isClaimed ? 'none' : 'auto',
                       }}
                       onClick={(e) => {
+                        // Block all clicks if claimed
                         if (isClaimed) {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.warn('Click blocked on claimed voucher');
+                          return false;
                         }
                       }}
                     >
@@ -722,78 +820,57 @@ export default function RedemVoucher() {
                         )}
         </div>
                       <div className="voucher-card-footer">
-                        {isClaimed ? (
-                          <Button
-                            variant="contained"
-                            disabled
-                            fullWidth
-                            sx={{
-                              backgroundColor: '#9ca3af',
-                              fontWeight: 600,
-                              py: 1.2,
-                              fontSize: '0.9375rem',
-                              cursor: 'not-allowed',
-                              '&:disabled': {
-                                backgroundColor: '#9ca3af',
-                                color: '#ffffff',
-                              }
-                            }}
-                          >
-                            Already Claimed
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            startIcon={!isClaimed ? <MdRedeem /> : null}
-                            onClick={(e) => {
-                              // CRITICAL: Block all clicks if voucher is claimed
-                              if (isClaimed) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.warn('❌ BLOCKED: Attempted to claim already claimed voucher:', voucher._id || voucher.id);
-                                return false;
-                              }
-                              
+                        <Button
+                          variant="contained"
+                          startIcon={!isClaimed ? <MdRedeem /> : null}
+                          onClick={(e) => {
+                            // CRITICAL: Block all clicks if claimed
+                            if (isClaimed) {
                               e.preventDefault();
                               e.stopPropagation();
-                              
-                              // Final safety check
-                              const finalCheck = isVoucherClaimed(voucher);
-                              if (finalCheck) {
-                                console.warn('❌ BLOCKED: Final check failed - voucher is claimed');
-                                return false;
-                              }
-                              
-                              handleOpenClaimModal(voucher);
-                            }}
-                            fullWidth
-                            disabled={isClaimed}
-                            sx={{
-                              backgroundColor: isClaimed ? '#9ca3af' : '#22c55e',
-                              fontWeight: 600,
-                              py: 1.2,
-                              fontSize: '0.9375rem',
-                              boxShadow: isClaimed ? 'none' : '0 4px 12px rgba(34, 197, 94, 0.35)',
-                              transition: 'all 0.3s ease',
-                              cursor: isClaimed ? 'not-allowed' : 'pointer',
-                              pointerEvents: isClaimed ? 'none' : 'auto',
-                              '&:hover': {
-                                backgroundColor: isClaimed ? '#9ca3af' : '#16a34a',
-                                boxShadow: isClaimed ? 'none' : '0 6px 16px rgba(34, 197, 94, 0.45)',
-                                transform: isClaimed ? 'none' : 'translateY(-2px)',
-                              },
-                              '&:disabled': {
-                                backgroundColor: '#9ca3af',
-                                color: '#ffffff',
-                                cursor: 'not-allowed',
-                                pointerEvents: 'none',
-                              }
-                            }}
-                          >
-                            {isClaimed ? 'Already Claimed' : 'Claim Voucher'}
-                          </Button>
-                        )}
-                      </div>
+                              toast.error('Voucher này đã được claim rồi');
+                              return false;
+                            }
+                            
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Final safety check before opening modal
+                            const finalCheck = voucherTemplateId && claimedVoucherIds.has(voucherTemplateId);
+                            if (finalCheck) {
+                              toast.error('Voucher này đã được claim rồi');
+                              return false;
+                            }
+                            
+                            handleOpenClaimModal(voucher);
+                          }}
+                          fullWidth
+                          disabled={isClaimed}
+                          sx={{
+                            backgroundColor: isClaimed ? '#9ca3af' : '#22c55e',
+                            fontWeight: 600,
+                            py: 1.2,
+                            fontSize: '0.9375rem',
+                            boxShadow: isClaimed ? 'none' : '0 4px 12px rgba(34, 197, 94, 0.35)',
+                            transition: 'all 0.3s ease',
+                            cursor: isClaimed ? 'not-allowed' : 'pointer',
+                            pointerEvents: isClaimed ? 'none' : 'auto',
+                            '&:hover': {
+                              backgroundColor: isClaimed ? '#9ca3af' : '#16a34a',
+                              boxShadow: isClaimed ? 'none' : '0 6px 16px rgba(34, 197, 94, 0.45)',
+                              transform: isClaimed ? 'none' : 'translateY(-2px)',
+                            },
+                            '&:disabled': {
+                              backgroundColor: '#9ca3af',
+                              color: '#ffffff',
+                              cursor: 'not-allowed',
+                              pointerEvents: 'none',
+                            }
+                          }}
+                        >
+                          {isClaimed ? 'Already Claimed' : 'Claim Voucher'}
+                        </Button>
+        </div>
                     </div>
                   );
                 })}
