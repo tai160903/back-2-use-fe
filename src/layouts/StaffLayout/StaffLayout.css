@@ -1,0 +1,54 @@
+
+.staff-layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+
+.staff-layout-container .navbar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 100;
+}
+
+
+.staff-layout-container .navbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.staff-layout-container .navbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.staff-layout-container .navbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.staff-layout-container .navbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Wrapper nội dung */
+.staff-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-left: 70px; /* khi sidebar đóng */
+  transition: margin-left 0.3s ease;
+}
+
+.staff-content-wrapper.sidebar-open {
+  margin-left: 250px; /* khi sidebar mở */
+}
+
+.staff-page-content {
+  flex: 1;
+  padding: 20px;
+}
+
+

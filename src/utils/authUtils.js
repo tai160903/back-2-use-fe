@@ -64,6 +64,8 @@ export const getRedirectPath = (role) => {
             return "/";
         case "business":
             return "/business";
+        case "staff":
+            return "/staff";
         case "admin":
         case "administrator":
             return "/admin";

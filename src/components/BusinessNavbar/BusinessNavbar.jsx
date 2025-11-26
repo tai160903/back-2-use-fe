@@ -46,14 +46,14 @@ const businessSidebarItems = [
   { id: "inventory", label: "Inventory Management", path: PATH.BUSINESS_INVENTORY },
   { id: "materials", label: "Materials", path: PATH.BUSINESS_MATERIALS },
   { id: "transaction", label: "Transaction", path: PATH.BUSINESS_TRANSACTION },
-  { id: "online-borrow-orders", label: "Online Orders", path: PATH.BUSINESS_ONLINE_BORROW_ORDERS },
   { id: "subscriptions", label: "Subscriptions", path: PATH.BUSINESS_SUBSCRIPTIONS },
   { id: "reedem-rewards", label: "Reedem Rewards", path: PATH.BUSINESS_REEDEM_REWARDS },
   { id: "wallet", label: "Wallet", path: PATH.BUSINESS_WALLET },
+  { id: "staff", label: "Staff Management", path: PATH.BUSINESS_STAFF },
   { id: "logout", label: "Logout", path: null },
 ];
 
-const BusinessNavbar = ({ onDrawerToggle }) => {
+const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -85,10 +85,15 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
       subscriptions: <MdSubscriptions className="navbar-icon" />,
       "reedem-rewards": <AiOutlineGift className="navbar-icon" />,
       wallet: <MdOutlineAccountBalanceWallet className="navbar-icon" />,
+      staff: <GoPeople className="navbar-icon" />,
       logout: <CiLogout className="navbar-icon" />,
     };
     return icons[iconName];
   };
+
+  const itemsToRender = sidebarItems && sidebarItems.length > 0
+    ? sidebarItems
+    : businessSidebarItems;
 
   return (
     <div
@@ -114,7 +119,7 @@ const BusinessNavbar = ({ onDrawerToggle }) => {
       </IconButton>
     </div>
       <List className="navbar-content">
-        {businessSidebarItems.map((item) => (
+        {itemsToRender.map((item) => (
           <ListItem
             button
             key={item.id}

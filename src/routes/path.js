@@ -45,7 +45,11 @@ export const PATH = {
     BUSINESS_WALLET:"/business/wallet",
     BUSINESS_PROFILE:"/business/profile",
     BUSINESS_MY_CUSTOMER_HISTORY:"/business/my-customer-history",
-    BUSINESS_ONLINE_BORROW_ORDERS:"/business/online-borrow-orders",
+    BUSINESS_STAFF:"/business/staff",
+
+    // STAFF
+    STAFF: "/staff",
+    STAFF_ONLINE_BORROW_ORDERS: "/staff/online-borrow-orders",
 
     // ADMIN
     ADMIN: "/admin",
