@@ -38,12 +38,11 @@ const Analytics = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [filter, setFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    // Load vouchers on component mount
+    // Load only leaderboard vouchers (admin-created vouchers) on component mount
     dispatch(getAllVouchersApi({
       page: 1,
       limit: 100,
@@ -86,24 +85,20 @@ const Analytics = () => {
     setCurrentPage(1);
   };
 
-  const handleTypeFilterChange = (newTypeFilter) => {
-    setTypeFilter(newTypeFilter);
-    setCurrentPage(1);
-  };
 
-  // Get all filtered data
+  // Get all filtered data - only leaderboard vouchers (admin-created)
   const getAllFilteredData = () => {
-    let filtered = [...vouchers];
+    // Filter only leaderboard vouchers (admin-created vouchers)
+    let filtered = vouchers.filter(
+      (item) => item.voucherType === 'leaderboard'
+    );
+    
     if (filter !== "All") {
       filtered = filtered.filter(
         (item) => item.status.toLowerCase() === filter.toLowerCase()
       );
     }
-    if (typeFilter !== "All") {
-      filtered = filtered.filter(
-        (item) => item.voucherType && item.voucherType.toLowerCase() === typeFilter.toLowerCase()
-      );
-    }
+    
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
@@ -112,6 +107,11 @@ const Analytics = () => {
       );
     }
     return filtered;
+  };
+
+  // Get only leaderboard vouchers for stats
+  const getLeaderboardVouchers = () => {
+    return vouchers.filter((item) => item.voucherType === 'leaderboard');
   };
 
   const renderGiftIcon = () => (
@@ -176,7 +176,7 @@ const Analytics = () => {
           <div>
             <h1 className="voucher-title">Vouchers Management</h1>
             <p className="voucher-description">
-              Review and manage vouchers by status
+              Create and manage leaderboard vouchers for top-ranked customers
             </p>
           </div>
         </div>
@@ -186,13 +186,13 @@ const Analytics = () => {
         </button>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Statistics Cards - Only Leaderboard Vouchers */}
       <div className="voucher-stats">
         <div className="stat-card stat-card-0">
           <div className="stat-content">
             <div className="stat-info">
               <h3 className="stat-title">Total Vouchers</h3>
-              <span className="stat-number">{vouchers.length}</span>
+              <span className="stat-number">{getLeaderboardVouchers().length}</span>
             </div>
             <PiClipboardTextBold className="stat-icon" size={56} />
           </div>
@@ -203,7 +203,7 @@ const Analytics = () => {
             <div className="stat-info">
               <h3 className="stat-title">Pending Review</h3>
               <span className="stat-number pending">
-                {vouchers.filter((item) => item.status === "pending").length}
+                {getLeaderboardVouchers().filter((item) => item.status === "pending").length}
               </span>
             </div>
             <CiClock2 className="stat-icon pending" size={56} />
@@ -215,7 +215,7 @@ const Analytics = () => {
             <div className="stat-info">
               <h3 className="stat-title">Active</h3>
               <span className="stat-number active">
-                {vouchers.filter((item) => item.status === "active").length}
+                {getLeaderboardVouchers().filter((item) => item.status === "active").length}
               </span>
             </div>
             <SiTicktick className="stat-icon active" size={56} />
@@ -227,7 +227,7 @@ const Analytics = () => {
             <div className="stat-info">
               <h3 className="stat-title">Expired</h3>
               <span className="stat-number expired">
-                {vouchers.filter((item) => item.status === "expired").length}
+                {getLeaderboardVouchers().filter((item) => item.status === "expired").length}
               </span>
             </div>
             <BiMessageSquareX className="stat-icon expired" size={56} />
@@ -257,52 +257,28 @@ const Analytics = () => {
             onClick={() => handleFilterChange(null, "All")}
           >
             <PiClipboardTextBold />
-            All ({vouchers.length})
+            All ({getLeaderboardVouchers().length})
           </button>
           <button 
             className={`filter-tab ${filter === "pending" ? "active" : ""}`}
             onClick={() => handleFilterChange(null, "pending")}
           >
             <CiClock2 />
-            Pending ({vouchers.filter((item) => item.status === "pending").length})
+            Pending ({getLeaderboardVouchers().filter((item) => item.status === "pending").length})
           </button>
           <button 
             className={`filter-tab ${filter === "active" ? "active" : ""}`}
             onClick={() => handleFilterChange(null, "active")}
           >
             <SiTicktick />
-            Active ({vouchers.filter((item) => item.status === "active").length})
+            Active ({getLeaderboardVouchers().filter((item) => item.status === "active").length})
           </button>
           <button 
             className={`filter-tab ${filter === "expired" ? "active" : ""}`}
             onClick={() => handleFilterChange(null, "expired")}
           >
             <BiMessageSquareX />
-            Expired ({vouchers.filter((item) => item.status === "expired").length})
-          </button>
-        </div>
-        
-        <div className="filter-tabs" style={{ marginTop: '12px' }}>
-          <button 
-            className={`filter-tab ${typeFilter === "All" ? "active" : ""}`}
-            onClick={() => handleTypeFilterChange("All")}
-          >
-            <PiClipboardTextBold />
-            All Types ({vouchers.length})
-          </button>
-          <button 
-            className={`filter-tab ${typeFilter === "business" ? "active" : ""}`}
-            onClick={() => handleTypeFilterChange("business")}
-          >
-            <FaGift />
-            Business ({vouchers.filter((item) => item.voucherType === "business").length})
-          </button>
-          <button 
-            className={`filter-tab ${typeFilter === "leaderboard" ? "active" : ""}`}
-            onClick={() => handleTypeFilterChange("leaderboard")}
-          >
-            <FaGift />
-            Leaderboard ({vouchers.filter((item) => item.voucherType === "leaderboard").length})
+            Expired ({getLeaderboardVouchers().filter((item) => item.status === "expired").length})
           </button>
         </div>
       </div>
@@ -313,10 +289,10 @@ const Analytics = () => {
       ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className={`voucher-grid ${typeFilter === "leaderboard" || typeFilter === "business" ? "leaderboard" : ""}`}>
+        <div className="voucher-grid leaderboard">
           {(() => {
             const filteredData = getAllFilteredData();
-            const perPage = typeFilter === "leaderboard" || typeFilter === "business" ? 8 : 6;
+            const perPage = 8;
             const startIndex = (currentPage - 1) * perPage;
             const endIndex = startIndex + perPage;
             return filteredData.slice(startIndex, endIndex).map((voucher) => (
@@ -332,9 +308,9 @@ const Analytics = () => {
       )}
 
       {/* Pagination */}
-      {!isLoading && vouchers.length > 0 && (() => {
+      {!isLoading && getLeaderboardVouchers().length > 0 && (() => {
         const filteredData = getAllFilteredData();
-        const perPage = typeFilter === "leaderboard" || typeFilter === "business" ? 8 : 6;
+        const perPage = 8;
         const filteredTotalPages = Math.ceil(filteredData.length / perPage);
         return (
           <Stack
@@ -381,7 +357,8 @@ const Analytics = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           voucher={editingVoucher}
-          onSubmit={async (voucherData, voucherType) => {
+          voucherType="leaderboard"
+          onSubmit={async (voucherData) => {
             try {
               if (editingVoucher) {
                 await dispatch(updateVoucherApi({
@@ -389,15 +366,8 @@ const Analytics = () => {
                   voucherData
                 })).unwrap();
               } else {
-                // Call appropriate API based on voucher type
-                if (voucherType === 'business') {
-                  await dispatch(createBusinessVoucherApi(voucherData)).unwrap();
-                } else if (voucherType === 'leaderboard') {
-                  await dispatch(createLeaderboardVoucherApi(voucherData)).unwrap();
-                } else {
-                  // Fallback to generic create
-                  await dispatch(createVoucherApi(voucherData)).unwrap();
-                }
+                // Only create leaderboard vouchers (admin-created vouchers)
+                await dispatch(createLeaderboardVoucherApi(voucherData)).unwrap();
                 // Refresh voucher list after successful creation
                 dispatch(getAllVouchersApi({
                   page: 1,

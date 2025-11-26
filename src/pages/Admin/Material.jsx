@@ -4,11 +4,14 @@ import {
   getAllMaterialsApi, 
   createMaterialApi,
   setMaterialNameFilter,
-  resetFilters 
+  resetFilters,
+  getMaterialRequestsApi,
+  updateMaterialApi,
+  reviewMaterialApi
 } from '../../store/slices/adminSlice';
 import MaterialCard from '../../components/MaterialCard/MaterialCard';
 import MaterialModal from './MaterialModal';
-import { updateMaterialApi } from '../../store/slices/adminSlice';
+import ReviewMaterialModal from './ReviewMaterialModal';
 import { FaRecycle, FaPlus } from 'react-icons/fa';
 import { CiClock2 } from "react-icons/ci";
 import { SiTicktick } from "react-icons/si";
@@ -23,6 +26,8 @@ const Material = () => {
   const dispatch = useDispatch();
   const { 
     materials, 
+    materialRequests,
+    materialRequestPagination,
     isLoading, 
     error, 
     pagination, 
@@ -31,6 +36,9 @@ const Material = () => {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewingRequest, setReviewingRequest] = useState(null);
+  const [reviewMode, setReviewMode] = useState(null); // 'approve' or 'reject'
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,6 +46,12 @@ const Material = () => {
   useEffect(() => {
     // Load materials on component mount
     dispatch(getAllMaterialsApi({
+      page: 1,
+      limit: 100,
+    }));
+    // Load material requests (pending) on component mount
+    dispatch(getMaterialRequestsApi({
+      status: 'pending',
       page: 1,
       limit: 100,
     }));
@@ -58,6 +72,47 @@ const Material = () => {
     setEditingMaterial(null);
   };
 
+  const handleOpenReviewModal = (request, mode) => {
+    setReviewingRequest(request);
+    setReviewMode(mode);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleCloseReviewModal = () => {
+    // Reset state in correct order to prevent flickering
+    setReviewMode(null);
+    setReviewingRequest(null);
+    setIsReviewModalOpen(false);
+  };
+
+  const handleReviewSubmit = async (reviewData) => {
+    if (!reviewingRequest) return;
+    
+    try {
+      await dispatch(reviewMaterialApi({
+        materialId: reviewingRequest._id,
+        reviewData
+      })).unwrap();
+      
+      // Refresh material requests
+      dispatch(getMaterialRequestsApi({
+        status: 'pending',
+        page: 1,
+        limit: 100,
+      }));
+      
+      // Refresh materials list
+      dispatch(getAllMaterialsApi({
+        page: 1,
+        limit: 100,
+      }));
+      
+      handleCloseReviewModal();
+    } catch (error) {
+      // Error handled by thunk
+    }
+  };
+
   const handlePageChange = (event, newPage) => {
     setCurrentPage(newPage);
   };
@@ -65,6 +120,14 @@ const Material = () => {
   const handleFilterChange = (event, newFilter) => {
     setFilter(newFilter);
     setCurrentPage(1);
+    // Reload material requests when switching to pending filter
+    if (newFilter === "pending") {
+      dispatch(getMaterialRequestsApi({
+        status: 'pending',
+        page: 1,
+        limit: 100,
+      }));
+    }
   };
 
   // Get all filtered data (safe guards for undefined fields)
@@ -182,7 +245,7 @@ const Material = () => {
             <div className="stat-info">
               <h3 className="stat-title">Pending Review</h3>
               <span className="stat-number pending">
-                {materials.filter((item) => item.status === "pending").length}
+                {materialRequestPagination?.total || materialRequests?.length || 0}
               </span>
             </div>
             <CiClock2 className="stat-icon pending" size={56} />
@@ -243,7 +306,7 @@ const Material = () => {
             onClick={() => handleFilterChange(null, "pending")}
           >
             <CiClock2 />
-            Pending ({materials.filter((item) => item.status === "pending").length})
+            Pending ({materialRequestPagination?.total || materialRequests?.length || 0})
           </button>
           <button 
             className={`filter-tab ${filter === "approved" ? "active" : ""}`}
@@ -262,9 +325,56 @@ const Material = () => {
         </div>
       </div>
 
-      {/* Material Cards */}
+      {/* Material Cards or Material Requests */}
       {isLoading ? (
         renderLoadingState()
+      ) : filter === "pending" ? (
+        // Show material requests when filter is "pending"
+        materialRequests.length === 0 ? (
+          renderEmptyState()
+        ) : (
+          <div className="material-grid">
+            {(() => {
+              const startIndex = (currentPage - 1) * 6;
+              const endIndex = startIndex + 6;
+              return materialRequests.slice(startIndex, endIndex).map((request) => (
+                <div key={request._id} className="material-card">
+                  <div className="material-card-header">
+                    <h3 className="material-card-title">{request.requestedMaterialName}</h3>
+                    <span className="material-card-status pending">Pending</span>
+                  </div>
+                  <div className="material-card-body">
+                    <p className="material-card-description">{request.description || 'No description'}</p>
+                    {request.businessId && (
+                      <div className="material-card-business">
+                        <strong>Business:</strong> {request.businessId.businessName || 'N/A'}
+                      </div>
+                    )}
+                    <div className="material-card-date">
+                      <strong>Requested:</strong> {new Date(request.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="material-card-actions">
+                    <button
+                      className="material-card-btn approve-btn"
+                      onClick={() => handleOpenReviewModal(request, 'approve')}
+                    >
+                      <SiTicktick />
+                      Approve
+                    </button>
+                    <button
+                      className="material-card-btn reject-btn"
+                      onClick={() => handleOpenReviewModal(request, 'reject')}
+                    >
+                      <BiMessageSquareX />
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        )
       ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
@@ -285,10 +395,20 @@ const Material = () => {
       )}
 
       {/* Pagination */}
-      {!isLoading && materials.length > 0 && (() => {
-        const filteredData = getAllFilteredData();
-        const filteredTotalPages = Math.ceil(filteredData.length / 6);
-        return (
+      {!isLoading && (() => {
+        let totalPages = 1;
+        let totalItems = 0;
+        
+        if (filter === "pending") {
+          totalItems = materialRequests.length;
+          totalPages = Math.ceil(totalItems / 6);
+        } else {
+          const filteredData = getAllFilteredData();
+          totalItems = filteredData.length;
+          totalPages = Math.ceil(totalItems / 6);
+        }
+        
+        return totalItems > 0 ? (
           <Stack
             spacing={2}
             className="mt-5 mb-5"
@@ -299,7 +419,7 @@ const Material = () => {
             }}
           >
             <Pagination
-              count={filteredTotalPages > 0 ? filteredTotalPages : 1}
+              count={totalPages > 0 ? totalPages : 1}
               page={currentPage}
               onChange={handlePageChange}
               variant="outlined"
@@ -324,7 +444,7 @@ const Material = () => {
               }}
             />
           </Stack>
-        );
+        ) : null;
       })()}
 
       {/* Material Modal */}
@@ -332,17 +452,40 @@ const Material = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         material={editingMaterial}
-        onSubmit={(materialData) => {
-          if (editingMaterial) {
-            dispatch(updateMaterialApi({
-              materialId: editingMaterial._id,
-              materialData
-            }));
-          } else {
-            dispatch(createMaterialApi(materialData));
+        onSubmit={async (materialData) => {
+          try {
+            if (editingMaterial) {
+              await dispatch(updateMaterialApi({
+                materialId: editingMaterial._id,
+                materialData
+              })).unwrap();
+              // Refresh materials list
+              dispatch(getAllMaterialsApi({
+                page: 1,
+                limit: 100,
+              }));
+            } else {
+              await dispatch(createMaterialApi(materialData)).unwrap();
+              // Refresh materials list
+              dispatch(getAllMaterialsApi({
+                page: 1,
+                limit: 100,
+              }));
+            }
+            handleCloseModal();
+          } catch (error) {
+            // Error handled by thunk
           }
-          handleCloseModal();
         }}
+      />
+
+      {/* Review Material Modal */}
+      <ReviewMaterialModal
+        isOpen={isReviewModalOpen}
+        onClose={handleCloseReviewModal}
+        materialRequest={reviewingRequest}
+        mode={reviewMode}
+        onSubmit={handleReviewSubmit}
       />
     </div>
   );
