@@ -36,6 +36,78 @@ import {
 } from "../../../store/slices/borrowSlice";
 import toast from "react-hot-toast";
 
+// Helper: compute day difference (ceil, always at least 1 day when different)
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const diffDaysCeil = (later, earlier) => {
+  const diff = later.getTime() - earlier.getTime();
+  return Math.ceil(diff / MS_PER_DAY);
+};
+
+// Calculate timing info for borrowing/return: how long until due or how late
+const getTimingInfo = (item) => {
+  if (!item) return null;
+
+  const now = new Date();
+  const dueDate = item.dueDate ? new Date(item.dueDate) : null;
+  const returnDate = item.returnDate ? new Date(item.returnDate) : null;
+  const status = item.status || "";
+
+  if (!dueDate) return null;
+
+  // Borrowing or pending pickup
+  if (status === "borrowing" || status === "pending_pickup") {
+    const daysLeft = diffDaysCeil(dueDate, now);
+
+    if (daysLeft > 0) {
+      return {
+        type: "upcoming",
+        message: `${daysLeft} day(s) left until due date.`,
+      };
+    }
+
+    if (daysLeft === 0) {
+      return {
+        type: "due_today",
+        message: "Today is the due date for this container.",
+      };
+    }
+
+    const daysLate = Math.abs(daysLeft);
+    return {
+      type: "late",
+      message: `Overdue by ${daysLate} day(s) past the due date.`,
+    };
+  }
+
+  // Returned: compare returnDate (if any) with dueDate
+  if (status === "return_late" || status === "returned") {
+    const base = returnDate || now;
+    const diff = diffDaysCeil(base, dueDate);
+
+    if (diff > 0) {
+      return {
+        type: "late",
+        message: `Returned late by ${diff} day(s) past the due date.`,
+      };
+    }
+
+    if (diff === 0) {
+      return {
+        type: "on_time",
+        message: "Returned on the due date.",
+      };
+    }
+
+    const earlyDays = Math.abs(diff);
+    return {
+      type: "early",
+      message: `Returned ${earlyDays} day(s) early before the due date.`,
+    };
+  }
+
+  return null;
+};
+
 function BorrowCard({ item }) {
   const product = item.productId || {};
   const productGroup = product.productGroupId || {};
@@ -58,6 +130,7 @@ function BorrowCard({ item }) {
   const due = toVNDate(item.dueDate);
   const deposit = item.depositAmount || 0;
   const status = item.status || "unknown";
+  const timingInfo = getTimingInfo(item);
 
   const rawType = item.borrowTransactionType;
   let typeLabel = rawType;
@@ -119,7 +192,7 @@ function BorrowCard({ item }) {
               <Typography>
                 Deposit:{" "}
                 <span style={{ color: "#cc3500", fontWeight: "bold" }}>
-                  {deposit.toLocaleString("vi-VN")} VNĐ
+                  {deposit.toLocaleString("vi-VN")} VND
                 </span>
               </Typography>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -151,6 +224,15 @@ function BorrowCard({ item }) {
               </div>
             </div>
           </div>
+
+          {/* Thông tin còn bao lâu / trễ bao nhiêu ngày khi đang mượn */}
+          {timingInfo && (
+            <div className="borrow-content-overdue">
+              <Typography className="borrow-content-overdue-title">
+                {timingInfo.message}
+              </Typography>
+            </div>
+          )}
         </div>
       </div>
     </Box>
@@ -162,6 +244,7 @@ function SuccessCard({ item }) {
   const productGroup = product.productGroupId || {};
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
+  const walletTransaction = item.walletTransaction || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -182,12 +265,21 @@ function SuccessCard({ item }) {
 
   const rewardPoints = item.rewardPointChanged || 0;
   const legitPoints = item.rankingPointChanged || 0;
+  const co2Changed = item.co2Changed ?? 0;
+  const ecoPointChanged = item.ecoPointChanged ?? 0;
+  const totalConditionPoints = item.totalConditionPoints ?? 0;
+
+  // Tiền trả lại từ ví (có thể hoàn toàn hoặc một phần nếu bị phạt)
+  const refundedAmount =
+    typeof walletTransaction.amount === "number" ? walletTransaction.amount : 0;
 
   const rawType = item.borrowTransactionType;
   let typeLabel = rawType;
   if (rawType === "borrow") typeLabel = "Borrow";
   if (rawType === "return_success") typeLabel = "Return Success";
   if (rawType === "return_failed") typeLabel = "Return Failed";
+
+  const timingInfo = getTimingInfo(item);
 
   return (
     <Box className="borrow-card-success" p={2} mb={2} borderRadius="10px">
@@ -241,36 +333,66 @@ function SuccessCard({ item }) {
             </div>
             <div className="borrow-content-right-success">
               <Typography sx={{ marginLeft: "10px" }}>
-                Deposit:{" "}
+                Deposit (upfront):{" "}
                 <span style={{ color: "#cc3500", fontWeight: "bold" }}>
-                  {deposit.toLocaleString("vi-VN")} VNĐ
+                  {deposit.toLocaleString("vi-VN")} VND
                 </span>
               </Typography>
 
-              <div className="borrow-rewardPoint">
-                <Typography>
-                  Reward Points:{" "}
-                  <span style={{ color: "#365bbf", fontWeight: "600" }}>
-                    {rewardPoints > 0 ? `+${rewardPoints}` : rewardPoints} points
-                  </span>
-                </Typography>
-              </div>
+              <div className="borrow-points-grid">
+                <div className="borrow-rewardPoint">
+                  <Typography>
+                    Reward Points:{" "}
+                    <span style={{ color: "#365bbf", fontWeight: "600" }}>
+                      {rewardPoints > 0 ? `+${rewardPoints}` : rewardPoints} points
+                    </span>
+                  </Typography>
+                </div>
 
-              <div className="borrow-legitPoint">
-                <Typography>
-                  Legit Points:{" "}
-                  <span style={{ color: "#8200de", fontWeight: "600" }}>
-                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
-                  </span>
-                </Typography>
+                <div className="borrow-legitPoint">
+                  <Typography>
+                    Legit Points:{" "}
+                    <span style={{ color: "#8200de", fontWeight: "600" }}>
+                      {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
+                    </span>
+                  </Typography>
+                </div>
+
+                {/* CO2, Eco, Condition with separate colors */}
+                <div className="borrow-co2Point">
+                  <Typography>
+                    CO₂ Changed:{" "}
+                    <span style={{ fontWeight: 600 }}>
+                      {co2Changed > 0 ? `+${co2Changed}` : co2Changed} kg
+                    </span>
+                  </Typography>
+                </div>
+
+                <div className="borrow-ecoPoint">
+                  <Typography>
+                    Eco Points:{" "}
+                    <span style={{ fontWeight: 600 }}>
+                      {ecoPointChanged > 0 ? `+${ecoPointChanged}` : ecoPointChanged}
+                    </span>
+                  </Typography>
+                </div>
+
+                <div className="borrow-conditionPoint">
+                  <Typography>
+                    Condition Points:{" "}
+                    <span style={{ fontWeight: 600 }}>
+                      {totalConditionPoints} points
+                    </span>
+                  </Typography>
+                </div>
               </div>
 
               <div className="borrow-receivePoint">
                 <Typography>
-                  Receive Money:
+                  Refunded amount:
                   <span style={{ color: "#36c775", fontWeight: "bold" }}>
                     {" "}
-                    {deposit.toLocaleString("vi-VN")} VNĐ
+                    {Number(refundedAmount || 0).toLocaleString("vi-VN")} VND
                   </span>
                 </Typography>
               </div>
@@ -282,13 +404,25 @@ function SuccessCard({ item }) {
                 >
                   <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
                 </Button>
-                <Button className="borrow-content-btn">
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
                   <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
                   Details
                 </Button>
               </div>
             </div>
           </div>
+
+          {/* Thông tin trễ / đúng hạn cho giao dịch trả thành công - full chiều ngang giống Borrow */}
+          {timingInfo && (
+            <div className="borrow-content-overdue-success">
+              <Typography className="borrow-content-overdue-title">
+                {timingInfo.message}
+              </Typography>
+            </div>
+          )}
         </div>
       </div>
     </Box>
@@ -300,6 +434,7 @@ function FailedCard({ item }) {
   const productGroup = product.productGroupId || {};
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
+  const walletTransaction = item.walletTransaction || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -320,12 +455,21 @@ function FailedCard({ item }) {
 
   const rewardPoints = item.rewardPointChanged || 0;
   const legitPoints = item.rankingPointChanged || 0;
+  const co2Changed = item.co2Changed ?? 0;
+  const ecoPointChanged = item.ecoPointChanged ?? 0;
+  const totalConditionPoints = item.totalConditionPoints ?? 0;
+
+  // Tiền trả lại trong trường hợp mất / thất bại (thường là 0 hoặc một phần)
+  const refundedAmount =
+    typeof walletTransaction.amount === "number" ? walletTransaction.amount : 0;
 
   const rawType = item.borrowTransactionType;
   let typeLabel = rawType;
   if (rawType === "borrow") typeLabel = "Borrow";
   if (rawType === "return_success") typeLabel = "Return Success";
   if (rawType === "return_failed") typeLabel = "Return Failed";
+
+  const timingInfo = getTimingInfo(item);
 
   return (
     <Box className="borrow-card-failed" p={2} mb={2} borderRadius="10px">
@@ -379,53 +523,93 @@ function FailedCard({ item }) {
             </div>
             <div className="borrow-content-right-success">
               <Typography sx={{ marginLeft: "10px" }}>
-                Deposit:{" "}
+                Deposit (upfront):{" "}
                 <span style={{ color: "#cc3500", fontWeight: "bold" }}>
-                  {deposit.toLocaleString("vi-VN")} VNĐ
+                  {deposit.toLocaleString("vi-VN")} VND
                 </span>
               </Typography>
 
               <div className="borrow-receivePoint">
                 <Typography>
-                  Receive Money:
+                  Refunded amount:
                   <span style={{ color: "#c64b4f", fontWeight: "bold" }}>
                     {" "}
-                    {deposit.toLocaleString("vi-VN")} VNĐ
+                    {Number(refundedAmount || 0).toLocaleString("vi-VN")} VND
                   </span>
                 </Typography>
               </div>
 
-              <div className="borrow-rewardPoint">
-                <Typography>
-                  Reward Points:{" "}
-                  <span style={{ color: "#365bbf", fontWeight: "600" }}>
-                    {rewardPoints > 0 ? `+${rewardPoints}` : rewardPoints} points
-                  </span>
-                </Typography>
-              </div>
+              <div className="borrow-points-grid">
+                <div className="borrow-rewardPoint">
+                  <Typography>
+                    Reward Points:{" "}
+                    <span style={{ color: "#365bbf", fontWeight: "600" }}>
+                      {rewardPoints > 0 ? `+${rewardPoints}` : rewardPoints} points
+                    </span>
+                  </Typography>
+                </div>
 
-              <div className="borrow-legitPoint">
-                <Typography>
-                  Legit Points:{" "}
-                  <span
-                    style={{
-                      color: legitPoints < 0 ? "#df4d56" : "#8200de",
-                      fontWeight: "600",
-                    }}
-                  >
-                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
-                  </span>
-                </Typography>
+                <div className="borrow-legitPoint">
+                  <Typography>
+                    Legit Points:{" "}
+                    <span
+                      style={{
+                        color: legitPoints < 0 ? "#df4d56" : "#8200de",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
+                    </span>
+                  </Typography>
+                </div>
+
+                {/* CO2, Eco, Condition with separate colors */}
+                <div className="borrow-co2Point">
+                  <Typography>
+                    CO₂ Changed:{" "}
+                    <span style={{ fontWeight: 600 }}>
+                      {co2Changed > 0 ? `+${co2Changed}` : co2Changed} kg
+                    </span>
+                  </Typography>
+                </div>
+                <div className="borrow-ecoPoint">
+                  <Typography>
+                    Eco Points:{" "}
+                    <span style={{ fontWeight: 600 }}>
+                      {ecoPointChanged > 0 ? `+${ecoPointChanged}` : ecoPointChanged}
+                    </span>
+                  </Typography>
+                </div>
+                <div className="borrow-conditionPoint">
+                  <Typography>
+                    Condition Points:{" "}
+                    <span style={{ fontWeight: 600 }}>
+                      {totalConditionPoints} points
+                    </span>
+                  </Typography>
+                </div>
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
-                <Button className="borrow-content-btn">
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
                   <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
                   Details
                 </Button>
               </div>
             </div>
           </div>
+
+          {/* Thông tin trễ / mất cho giao dịch thất bại - full chiều ngang giống Borrow */}
+          {timingInfo && (
+            <div className="borrow-content-overdue-failed">
+              <Typography className="borrow-content-overdue-title">
+                {timingInfo.message}
+              </Typography>
+            </div>
+          )}
         </div>
       </div>
     </Box>
@@ -553,6 +737,9 @@ export default function TransactionHistory() {
   const detailMaterial = detailGroup.materialId || {};
   const detailSize = detailProduct.productSizeId || {};
   const detailBusiness = detail.businessId || {};
+  const detailPreviousImages = detail.previousConditionImages || {};
+  const detailCurrentImages = detail.currentConditionImages || {};
+  const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
 
   const toVNDate = (d) =>
     d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
@@ -661,11 +848,11 @@ export default function TransactionHistory() {
         <div className="transaction-list">
           {isLoading ? (
             <Typography style={{ marginTop: "16px" }}>
-              Đang tải lịch sử giao dịch...
+              Loading transaction history...
             </Typography>
           ) : filteredData.length === 0 ? (
             <Typography style={{ marginTop: "16px" }}>
-              Không có giao dịch nào.
+              No transactions found.
             </Typography>
           ) : (
             filteredData.map((item) => {
@@ -833,7 +1020,7 @@ export default function TransactionHistory() {
                         {Number(detail.depositAmount || 0).toLocaleString(
                           "vi-VN"
                         )}{" "}
-                        VNĐ
+                        VND
                       </span>
                     </Typography>
                   </Box>
@@ -860,6 +1047,116 @@ export default function TransactionHistory() {
                     <Typography variant="body2">
                       Phone: {detailBusiness.businessPhone || "N/A"}
                     </Typography>
+                  </Box>
+                </Box>
+
+                {/* Only show previous & current images for condition */}
+                <Divider sx={{ my: 2 }} />
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1.5, fontWeight: 600 }}
+                >
+                  Condition images
+                </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Previous condition
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "repeat(3, 1fr)" },
+                        gap: 1,
+                      }}
+                    >
+                      {conditionFaces.map((face) => {
+                        const src =
+                          detailPreviousImages[`${face}Image`] || null;
+                        if (!src) return null;
+                        return (
+                          <Box
+                            key={`prev-${face}`}
+                            sx={{ textAlign: "center" }}
+                          >
+                            <Box
+                              component="img"
+                              src={src}
+                              alt={`Previous ${face}`}
+                              sx={{
+                                width: "100%",
+                                height: 70,
+                                objectFit: "cover",
+                                borderRadius: 1,
+                                border: "1px solid #eee",
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {face.charAt(0).toUpperCase() + face.slice(1)}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Current condition
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "repeat(3, 1fr)" },
+                        gap: 1,
+                      }}
+                    >
+                      {conditionFaces.map((face) => {
+                        const src =
+                          detailCurrentImages[`${face}Image`] || null;
+                        if (!src) return null;
+                        return (
+                          <Box
+                            key={`curr-${face}`}
+                            sx={{ textAlign: "center" }}
+                          >
+                            <Box
+                              component="img"
+                              src={src}
+                              alt={`Current ${face}`}
+                              sx={{
+                                width: "100%",
+                                height: 70,
+                                objectFit: "cover",
+                                borderRadius: 1,
+                                border: "1px solid #eee",
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {face.charAt(0).toUpperCase() + face.slice(1)}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
                   </Box>
                 </Box>
               </Box>

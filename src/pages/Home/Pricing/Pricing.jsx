@@ -41,16 +41,6 @@ import { useNavigate } from 'react-router-dom';
 import { Path } from 'leaflet';
 import { PATH } from '../../../routes/path';
 
-// Fallback features cho trường hợp không có dữ liệu từ API
-const DEFAULT_FEATURES = [
-  'Complete QR tracking system',
-  'Customer mobile app',
-  'Business dashboard',
-  'Real-time analytics',
-  'Return point network access',
-  'POS system integration'
-];
-
 const includedFeatures = [
   {
     icon: <MdAccessTime style={{ color: '#0f3713', fontSize: '3rem' }} />,
@@ -95,7 +85,9 @@ const Pricing = () => {
   const { subscription, isLoading, error } = useSelector(state => state.subscription);
   const { currentUser } = useSelector(state => state.auth);
 
-  const dataSubscriptions = subscription?.data?.subscriptions || [];
+  const dataSubscriptions = Array.isArray(subscription?.data)
+    ? subscription.data
+    : subscription?.data?.subscriptions || [];
   const featuresList = subscription?.data?.description || [];
 
   useEffect(() => {
@@ -183,7 +175,7 @@ const Pricing = () => {
     if (price === 0) {
       return 'FREE';
     }
-    return `$${price}`;
+    return `${price.toLocaleString()} VND`;
   };
 
   // Hàm để format duration
@@ -266,28 +258,47 @@ const Pricing = () => {
                   <Typography variant="body1" className="pricing-card-description">
                     {subscription.description || 'Perfect for your business needs'}
                   </Typography>
+                  {/* Usage limits from API */}
+                  <Box className="pricing-limits-row">
+                    <Box className="pricing-limit-badge">
+                      <span className="pricing-limit-label">Groups</span>
+                      <span className="pricing-limit-value">
+                        {subscription.limits?.productGroupLimit ?? '∞'}
+                      </span>
+                    </Box>
+                    <Box className="pricing-limit-badge">
+                      <span className="pricing-limit-label">Items / Group</span>
+                      <span className="pricing-limit-value">
+                        {subscription.limits?.productItemLimit ?? '∞'}
+                      </span>
+                    </Box>
+                    <Box className="pricing-limit-badge">
+                      <span className="pricing-limit-label">Export</span>
+                      <span className="pricing-limit-value pricing-limit-pill">
+                        {subscription.limits?.exportLevel
+                          ? subscription.limits.exportLevel.toUpperCase()
+                          : 'NONE'}
+                      </span>
+                    </Box>
+                    <Box className="pricing-limit-badge">
+                      <span className="pricing-limit-label">Eco Bonus</span>
+                      <span className="pricing-limit-value">
+                        {subscription.limits?.ecoBonusPercent != null
+                          ? `${subscription.limits.ecoBonusPercent}%`
+                          : '0%'}
+                      </span>
+                    </Box>
+                  </Box>
                   <List className="pricing-features-list">
-                    {/* Hiển thị features từ API */}
-                    {featuresList.length > 0 ? (
-                      featuresList.map((feature, idx) => (
-                        <ListItem key={idx} className="pricing-feature-item">
-                          <ListItemIcon className="pricing-feature-icon">
-                            <MdCheckCircle style={{ color: '#0f3713', fontSize: '1.2rem' }} />
-                          </ListItemIcon>
-                          <ListItemText primary={feature} className="pricing-feature-text" />
-                        </ListItem>
-                      ))
-                    ) : (
-                      // Fallback features nếu không có features từ API
-                      DEFAULT_FEATURES.map((feature, idx) => (
-                        <ListItem key={idx} className="pricing-feature-item">
-                          <ListItemIcon className="pricing-feature-icon">
-                            <MdCheckCircle style={{ color: '#0f3713', fontSize: '1.2rem' }} />
-                          </ListItemIcon>
-                          <ListItemText primary={feature} className="pricing-feature-text" />
-                        </ListItem>
-                      ))
-                    )}
+                    {/* Hiển thị features lấy từ DB (subscription.data.description) */}
+                    {featuresList.map((feature, idx) => (
+                      <ListItem key={idx} className="pricing-feature-item">
+                        <ListItemIcon className="pricing-feature-icon">
+                          <MdCheckCircle style={{ color: '#0f3713', fontSize: '1.2rem' }} />
+                        </ListItemIcon>
+                        <ListItemText primary={feature} className="pricing-feature-text" />
+                      </ListItem>
+                    ))}
                   </List>
                   <Button
                     variant="contained"

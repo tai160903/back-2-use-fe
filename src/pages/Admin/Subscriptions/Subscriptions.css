@@ -49,26 +49,6 @@
 }
 
 /* Header Buttons */
-.manage-features-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.manage-features-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
 
 .create-btn {
   display: flex;
@@ -280,6 +260,44 @@
   flex-direction: column;
   gap: 12px;
   margin-bottom: 20px;
+}
+
+/* Usage limits badges */
+.subscriptions-limits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.limit-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #f3f4f6;
+}
+
+.limit-badge-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.limit-badge-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.limit-badge-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .subscriptions-detail-item {

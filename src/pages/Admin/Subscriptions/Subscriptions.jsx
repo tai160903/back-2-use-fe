@@ -4,12 +4,11 @@ import {
   MdAttachMoney, 
   MdCalendarToday, 
   MdDescription, 
-  MdPayment, 
-  MdDateRange, 
-  MdModeEdit, 
+  MdPayment,
+  MdDateRange,
+  MdModeEdit,
   MdDelete,
   MdAdd,
-  MdSettings,
 } from "react-icons/md";
 
 import { IoIosSearch } from "react-icons/io";
@@ -17,7 +16,6 @@ import {
   BiLayer 
 } from "react-icons/bi";
 import ModalSubscriptions from "../../../components/ModalSubscriptions/ModalSubscriptions";
-import ModalFeatures from "../../../components/ModalFeatures/ModalFeatures";
 import DeleteConfirmModal from "../../../components/DeleteConfirmModal/DeleteConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
 import { 
@@ -38,14 +36,16 @@ export default function Subscriptions() {
   const [modalMode, setModalMode] = useState("view");
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [openFeaturesModal, setOpenFeaturesModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const dispatch = useDispatch();
   const { subscription } = useSelector(state => state.subscription);
 
-const dataSubscriptions = subscription.data?.subscriptions || [];
-const featuresList = subscription.data?.description || [];
+  // Hỗ trợ cả hai dạng response:
+  // { statusCode, message, data: [...] } hoặc { statusCode, message, data: { subscriptions: [...] } }
+  const dataSubscriptions = Array.isArray(subscription.data)
+    ? subscription.data
+    : subscription.data?.subscriptions || [];
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
@@ -111,14 +111,6 @@ const featuresList = subscription.data?.description || [];
     setModalMode("view");
   };
 
-  const handleManageFeatures = () => {
-    setOpenFeaturesModal(true);
-  };
-
-  const handleCloseFeaturesModal = () => {
-    setOpenFeaturesModal(false);
-  };
-
   const handlePageChange = (event, newPage) => {
     setCurrentPage(newPage);
   };
@@ -175,10 +167,6 @@ const featuresList = subscription.data?.description || [];
           </div>
         </div>
         <div className="header-actions">
-          <button className="manage-features-btn" onClick={handleManageFeatures}>
-            <MdSettings size={20} />
-            Manage Features
-          </button>
           <button className="create-btn" onClick={handleCreateClick}>
             <MdAdd size={20} />
             Create Subscription
@@ -266,14 +254,37 @@ const featuresList = subscription.data?.description || [];
                   </span>
                   <span className="subscriptions-detail-value">{item.durationInDays} days</span>
                 </div>
-                <div className="subscriptions-detail-item">
-                  <span className="subscriptions-detail-label">
-                    <MdDescription />
-                    Features
-                  </span>
-                  <span className="subscriptions-detail-value">
-                    {featuresList.length} features
-                  </span>
+
+                {/* Usage limits overview */}
+                <div className="subscriptions-limits">
+                  <div className="limit-badge">
+                    <span className="limit-badge-label">Groups</span>
+                    <span className="limit-badge-value">
+                      {item.limits?.productGroupLimit ?? "∞"}
+                    </span>
+                  </div>
+                  <div className="limit-badge">
+                    <span className="limit-badge-label">Items / Group</span>
+                    <span className="limit-badge-value">
+                      {item.limits?.productItemLimit ?? "∞"}
+                    </span>
+                  </div>
+                  <div className="limit-badge">
+                    <span className="limit-badge-label">Export</span>
+                    <span className="limit-badge-value limit-badge-pill">
+                      {item.limits?.exportLevel
+                        ? item.limits.exportLevel.toUpperCase()
+                        : "NONE"}
+                    </span>
+                  </div>
+                  <div className="limit-badge">
+                    <span className="limit-badge-label">Eco Bonus</span>
+                    <span className="limit-badge-value">
+                      {item.limits?.ecoBonusPercent != null
+                        ? `${item.limits.ecoBonusPercent}%`
+                        : "0%"}
+                    </span>
+                  </div>
                 </div>
                 <div className="subscriptions-detail-item">
                   <span className="subscriptions-detail-label">
@@ -281,15 +292,6 @@ const featuresList = subscription.data?.description || [];
                   </span>
                   <span className={`status-badge ${item.isActive ? 'status-active' : 'status-cancelled'}`}>
                     {item.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <div className="subscriptions-detail-item">
-                  <span className="subscriptions-detail-label">
-                    <MdDateRange />
-                    Created
-                  </span>
-                  <span className="subscriptions-detail-value">
-                    {new Date(item.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -367,10 +369,6 @@ const featuresList = subscription.data?.description || [];
         itemType="subscription plan"
       />
 
-      <ModalFeatures
-        open={openFeaturesModal}
-        onClose={handleCloseFeaturesModal}
-      />
     </div>
   );
 }

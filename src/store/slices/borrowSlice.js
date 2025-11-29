@@ -49,7 +49,7 @@ export const getTransactionHistoryBusinessApi = createAsyncThunk(
     async (data = {}, { rejectWithValue }) => {
         try {
             const response = await fetcher.get(
-                "/borrow-transactions/business/history",
+                "/borrow-transactions/business",
                 {
                     params: {
                         status: data.status || undefined,

@@ -8,7 +8,8 @@ import {
   FormControlLabel, 
   Checkbox, 
   Box,
-  Typography
+  Typography,
+  Grid,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -35,6 +36,25 @@ const subscriptionSchema = yup.object({
     .min(1, "Duration must be at least 1 day")
     .max(365, "Duration cannot exceed 365 days")
     .integer("Duration must be an integer"),
+  productGroupLimit: yup
+    .number()
+    .required("Product group limit is required")
+    .min(0, "Product group limit cannot be negative")
+    .integer("Product group limit must be an integer"),
+  productItemLimit: yup
+    .number()
+    .required("Product item limit is required")
+    .min(0, "Product item limit cannot be negative")
+    .integer("Product item limit must be an integer"),
+  exportLevel: yup
+    .string()
+    .required("Export level is required"),
+  ecoBonusPercent: yup
+    .number()
+    .required("Eco bonus percent is required")
+    .min(0, "Eco bonus percent cannot be negative")
+    .max(100, "Eco bonus percent cannot exceed 100")
+    .integer("Eco bonus percent must be an integer"),
   isActive: yup.boolean(),
   isTrial: yup.boolean()
 });
@@ -53,6 +73,10 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
       name: "",
       price: "",
       durationInDays: "",
+      productGroupLimit: "",
+      productItemLimit: "",
+      exportLevel: "",
+      ecoBonusPercent: "",
       isActive: true,
       isTrial: false
     }
@@ -61,10 +85,15 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
   // Reset form when modal opens or selectedItem changes
   useEffect(() => {
     if (mode === "edit" && selectedItem) {
+      const limits = selectedItem.limits || {};
       reset({
         name: selectedItem.name || "",
         price: selectedItem.price || "",
         durationInDays: selectedItem.durationInDays || "",
+        productGroupLimit: limits.productGroupLimit ?? "",
+        productItemLimit: limits.productItemLimit ?? "",
+        exportLevel: limits.exportLevel || "",
+        ecoBonusPercent: limits.ecoBonusPercent ?? "",
         isActive: selectedItem.isActive !== undefined ? selectedItem.isActive : true,
         isTrial: selectedItem.isTrial !== undefined ? selectedItem.isTrial : false
       });
@@ -73,6 +102,10 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
         name: "",
         price: "",
         durationInDays: "",
+        productGroupLimit: "",
+        productItemLimit: "",
+        exportLevel: "",
+        ecoBonusPercent: "",
         isActive: true,
         isTrial: false
       });
@@ -84,9 +117,23 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
 
   // function submit form
   const onSubmit = async (data) => {
+    const payload = {
+      name: data.name,
+      price: Number(data.price),
+      durationInDays: Number(data.durationInDays),
+      isActive: data.isActive,
+      isTrial: data.isTrial,
+      limits: {
+        productGroupLimit: Number(data.productGroupLimit),
+        productItemLimit: Number(data.productItemLimit),
+        exportLevel: data.exportLevel,
+        ecoBonusPercent: Number(data.ecoBonusPercent),
+      },
+    };
+
     if (mode === "create") {
       try {
-        await dispatch(createSubscription(data)).unwrap();
+        await dispatch(createSubscription(payload)).unwrap();
         toast.success("Subscription plan created successfully!");
         onClose();
       } catch (error) {
@@ -94,7 +141,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
       }
     } else if (mode === "edit") {
       try {
-        await dispatch(updateSubscription({ id: selectedItem._id, data })).unwrap();
+        await dispatch(updateSubscription({ id: selectedItem._id, data: payload })).unwrap();
         toast.success("Subscription plan updated successfully!");
         onClose();
       } catch (error) {
@@ -265,6 +312,51 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                       </Box>
                     </Box>
                   </Box>
+
+                  {/* Usage limits */}
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" className="section-header">
+                      Usage Limits
+                    </Typography>
+                    {(() => {
+                      const limits = subscriptionDetails?.data?._doc?.limits || selectedItem?.limits || {};
+                      return (
+                        <Box className="info-cards-grid">
+                          <Box className="info-card">
+                            <Typography className="info-card-label">Product Groups</Typography>
+                            <Typography className="info-card-value">
+                              {limits.productGroupLimit ?? 'N/A'}
+                            </Typography>
+                          </Box>
+
+                          <Box className="info-card">
+                            <Typography className="info-card-label">Products / Group</Typography>
+                            <Typography className="info-card-value">
+                              {limits.productItemLimit ?? 'N/A'}
+                            </Typography>
+                          </Box>
+
+                          <Box className="info-card">
+                            <Typography className="info-card-label">Export Level</Typography>
+                            <Typography className="info-card-value">
+                              {limits.exportLevel
+                                ? limits.exportLevel.charAt(0).toUpperCase() + limits.exportLevel.slice(1)
+                                : 'N/A'}
+                            </Typography>
+                          </Box>
+
+                          <Box className="info-card">
+                            <Typography className="info-card-label">Eco Bonus</Typography>
+                            <Typography className="info-card-value">
+                              {limits.ecoBonusPercent != null
+                                ? `${limits.ecoBonusPercent}%`
+                                : 'N/A'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      );
+                    })()}
+                  </Box>
                 </Box>
                 
                 {/* Features Section */}
@@ -287,179 +379,352 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
             ) : (
                 /* Create/Edit Mode - Form Fields */
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Controller
-                    name="name"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Plan Name *"
-                        required
-                        placeholder="e.g., Premium Plan, Basic Plan"
-                        variant="outlined"
-                        fullWidth
-                        error={!!errors.name}
-                        helperText={errors.name?.message}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: '8px',
-                            fontSize: '16px',
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            color: '#374151',
-                          },
-                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#174d31',
-                            borderWidth: '2px',
-                          },
-                          '& .MuiInputLabel-root.Mui-focused': {
-                            color: '#174d31',
-                          }
-                        }}
-                      />
-                    )}
-                  />
-                  
-                  <Controller
-                    name="price"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Price (VND) *"
-                        type="number"
-                        required
-                        placeholder="e.g., 1999"
-                        variant="outlined"
-                        fullWidth
-                        error={!!errors.price}
-                        helperText={errors.price?.message}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: '8px',
-                            fontSize: '16px',
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            color: '#374151',
-                          },
-                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#174d31',
-                            borderWidth: '2px',
-                          },
-                          '& .MuiInputLabel-root.Mui-focused': {
-                            color: '#174d31',
-                          }
-                        }}
-                      />
-                    )}
-                  />
-                  
-                  <Controller
-                    name="durationInDays"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Duration (Days) *"
-                        type="number"
-                        required
-                        placeholder="e.g., 30"
-                        variant="outlined"
-                        fullWidth
-                        error={!!errors.durationInDays}
-                        helperText={errors.durationInDays?.message}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(value === "" ? "" : parseInt(value) || "");
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: '8px',
-                            fontSize: '16px',
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            color: '#374151',
-                          },
-                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#174d31',
-                            borderWidth: '2px',
-                          },
-                          '& .MuiInputLabel-root.Mui-focused': {
-                            color: '#174d31',
-                          }
-                        }}
-                      />
-                    )}
-                  />
-                  
-                  {/* Checkboxes in same row */}
-                  <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    <Controller
-                      name="isActive"
-                      control={control}
-                      render={({ field }) => (
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              {...field}
-                              checked={field.value}
-                              sx={{
+                  <Grid container spacing={2}>
+                    <Grid item size={6}>
+                      <Controller
+                        name="name"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Plan Name *"
+                            required
+                            placeholder="e.g., Premium Plan, Basic Plan"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.name}
+                            helperText={errors.name?.message}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
                                 color: '#174d31',
-                                '&.Mui-checked': {
-                                  color: '#174d31',
-                                },
-                                transform: 'scale(1.1)',
-                              }}
-                            />
-                          }
-                          label="Active Status"
-                          sx={{
-                            '& .MuiFormControlLabel-label': {
-                              fontWeight: 500,
-                              color: '#374151',
-                              fontSize: '16px'
-                            }
-                          }}
-                        />
-                      )}
-                    />
-                    <Controller
-                      name="isTrial"
-                      control={control}
-                      render={({ field }) => (
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              {...field}
-                              checked={field.value}
-                              sx={{
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item size={6}>
+                      <Controller
+                        name="price"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Price (VND) *"
+                            type="number"
+                            required
+                            placeholder="e.g., 1999"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.price}
+                            helperText={errors.price?.message}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
                                 color: '#174d31',
-                                '&.Mui-checked': {
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item size={6}>
+                      <Controller
+                        name="durationInDays"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Duration (Days) *"
+                            type="number"
+                            required
+                            placeholder="e.g., 30"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.durationInDays}
+                            helperText={errors.durationInDays?.message}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? "" : parseInt(value) || "");
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
+                                color: '#174d31',
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item size={6}>
+                      <Controller
+                        name="productGroupLimit"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Product Group Limit *"
+                            type="number"
+                            required
+                            placeholder="e.g., 12"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.productGroupLimit}
+                            helperText={errors.productGroupLimit?.message}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? "" : parseInt(value) || "");
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
+                                color: '#174d31',
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item size={6}>
+                      <Controller
+                        name="productItemLimit"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Product Item Limit *"
+                            type="number"
+                            required
+                            placeholder="e.g., 2"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.productItemLimit}
+                            helperText={errors.productItemLimit?.message}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? "" : parseInt(value) || "");
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
+                                color: '#174d31',
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item size={6}>
+                      <Controller
+                        name="ecoBonusPercent"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Eco Bonus Percent (%) *"
+                            type="number"
+                            required
+                            placeholder="e.g., 10"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.ecoBonusPercent}
+                            helperText={errors.ecoBonusPercent?.message}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? "" : parseInt(value) || "");
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
+                                color: '#174d31',
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item size={6}>
+                      <Controller
+                        name="exportLevel"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Export Level *"
+                            required
+                            placeholder="none | basic | advanced"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.exportLevel}
+                            helperText={errors.exportLevel?.message}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
+                                color: '#174d31',
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                      <Controller
+                        name="isActive"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                {...field}
+                                checked={field.value}
+                                sx={{
                                   color: '#174d31',
-                                },
-                                transform: 'scale(1.1)',
-                              }}
-                            />
-                          }
-                          label="Trial Plan"
-                          sx={{
-                            '& .MuiFormControlLabel-label': {
-                              fontWeight: 500,
-                              color: '#374151',
-                              fontSize: '16px'
+                                  '&.Mui-checked': {
+                                    color: '#174d31',
+                                  },
+                                  transform: 'scale(1.1)',
+                                }}
+                              />
                             }
-                          }}
-                        />
-                      )}
-                    />
-                  </Box>
+                            label="Active Status"
+                            sx={{
+                              '& .MuiFormControlLabel-label': {
+                                fontWeight: 500,
+                                color: '#374151',
+                                fontSize: '16px'
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                      <Controller
+                        name="isTrial"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                {...field}
+                                checked={field.value}
+                                sx={{
+                                  color: '#174d31',
+                                  '&.Mui-checked': {
+                                    color: '#174d31',
+                                  },
+                                  transform: 'scale(1.1)',
+                                }}
+                              />
+                            }
+                            label="Trial Plan"
+                            sx={{
+                              '& .MuiFormControlLabel-label': {
+                                fontWeight: 500,
+                                color: '#374151',
+                                fontSize: '16px'
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+                  </Grid>
                 </Box>
               )}
           </Box>
