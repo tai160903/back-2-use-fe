@@ -188,7 +188,6 @@ const subscriptionSlice = createSlice({
   initialState: {
     subscription: [],
     subscriptionDetails: null, 
-    features: [],
     subscriptionHistory: { data: [], total: 0, currentPage: 1, totalPages: 1 },
     isLoading: false,
     error: null,
@@ -257,46 +256,6 @@ const subscriptionSlice = createSlice({
         state.subscriptionDetails = payload; 
       })
       .addCase(getSubscriptionById.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-      })
-      // Features reducers
-      .addCase(getSubscriptionFeatures.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(getSubscriptionFeatures.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        state.features = payload.data || [];
-      })
-      .addCase(getSubscriptionFeatures.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-      })
-      .addCase(updateSubscriptionFeatures.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(updateSubscriptionFeatures.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        state.features = payload.data || [];
-      })
-      .addCase(updateSubscriptionFeatures.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-      })
-      .addCase(deleteSubscriptionFeature.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteSubscriptionFeature.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = null;
-        state.features = payload.data || [];
-      })
-      .addCase(deleteSubscriptionFeature.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })

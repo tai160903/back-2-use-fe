@@ -336,6 +336,43 @@ button.btn-upgarde {
     color: #ff9800 !important;
 }
 
+.package-limits {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.package-limit-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: #f3f4f6;
+}
+
+.package-limit-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.package-limit-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.package-limit-pill {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
 .package-features {
     margin-top: 16px;
 }

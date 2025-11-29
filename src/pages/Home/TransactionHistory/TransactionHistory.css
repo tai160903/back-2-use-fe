@@ -247,7 +247,8 @@ button.borrow-content-btn:hover {
   color: #cc3500;
   font-size: 14px;
   border-radius: 8px;
-  min-width: 120%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .borrow-content-overdue-success {
@@ -258,7 +259,8 @@ button.borrow-content-btn:hover {
   color: #b05b05;
   font-size: 14px;
   border-radius: 8px;
-  min-width: 120%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .borrow-content-overdue-failed {
@@ -269,7 +271,8 @@ button.borrow-content-btn:hover {
   color: #bd0311;
   font-size: 14px;
   border-radius: 8px;
-   min-width: 120%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .borrow-content-overdue-title {
@@ -287,7 +290,6 @@ button.borrow-content-btn:hover {
   justify-content: center;
   padding: 8px 0px;
   border-radius: 10px;
-  margin: 10px;
 }
 
 .borrow-legitPoint {
@@ -299,7 +301,6 @@ button.borrow-content-btn:hover {
   justify-content: center;
   padding: 8px 0px;
   border-radius: 10px;
-  margin: 10px;
 }
 
 .borrow-receivePoint {
@@ -337,6 +338,48 @@ button.borrow-content-btn:hover {
   border-radius: 10px;
 
   margin: 10px;
+}
+
+/* CO2, Eco, Condition với màu riêng */
+.borrow-co2Point {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  border: 1px solid #c6f6d5;
+  background: #f0fff4;
+  justify-content: center;
+  padding: 8px 0px;
+  border-radius: 10px;
+}
+
+.borrow-ecoPoint {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  border: 1px solid #b2f5ea;
+  background: #e6fffa;
+  justify-content: center;
+  padding: 8px 0px;
+  border-radius: 10px;
+}
+
+.borrow-conditionPoint {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  border: 1px solid #fbd38d;
+  background: #fffaf0;
+  justify-content: center;
+  padding: 8px 0px;
+  border-radius: 10px;
+}
+
+/* Grid cho nhóm điểm (Reward / Legit / CO2 / Eco / Condition) */
+.borrow-points-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0;
 }
 
 .borrow-content-right-success {

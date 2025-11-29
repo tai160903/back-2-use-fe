@@ -39,6 +39,7 @@ function BorrowCard({ item }) {
   const productGroup = product.productGroupId || {};
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
+  const customer = item.customerId || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -48,6 +49,11 @@ function BorrowCard({ item }) {
   const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
   const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
+
+  const customerName = customer.fullName || "N/A";
+  const customerPhone = customer.phone || "N/A";
+  const quantity = item.quantity || 1;
+  const extensions = item.extensionCount || 0;
 
   const toVNDate = (d) =>
     d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
@@ -114,6 +120,17 @@ function BorrowCard({ item }) {
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
                 </div>
+
+                {/* Customer & transaction meta */}
+                <Typography variant="body2" className="borrow-content-material">
+                  Customer: {customerName} ({customerPhone})
+                </Typography>
+                <Typography variant="body2" className="borrow-content-material">
+                  Items borrowed: {quantity}
+                </Typography>
+                <Typography variant="body2" className="borrow-content-material">
+                  Extensions: {extensions}
+                </Typography>
                 {/* Overdue đưa ngay dưới info */}
 
                 <div className="borrow-content-overdue">
@@ -154,6 +171,7 @@ function SuccessCard({ item }) {
   const productGroup = product.productGroupId || {};
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
+  const customer = item.customerId || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -163,6 +181,11 @@ function SuccessCard({ item }) {
   const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
   const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
+
+  const customerName = customer.fullName || "N/A";
+  const customerPhone = customer.phone || "N/A";
+  const quantity = item.quantity || 1;
+  const extensions = item.extensionCount || 0;
 
   const toVNDate = (d) =>
     d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
@@ -230,6 +253,15 @@ function SuccessCard({ item }) {
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
                 </div>
+                <Typography variant="body2" className="borrow-content-material">
+                  Customer: {customerName} ({customerPhone})
+                </Typography>
+                <Typography variant="body2" className="borrow-content-material">
+                  Items borrowed: {quantity}
+                </Typography>
+                <Typography variant="body2" className="borrow-content-material">
+                  Extensions: {extensions}
+                </Typography>
                 {/* Overdue đưa ngay dưới info */}
 
                 <div className="borrow-content-overdue-success">
@@ -300,7 +332,10 @@ function SuccessCard({ item }) {
                 <Button className="borrow-content-btn">
                   <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
                 </Button>
-                <Button className="borrow-content-btn">
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
                   <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
                   Details
                 </Button>
@@ -318,6 +353,7 @@ function FailedCard({ item }) {
   const productGroup = product.productGroupId || {};
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
+  const customer = item.customerId || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -327,6 +363,11 @@ function FailedCard({ item }) {
   const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
   const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
+
+  const customerName = customer.fullName || "N/A";
+  const customerPhone = customer.phone || "N/A";
+  const quantity = item.quantity || 1;
+  const extensions = item.extensionCount || 0;
 
   const toVNDate = (d) =>
     d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
@@ -394,6 +435,15 @@ function FailedCard({ item }) {
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
                 </div>
+                <Typography variant="body2" className="borrow-content-material">
+                  Customer: {customerName} ({customerPhone})
+                </Typography>
+                <Typography variant="body2" className="borrow-content-material">
+                  Items borrowed: {quantity}
+                </Typography>
+                <Typography variant="body2" className="borrow-content-material">
+                  Extensions: {extensions}
+                </Typography>
                 {/* Overdue đưa ngay dưới info */}
 
                 <div className="borrow-content-overdue-failed">
@@ -446,7 +496,10 @@ function FailedCard({ item }) {
                 <Button className="borrow-content-btn">
                   <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
                 </Button>
-                <Button className="borrow-content-btn">
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
                   <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
                   Details
                 </Button>

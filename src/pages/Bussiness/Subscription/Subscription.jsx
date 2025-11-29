@@ -18,7 +18,16 @@ export default function Subscription() {
   const dispatch = useDispatch();
   const { subscription, isLoading, subscriptionHistory } = useSelector((state) => state.subscription);
   const { balance, businessInfo, refetch } = useUserInfo();
-  const featuresList = subscription?.data?.description || [];
+
+  // Chuẩn hóa dữ liệu subscription từ API
+  // Hỗ trợ cả dạng { statusCode, message, data: [...] } và { statusCode, message, data: { subscriptions, description } }
+  const rawSubscriptionData = subscription?.data;
+  const dataSubscriptions = Array.isArray(rawSubscriptionData)
+    ? rawSubscriptionData
+    : rawSubscriptionData?.subscriptions || [];
+  const featuresList = Array.isArray(rawSubscriptionData?.description)
+    ? rawSubscriptionData.description
+    : [];
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -224,8 +233,8 @@ export default function Subscription() {
           <div className='subscription-packages-grid'>
             {isLoading ? (
               <Typography>Loading...</Typography>
-            ) : (Array.isArray(subscription?.data?.subscriptions) && subscription.data.subscriptions.length > 0) ? (
-              subscription.data.subscriptions
+            ) : dataSubscriptions.length > 0 ? (
+              dataSubscriptions
                 .filter((subscriptionPackage) => !subscriptionPackage.isDeleted && subscriptionPackage.isActive)
                 .map((subscriptionPackage) => {
                   const startDateObject = activeStartDate;
@@ -268,11 +277,42 @@ export default function Subscription() {
                       <Typography className='package-price'>
                         {formatPrice(subscriptionPackage.price)}
                       </Typography>
-                 
 
-                      {subscription.data.description && (
+                      {/* Giới hạn sử dụng từ limits */}
+                      <div className='package-limits'>
+                        <div className='package-limit-badge'>
+                          <span className='package-limit-label'>Groups</span>
+                          <span className='package-limit-value'>
+                            {subscriptionPackage.limits?.productGroupLimit ?? '∞'}
+                          </span>
+                        </div>
+                        <div className='package-limit-badge'>
+                          <span className='package-limit-label'>Items / Group</span>
+                          <span className='package-limit-value'>
+                            {subscriptionPackage.limits?.productItemLimit ?? '∞'}
+                          </span>
+                        </div>
+                        <div className='package-limit-badge'>
+                          <span className='package-limit-label'>Export</span>
+                          <span className='package-limit-value package-limit-pill'>
+                            {subscriptionPackage.limits?.exportLevel
+                              ? subscriptionPackage.limits.exportLevel.toUpperCase()
+                              : 'NONE'}
+                          </span>
+                        </div>
+                        <div className='package-limit-badge'>
+                          <span className='package-limit-label'>Eco Bonus</span>
+                          <span className='package-limit-value'>
+                            {subscriptionPackage.limits?.ecoBonusPercent != null
+                              ? `${subscriptionPackage.limits.ecoBonusPercent}%`
+                              : '0%'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {featuresList.length > 0 && (
                         <div className='package-features'>
-                          {subscription.data.description.map((feature, index) => (
+                          {featuresList.map((feature, index) => (
                             <Typography key={index} className='feature-item'>
                               ✓ {feature}
                             </Typography>
