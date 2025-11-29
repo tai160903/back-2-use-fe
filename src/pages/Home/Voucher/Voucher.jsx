@@ -1,885 +1,347 @@
-import { Typography, Pagination, Stack, Tabs, Tab, Box } from '@mui/material'
-import React, { useState, useMemo, useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import React, { useState } from 'react';
 import { 
-  getCustomerVouchers, 
-  getMyCustomerVouchers, 
-  redeemCustomerVoucher 
-} from '../../../store/slices/voucherSlice'
-import { switchAccountTypeAPI } from '../../../store/slices/authSlice'
-import { getUserRole, getCurrentUser, getTokenRole } from '../../../utils/authUtils'
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, Pagination as SwiperPagination } from 'swiper/modules'
-import 'swiper/css'
-import 'swiper/css/navigation'
-import 'swiper/css/pagination'
-import './Voucher.css'
-import toast from 'react-hot-toast'
+  Box, 
+  Typography, 
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  LinearProgress,
+  Link,
+} from '@mui/material';
+import {
+  Close as CloseIcon,
+  CardGiftcard as GiftIcon,
+  LocalFlorist as EcoIcon,
+  Star as StarIcon,
+} from '@mui/icons-material';
+import './Voucher.css';
 
-// Helper function to format date
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'N/A';
-  return date.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
-
+// Mock data - Vouchers
+const mockVouchers = [
+  {
+    id: 1,
+    type: 'regular',
+    discount: '10%',
+    maxDiscount: 50000,
+    minSpend: 200000,
+    points: 50,
+    usagePercentage: 85,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+  {
+    id: 2,
+    type: 'regular',
+    discount: '15%',
+    maxDiscount: 100000,
+    minSpend: 500000,
+    points: 100,
+    usagePercentage: 92,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+  {
+    id: 3,
+    type: 'exclusive',
+    discount: '20%',
+    maxDiscount: 200000,
+    minSpend: 1000000,
+    points: 200,
+    usagePercentage: 45,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+  {
+    id: 4,
+    type: 'regular',
+    discount: '25%',
+    maxDiscount: 150000,
+    minSpend: 800000,
+    points: 150,
+    usagePercentage: 78,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+  {
+    id: 5,
+    type: 'regular',
+    discount: '30%',
+    maxDiscount: 300000,
+    minSpend: 2000000,
+    points: 300,
+    usagePercentage: 60,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+  {
+    id: 6,
+    type: 'exclusive',
+    discount: '50%',
+    maxDiscount: 500000,
+    minSpend: 3000000,
+    points: 500,
+    usagePercentage: 35,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+  {
+    id: 7,
+    type: 'regular',
+    discount: '8%',
+    maxDiscount: 30000,
+    minSpend: 150000,
+    points: 30,
+    usagePercentage: 95,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+  {
+    id: 8,
+    type: 'regular',
+    discount: '12%',
+    maxDiscount: 80000,
+    minSpend: 400000,
+    points: 80,
+    usagePercentage: 88,
+    status: 'active',
+    category: 'Áp dụng cho toàn hệ thống',
+    expiry: '31/12/2024',
+  },
+];
 
 export default function Voucher() {
-  const dispatch = useDispatch();
-  const { 
-    customerVouchers, 
-    customerVoucherPagination,
-    myCustomerVouchers,
-    myCustomerVoucherPagination,
-    isLoading 
-  } = useSelector(state => state.vouchers);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [conditionModalOpen, setConditionModalOpen] = useState(false);
+  const [savedVouchers, setSavedVouchers] = useState(new Set());
 
-  // State cho tab, filter và pagination
-  const [activeTab, setActiveTab] = useState(0); // 0: All Vouchers, 1: My Vouchers
-  const [statusFilter, setStatusFilter] = useState(''); // '', active, inactive, expired
-  const [voucherTypeFilter, setVoucherTypeFilter] = useState(''); // business, leaderboard
-  const [currentPage, setCurrentPage] = useState(1);
-  const [myVouchersPage, setMyVouchersPage] = useState(1);
-  const [displayPage, setDisplayPage] = useState(1); // Client-side pagination for display
-  const [myVouchersDisplayPage, setMyVouchersDisplayPage] = useState(1); // Client-side pagination for My Vouchers
-  const vouchersPerPage = 10; // API pagination
-  const vouchersPerDisplayPage = 9; // Display pagination (3x3 grid)
+  const userPoints = 350; // Mock user points
 
-  // Check and sync role if mismatch
-  useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-
-    const tokenRole = getTokenRole();
-    const userRole = getUserRole(); // Ưu tiên role từ user object
-    
-    // Nếu role trong token khác với role trong user object, cần switch
-    if (userRole && tokenRole && tokenRole !== userRole) {
-      console.log(`Role mismatch detected. Token: ${tokenRole}, User: ${userRole}. Switching to ${userRole}...`);
-      dispatch(switchAccountTypeAPI({ role: userRole })).then((result) => {
-        if (switchAccountTypeAPI.fulfilled.match(result)) {
-          console.log('Role switched successfully');
-          // Reload page to refresh token
-          window.location.reload();
-        }
-      });
-    }
-  }, [dispatch]);
-
-  // Load customer vouchers (All Vouchers) - Always load to ensure Featured Vouchers has data
-  // This is critical for Featured Vouchers section which shows leaderboard vouchers to all users
-  useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-
-    // Check if user can access customer features
-    const tokenRole = getUserRole();
-    const userRole = currentUser.user?.role?.trim().toLowerCase();
-    
-    // If user is not a customer and cannot switch to customer, skip
-    // But if user has customer role (even if currently in business mode), try to load
-    if (tokenRole && tokenRole !== 'customer' && userRole !== 'customer') {
-      console.warn('User is not a customer, skipping voucher load');
-      return;
-    }
-    
-    // If user is in business mode but has customer role, try to load anyway
-    // The API might still work, or we'll handle 403 error by switching to customer mode
-    const shouldLoad = tokenRole === 'customer' || userRole === 'customer';
-    
-    if (shouldLoad) {
-      // Always load customer vouchers (even in My Vouchers tab) to ensure Featured Vouchers has data
-      // Load with higher limit in My Vouchers tab to ensure we get leaderboard vouchers
-      // This ensures Featured Vouchers always has data regardless of which tab or account is active
-      dispatch(getCustomerVouchers({
-        status: activeTab === 0 ? (statusFilter || undefined) : undefined, // Only apply filter in All Vouchers tab
-        page: activeTab === 0 ? currentPage : 1, // Use currentPage only in All Vouchers tab
-        limit: activeTab === 0 ? vouchersPerPage : 50, // Load more in My Vouchers tab to ensure we get leaderboard vouchers
-      })).catch((error) => {
-        console.error('Error loading customer vouchers:', error);
-        if (error?.response?.status === 403) {
-          // Nếu bị 403, có thể role chưa sync, thử switch lại
-          if (userRole === 'customer') {
-            dispatch(switchAccountTypeAPI({ role: 'customer' })).then(() => {
-              // Retry loading after switching
-              dispatch(getCustomerVouchers({
-                status: activeTab === 0 ? (statusFilter || undefined) : undefined,
-                page: activeTab === 0 ? currentPage : 1,
-                limit: activeTab === 0 ? vouchersPerPage : 50,
-              }));
-            });
-          } else {
-            console.warn('User does not have customer role, cannot load vouchers');
-          }
-        }
-      });
-    }
-  }, [dispatch, statusFilter, currentPage, activeTab]);
-  
-  // Reload customer vouchers when user changes (to ensure Featured Vouchers always has data)
-  // Featured Vouchers (leaderboard vouchers) should be visible to ALL users who have customer role
-  useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-    
-    // Check if user can access customer features (either currently customer or can switch to customer)
-    const tokenRole = getUserRole();
-    const userRole = currentUser.user?.role?.trim().toLowerCase();
-    
-    // Only skip if user is definitely not a customer (e.g., admin only)
-    // If user has customer role or can switch to customer, load vouchers for Featured section
-    if (tokenRole && tokenRole !== 'customer' && userRole !== 'customer') {
-      // User is not a customer and cannot switch to customer, skip
-      return;
-    }
-    
-    // Reload customer vouchers when component mounts or user changes
-    // This ensures Featured Vouchers (leaderboard vouchers) are always available for all users with customer role
-    // Load without filter to get all vouchers including leaderboard vouchers
-    const userId = currentUser.user?._id || currentUser.user?.id;
-    if (userId && (tokenRole === 'customer' || userRole === 'customer')) {
-      // Load all vouchers without status filter to ensure we get leaderboard vouchers
-      // This is separate from the main load to ensure Featured Vouchers always has data
-      // Try to load even if current role is business (user might have customer role too)
-      dispatch(getCustomerVouchers({
-        status: undefined, // Load all statuses to get leaderboard vouchers
-        page: 1,
-        limit: 50, // Load enough to get leaderboard vouchers
-      })).catch((error) => {
-        console.error('Error loading customer vouchers for Featured section:', error);
-        // If error is 403 and user has customer role, try switching to customer mode
-        if (error?.response?.status === 403 && userRole === 'customer') {
-          dispatch(switchAccountTypeAPI({ role: 'customer' })).then(() => {
-            // Retry loading after switching
-            dispatch(getCustomerVouchers({
-              status: undefined,
-              page: 1,
-              limit: 50,
-            }));
-          });
-        }
-      });
-    }
-  }, [dispatch]); // Run on mount - will reload when component remounts after account change
-
-  // Load my customer vouchers - Load tất cả để kiểm tra redeemed status cho All Vouchers tab
-  useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-    
-    const tokenRole = getUserRole();
-    if (tokenRole !== 'customer') return;
-
-    if (activeTab === 1) {
-      // Load với filter cho My Vouchers tab
-      dispatch(getMyCustomerVouchers({
-        voucherType: voucherTypeFilter || undefined,
-        status: 'redeemed', // redeemed, used, expired
-        page: myVouchersPage,
-        limit: vouchersPerPage,
-      }));
+  const handleSaveVoucher = (voucherId) => {
+    const newSaved = new Set(savedVouchers);
+    if (newSaved.has(voucherId)) {
+      newSaved.delete(voucherId);
     } else {
-      // Load tất cả redeemed vouchers để so sánh với All Vouchers
-      dispatch(getMyCustomerVouchers({
-        voucherType: undefined,
-        status: 'redeemed',
-        page: 1,
-        limit: 100, // Load nhiều để đảm bảo có đủ data
-      }));
+      newSaved.add(voucherId);
     }
-  }, [dispatch, activeTab, voucherTypeFilter, myVouchersPage]);
-
-  // Transform API data to match component format
-  const transformedVouchers = useMemo(() => {
-    const vouchers = activeTab === 0 ? customerVouchers : myCustomerVouchers;
-    console.log('Raw vouchers data:', vouchers);
-    if (!vouchers || vouchers.length === 0) {
-      console.log('No vouchers found or empty array');
-      return [];
-    }
-    
-    // Tạo Set chứa các voucher ID đã được redeem (cho All Vouchers tab)
-    const redeemedVoucherIds = new Set();
-    if (activeTab === 0 && myCustomerVouchers && myCustomerVouchers.length > 0) {
-      myCustomerVouchers.forEach(redeemedVoucher => {
-        // Lấy voucher template ID từ myCustomerVouchers để so sánh với customerVouchers
-        // templateVoucherId là ID của voucher template (available voucher)
-        const redeemedId = redeemedVoucher.templateVoucherId || 
-                           redeemedVoucher.voucherId || 
-                           redeemedVoucher.voucher?._id || 
-                           redeemedVoucher.voucherInfo?._id ||
-                           redeemedVoucher.voucher?.id ||
-                           redeemedVoucher.voucherTemplateId;
-        if (redeemedId) {
-          redeemedVoucherIds.add(String(redeemedId));
-        }
-      });
-    }
-    
-    const transformed = vouchers.map((voucher, index) => {
-      // Determine discount value - prioritize percentage
-      let value = '';
-      if (activeTab === 1) {
-        // My vouchers - check voucher object first
-        if (voucher.voucher?.discountPercent) {
-          value = `${voucher.voucher.discountPercent}%`;
-        } else if (voucher.voucherInfo?.discountPercent) {
-          value = `${voucher.voucherInfo.discountPercent}%`;
-        } else if (voucher.discountPercent) {
-          value = `${voucher.discountPercent}%`;
-        } else if (voucher.discount) {
-          value = `${voucher.discount}%`;
-        } else if (voucher.voucher?.discountAmount) {
-          value = `${voucher.voucher.discountAmount.toLocaleString('vi-VN')}đ`;
-        } else if (voucher.discountAmount) {
-          value = `${voucher.discountAmount.toLocaleString('vi-VN')}đ`;
-        }
-      } else {
-        // All vouchers
-        if (voucher.discountPercent) {
-          value = `${voucher.discountPercent}%`;
-        } else if (voucher.discount) {
-          value = `${voucher.discount}%`;
-        } else if (voucher.discountAmount) {
-          value = `${voucher.discountAmount.toLocaleString('vi-VN')}đ`;
-        }
-      }
-      
-      // If still no value, set default
-      if (!value) {
-        value = '0%';
-      }
-
-      // Determine status for UI
-      let status = 'available';
-      let statusText = 'Available';
-      const voucherId = String(voucher._id || voucher.id);
-      const isRedeemed = activeTab === 0 && redeemedVoucherIds.has(voucherId);
-      
-      if (activeTab === 1) {
-        // My vouchers
-        if (voucher.status === 'used') {
-          status = 'collected';
-          statusText = 'Used';
-        } else if (voucher.status === 'expired') {
-          status = 'unavailable';
-          statusText = 'Expired';
-        } else if (voucher.status === 'redeemed') {
-          status = 'available';
-          statusText = 'Redeemed';
-        }
-      } else {
-        // All vouchers
-        if (isRedeemed) {
-          status = 'collected'; // Đánh dấu là đã redeem
-          statusText = 'Redeemed';
-        } else if (voucher.status === 'inactive') {
-          status = 'unavailable';
-          statusText = 'Inactive';
-        } else if (voucher.status === 'expired') {
-          status = 'unavailable';
-          statusText = 'Expired';
-        } else if (voucher.status === 'active') {
-          status = 'available';
-          statusText = 'Available';
-        }
-      }
-
-      return {
-        id: voucher._id || voucher.id,
-        type: voucher.voucherType === 'leaderboard' ? 'exclusive' : 'regular',
-        rank: voucher.voucherType === 'leaderboard' && index < 10 ? `Top ${index + 1}` : null,
-        title: activeTab === 1 
-          ? (voucher.voucher?.name || voucher.voucherInfo?.name || voucher.customName || voucher.name || 'Voucher')
-          : (voucher.customName || voucher.name || voucher.voucher?.name || 'Voucher'),
-        value: value,
-        description: activeTab === 1
-          ? (voucher.voucher?.description || voucher.voucherInfo?.description || voucher.customDescription || voucher.description || 'Voucher description')
-          : (voucher.customDescription || voucher.description || voucher.voucher?.description || 'Voucher description'),
-        points: voucher.rewardPointCost || voucher.voucher?.rewardPointCost || 0,
-        code: activeTab === 1
-          ? (voucher.fullCode || voucher.code || voucher.voucherCode || voucher.baseCode || voucher.voucher?.baseCode || '')
-          : (voucher.baseCode || voucher.code || voucher.voucher?.baseCode || ''),
-        expiry: formatDate(activeTab === 1
-          ? (voucher.expiryDate || voucher.leaderboardExpireAt || voucher.voucher?.endDate || voucher.voucherInfo?.endDate)
-          : (voucher.endDate || voucher.voucher?.endDate || voucher.expiryDate)),
-        redeemedAt: activeTab === 1 ? formatDate(voucher.redeemedAt || voucher.createdAt) : null,
-        status: status,
-        statusText: statusText,
-        originalVoucher: voucher
-      };
-    });
-    console.log('Transformed vouchers:', transformed);
-    return transformed;
-  }, [customerVouchers, myCustomerVouchers, activeTab]);
-
-  // Handle tab change
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setCurrentPage(1);
-    setMyVouchersPage(1);
-    setDisplayPage(1);
-    setMyVouchersDisplayPage(1);
+    setSavedVouchers(newSaved);
   };
 
-  // Handle status filter change (for All Vouchers)
-  const handleStatusFilterChange = (newStatus) => {
-    setStatusFilter(newStatus);
-    setCurrentPage(1);
-    setDisplayPage(1);
-    // Scroll to top when filter changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleShowConditions = (voucher) => {
+    setSelectedVoucher(voucher);
+    setConditionModalOpen(true);
   };
 
-  // Handle voucher type filter change (for My Vouchers)
-  const handleVoucherTypeFilterChange = (newType) => {
-    setVoucherTypeFilter(newType);
-    setMyVouchersPage(1);
-    setMyVouchersDisplayPage(1);
-    // Scroll to top when filter changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleCloseModals = () => {
+    setConditionModalOpen(false);
+    setSelectedVoucher(null);
   };
 
-  // Handle page change (API pagination)
-  const handlePageChange = (event, newPage) => {
-    if (activeTab === 0) {
-      setCurrentPage(newPage);
-    } else {
-      setMyVouchersPage(newPage);
-    }
-  };
-  
-  // Handle display page change (Client-side pagination)
-  const handleDisplayPageChange = (event, newPage) => {
-    if (activeTab === 0) {
-      setDisplayPage(newPage);
-    } else {
-      setMyVouchersDisplayPage(newPage);
-    }
-    // Scroll to top when page changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Handle redeem voucher
-  const handleRedeemVoucher = async (voucher) => {
-    const voucherId = voucher.originalVoucher?._id || voucher.originalVoucher?.id || voucher.id;
-    if (!voucherId) {
-      toast.error('Voucher ID not found');
-      return;
-    }
-
-    try {
-      await dispatch(redeemCustomerVoucher({ voucherId })).unwrap();
-      // Refresh my vouchers after redeem
-      if (activeTab === 1) {
-        dispatch(getMyCustomerVouchers({
-          voucherType: voucherTypeFilter || undefined,
-          status: 'redeemed',
-          page: myVouchersPage,
-          limit: vouchersPerPage,
-        }));
-      }
-      // Refresh all vouchers
-      dispatch(getCustomerVouchers({
-        status: statusFilter,
-        page: currentPage,
-        limit: vouchersPerPage,
-      }));
-      // Reset display page after redeem
-      setDisplayPage(1);
-      setMyVouchersDisplayPage(1);
-    } catch (error) {
-      // Error is handled by the thunk
-    }
-  };
-  
-  // Reset display page when filter or tab changes
-  useEffect(() => {
-    setDisplayPage(1);
-  }, [statusFilter, activeTab]);
-  
-  useEffect(() => {
-    setMyVouchersDisplayPage(1);
-  }, [voucherTypeFilter, activeTab]);
-
-  // Get pagination info
-  const pagination = activeTab === 0 ? customerVoucherPagination : myCustomerVoucherPagination;
-  const totalPages = pagination?.totalPages || 1;
-  
-  // Client-side pagination for display (9 vouchers per page)
-  const displayVouchers = useMemo(() => {
-    const startIndex = activeTab === 0 
-      ? (displayPage - 1) * vouchersPerDisplayPage
-      : (myVouchersDisplayPage - 1) * vouchersPerDisplayPage;
-    const endIndex = startIndex + vouchersPerDisplayPage;
-    return transformedVouchers.slice(startIndex, endIndex);
-  }, [transformedVouchers, displayPage, myVouchersDisplayPage, activeTab]);
-  
-  const totalDisplayPages = transformedVouchers.length > 0 
-    ? Math.ceil(transformedVouchers.length / vouchersPerDisplayPage) 
-    : 1;
-
-  // Get top featured vouchers (Leaderboard vouchers) - Always show, prioritize All Vouchers data
-  const featuredVouchers = useMemo(() => {
-    // Always prioritize customerVouchers (All Vouchers) for leaderboard vouchers
-    // This ensures Featured Vouchers always shows leaderboard vouchers available to all users
-    let sourceVouchers = customerVouchers;
-    let isFromMyVouchers = false;
-    
-    // Filter leaderboard vouchers from customerVouchers first (available to all)
-    let leaderboardVouchers = [];
-    
-    if (sourceVouchers && sourceVouchers.length > 0) {
-      leaderboardVouchers = sourceVouchers
-        .filter(voucher => {
-          // Check for leaderboard type in flat structure
-          return voucher.voucherType === 'leaderboard';
-        })
-        .slice(0, 10); // Get first 10 leaderboard vouchers
-    }
-    
-    // If no leaderboard vouchers found in customerVouchers, try myCustomerVouchers as fallback
-    if (leaderboardVouchers.length === 0 && myCustomerVouchers && myCustomerVouchers.length > 0) {
-      leaderboardVouchers = myCustomerVouchers
-        .filter(voucher => {
-          // Check for leaderboard type in nested structure
-          return voucher.voucher?.voucherType === 'leaderboard' || 
-                 voucher.voucherType === 'leaderboard' ||
-                 voucher.voucherInfo?.voucherType === 'leaderboard';
-        })
-        .slice(0, 10);
-      isFromMyVouchers = true;
-    }
-    
-    if (leaderboardVouchers.length === 0) return [];
-    
-    // Transform to match carousel format
-    return leaderboardVouchers.map((voucher, index) => {
-      // Determine discount value - handle both nested and flat structures
-      let value = '';
-      if (isFromMyVouchers) {
-        // From myCustomerVouchers - check nested voucher object
-        if (voucher.voucher?.discountPercent) {
-          value = `${voucher.voucher.discountPercent}%`;
-        } else if (voucher.voucherInfo?.discountPercent) {
-          value = `${voucher.voucherInfo.discountPercent}%`;
-        } else if (voucher.discountPercent) {
-          value = `${voucher.discountPercent}%`;
-        } else if (voucher.voucher?.discountAmount) {
-          value = `${voucher.voucher.discountAmount.toLocaleString('vi-VN')}đ`;
-        } else if (voucher.discountAmount) {
-          value = `${voucher.discountAmount.toLocaleString('vi-VN')}đ`;
-        }
-      } else {
-        // From customerVouchers - flat structure
-        if (voucher.discountPercent) {
-          value = `${voucher.discountPercent}%`;
-        } else if (voucher.discountAmount) {
-          value = `${voucher.discountAmount.toLocaleString('vi-VN')}đ`;
-        } else if (voucher.discount) {
-          value = `${voucher.discount}%`;
-        }
-      }
-      if (!value) value = '0%';
-      
-      return {
-        id: voucher._id || voucher.id,
-        type: 'exclusive',
-        rank: index < 10 ? `Top ${index + 1}` : null,
-        title: isFromMyVouchers
-          ? (voucher.voucher?.name || voucher.voucherInfo?.name || voucher.customName || voucher.name || 'Voucher')
-          : (voucher.customName || voucher.name || voucher.voucher?.name || 'Voucher'),
-        value: value,
-        description: isFromMyVouchers
-          ? (voucher.voucher?.description || voucher.voucherInfo?.description || voucher.customDescription || voucher.description || 'Voucher description')
-          : (voucher.customDescription || voucher.description || voucher.voucher?.description || 'Voucher description'),
-        points: voucher.rewardPointCost || voucher.voucher?.rewardPointCost || 0,
-        code: isFromMyVouchers
-          ? (voucher.fullCode || voucher.code || voucher.voucherCode || voucher.baseCode || voucher.voucher?.baseCode || '')
-          : (voucher.baseCode || voucher.code || voucher.voucher?.baseCode || ''),
-        expiry: formatDate(isFromMyVouchers
-          ? (voucher.expiryDate || voucher.leaderboardExpireAt || voucher.voucher?.endDate || voucher.voucherInfo?.endDate)
-          : (voucher.endDate || voucher.voucher?.endDate || voucher.expiryDate)),
-        status: isFromMyVouchers
-          ? (voucher.status === 'used' ? 'unavailable' : voucher.status === 'expired' ? 'unavailable' : 'available')
-          : (voucher.status === 'active' ? 'available' : 'unavailable'),
-        originalVoucher: voucher
-      };
-    });
-  }, [customerVouchers, myCustomerVouchers, activeTab]);
-
-  // Render voucher card
-  const renderVoucherCard = (voucher) => {
-    const isExclusive = voucher.rank !== null
-    // Kiểm tra nếu voucher đã được redeem (cho All Vouchers tab)
-    const isCollected = voucher.status === 'collected' || (activeTab === 0 && voucher.statusText === 'Redeemed')
-    const isUnavailable = voucher.status === 'unavailable'
-
-    return (
-      <div 
-        key={voucher.id} 
-        className={`voucher-grid-card ${isUnavailable || isCollected ? 'unavailable' : ''} ${isExclusive ? 'exclusive' : 'regular'}`}
-      >
-        
-        <div className='voucher-grid-content'>
-          <div className='voucher-grid-title'>{voucher.title}</div>
-          {voucher.value && (
-            <div className='voucher-grid-value' style={{ fontSize: '1.5rem', fontWeight: 700, color: '#22c55e', marginBottom: '8px' }}>
-              {voucher.value}
-            </div>
-          )}
-          <div className='voucher-grid-description'>{voucher.description}</div>
-          {activeTab === 0 && voucher.points > 0 && (
-            <div className='voucher-grid-points'>{voucher.points} points</div>
-          )}
-          {activeTab === 1 && (
-            <>
-              {voucher.code && (
-                <div className='voucher-grid-code'>
-                  <span className='code-icon'>📄</span>
-                  <span style={{ fontWeight: 600, fontFamily: 'monospace' }}>{voucher.code}</span>
-                </div>
-              )}
-              {voucher.redeemedAt && (
-                <div className='voucher-grid-expiry' style={{ marginTop: '8px' }}>
-                  <span style={{ fontWeight: 500 }}>Redeemed:</span> {voucher.redeemedAt}
-                </div>
-              )}
-              <div className='voucher-grid-expiry' style={{ marginTop: '4px' }}>
-                <span style={{ fontWeight: 500 }}>Status:</span> {voucher.statusText}
-              </div>
-            </>
-          )}
-          {activeTab === 0 && (
-            <>
-              {voucher.code && (
-                <div className='voucher-grid-code'>
-                  <span className='code-icon'>📄</span>
-                  <span>{voucher.code}</span>
-                </div>
-              )}
-              <div className='voucher-grid-expiry'>Expires: {voucher.expiry}</div>
-            </>
-          )}
-          
-          <div className='voucher-grid-actions'>
-            {activeTab === 1 ? (
-              // My Vouchers tab
-              isCollected ? (
-                <div className='collected-text'>
-                  <span className='check-icon'>✓</span>
-                  <span>Used</span>
-                </div>
-              ) : isUnavailable ? (
-                <div className='unavailable-text'>
-                  <span className='lock-icon'>🔒</span>
-                  <span>Expired</span>
-                </div>
-              ) : (
-                <div className='collected-text'>
-                  <span className='check-icon'>✓</span>
-                  <span>Redeemed</span>
-                </div>
-              )
-            ) : (
-              // All Vouchers tab
-              isCollected ? (
-                <div className='collected-text'>
-                  <span className='check-icon'>✓</span>
-                  <span>Redeemed</span>
-                </div>
-              ) : isUnavailable ? (
-                <div className='unavailable-text'>
-                  <span className='lock-icon'>🔒</span>
-                  <span>Unavailable</span>
-                </div>
-              ) : (
-                <button 
-                  className='btn-collect'
-                  onClick={() => handleRedeemVoucher(voucher)}
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Processing...' : 'Redeem Now'}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className='vouchers-page'>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '400px',
-          fontSize: '18px',
-          color: '#666'
-        }}>
-          Loading vouchers...
-        </div>
-      </div>
-    );
-  }
+  const filteredVouchers = statusFilter === 'all' 
+    ? mockVouchers 
+    : mockVouchers.filter(v => v.status === statusFilter);
 
   return (
-    <>
-    <div className='vouchers-page'>
-        <div className='vouchers-banner'>
-        </div>
-        
-        {/* Featured Vouchers Carousel - Show in both tabs */}
-        {featuredVouchers.length > 0 && (
-          <div className='vouchers-carousel'>
-            <div className='vouchers-header'>
-              <Typography variant='h2' className='vouchers-carousel-title'>
-                Featured Vouchers
-              </Typography>
-              <span className='vouchers-carousel-subtitle'>
-                Discover exclusive vouchers for top 50 members
-              </span>
-            </div>
-
-            <div className='vouchers-swiper-container'>
-              {featuredVouchers.length > 0 ? (
-                <Swiper
-                  modules={[Navigation, SwiperPagination]}
-                  spaceBetween={20}
-                  slidesPerView={3}
-                  slidesPerGroup={1}
-                  navigation={{
-                    nextEl: '.swiper-button-next-custom',
-                    prevEl: '.swiper-button-prev-custom',
-                  }}
-                  pagination={{
-                    clickable: true,
-                    el: '.swiper-pagination-custom',
-                  }}
-                  loop={false}
-                  breakpoints={{
-                    320: {
-                      slidesPerView: 1,
-                      spaceBetween: 10
-                    },
-                    640: {
-                      slidesPerView: 2,
-                      spaceBetween: 15
-                    },
-                    1024: {
-                      slidesPerView: 3,
-                      spaceBetween: 20
-                    }
-                  }}
-                  className="vouchers-swiper"
-                >
-                  {featuredVouchers.map((voucher) => (
-                    <SwiperSlide key={voucher.id}>
-                      <div className='voucher-cards-container'>
-                        {voucher.rank && (
-                          <div className='voucher-rank-badge'>
-                            <span className='rank-text'>{voucher.rank}</span>
-                            <span className='crown-icon'>👑</span>
-                          </div>
-                        )}
-                        <div className='voucher-value'>
-                          {voucher.value}
-                        </div>
-                        <div className='voucher-description'>
-                          {voucher.description}
-                        </div>
-                        {voucher.code && (
-                          <div className='voucher-code'>
-                            Code: {voucher.code}
-                          </div>
-                        )}
-                        <div className='voucher-tag'>
-                          {voucher.title}
-                        </div>
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              ) : (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                  No featured vouchers available
-                </div>
-              )}
-              
-              {/* Custom Navigation Buttons */}
-              <div className='swiper-button-prev-custom'>
-                <span>‹</span>
-              </div>
-              <div className='swiper-button-next-custom'>
-                <span>›</span>
-              </div>
-              
-              {/* Custom Pagination */}
-              <div className='swiper-pagination-custom'></div>
-            </div>
+    <div className="voucher-page-shopee">
+      {/* Main Banner */}
+      <div className="voucher-banner-main">
+        <div className="voucher-banner-content">
+          <EcoIcon className="banner-logo-icon" />
+          <div className="banner-text-container">
+            <Typography variant="h3" className="banner-title">
+              VOUCHER BACK2USE
+            </Typography>
+            <Typography variant="body2" className="banner-subtitle">
+              Số lượng có hạn, dành cho những bạn nhanh nhất.
+            </Typography>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Tabs Section */}
-        <div className='vouchers-content'>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange}
-              sx={{
-                '& .MuiTab-root': {
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  textTransform: 'none',
-                }
-              }}
+      {/* Main Content */}
+      <div className="voucher-content-wrapper">
+        <div className="voucher-content-card">
+          {/* Section Header */}
+          <div className="voucher-section-header-custom">
+            <EcoIcon className="section-icon-custom" />
+            <Typography variant="h6" className="section-title-custom">
+              VOUCHER BACK2USE
+            </Typography>
+          </div>
+
+          {/* Filters */}
+          <div className="voucher-filters-custom">
+            <Button
+              variant={statusFilter === 'all' ? 'contained' : 'outlined'}
+              onClick={() => setStatusFilter('all')}
+              className={`filter-btn-custom ${statusFilter === 'all' ? 'active' : ''}`}
+              size="small"
             >
-              <Tab label="All Vouchers" />
-              <Tab label="My Vouchers" />
-            </Tabs>
-          </Box>
-
-          {/* Filter Buttons */}
-          {activeTab === 0 ? (
-            // All Vouchers filters
-            <div className='voucher-filter'>
-              <button 
-                className={`filter-btn ${statusFilter === '' ? 'active' : ''}`}
-                onClick={() => handleStatusFilterChange('')}
-              >
-                <span className='filter-icon'>🎁</span>
-                <span>All</span>
-              </button>
-              <button 
-                className={`filter-btn ${statusFilter === 'active' ? 'active' : ''}`}
-                onClick={() => handleStatusFilterChange('active')}
-              >
-                <span className='filter-icon'>✅</span>
-                <span>Active</span>
-              </button>
-              <button 
-                className={`filter-btn ${statusFilter === 'inactive' ? 'active' : ''}`}
-                onClick={() => handleStatusFilterChange('inactive')}
-              >
-                <span className='filter-icon'>⏸️</span>
-                <span>Inactive</span>
-              </button>
-              <button 
-                className={`filter-btn ${statusFilter === 'expired' ? 'active' : ''}`}
-                onClick={() => handleStatusFilterChange('expired')}
-              >
-                <span className='filter-icon'>⏰</span>
-                <span>Expired</span>
-              </button>
-            </div>
-          ) : (
-            // My Vouchers filters
-            <div className='voucher-filter'>
-              <button 
-                className={`filter-btn ${voucherTypeFilter === '' ? 'active' : ''}`}
-                onClick={() => handleVoucherTypeFilterChange('')}
-              >
-                <span className='filter-icon'>🎁</span>
-                <span>All</span>
-              </button>
-              <button 
-                className={`filter-btn ${voucherTypeFilter === 'business' ? 'active' : ''}`}
-                onClick={() => handleVoucherTypeFilterChange('business')}
-              >
-                <span className='filter-icon'>🏪</span>
-                <span>Business</span>
-              </button>
-              <button 
-                className={`filter-btn ${voucherTypeFilter === 'leaderboard' ? 'active' : ''}`}
-                onClick={() => handleVoucherTypeFilterChange('leaderboard')}
-              >
-                <span className='filter-icon'>👑</span>
-                <span>Leaderboard</span>
-              </button>
-            </div>
-          )}
+              Tất cả
+            </Button>
+            <Button
+              variant={statusFilter === 'active' ? 'contained' : 'outlined'}
+              onClick={() => setStatusFilter('active')}
+              className={`filter-btn-custom ${statusFilter === 'active' ? 'active' : ''}`}
+              size="small"
+            >
+              Đang hoạt động
+            </Button>
+            <Button
+              variant={statusFilter === 'inactive' ? 'contained' : 'outlined'}
+              onClick={() => setStatusFilter('inactive')}
+              className={`filter-btn-custom ${statusFilter === 'inactive' ? 'active' : ''}`}
+              size="small"
+            >
+              Tạm dừng
+            </Button>
+          </div>
 
           {/* Voucher Grid */}
-          <div className='voucher-grid'>
-            {displayVouchers.length > 0 ? (
-              displayVouchers.map(renderVoucherCard)
-            ) : (
-              <div style={{ 
-                gridColumn: '1 / -1', 
-                padding: '60px 20px', 
-                textAlign: 'center', 
-                color: '#999',
-                fontSize: '18px'
-              }}>
-                {isLoading ? 'Loading...' : 'No vouchers found'}
-              </div>
-            )}
+          <div className="voucher-grid-custom">
+            {filteredVouchers.map((voucher) => {
+              const isSaved = savedVouchers.has(voucher.id);
+              const canSave = userPoints >= voucher.points;
+              
+              return (
+                <div 
+                  key={voucher.id} 
+                  className={`voucher-card-custom ${voucher.type} ${voucher.status}`}
+                >
+                  {/* Left Strip */}
+                  <div className="voucher-card-strip">
+                    <div className="voucher-strip-badge">
+                      <div className="badge-icon-wrapper">
+                        {voucher.type === 'exclusive' ? (
+                          <StarIcon className="strip-icon" />
+                        ) : (
+                          <EcoIcon className="strip-icon" />
+                        )}
+                      </div>
+                      <span className="strip-text">
+                        {voucher.type === 'exclusive' ? 'ĐẶC BIỆT' : 'BACK2USE'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="voucher-card-body">
+                    <div className="voucher-main-info">
+                      <Typography variant="h3" className="voucher-discount-text">
+                        {voucher.discount}
+                      </Typography>
+                      <Typography variant="body2" className="voucher-max-discount-text">
+                        Giảm tối đa {voucher.maxDiscount.toLocaleString('vi-VN')}đ
+                      </Typography>
+                      <Typography variant="body2" className="voucher-min-order-text">
+                        Đơn tối thiểu {voucher.minSpend.toLocaleString('vi-VN')}đ
+                      </Typography>
+                      <Typography variant="body2" className="voucher-category-text">
+                        {voucher.category}
+                      </Typography>
+                      
+                      {/* Points */}
+                      <div className="voucher-points-section">
+                        <GiftIcon className="points-icon" />
+                        <Typography variant="caption" className="points-text">
+                          {voucher.points} điểm
+                        </Typography>
+                      </div>
+
+                      {/* Usage Progress */}
+                      <div className="voucher-usage-section">
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={voucher.usagePercentage} 
+                          className="usage-bar"
+                        />
+                        <Typography variant="caption" className="usage-percentage">
+                          Đã dùng {voucher.usagePercentage}%
+                        </Typography>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="voucher-card-footer-custom">
+                      <Button
+                        variant="contained"
+                        className={`save-btn ${isSaved ? 'saved' : ''} ${!canSave ? 'disabled' : ''}`}
+                        onClick={() => handleSaveVoucher(voucher.id)}
+                        disabled={!canSave}
+                        fullWidth
+                      >
+                        {isSaved ? 'Đã lưu' : canSave ? 'Lưu' : `Cần ${voucher.points - userPoints} điểm nữa`}
+                      </Button>
+                      <Link
+                        component="button"
+                        variant="caption"
+                        className="condition-link"
+                        onClick={() => handleShowConditions(voucher)}
+                      >
+                        Điều kiện
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
-          {/* Display Pagination (Client-side - 9 vouchers per page) */}
-          {transformedVouchers.length > 0 && (
-            <Stack
-              spacing={2}
-              className="voucher-pagination"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginTop: "40px",
-                marginBottom: "20px"
-              }}
-            >
-              <Pagination
-                count={totalDisplayPages}
-                page={activeTab === 0 ? displayPage : myVouchersDisplayPage}
-                onChange={handleDisplayPageChange}
-                variant="outlined"
-                shape="rounded"
-                color="primary"
-                size="large"
-                showFirstButton
-                showLastButton
-              />
-            </Stack>
-          )}
-
-          {/* API Pagination (Server-side - Load more data from server) */}
-          {totalPages > 1 && (
-            <Stack
-              spacing={2}
-              className="voucher-api-pagination"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginTop: "20px",
-                marginBottom: "40px"
-              }}
-            >
-              <Pagination
-                count={totalPages}
-                page={activeTab === 0 ? currentPage : myVouchersPage}
-                onChange={handlePageChange}
-                variant="outlined"
-                shape="rounded"
-                color="secondary"
-                size="medium"
-                showFirstButton
-                showLastButton
-              />
-            </Stack>
-          )}
         </div>
+      </div>
+
+      {/* Condition Modal */}
+      <Dialog
+        open={conditionModalOpen}
+        onClose={handleCloseModals}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ className: 'condition-modal' }}
+      >
+        <DialogTitle>
+          <Typography variant="h6">Điều kiện sử dụng</Typography>
+          <IconButton onClick={handleCloseModals} size="small" sx={{ position: 'absolute', right: 8, top: 8 }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedVoucher && (
+            <Box>
+              <Typography variant="body2" paragraph>
+                <strong>Giá trị giảm:</strong> {selectedVoucher.discount}
+              </Typography>
+              <Typography variant="body2" paragraph>
+                <strong>Đơn tối thiểu:</strong> {selectedVoucher.minSpend?.toLocaleString('vi-VN')}đ
+              </Typography>
+              <Typography variant="body2" paragraph>
+                <strong>Giảm tối đa:</strong> {selectedVoucher.maxDiscount?.toLocaleString('vi-VN')}đ
+              </Typography>
+              <Typography variant="body2" paragraph>
+                <strong>Điểm cần để nhận:</strong> {selectedVoucher.points} điểm
+              </Typography>
+              <Typography variant="body2" paragraph>
+                <strong>Hạn sử dụng:</strong> {selectedVoucher.expiry}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Áp dụng:</strong> {selectedVoucher.category}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModals}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
+
     </div>
-    </>
-  )
+  );
 }
