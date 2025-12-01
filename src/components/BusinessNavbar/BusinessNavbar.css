@@ -14,12 +14,20 @@
 .navbar-closed .navbar-logo-text { display: none; }
 .navbar-header .MuiIconButton-root { width: 32px; height: 32px; }
 
-/* Khoảng cách giữa icon và chữ trong menu */
 .navbar .MuiListItemIcon-root {
   min-width: auto !important;
   margin-right: 15px;
 }
 
-/* Chiều cao tối thiểu cho mỗi item trong menu */
 .navbar .MuiListItem-root { min-height: 60px; }
+
+.navbar-item .navbar-icon {
+  color: #ffffff;
+  transition: color 0.2s ease;
+}
+
+.navbar-item:hover .navbar-icon,
+.navbar-item.active .navbar-icon {
+  color: #1976d2;
+}
 

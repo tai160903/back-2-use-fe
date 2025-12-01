@@ -57,6 +57,7 @@ import EcoReward from "../pages/Admin/EcoReward/EcoReward";
 import LeaderBoard from "../pages/Admin/LeaderBoard/LeaderBoard";
 import StaffLayout from "../layouts/StaffLayout/StaffLayout";
 import StaffDashboard from "../pages/Staff/StaffDashboard/StaffDashboard";
+import StaffProfile from "../pages/Staff/StaffProfile/StaffProfile";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -348,6 +349,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["staff"]}>
               <StaffDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.STAFF_PROFILE,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <StaffProfile />
             </ProtectedRoute>
           ),
         },

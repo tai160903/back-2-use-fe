@@ -133,7 +133,7 @@ const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
           >
             <Tooltip title={!isOpen ? item.label : ""} placement="right">
               <ListItemIcon className={`navbar-icon navbar-icon-${item.id}`}>
-                {getIconComponent(item.id)}
+                {item.icon ? item.icon : getIconComponent(item.id)}
               </ListItemIcon>
             </Tooltip>
             {isOpen && <ListItemText primary={item.label} />}

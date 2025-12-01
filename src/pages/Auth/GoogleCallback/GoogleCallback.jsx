@@ -5,6 +5,7 @@ import { googleRedirectAPI, login } from "../../../store/slices/authSlice";
 import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
 import { CircularProgress, Box, Typography } from "@mui/material";
+import { getUserRole, getRedirectPath } from "../../../utils/authUtils";
 
 export default function GoogleCallback() {
   const [searchParams] = useSearchParams();
@@ -44,19 +45,16 @@ export default function GoogleCallback() {
           localStorage.setItem("currentUser", JSON.stringify(userData));
           dispatch(login(userData));
 
-          const userType = tokenPayload.role?.trim().toLowerCase();
+          // Lấy role hiện tại (ưu tiên từ user object nếu sau này có, fallback token)
+          const userRole =
+            getUserRole() ||
+            tokenPayload.role?.trim().toLowerCase() ||
+            "customer";
+          const redirectPath = getRedirectPath(userRole);
 
           // Điều hướng dựa vào role
           setTimeout(() => {
-            if (userType === "customer") {
-              navigate(PATH.HOME, { replace: true });
-            } else if (userType === "business") {
-              navigate(PATH.BUSINESS, { replace: true });
-            } else if (userType === "admin" || userType === "administrator") {
-              navigate(PATH.ADMIN, { replace: true });
-            } else {
-              navigate(PATH.HOME, { replace: true });
-            }
+            navigate(redirectPath, { replace: true });
           }, 100);
 
           toast.success("Đăng nhập bằng Google thành công!");
@@ -84,22 +82,25 @@ export default function GoogleCallback() {
             // Lưu dữ liệu user vào localStorage
             localStorage.setItem("currentUser", JSON.stringify(payload.data));
 
-            // Decode JWT token để lấy role
-            const token = payload.data.accessToken;
-            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-            const userType = tokenPayload.role?.trim().toLowerCase();
+            // Lấy role hiện tại ưu tiên từ user object, fallback token
+            const userRole =
+              getUserRole() ||
+              (() => {
+                try {
+                  const token = payload.data.accessToken;
+                  const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+                  return tokenPayload.role?.trim().toLowerCase();
+                } catch {
+                  return null;
+                }
+              })() ||
+              "customer";
+
+            const redirectPath = getRedirectPath(userRole);
 
             // Điều hướng dựa vào role
             setTimeout(() => {
-              if (userType === "customer") {
-                navigate(PATH.HOME, { replace: true });
-              } else if (userType === "business") {
-                navigate(PATH.BUSINESS, { replace: true });
-              } else if (userType === "admin" || userType === "administrator") {
-                navigate(PATH.ADMIN, { replace: true });
-              } else {
-                navigate(PATH.HOME, { replace: true });
-              }
+              navigate(redirectPath, { replace: true });
             }, 100);
 
             toast.success("Đăng nhập bằng Google thành công!");

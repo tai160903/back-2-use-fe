@@ -85,6 +85,19 @@ export const updateProfileBusiness = createAsyncThunk(
   }
 )
 
+// GET PROFILE Staff
+export const getProfileStaff = createAsyncThunk(
+  "user/getProfileStaff",
+  async (__dirname, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/staffs/profile")
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+)
+
 const userSlice = createSlice({
   name: "user",
   initialState: {
@@ -162,6 +175,18 @@ const userSlice = createSlice({
         state.businessInfo = payload
       })
       .addCase(updateProfileBusiness.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(getProfileStaff.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getProfileStaff.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.staffInfo = payload
+      })
+      .addCase(getProfileStaff.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })

@@ -22,6 +22,7 @@ import {
   Pagination,
   Stack,
 } from "@mui/material";
+import Rating from "@mui/material/Rating";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { MdOutlineQrCode2 } from "react-icons/md";
 import { FiBox, FiUser, FiShoppingBag, FiRefreshCw } from "react-icons/fi";
@@ -30,12 +31,15 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { MdOutlineFeedback } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useUserInfo } from "../../../hooks/useUserInfo";
+import { getUserRole } from "../../../utils/authUtils";
+import { useForm, Controller } from "react-hook-form";
 import {
   getTransactionHistoryApi,
   getDetailsBorrowTransactionCustomerApi,
   cancelBorrowTransactionCustomerApi,
   extendBorrowProductApi,
 } from "../../../store/slices/borrowSlice";
+import { giveFeedbackApi } from "../../../store/slices/feedbackSlice";
 import toast from "react-hot-toast";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -535,12 +539,14 @@ function SuccessCard({ item }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
-                <Button
-                  className="borrow-content-btn"
-                  onClick={item.onViewDetails}
-                >
-                  <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
-                </Button>
+                {item.canFeedback && (
+                  <Button
+                    className="borrow-content-btn"
+                    onClick={item.onFeedback}
+                  >
+                    <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
+                  </Button>
+                )}
                 <Button
                   className="borrow-content-btn"
                   onClick={item.onViewDetails}
@@ -826,6 +832,20 @@ export default function TransactionHistory() {
   const { borrow, isLoading, borrowDetail, isDetailLoading, totalPages } =
     useSelector((state) => state.borrow);
   const { refetch: refetchUserInfo } = useUserInfo();
+  const role = getUserRole();
+
+  const {
+    control,
+    handleSubmit,
+    reset: resetFeedbackForm,
+    register,
+    formState: { errors: feedbackErrors, isSubmitting: isSubmittingFeedback },
+  } = useForm({
+    defaultValues: {
+      rating: 5,
+      comment: "",
+    },
+  });
 
   // trạng thái filter
   const [status, setStatus] = useState("");
@@ -839,6 +859,9 @@ export default function TransactionHistory() {
   const [extendDays, setExtendDays] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 3;
+
+  const [openFeedback, setOpenFeedback] = useState(false);
+  const [selectedFeedbackId, setSelectedFeedbackId] = useState(null);
 
   const transactions = Array.isArray(borrow) ? borrow : [];
 
@@ -907,6 +930,61 @@ export default function TransactionHistory() {
     setOpenExtend(false);
     setSelectedExtendId(null);
     setExtendDays("");
+  };
+
+  const handleOpenFeedback = (id) => {
+    setSelectedFeedbackId(id);
+    setOpenFeedback(true);
+    resetFeedbackForm({
+      rating: 5,
+      comment: "",
+    });
+  };
+
+  const handleCloseFeedback = () => {
+    setOpenFeedback(false);
+    setSelectedFeedbackId(null);
+    resetFeedbackForm({
+      rating: 5,
+      comment: "",
+    });
+  };
+
+  const onSubmitFeedback = async (data) => {
+    if (role !== "customer") {
+      toast.error("Only customer accounts can send feedback.");
+      return;
+    }
+
+    if (!selectedFeedbackId) {
+      toast.error("Cannot find transaction to rate.");
+      return;
+    }
+
+    try {
+      await dispatch(
+        giveFeedbackApi({
+          borrowTransactionId: selectedFeedbackId,
+          rating: data.rating,
+          comment: data.comment,
+        })
+      ).unwrap();
+      toast.success("Feedback submitted successfully.");
+      setOpenFeedback(false);
+      setSelectedFeedbackId(null);
+      resetFeedbackForm({
+        rating: 5,
+        comment: "",
+      });
+    } catch (error) {
+      const backendMessage =
+        error?.message ||
+        error?.error ||
+        (typeof error === "string" ? error : null) ||
+        "Failed to submit feedback.";
+
+      toast.error(backendMessage);
+    }
   };
 
   const handleConfirmExtend = async () => {
@@ -1074,6 +1152,8 @@ export default function TransactionHistory() {
                 onViewDetails: () => handleViewDetails(item._id),
                 onCancel: () => handleOpenCancel(item._id),
                 onExtend: () => handleOpenExtend(item._id),
+                onFeedback: () => handleOpenFeedback(item._id),
+                canFeedback: role === "customer",
               };
               if (item.borrowTransactionType === "borrow")
                 return <BorrowCard key={item._id} item={cardProps} />;
@@ -1465,6 +1545,97 @@ export default function TransactionHistory() {
               disabled={isLoading}
             >
               {isLoading ? "Extending..." : "Confirm"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Feedback popup */}
+        <Dialog
+          open={openFeedback}
+          onClose={handleCloseFeedback}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              fontSize: 18,
+              backgroundColor: "#0b5529",
+              color: "#ffffff",
+              borderBottom: "1px solid #eee",
+            }}
+          >
+            Send feedback
+          </DialogTitle>
+          <DialogContent dividers>
+            <Typography>
+              Please rate your borrowing/return experience.
+            </Typography>
+            <form
+              id="feedback-form"
+              onSubmit={handleSubmit(onSubmitFeedback)}
+              style={{ marginTop: 16 }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Typography sx={{ minWidth: 80 }}>Rating:</Typography>
+                  <Controller
+                    name="rating"
+                    control={control}
+                    rules={{
+                      required: "Please select a rating.",
+                    }}
+                    render={({ field }) => (
+                      <Rating
+                        {...field}
+                        value={field.value || 0}
+                        onChange={(_, value) => field.onChange(value)}
+                       
+                      />
+                    )}
+                  />
+                </Box>
+                {feedbackErrors.rating && (
+                  <Typography variant="caption" color="error">
+                    {feedbackErrors.rating.message}
+                  </Typography>
+                )}
+
+                <TextField
+                  label="Comment"
+                  multiline
+                  minRows={3}
+                  placeholder="Share more about the service and product quality..."
+                  fullWidth
+                  {...register("comment")}
+                />
+              </Box>
+            </form>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleCloseFeedback}
+              disabled={isSubmittingFeedback}
+            >
+              Close
+            </Button>
+            <Button
+              type="submit"
+              form="feedback-form"
+              variant="contained"
+              sx={{
+                backgroundColor: "#0b5529",
+                "&:hover": { backgroundColor: "#094421" },
+              }}
+              disabled={isSubmittingFeedback}
+            >
+              {isSubmittingFeedback ? "Sending..." : "Submit feedback"}
             </Button>
           </DialogActions>
         </Dialog>

@@ -6,6 +6,12 @@ import Grid from "@mui/material/Grid";
 import Rating from "@mui/material/Rating";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
 import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -15,16 +21,37 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import { useDispatch, useSelector } from "react-redux";
 import { getStoreById } from "../../../store/slices/storeSilce";
+import {
+  getFeedbackApi,
+  getFeedbackOfCustomerApi,
+  deleteFeedbackApi,
+  updateFeedbackApi,
+} from "../../../store/slices/feedbackSlice";
+import { getUserRole } from "../../../utils/authUtils";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import cupImg from "../../../assets/image/cup6.png";
 import containerImg from "../../../assets/image/container.png";
 import cup3 from "../../../assets/image/cup3.png";
 import Loading from "../../../components/Loading/Loading";
+import toast from "react-hot-toast";
 
 export default function StoreDetail() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { id: storeId } = useParams();
-  const { storeDetail, isLoadingStoreDetail, error } = useSelector((state) => state.store);
+  const {
+    storeDetail,
+    isLoadingStoreDetail,
+    error: storeError,
+  } = useSelector((state) => state.store);
+  const {
+    businessFeedback,
+    myFeedback,
+    loading: isLoadingFeedback,
+    error: feedbackError,
+  } = useSelector((state) => state.feedback);
+  const { currentUser } = useSelector((state) => state.auth);
+  const role = getUserRole();
   const vouchers = [
     {
       id: "v1",
@@ -56,8 +83,16 @@ export default function StoreDetail() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   const [catalogProducts, setCatalogProducts] = useState([]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deletingFeedback, setDeletingFeedback] = useState(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editingFeedback, setEditingFeedback] = useState(null);
+  const [editRating, setEditRating] = useState(5);
+  const [editComment, setEditComment] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  // Lấy data từ API
+
+  
   const business = storeDetail?.business || storeDetail || null;
   const convertToSlug = (value) =>
     (value || "").toLowerCase().trim().replace(/\s+/g, "-");
@@ -98,61 +133,143 @@ export default function StoreDetail() {
     }
   }, [storeDetail]);
 
-  const reviews = [
-    {
-      id: "r1",
-      user: "Alex Nguyen",
-      role: "CEO",
-      rating: 5,
-      date: "2025-10-10",
-      comment:
-        "Back2Use made it easy to borrow and return cups. Super convenient and eco-friendly!",
-    },
-    {
-      id: "r2",
-      user: "Lan Pham",
-      role: "Product Designer",
-      rating: 4.5,
-      date: "2025-10-05",
-      comment:
-        "Thanks to the program, I feel more informed and confident about my choices. The containers are sturdy and clean.",
-    },
-    {
-      id: "r3",
-      user: "Khanh Vo",
-      role: "Design Lead",
-      rating: 4,
-      date: "2025-09-28",
-      comment:
-        "Great customer support. The team went above and beyond to help with a billing issue.",
-    },
-  ];
+  const feedbackData = Array.isArray(businessFeedback?.data)
+    ? businessFeedback.data
+    : [];
+  const myFeedbackData = Array.isArray(myFeedback?.data) ? myFeedback.data : [];
+  const myFeedbackIdSet = new Set(myFeedbackData.map((item) => item._id));
 
-
-
-  // (Bỏ AVERAGE_RATING vì không hiển thị trong UI)
 
   // Reviews pagination
   const [reviewPage, setReviewPage] = useState(1);
-  const reviewsPerPage = 6;
+  const reviewsPerPage = 3;
   const [reviewRatingFilter, setReviewRatingFilter] = useState("all"); 
   const filteredReviews =
     reviewRatingFilter === "all"
-      ? reviews
-      : reviews.filter((review) => review.rating >= parseFloat(reviewRatingFilter));
-  const totalReviewPages = Math.max(
-    1,
-    Math.ceil(filteredReviews.length / reviewsPerPage)
-  );
-  const reviewStart = (reviewPage - 1) * reviewsPerPage;
-  const paginatedReviews = filteredReviews.slice(
-    reviewStart,
-    reviewStart + reviewsPerPage
-  );
+      ? feedbackData
+      : feedbackData.filter(
+          (review) =>
+            Number(review.rating || 0) === Number(reviewRatingFilter)
+        );
+  const totalReviewPages =
+    businessFeedback?.totalPages && businessFeedback.totalPages > 0
+      ? businessFeedback.totalPages
+      : 1;
+  const paginatedReviews = filteredReviews;
   const handleReviewPageChange = (event, page) => setReviewPage(page);
   useEffect(() => {
     setReviewPage(1);
   }, [reviewRatingFilter]);
+
+
+  useEffect(() => {
+    if (!storeId) return;
+    const ratingParam =
+      reviewRatingFilter === "all" ? "" : Number(reviewRatingFilter);
+    dispatch(
+      getFeedbackApi({
+        businessId: storeId,
+        page: reviewPage,
+        limit: reviewsPerPage,
+        rating: ratingParam,
+      })
+    );
+  }, [dispatch, storeId, reviewPage, reviewsPerPage, reviewRatingFilter]);
+
+  // Lấy tất cả feedback của chính user (để xác định feedback nào là của mình)
+  useEffect(() => {
+    if (role !== "customer") return;
+    if (!currentUser?.accessToken) return;
+    dispatch(
+      getFeedbackOfCustomerApi({
+        page: 1,
+        limit: 1000,
+        rating: "",
+      })
+    );
+  }, [dispatch, role, currentUser?.accessToken]);
+
+  const refreshFeedbackLists = () => {
+    const ratingParam =
+      reviewRatingFilter === "all" ? "" : Number(reviewRatingFilter);
+    if (storeId) {
+      dispatch(
+        getFeedbackApi({
+          businessId: storeId,
+          page: reviewPage,
+          limit: reviewsPerPage,
+          rating: ratingParam,
+        })
+      );
+    }
+    if (role === "customer" && currentUser?.accessToken) {
+      dispatch(
+        getFeedbackOfCustomerApi({
+          page: 1,
+          limit: 1000,
+          rating: "",
+        })
+      );
+    }
+  };
+
+  const handleOpenDelete = (review) => {
+    setDeletingFeedback(review);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDeleteDialog(false);
+    setDeletingFeedback(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingFeedback?._id) return;
+    try {
+      await dispatch(
+        deleteFeedbackApi({ id: deletingFeedback._id })
+      ).unwrap();
+      refreshFeedbackLists();
+    } catch (error) {
+   
+      toast.error(error.message || "Failed to delete feedback");
+    }
+    setOpenDeleteDialog(false);
+    setDeletingFeedback(null);
+  };
+
+  const handleOpenEdit = (review) => {
+    setEditingFeedback(review);
+    setEditRating(review.rating || 0);
+    setEditComment(review.comment || "");
+    setOpenEditDialog(true);
+  };
+
+  const handleCloseEdit = () => {
+    setOpenEditDialog(false);
+    setEditingFeedback(null);
+    setEditRating(5);
+    setEditComment("");
+  };
+
+  const handleConfirmEdit = async () => {
+    if (!editingFeedback?._id) return;
+    setSubmittingFeedback(true);
+    try {
+      await dispatch(
+        updateFeedbackApi({
+          id: editingFeedback._id,
+          data: { rating: editRating, comment: editComment },
+        })
+      ).unwrap();
+      refreshFeedbackLists();
+    } catch (error) {
+      toast.error(error.message || "Failed to update feedback");
+    } finally {
+      setSubmittingFeedback(false);
+      handleCloseEdit();
+    }
+  };
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -165,14 +282,14 @@ export default function StoreDetail() {
   }
 
   // Error state
-  if (error) {
+  if (storeError) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
         <Typography variant="h6" color="error">
-          Có lỗi xảy ra khi tải thông tin cửa hàng
+          An error occurred while loading store information
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {error.message || "Vui lòng thử lại sau"}
+          {storeError.message || "Vui lòng thử lại sau"}
         </Typography>
       </div>
     );
@@ -272,7 +389,7 @@ export default function StoreDetail() {
                           readOnly
                         />
                         <Typography variant="body1">
-                          {rating} ({reviewCount} đánh giá)
+                          {rating} ({reviewCount} reviews)
                         </Typography>
                       </Stack>
                     </div>
@@ -496,28 +613,70 @@ export default function StoreDetail() {
               >
                 {option === "all"
                   ? "All ratings"
-                  : `${option}${option === "5" ? "" : "+"} stars`}
+                  : `${option} stars`}
               </button>
             ))}
           </div>
           <div className="reviews-list">
-            {paginatedReviews.map((review) => (
-              <div key={review.id} className="review-card">
-                <div className="review-score-row">
-                  <StarRoundedIcon className="review-star" />
-                  <span className="review-score">{review.rating.toFixed(1)}</span>
-                </div>
-                <Typography className="review-text">{review.comment}</Typography>
+            {isLoadingFeedback ? (
+              <Typography>Loading customer reviews...</Typography>
+            ) : feedbackError ? (
+              <Typography color="error">
+                Unable to load reviews:{" "}
+                {feedbackError.message || String(feedbackError)}
+              </Typography>
+            ) : paginatedReviews.length === 0 ? (
+              <Typography> No reviews found for this store</Typography>
+            ) : (
+              paginatedReviews.map((review) => {
+                const reviewerName =
+                  review.customerId?.fullName || "Khách hàng ẩn danh";
+                const ratingValue = Number(review.rating || 0).toFixed(1);
+                const isOwner = myFeedbackIdSet.has(review._id);
 
-                <div className="review-footer">
-                  <Avatar className="review-avatar">{review.user.charAt(0)}</Avatar>
-                  <div className="review-footer-right">
-                    <Typography className="review-user">{review.user}</Typography>
-                    <span className="review-role">{review.role}</span>
+                return (
+                  <div key={review._id} className="review-card">
+                    <div className="review-score-row">
+                      <StarRoundedIcon className="review-star" />
+                      <span className="review-score">{ratingValue}</span>
+                    </div>
+                    <Typography className="review-text">
+                      {review.comment}
+                    </Typography>
+
+                    <div className="review-footer">
+                      <Avatar className="review-avatar">
+                        {reviewerName.charAt(0)}
+                      </Avatar>
+                      <div className="review-footer-right">
+                        <Typography className="review-user">
+                          {reviewerName}
+                        </Typography>
+                        <span className="review-role">Khách hàng</span>
+                        {isOwner && (
+                          <div className="review-actions">
+                            <button
+                              className="review-action-btn edit"
+                              onClick={() => handleOpenEdit(review)}
+                            >
+                              <FiEdit2 className="review-action-icon" />
+                              Edit
+                            </button>
+                            <button
+                              className="review-action-btn delete"
+                              onClick={() => handleOpenDelete(review)}
+                            >
+                              <FiTrash2 className="review-action-icon" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            )}
           </div>
           <Stack
             spacing={2}
@@ -538,6 +697,85 @@ export default function StoreDetail() {
           </Stack>
         </div>
       </section>
+
+      {/* Delete review dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCloseDelete}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete review</DialogTitle>
+        <DialogContent dividers>
+          <Typography>
+            Are you sure you want to delete this review? This action cannot be
+            undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDelete}>Cancel</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit review dialog */}
+      <Dialog
+        open={openEditDialog}
+        onClose={handleCloseEdit}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit review</DialogTitle>
+        <DialogContent dividers>
+          <Typography sx={{ mb: 2 }}>
+            Update your rating and comment for this store.
+          </Typography>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              marginBottom: 16,
+            }}
+          >
+            <Typography sx={{ minWidth: 80 }}>Rating:</Typography>
+            <Rating
+              value={editRating}
+              onChange={(_, value) => setEditRating(value || 0)}
+            />
+          </div>
+          <TextField
+            label="Comment"
+            multiline
+            minRows={3}
+            fullWidth
+            value={editComment}
+            onChange={(e) => setEditComment(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEdit} disabled={submittingFeedback}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmEdit}
+            variant="contained"
+            disabled={submittingFeedback}
+            sx={{
+              backgroundColor: "#0b5529",
+              "&:hover": { backgroundColor: "#094421" },
+            }}
+          >
+            {submittingFeedback ? "Saving..." : "Save changes"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
