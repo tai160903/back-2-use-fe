@@ -4,12 +4,9 @@ import VoucherCard from '../../components/VoucherCard/VoucherCard';
 import VoucherModal from './VoucherModal';
 import VoucherDetailModal from '../../components/VoucherDetailModal/VoucherDetailModal';
 import { 
-  getAllVouchersApi,
-  createVoucherApi,
-  createBusinessVoucherApi,
+  getLeaderboardVouchersApi,
   createLeaderboardVoucherApi,
-  updateVoucherApi,
-  getVoucherByIdApi,
+  getLeaderboardVoucherByIdApi,
   setVoucherNameFilter,
   resetVoucherFilters 
 } from '../../store/slices/voucherSlice';
@@ -43,7 +40,7 @@ const Analytics = () => {
 
   useEffect(() => {
     // Load only leaderboard vouchers (admin-created vouchers) on component mount
-    dispatch(getAllVouchersApi({
+    dispatch(getLeaderboardVouchersApi({
       page: 1,
       limit: 100,
     }));
@@ -67,7 +64,7 @@ const Analytics = () => {
   const handleViewDetail = (voucher) => {
     const voucherId = voucher._id || voucher.id;
     if (voucherId) {
-      dispatch(getVoucherByIdApi(voucherId));
+      dispatch(getLeaderboardVoucherByIdApi(voucherId));
       setIsDetailModalOpen(true);
     }
   };
@@ -361,15 +358,13 @@ const Analytics = () => {
           onSubmit={async (voucherData) => {
             try {
               if (editingVoucher) {
-                await dispatch(updateVoucherApi({
-                  voucherId: editingVoucher._id,
-                  voucherData
-                })).unwrap();
+                // Note: updateVoucherApi has been removed
+                console.warn('Update functionality has been removed');
               } else {
                 // Only create leaderboard vouchers (admin-created vouchers)
                 await dispatch(createLeaderboardVoucherApi(voucherData)).unwrap();
                 // Refresh voucher list after successful creation
-                dispatch(getAllVouchersApi({
+                dispatch(getLeaderboardVouchersApi({
                   page: 1,
                   limit: 100,
                 }));

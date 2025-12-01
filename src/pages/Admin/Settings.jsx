@@ -61,7 +61,7 @@ import {
   upsertSystemSettingApi,
   updateSystemSettingApi,
 } from "../../store/slices/adminSlice";
-import { getAllVouchersApi } from "../../store/slices/voucherSlice";
+import { getLeaderboardVouchersApi } from "../../store/slices/voucherSlice";
 import "./AdminDashboard.css";
 
 function TabPanel({ children, value, index }) {
@@ -311,7 +311,7 @@ export default function Settings() {
   useEffect(() => {
     if (activeTab === 0) {
       dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
-      dispatch(getAllVouchersApi({ page: 1, limit: 100 }));
+      dispatch(getLeaderboardVouchersApi({ page: 1, limit: 100 }));
     } else if (activeTab === 1) {
       // dispatch(getRewardSettingsApi());
       // Gọi thêm API hệ thống khi ở tab Reward Setting
@@ -334,7 +334,7 @@ export default function Settings() {
     setActiveTab(newValue);
     if (newValue === 0) {
       dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
-      dispatch(getAllVouchersApi({ page: 1, limit: 100 }));
+      dispatch(getLeaderboardVouchersApi({ page: 1, limit: 100 }));
     } else if (newValue === 1) {
       // dispatch(getRewardSettingsApi());
       // Gọi thêm API hệ thống khi chuyển sang tab Reward Setting
