@@ -133,6 +133,7 @@ export default function Rankings() {
                 const displayName =
                   (leaderBoardEntry.customerId && leaderBoardEntry.customerId.fullName) ||
                   `Khách hàng #${leaderBoardEntry.rank ?? index + 1}`
+                const avatarUrl = leaderBoardEntry.customerId?.userId?.avatar
                 const initials = displayName
                   .split(' ')
                   .filter(Boolean)
@@ -163,8 +164,11 @@ export default function Rankings() {
                     >
                       <CardContent sx={{ pt: 5 }}>
                         <Box textAlign="center">
-                          <Avatar sx={{ width: 96, height: 96, mx: 'auto', mb: 1.5 }}>
-                            {initials}
+                          <Avatar
+                            sx={{ width: 96, height: 96, mx: 'auto', mb: 1.5 }}
+                            src={avatarUrl}
+                          >
+                            {!avatarUrl && initials}
                           </Avatar>
                           <Typography
                             variant="h5"
@@ -202,6 +206,7 @@ export default function Rankings() {
                     (leaderBoardEntry.customerId && leaderBoardEntry.customerId.fullName) ||
                     `Khách hàng #${leaderBoardEntry.rank ?? index + 1}`
                   const firstCharacter = displayName.charAt(0).toUpperCase()
+                  const avatarUrl = leaderBoardEntry.customerId?.userId?.avatar
                   return (
                     <Box
                       key={leaderBoardEntry._id || `${index}`}
@@ -214,7 +219,9 @@ export default function Rankings() {
                           <div className={`rank-badge rank-badge-${leaderBoardEntry.rank}`}>
                             {leaderBoardEntry.rank}
                           </div>
-                          <Avatar sx={{ width: 32, height: 32 }}>{firstCharacter}</Avatar>
+                          <Avatar sx={{ width: 32, height: 32 }} src={avatarUrl}>
+                            {!avatarUrl && firstCharacter}
+                          </Avatar>
                           <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                             {displayName}
                           </Typography>

@@ -19,10 +19,12 @@ import {
   DialogActions,
   Chip,
   Divider,
+  Pagination,
+  Stack,
 } from "@mui/material";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { MdOutlineQrCode2 } from "react-icons/md";
-import { FiBox } from "react-icons/fi";
+import { FiBox, FiUser, FiShoppingBag, FiRefreshCw } from "react-icons/fi";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { MdOutlineFeedback } from "react-icons/md";
@@ -36,7 +38,6 @@ import {
 } from "../../../store/slices/borrowSlice";
 import toast from "react-hot-toast";
 
-// Helper: compute day difference (ceil, always at least 1 day when different)
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const diffDaysCeil = (later, earlier) => {
   const diff = later.getTime() - earlier.getTime();
@@ -113,6 +114,7 @@ function BorrowCard({ item }) {
   const productGroup = product.productGroupId || {};
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
+  const business = item.businessId || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -131,6 +133,10 @@ function BorrowCard({ item }) {
   const deposit = item.depositAmount || 0;
   const status = item.status || "unknown";
   const timingInfo = getTimingInfo(item);
+
+  const businessName = business.businessName || "N/A";
+  const quantity = item.quantity || 1;
+  const extensions = item.extensionCount || 0;
 
   const rawType = item.borrowTransactionType;
   let typeLabel = rawType;
@@ -185,6 +191,69 @@ function BorrowCard({ item }) {
                   >
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
+                </div>
+              
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiUser /> Store: {businessName}
+                    </Typography>
+                    {item.returnDate && (
+                      <Typography
+                        variant="body2"
+                        className="borrow-content-material"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <RiCalendarScheduleLine />
+                        Returned: {toVNDate(item.returnDate)}
+                      </Typography>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiShoppingBag /> Items: {quantity}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiRefreshCw /> Extensions: {extensions}
+                    </Typography>
+                  </div>
                 </div>
               </div>
             </div>
@@ -245,6 +314,7 @@ function SuccessCard({ item }) {
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
   const walletTransaction = item.walletTransaction || {};
+  const business = item.businessId || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -262,6 +332,10 @@ function SuccessCard({ item }) {
   const due = toVNDate(item.dueDate);
   const deposit = item.depositAmount || 0;
   const status = item.status || "unknown";
+
+  const businessName = business.businessName || "N/A";
+  const quantity = item.quantity || 1;
+  const extensions = item.extensionCount || 0;
 
   const rewardPoints = item.rewardPointChanged || 0;
   const legitPoints = item.rankingPointChanged || 0;
@@ -328,6 +402,69 @@ function SuccessCard({ item }) {
                   >
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
+                </div>
+                {/* Business, quantity, extensions + returned date (nằm ngang, có icon) */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiUser /> Store: {businessName}
+                    </Typography>
+                    {item.returnDate && (
+                      <Typography
+                        variant="body2"
+                        className="borrow-content-material"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <RiCalendarScheduleLine />
+                        Returned: {toVNDate(item.returnDate)}
+                      </Typography>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiShoppingBag /> Items: {quantity}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiRefreshCw /> Extensions: {extensions}
+                    </Typography>
+                  </div>
                 </div>
               </div>
             </div>
@@ -435,6 +572,7 @@ function FailedCard({ item }) {
   const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
   const walletTransaction = item.walletTransaction || {};
+  const business = item.businessId || {};
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -452,6 +590,10 @@ function FailedCard({ item }) {
   const due = toVNDate(item.dueDate);
   const deposit = item.depositAmount || 0;
   const status = item.status || "unknown";
+
+  const businessName = business.businessName || "N/A";
+  const quantity = item.quantity || 1;
+  const extensions = item.extensionCount || 0;
 
   const rewardPoints = item.rewardPointChanged || 0;
   const legitPoints = item.rankingPointChanged || 0;
@@ -518,6 +660,69 @@ function FailedCard({ item }) {
                   >
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
+                </div>
+                {/* Business, quantity, extensions + returned date (nằm ngang, có icon) */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiUser /> Store: {businessName}
+                    </Typography>
+                    {item.returnDate && (
+                      <Typography
+                        variant="body2"
+                        className="borrow-content-material"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <RiCalendarScheduleLine />
+                        Returned: {toVNDate(item.returnDate)}
+                      </Typography>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiShoppingBag /> Items: {quantity}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiRefreshCw /> Extensions: {extensions}
+                    </Typography>
+                  </div>
                 </div>
               </div>
             </div>
@@ -618,9 +823,8 @@ function FailedCard({ item }) {
 
 export default function TransactionHistory() {
   const dispatch = useDispatch();
-  const { borrow, isLoading, borrowDetail, isDetailLoading } = useSelector(
-    (state) => state.borrow
-  );
+  const { borrow, isLoading, borrowDetail, isDetailLoading, totalPages } =
+    useSelector((state) => state.borrow);
   const { refetch: refetchUserInfo } = useUserInfo();
 
   // trạng thái filter
@@ -633,6 +837,8 @@ export default function TransactionHistory() {
   const [openExtend, setOpenExtend] = useState(false);
   const [selectedExtendId, setSelectedExtendId] = useState(null);
   const [extendDays, setExtendDays] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 3;
 
   const transactions = Array.isArray(borrow) ? borrow : [];
 
@@ -649,12 +855,19 @@ export default function TransactionHistory() {
         status: status || undefined,
         productName: searchText || undefined,
         borrowTransactionType,
+        page: currentPage,
+        limit,
       })
     );
-  }, [dispatch, status, searchText, value]);
+  }, [dispatch, status, searchText, value, currentPage, limit]);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
   };
 
   const handleViewDetails = (id) => {
@@ -873,6 +1086,27 @@ export default function TransactionHistory() {
             })
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Stack
+            spacing={2}
+            sx={{
+              mt: 3,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              variant="outlined"
+              shape="rounded"
+            />
+          </Stack>
+        )}
 
         {/* Detail Popup */}
         <Dialog

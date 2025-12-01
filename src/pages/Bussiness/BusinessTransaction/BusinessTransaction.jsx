@@ -19,10 +19,12 @@ import {
   DialogActions,
   Chip,
   Divider,
+  Pagination,
+  Stack,
 } from "@mui/material";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { MdOutlineQrCode2 } from "react-icons/md";
-import { FiBox } from "react-icons/fi";
+import { FiBox, FiUser, FiShoppingBag, FiRefreshCw } from "react-icons/fi";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { CiWarning } from "react-icons/ci";
@@ -32,6 +34,78 @@ import {
   getTransactionHistoryBusinessApi,
   getDetailsBorrowTransactionBusinessApi,
 } from "../../../store/slices/borrowSlice";
+
+// ============ Timing Helpers (similar to customer TransactionHistory) ============
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const diffDaysCeil = (later, earlier) => {
+  const diff = later.getTime() - earlier.getTime();
+  return Math.ceil(diff / MS_PER_DAY);
+};
+
+// Calculate timing info for borrowing/return: how long until due or how late
+const getTimingInfo = (item) => {
+  if (!item) return null;
+
+  const now = new Date();
+  const dueDate = item.dueDate ? new Date(item.dueDate) : null;
+  const returnDate = item.returnDate ? new Date(item.returnDate) : null;
+  const status = item.status || "";
+
+  if (!dueDate) return null;
+
+  // Borrowing or pending pickup
+  if (status === "borrowing" || status === "pending_pickup") {
+    const daysLeft = diffDaysCeil(dueDate, now);
+
+    if (daysLeft > 0) {
+      return {
+        type: "upcoming",
+        message: `${daysLeft} day(s) left until due date.`,
+      };
+    }
+
+    if (daysLeft === 0) {
+      return {
+        type: "due_today",
+        message: "Today is the due date for this container.",
+      };
+    }
+
+    const daysLate = Math.abs(daysLeft);
+    return {
+      type: "late",
+      message: `Overdue by ${daysLate} day(s) past the due date.`,
+    };
+  }
+
+  // Returned: compare returnDate (if any) with dueDate
+  if (status === "return_late" || status === "returned") {
+    const base = returnDate || now;
+    const diff = diffDaysCeil(base, dueDate);
+
+    if (diff > 0) {
+      return {
+        type: "late",
+        message: `Returned late by ${diff} day(s) past the due date.`,
+      };
+    }
+
+    if (diff === 0) {
+      return {
+        type: "on_time",
+        message: "Returned on the due date.",
+      };
+    }
+
+    const earlyDays = Math.abs(diff);
+    return {
+      type: "early",
+      message: `Returned ${earlyDays} day(s) early before the due date.`,
+    };
+  }
+
+  return null;
+};
 
 // ================== Card Components ==================
 function BorrowCard({ item }) {
@@ -51,7 +125,6 @@ function BorrowCard({ item }) {
   const size = sizeObj.sizeName;
 
   const customerName = customer.fullName || "N/A";
-  const customerPhone = customer.phone || "N/A";
   const quantity = item.quantity || 1;
   const extensions = item.extensionCount || 0;
 
@@ -69,7 +142,6 @@ function BorrowCard({ item }) {
   if (rawType === "return_success") typeLabel = "Return Success";
   if (rawType === "return_failed") typeLabel = "Return Failed";
 
-  const overdueDays = item.overdueDays || 0;
   const fee = item.totalChargeFee || item.fee || 0;
 
   return (
@@ -120,28 +192,83 @@ function BorrowCard({ item }) {
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
                 </div>
-
-                {/* Customer & transaction meta */}
-                <Typography variant="body2" className="borrow-content-material">
-                  Customer: {customerName} ({customerPhone})
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  Items borrowed: {quantity}
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  Extensions: {extensions}
-                </Typography>
-                {/* Overdue đưa ngay dưới info */}
-
-                <div className="borrow-content-overdue">
-                  <Typography className="borrow-content-overdue-title">
-                    <CiWarning style={{ marginRight: "10px" }} /> Overdue by{" "}
-                    {overdueDays} days <br />
-                  </Typography>
-                  <Typography>
-                    Total charge fee: {fee.toLocaleString("vi-VN")} VNĐ
-                  </Typography>
+               
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiUser /> User: {customerName} 
+                    </Typography>
+                    {item.returnDate && (
+                      <Typography
+                        variant="body2"
+                        className="borrow-content-material"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <RiCalendarScheduleLine />
+                        Returned: {toVNDate(item.returnDate)}
+                      </Typography>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiShoppingBag /> Items: {quantity}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiRefreshCw /> Extensions: {extensions}
+                    </Typography>
+                  </div>
                 </div>
+                {/* Timing info (days left / late / early) and fee */}
+                {getTimingInfo(item) && (
+                  <div className="borrow-content-overdue">
+                    <Typography className="borrow-content-overdue-title">
+                      <CiWarning style={{ marginRight: "10px" }} />
+                      {getTimingInfo(item).message}
+                    </Typography>
+                    {fee > 0 && (
+                      <Typography>
+                        Total charge fee: {fee.toLocaleString("vi-VN")} VNĐ
+                      </Typography>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="borrow-content-right">
@@ -183,7 +310,6 @@ function SuccessCard({ item }) {
   const size = sizeObj.sizeName;
 
   const customerName = customer.fullName || "N/A";
-  const customerPhone = customer.phone || "N/A";
   const quantity = item.quantity || 1;
   const extensions = item.extensionCount || 0;
 
@@ -202,8 +328,6 @@ function SuccessCard({ item }) {
   if (rawType === "return_failed") typeLabel = "Return Failed";
 
   const fee = item.totalChargeFee || item.fee || 0;
-  const rewardPoints = item.rewardPointChanged || 0;
-  const legitPoints = item.rankingPointChanged || 0;
 
   return (
     <Box className="borrow-card-success" p={2} mb={2} borderRadius="10px">
@@ -253,32 +377,83 @@ function SuccessCard({ item }) {
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
                 </div>
-                <Typography variant="body2" className="borrow-content-material">
-                  Customer: {customerName} ({customerPhone})
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  Items borrowed: {quantity}
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  Extensions: {extensions}
-                </Typography>
-                {/* Overdue đưa ngay dưới info */}
-
-                <div className="borrow-content-overdue-success">
-                  <Typography className="borrow-content-overdue-title">
-                    <CiWarning style={{ marginRight: "10px" }} /> Late return
-                    but within allowed time{" "}
-                  </Typography>
-                  <div style={{ display: "flex" }}>
-                    <Typography>
-                      <Typography>Late fee: $2.00 | </Typography>
+                {/* Customer, quantity, extensions + returned date (nằm ngang, có icon) */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiUser /> User: {customerName}
                     </Typography>
-                    <Typography>
-                      {" "}
-                      Total returned: {fee.toLocaleString("vi-VN")} VNĐ
+                    {item.returnDate && (
+                      <Typography
+                        variant="body2"
+                        className="borrow-content-material"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <RiCalendarScheduleLine />
+                        Returned: {toVNDate(item.returnDate)}
+                      </Typography>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiShoppingBag /> Items: {quantity}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiRefreshCw /> Extensions: {extensions}
                     </Typography>
                   </div>
                 </div>
+                {/* Timing info & late fee */}
+                {getTimingInfo(item) && (
+                  <div className="borrow-content-overdue-success">
+                    <Typography className="borrow-content-overdue-title">
+                      <CiWarning style={{ marginRight: "10px" }} />
+                      {getTimingInfo(item).message}
+                    </Typography>
+                    {fee > 0 && (
+                      <Typography>
+                        Late fee: {fee.toLocaleString("vi-VN")} VNĐ
+                      </Typography>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="borrow-content-right-success">
@@ -303,31 +478,6 @@ function SuccessCard({ item }) {
                   </span>
                 </Typography>
               </div>
-              <div className="borrow-rewardPoint">
-                <Typography>
-                  Reward Points:{" "}
-                  <span style={{ color: "#365bbf", fontWeight: "600" }}>
-                    {rewardPoints > 0
-                      ? `+${rewardPoints}`
-                      : rewardPoints}{" "}
-                    points
-                  </span>
-                </Typography>
-              </div>
-              <div className="borrow-legitPoint">
-                <Typography>
-                  Legit Points:{" "}
-                  <span
-                    style={{
-                      color: legitPoints < 0 ? "#df4d56" : "#8200de",
-                      fontWeight: "600",
-                    }}
-                  >
-                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
-                  </span>
-                </Typography>
-              </div>
-
               <div style={{ display: "flex", gap: "10px" }}>
                 <Button className="borrow-content-btn">
                   <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
@@ -365,7 +515,6 @@ function FailedCard({ item }) {
   const size = sizeObj.sizeName;
 
   const customerName = customer.fullName || "N/A";
-  const customerPhone = customer.phone || "N/A";
   const quantity = item.quantity || 1;
   const extensions = item.extensionCount || 0;
 
@@ -384,8 +533,6 @@ function FailedCard({ item }) {
   if (rawType === "return_failed") typeLabel = "Return Failed";
 
   const fee = item.totalChargeFee || item.fee || 0;
-  const rewardPoints = item.rewardPointChanged || 0;
-  const legitPoints = item.rankingPointChanged || 0;
 
   return (
     <Box className="borrow-card-failed" p={2} mb={2} borderRadius="10px">
@@ -435,32 +582,83 @@ function FailedCard({ item }) {
                     <RiCalendarScheduleLine /> Due: {due}
                   </Typography>
                 </div>
-                <Typography variant="body2" className="borrow-content-material">
-                  Customer: {customerName} ({customerPhone})
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  Items borrowed: {quantity}
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  Extensions: {extensions}
-                </Typography>
-                {/* Overdue đưa ngay dưới info */}
-
-                <div className="borrow-content-overdue-failed">
-                  <Typography className="borrow-content-overdue-title">
-                    <CiWarning style={{ marginRight: "10px" }} /> Late return
-                    but within allowed time{" "}
-                  </Typography>
-                  <div style={{ display: "flex" }}>
-                    <Typography>
-                      <Typography>Late fee: $2.00 | </Typography>
+                {/* Customer, quantity, extensions + returned date (nằm ngang, có icon) */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiUser /> User: {customerName}
                     </Typography>
-                    <Typography>
-                      {" "}
-                      Total returned: {fee.toLocaleString("vi-VN")} VNĐ
+                    {item.returnDate && (
+                      <Typography
+                        variant="body2"
+                        className="borrow-content-material"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <RiCalendarScheduleLine />
+                        Returned: {toVNDate(item.returnDate)}
+                      </Typography>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiShoppingBag /> Items: {quantity}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      className="borrow-content-material"
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <FiRefreshCw /> Extensions: {extensions}
                     </Typography>
                   </div>
                 </div>
+                {/* Timing info & fee for failed / lost */}
+                {getTimingInfo(item) && (
+                  <div className="borrow-content-overdue-failed">
+                    <Typography className="borrow-content-overdue-title">
+                      <CiWarning style={{ marginRight: "10px" }} />
+                      {getTimingInfo(item).message}
+                    </Typography>
+                    {fee > 0 && (
+                      <Typography>
+                        Fee / forfeited deposit: {fee.toLocaleString("vi-VN")} VNĐ
+                      </Typography>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="borrow-content-right-success">
@@ -480,14 +678,7 @@ function FailedCard({ item }) {
                 </Typography>
               </div>
 
-              <div className="borrow-legitPoint-failed">
-                <Typography>
-                  Legit Points:{" "}
-                  <span style={{ color: "#df4d56", fontWeight: "600" }}>
-                    {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
-                  </span>
-                </Typography>
-              </div>
+              {/* No legit points display for failed transactions here */}
               <div className="borrow-failedPoint">
                 <Typography>No refund due to failed return</Typography>
               </div>
@@ -515,19 +706,21 @@ function FailedCard({ item }) {
 // ================== Main Component ==================
 export default function BusinessTransaction() {
   const dispatch = useDispatch();
-  const { borrow, isLoading, borrowDetail, isDetailLoading } = useSelector(
-    (state) => state.borrow
-  );
+  const { borrow, isLoading, borrowDetail, isDetailLoading, totalPages } =
+    useSelector((state) => state.borrow);
 
   const [status, setStatus] = useState("");
   const [searchText, setSearchText] = useState("");
   const [value, setValue] = useState(0);
   const [openDetail, setOpenDetail] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 3;
 
   const transactions = Array.isArray(borrow) ? borrow : [];
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    setCurrentPage(1);
   };
 
   const handleViewDetails = (id) => {
@@ -552,9 +745,15 @@ export default function BusinessTransaction() {
         status: status || undefined,
         productName: searchText || undefined,
         borrowTransactionType,
+        page: currentPage,
+        limit,
       })
     );
-  }, [dispatch, status, searchText, value]);
+  }, [dispatch, status, searchText, value, currentPage, limit]);
+
+  const handlePageChange = (event, page) => {
+    setCurrentPage(page);
+  };
 
   const filteredData = transactions;
 
@@ -563,6 +762,10 @@ export default function BusinessTransaction() {
   const detailGroup = detailProduct.productGroupId || {};
   const detailMaterial = detailGroup.materialId || {};
   const detailSize = detailProduct.productSizeId || {};
+  const detailCustomer = detail.customerId || {};
+  const detailPreviousImages = detail.previousConditionImages || {};
+  const detailCurrentImages = detail.currentConditionImages || {};
+  const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
 
   const toVNDate = (d) =>
     d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
@@ -693,6 +896,27 @@ export default function BusinessTransaction() {
           )}
         </div>
 
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Stack
+            spacing={2}
+            sx={{
+              mt: 3,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              variant="outlined"
+              shape="rounded"
+            />
+          </Stack>
+        )}
+
         {/* Detail popup for business transaction */}
         <Dialog
           open={openDetail}
@@ -723,7 +947,8 @@ export default function BusinessTransaction() {
             ) : !detail || !detail._id ? (
               <Typography>Transaction not found.</Typography>
             ) : (
-              <Box sx={{ mt: 1 }}>
+              <Box className="borrow-detail-popup" sx={{ mt: 1 }}>
+                {/* Header sản phẩm + chip loại & trạng thái */}
                 <Box
                   sx={{
                     display: "flex",
@@ -760,16 +985,28 @@ export default function BusinessTransaction() {
                       <Typography variant="h6">
                         {detailGroup.name || "Unknown Item"}
                       </Typography>
-                      <Chip
-                        size="small"
-                        label={typeLabel}
-                        variant="outlined"
-                        sx={{
-                          borderColor: "#0b5529",
-                          color: "#0b5529",
-                          fontWeight: 500,
-                        }}
-                      />
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <Chip
+                          size="small"
+                          label={typeLabel}
+                          variant="outlined"
+                          sx={{
+                            borderColor: "#0b5529",
+                            color: "#0b5529",
+                            fontWeight: 500,
+                          }}
+                        />
+                        <Chip
+                          size="small"
+                          label={detail.status}
+                          variant="filled"
+                          sx={{
+                            backgroundColor: "#0b5529",
+                            color: "#ffffff",
+                            fontWeight: 500,
+                          }}
+                        />
+                      </Box>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
                       Material: {detailMaterial.materialName || "N/A"}
@@ -793,6 +1030,7 @@ export default function BusinessTransaction() {
 
                 <Divider sx={{ my: 2 }} />
 
+                {/* Hai cột: Transaction Info + Customer */}
                 <Box
                   sx={{
                     display: "grid",
@@ -817,6 +1055,12 @@ export default function BusinessTransaction() {
                       Due date:{" "}
                       <strong>{toVNDate(detail.dueDate)}</strong>
                     </Typography>
+                    {detail.returnDate && (
+                      <Typography variant="body2">
+                        Returned at:{" "}
+                        <strong>{toVNDate(detail.returnDate)}</strong>
+                      </Typography>
+                    )}
                     <Typography variant="body2" sx={{ mt: 1 }}>
                       Deposit:{" "}
                       <span
@@ -833,7 +1077,133 @@ export default function BusinessTransaction() {
                     </Typography>
                   </Box>
 
-               
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Customer
+                    </Typography>
+                    <Typography variant="body2">
+                      Name:{" "}
+                      <strong>
+                        {detailCustomer.fullName || "N/A"}
+                      </strong>
+                    </Typography>
+                    <Typography variant="body2">
+                      Phone: {detailCustomer.phone || "N/A"}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Hình ảnh tình trạng trước & sau giống trang TransactionHistory */}
+                <Divider sx={{ my: 2 }} />
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1.5, fontWeight: 600 }}
+                >
+                  Condition images
+                </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Previous condition
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "repeat(3, 1fr)" },
+                        gap: 1,
+                      }}
+                    >
+                      {conditionFaces.map((face) => {
+                        const src =
+                          detailPreviousImages[`${face}Image`] || null;
+                        if (!src) return null;
+                        return (
+                          <Box
+                            key={`prev-${face}`}
+                            sx={{ textAlign: "center" }}
+                          >
+                            <Box
+                              component="img"
+                              src={src}
+                              alt={`Previous ${face}`}
+                              sx={{
+                                width: "100%",
+                                height: 70,
+                                objectFit: "cover",
+                                borderRadius: 1,
+                                border: "1px solid #eee",
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {face.charAt(0).toUpperCase() + face.slice(1)}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Current condition
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "repeat(3, 1fr)" },
+                        gap: 1,
+                      }}
+                    >
+                      {conditionFaces.map((face) => {
+                        const src =
+                          detailCurrentImages[`${face}Image`] || null;
+                        if (!src) return null;
+                        return (
+                          <Box
+                            key={`curr-${face}`}
+                            sx={{ textAlign: "center" }}
+                          >
+                            <Box
+                              component="img"
+                              src={src}
+                              alt={`Current ${face}`}
+                              sx={{
+                                width: "100%",
+                                height: 70,
+                                objectFit: "cover",
+                                borderRadius: 1,
+                                border: "1px solid #eee",
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {face.charAt(0).toUpperCase() + face.slice(1)}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             )}
