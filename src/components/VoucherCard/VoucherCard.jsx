@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { 
-  deleteVoucherApi,
-  reviewVoucherApi
-} from '../../store/slices/voucherSlice';
+// Note: deleteVoucherApi and reviewVoucherApi have been removed from voucherSlice
 import { 
   FaRegEdit, 
   FaCheck, 
@@ -65,18 +62,15 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
   };
 
   const handleConfirmDelete = () => {
-    dispatch(deleteVoucherApi(voucher._id));
+    // Note: deleteVoucherApi has been removed
+    console.warn('Delete functionality has been removed');
     setIsDeleteOpen(false);
   };
 
   const handleApprove = (e) => {
     e.stopPropagation();
-    dispatch(reviewVoucherApi({
-      voucherId: voucher._id,
-      reviewData: {
-        status: 'active'
-      }
-    }));
+    // Note: reviewVoucherApi has been removed
+    console.warn('Approve functionality has been removed');
   };
 
   const handleReject = (e) => {
@@ -91,13 +85,8 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
       alert('Please enter a rejection reason.');
       return;
     }
-    dispatch(reviewVoucherApi({
-      voucherId: voucher._id,
-      reviewData: {
-        status: 'expired',
-        rejectReason: reason
-      }
-    }));
+    // Note: reviewVoucherApi has been removed
+    console.warn('Reject functionality has been removed');
     setIsRejectOpen(false);
   };
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   Dialog,
   DialogTitle,
@@ -7,50 +6,51 @@ import {
   DialogActions,
   Button,
   TextField,
-  Grid,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Box,
   Typography,
   IconButton,
-  Alert,
-  Divider,
-  CircularProgress,
-  Switch,
-  FormControlLabel,
-  Tooltip,
-  Chip,
+  InputAdornment,
+  Paper,
+  Stack,
+  Grid,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   CardGiftcard as VoucherIcon,
+  Percent as PercentIcon,
+  Code as CodeIcon,
+  Description as DescriptionIcon,
+  Title as TitleIcon,
 } from '@mui/icons-material';
-import { getEcoRewardApi } from '../../store/slices/ecoRewardSlice';
 
-const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
-  const dispatch = useDispatch();
-  const { items: ecoRewardPolicies, status: ecoRewardStatus } = useSelector((state) => state.ecoreward);
-  // Always use leaderboard type for admin-created vouchers
-  const selectedVoucherType = 'leaderboard';
+const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     baseCode: '',
     discountPercent: '',
-    rewardPointCost: '',
-    maxUsage: '',
-    startDate: '',
-    endDate: '',
-    ecoRewardPolicyId: '',
-    isDisabled: false,
   });
 
   const [errors, setErrors] = useState({});
+  const [isDescriptionFocused, setIsDescriptionFocused] = useState(false);
 
-  // No need to load eco reward policies for leaderboard vouchers
+  // Calculate rows for description based on content
+  const calculateDescriptionRows = () => {
+    if (isDescriptionFocused) {
+      // When focused, expand based on content
+      const lineCount = formData.description.split('\n').length;
+      const minRows = 3;
+      const maxRows = 8;
+      // Calculate rows based on content length and line breaks
+      const estimatedRows = Math.max(
+        minRows,
+        Math.min(maxRows, Math.ceil(formData.description.length / 50) + lineCount - 1)
+      );
+      return estimatedRows;
+    }
+    // When not focused, show same height as other fields (1 row to match single-line inputs)
+    return 1;
+  };
 
   useEffect(() => {
     if (voucher) {
@@ -59,12 +59,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         description: voucher.description || '',
         baseCode: voucher.baseCode || '',
         discountPercent: voucher.discountPercent || voucher.discount || '',
-        rewardPointCost: voucher.rewardPointCost || '',
-        maxUsage: voucher.maxUsage || '',
-        startDate: voucher.startDate ? voucher.startDate.split('T')[0] : '',
-        endDate: voucher.endDate ? voucher.endDate.split('T')[0] : '',
-        ecoRewardPolicyId: '',
-        isDisabled: voucher.isDisabled !== undefined ? voucher.isDisabled : false,
       });
     } else {
       setFormData({
@@ -72,12 +66,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
         description: '',
         baseCode: '',
         discountPercent: '',
-        rewardPointCost: '',
-        maxUsage: '',
-        startDate: '',
-        endDate: '',
-        ecoRewardPolicyId: '',
-        isDisabled: false,
       });
     }
     setErrors({});
@@ -98,13 +86,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
     }
   };
 
-  const handleSwitchChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      isDisabled: !e.target.checked // Switch checked = true means isDisabled = false (enabled)
-    }));
-  };
-
   const validate = () => {
     const newErrors = {};
 
@@ -120,21 +101,10 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
       newErrors.description = 'Description is required';
     }
 
-    // Validation based on voucher type
-    if (selectedVoucherType === 'business') {
-      if (!formData.maxUsage || formData.maxUsage <= 0) {
-        newErrors.maxUsage = 'Max usage must be greater than 0';
-      }
-      if (!formData.ecoRewardPolicyId.trim()) {
-        newErrors.ecoRewardPolicyId = 'Eco Reward Policy ID is required';
-      }
-    } else if (selectedVoucherType === 'leaderboard') {
-      if (!formData.discountPercent || formData.discountPercent <= 0) {
-        newErrors.discountPercent = 'Discount percent must be greater than 0';
-      }
-      if (formData.discountPercent > 100) {
-        newErrors.discountPercent = 'Discount percent cannot exceed 100%';
-      }
+    if (!formData.discountPercent || formData.discountPercent <= 0) {
+      newErrors.discountPercent = 'Discount percent must be greater than 0';
+    } else if (formData.discountPercent > 100) {
+      newErrors.discountPercent = 'Discount percent cannot exceed 100%';
     }
 
     setErrors(newErrors);
@@ -144,12 +114,11 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      // Prepare data for leaderboard vouchers
       const submitData = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         discountPercent: parseFloat(formData.discountPercent),
-        baseCode: formData.baseCode,
+        baseCode: formData.baseCode.trim().toUpperCase(),
       };
       
       onSubmit(submitData);
@@ -160,37 +129,58 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
     <Dialog 
       open={isOpen} 
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="lg"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
-          boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
+          borderRadius: 4,
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
           overflow: 'hidden',
-          background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-          maxHeight: '90vh'
         }
       }}
     >
+      {/* Header */}
       <DialogTitle 
         sx={{ 
           background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
           color: 'white',
-          py: 2,
+          py: 2.5,
           px: 3,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: 'rgba(255, 255, 255, 0.2)',
+          }
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <VoucherIcon sx={{ fontSize: 28 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              background: 'rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <VoucherIcon sx={{ fontSize: 28 }} />
+          </Box>
           <Box>
-            <Typography variant="h6" component="div" fontWeight="bold">
+            <Typography variant="h6" component="div" fontWeight="bold" sx={{ mb: 0.5 }}>
               {voucher ? 'Edit Voucher' : 'Create New Voucher'}
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
-              {voucher ? 'Update leaderboard voucher information' : 'Create a new leaderboard voucher for top-ranked customers'}
+            <Typography variant="body2" sx={{ opacity: 0.95, fontSize: '0.875rem' }}>
+              {voucher ? 'Update voucher information' : 'Create a new leaderboard voucher for top-ranked customers'}
             </Typography>
           </Box>
         </Box>
@@ -209,262 +199,210 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
       </DialogTitle>
 
       <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+        <DialogContent sx={{ pt: 4, pb: 2, px: 3 }}>
           <Grid container spacing={2.5}>
-            {/* Voucher type is fixed to leaderboard for admin-created vouchers */}
-
-            <Grid item xs={12} md={7}>
-              <TextField
-                name="name"
-                label="Voucher Name"
-                value={formData.name}
-                onChange={handleChange}
-                error={!!errors.name}
-                helperText={errors.name}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12} md={5}>
-              <TextField
-                name="baseCode"
-                label="Base Code"
-                value={formData.baseCode}
-                onChange={handleChange}
-                error={!!errors.baseCode}
-                helperText={errors.baseCode || 'e.g. SUMMER2025'}
-                fullWidth
-                required
-                placeholder="e.g. SUMMER2025"
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                name="description"
-                label="Description"
-                value={formData.description}
-                onChange={handleChange}
-                error={!!errors.description}
-                helperText={errors.description}
-                multiline
-                rows={3}
-                fullWidth
-                required
-              />
-            </Grid>
-
-            {/* Business voucher fields removed - only leaderboard vouchers for admin */}
-            {false && selectedVoucherType === 'business' && (
-              <>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    name="maxUsage"
-                    label="Max Usage"
-                    type="number"
-                    value={formData.maxUsage}
-                    onChange={handleChange}
-                    error={!!errors.maxUsage}
-                    helperText={errors.maxUsage}
-                    fullWidth
-                    required
-                    inputProps={{ min: 1 }}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">times</InputAdornment>
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth required error={!!errors.ecoRewardPolicyId}>
-                    <InputLabel id="eco-reward-policy-label">Eco Reward Policy</InputLabel>
-                    <Select
-                      name="ecoRewardPolicyId"
-                      value={formData.ecoRewardPolicyId || ''}
-                      onChange={handleChange}
-                      labelId="eco-reward-policy-label"
-                      label="Eco Reward Policy"
-                      disabled={ecoRewardStatus === 'loading'}
-                      displayEmpty
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 400,
-                            minWidth: 400,
-                            maxWidth: '100%',
-                          },
-                        },
-                      }}
-                    >
-                      {ecoRewardStatus === 'loading' ? (
-                        <MenuItem disabled value="">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}>
-                            <CircularProgress size={16} />
-                            <Typography variant="body2">Đang tải...</Typography>
-                          </Box>
-                        </MenuItem>
-                      ) : Array.isArray(ecoRewardPolicies) && ecoRewardPolicies.length > 0 ? (
-                        ecoRewardPolicies.map((policy) => (
-                          <MenuItem 
-                            key={policy._id} 
-                            value={policy._id}
-                            sx={{ 
-                              py: 1.5,
-                              minHeight: 'auto',
-                              whiteSpace: 'normal',
-                            }}
-                          >
-                            <Box sx={{ width: '100%', pr: 1 }}>
-                              <Typography variant="body1" fontWeight={600} sx={{ mb: 0.5, lineHeight: 1.4 }}>
-                                {policy.label || 'Unnamed Policy'}
-                              </Typography>
-                              {policy.description && (
-                                <Typography 
-                                  variant="body2" 
-                                  color="text.secondary" 
-                                  sx={{ 
-                                    display: 'block', 
-                                    mb: 0.5,
-                                    lineHeight: 1.4,
-                                    wordBreak: 'break-word'
-                                  }}
-                                >
-                                  {policy.description}
-                                </Typography>
-                              )}
-                              {policy.threshold !== undefined && (
-                                <Typography 
-                                  variant="body2" 
-                                  color="primary" 
-                                  sx={{ 
-                                    display: 'block', 
-                                    fontWeight: 500,
-                                    mt: 0.25
-                                  }}
-                                >
-                                  Threshold: {policy.threshold}
-                                </Typography>
-                              )}
-                            </Box>
-                          </MenuItem>
-                        ))
-                      ) : (
-                        <MenuItem disabled sx={{ py: 1.5 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Không có policy nào
-                          </Typography>
-                        </MenuItem>
-                      )}
-                    </Select>
-                    {errors.ecoRewardPolicyId && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
-                        {errors.ecoRewardPolicyId}
-                      </Typography>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
-                      p: 2,
+            {/* Row 1: Voucher Name and Base Code */}
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <TitleIcon sx={{ fontSize: 20, color: '#22c55e' }} />
+                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                    Voucher Name
+                  </Typography>
+                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
+                </Box>
+                <TextField
+                  name="name"
+                  placeholder="Enter voucher name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  error={!!errors.name}
+                  helperText={errors.name}
+                  fullWidth
+                  required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      backgroundColor: 'rgba(34, 197, 94, 0.04)',
-                      border: '1px solid',
-                      borderColor: formData.isDisabled ? 'error.light' : 'success.light',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Chip
-                        label={formData.isDisabled ? 'Disabled' : 'Enabled'}
-                        color={formData.isDisabled ? 'error' : 'success'}
-                        size="small"
-                        sx={{ minWidth: '80px', fontWeight: 600 }}
-                      />
-                      <Box>
-                        <Typography variant="body1" fontWeight={600} sx={{ mb: 0.25 }}>
-                          Trạng thái hiển thị cho Business
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formData.isDisabled 
-                            ? 'Voucher sẽ bị ẩn, business không thể xem và claim' 
-                            : 'Voucher sẽ hiển thị, business có thể xem và claim'}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Tooltip
-                      title={formData.isDisabled
-                        ? 'Click để enable voucher (business có thể xem và claim)'
-                        : 'Click để disable voucher (business không thể xem và claim)'}
-                      arrow
-                      placement="top"
-                    >
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={!formData.isDisabled}
-                            onChange={handleSwitchChange}
-                            color="primary"
-                            sx={{
-                              '& .MuiSwitch-switchBase.Mui-checked': {
-                                color: '#22c55e',
-                              },
-                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                backgroundColor: '#22c55e',
-                              },
-                            }}
-                          />
-                        }
-                        label=""
-                        sx={{ m: 0 }}
-                      />
-                    </Tooltip>
-                  </Box>
-                </Grid>
-              </>
-            )}
-
-            {/* Leaderboard Voucher Fields - Always shown */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="discountPercent"
-                label="Discount Percent (%)"
-                type="number"
-                value={formData.discountPercent}
-                onChange={handleChange}
-                error={!!errors.discountPercent}
-                helperText={errors.discountPercent || 'Discount percentage for top-ranked customers'}
-                fullWidth
-                required
-                inputProps={{ min: 0, max: 100, step: 0.1 }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>
-                }}
-              />
+                      height: '56.5px',
+                      '&:hover fieldset': {
+                        borderColor: '#22c55e',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#22c55e',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Box>
             </Grid>
 
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <CodeIcon sx={{ fontSize: 20, color: '#22c55e' }} />
+                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                    Base Code
+                  </Typography>
+                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
+                </Box>
+                <TextField
+                  name="baseCode"
+                  placeholder="e.g. SUMMER2025"
+                  value={formData.baseCode}
+                  onChange={handleChange}
+                  error={!!errors.baseCode}
+                  helperText={errors.baseCode || 'Code will be automatically converted to uppercase'}
+                  fullWidth
+                  required
+                  inputProps={{
+                    style: { textTransform: 'uppercase' },
+                    maxLength: 20,
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      fontFamily: 'monospace',
+                      height: '56.5px',
+                      '&:hover fieldset': {
+                        borderColor: '#22c55e',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#22c55e',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            {/* Row 2: Description and Discount Percent */}
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <DescriptionIcon sx={{ fontSize: 20, color: '#22c55e' }} />
+                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                    Description
+                  </Typography>
+                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
+                </Box>
+                <TextField
+                  name="description"
+                  placeholder="Enter voucher description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  onFocus={() => setIsDescriptionFocused(true)}
+                  onBlur={() => setIsDescriptionFocused(false)}
+                  error={!!errors.description}
+                  helperText={errors.description}
+                  multiline
+                  rows={calculateDescriptionRows()}
+                  fullWidth
+                  required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      transition: 'all 0.3s ease',
+                      minHeight: isDescriptionFocused ? 'auto' : '56.5px',
+                      height: isDescriptionFocused ? 'auto' : '56.5px',
+                      alignItems: isDescriptionFocused ? 'flex-start' : 'center',
+                      '&:hover fieldset': {
+                        borderColor: '#22c55e',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#22c55e',
+                        borderWidth: 2,
+                      },
+                    },
+                    '& .MuiInputBase-input': {
+                      transition: 'all 0.3s ease',
+                      overflow: isDescriptionFocused ? 'auto' : 'hidden',
+                      paddingTop: isDescriptionFocused ? '16.5px' : '16.5px',
+                      paddingBottom: isDescriptionFocused ? '16.5px' : '16.5px',
+                      minHeight: isDescriptionFocused ? 'auto' : '23px',
+                      lineHeight: isDescriptionFocused ? '1.5' : '1.4375em',
+                      height: isDescriptionFocused ? 'auto' : '23px',
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <PercentIcon sx={{ fontSize: 20, color: '#22c55e' }} />
+                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                    Discount Percent
+                  </Typography>
+                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
+                </Box>
+                <TextField
+                  name="discountPercent"
+                  type="number"
+                  placeholder="0"
+                  value={formData.discountPercent}
+                  onChange={handleChange}
+                  error={!!errors.discountPercent}
+                  helperText={errors.discountPercent || 'Discount percentage for top-ranked customers (0-100%)'}
+                  fullWidth
+                  required
+                  inputProps={{ min: 0, max: 100, step: 0.1 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Typography variant="body2" sx={{ color: '#22c55e', fontWeight: 600 }}>
+                          %
+                        </Typography>
+                      </InputAdornment>
+                    )
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      height: '56.5px',
+                      '&:hover fieldset': {
+                        borderColor: '#22c55e',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#22c55e',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
           </Grid>
         </DialogContent>
 
-        <Divider />
-
-        <DialogActions sx={{ px: 3, py: 2, gap: 2, backgroundColor: 'rgba(34, 197, 94, 0.02)', display: 'flex', justifyContent: 'space-between' }}>
+        {/* Footer Actions */}
+        <DialogActions 
+          sx={{ 
+            px: 3, 
+            py: 2.5, 
+            gap: 2, 
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: '#fafafa',
+          }}
+        >
           <Button 
             onClick={onClose}
             variant="outlined"
             sx={{
-              color: '#666',
-              borderColor: '#ccc',
+              color: '#6b7280',
+              borderColor: '#d1d5db',
               px: 3,
-              py: 1,
+              py: 1.25,
               fontSize: '0.9375rem',
-              borderWidth: 1.5,
-              fontWeight: 500,
+              fontWeight: 600,
+              borderRadius: 2,
+              textTransform: 'none',
               '&:hover': {
-                borderColor: '#999',
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                borderWidth: 1.5,
+                borderColor: '#9ca3af',
+                backgroundColor: '#f9fafb',
               }
             }}
           >
@@ -474,17 +412,22 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit, voucherType }) => {
             type="submit"
             variant="contained"
             sx={{
-              backgroundColor: '#22c55e',
-              px: 3,
-              py: 1,
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+              color: 'white',
+              px: 4,
+              py: 1.25,
               fontSize: '0.9375rem',
               fontWeight: 600,
-              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
-              transition: 'all 0.3s ease',
+              borderRadius: 2,
+              textTransform: 'none',
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
               '&:hover': {
-                backgroundColor: '#16a34a',
-                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
-                transform: 'translateY(-2px)',
+                background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.4)',
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0)',
               }
             }}
           >

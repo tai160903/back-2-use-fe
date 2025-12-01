@@ -33,11 +33,7 @@ import {
 import Tooltip from '@mui/material/Tooltip';
 import { FaGift, FaCoins, FaCalendarAlt, FaCode, FaInfoCircle, FaStore } from 'react-icons/fa';
 import {
-  getBusinessVouchersByVoucherIdApi,
   getBusinessVoucherCodesApi,
-  updateBusinessVoucherIsDisabledApi,
-  updateVoucherTemplateIsDisabledApi,
-  getVoucherByIdApi,
 } from '../../store/slices/voucherSlice';
 import './VoucherDetailModal.css';
 
@@ -51,10 +47,8 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
 
   useEffect(() => {
     if (isOpen && voucher && voucher.voucherType === 'business') {
-      const voucherId = voucher._id || voucher.id;
-      if (voucherId) {
-        dispatch(getBusinessVouchersByVoucherIdApi({ voucherId, page: 1, limit: 100 }));
-      }
+      // Note: getBusinessVouchersByVoucherIdApi has been removed
+      console.warn('getBusinessVouchersByVoucherIdApi has been removed');
     } else if (!isOpen) {
       // Reset state when modal closes
       setExpandedBusinessVoucher(null);
@@ -78,47 +72,22 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
   };
 
   const handleToggleTemplateIsDisabled = async (currentIsDisabled) => {
-    setTogglingTemplate(true);
-    const voucherId = voucher._id || voucher.id;
-    
-    try {
-      await dispatch(updateVoucherTemplateIsDisabledApi({
-        voucherId,
-        isDisabled: !currentIsDisabled
-      })).unwrap();
-      
-      // Refresh voucher data from API
-      if (voucherId) {
-        await dispatch(getVoucherByIdApi(voucherId));
-      }
-    } catch (error) {
-      // Error is handled by the thunk (toast notification)
-      console.error('Failed to toggle template isDisabled:', error);
-    } finally {
-      setTogglingTemplate(false);
-    }
+    // Note: updateVoucherTemplateIsDisabledApi and getVoucherByIdApi have been removed
+    console.warn('Toggle template isDisabled functionality has been removed');
+    setTogglingTemplate(false);
   };
 
   const handleToggleIsDisabled = async (businessVoucherId, currentIsDisabled) => {
-    setTogglingVouchers({ ...togglingVouchers, [businessVoucherId]: true });
+    // Note: updateBusinessVoucherIsDisabledApi and getBusinessVouchersByVoucherIdApi have been removed
+    console.warn('Toggle business voucher isDisabled functionality has been removed');
+    setTogglingVouchers({ ...togglingVouchers, [businessVoucherId]: false });
     
     try {
-      await dispatch(updateBusinessVoucherIsDisabledApi({
-        voucherId: businessVoucherId,
-        isDisabled: !currentIsDisabled,
-      })).unwrap();
-      
-      // Refresh business vouchers list
-      const voucherId = voucher._id || voucher.id;
-      if (voucherId) {
-        await dispatch(getBusinessVouchersByVoucherIdApi({ voucherId, page: 1, limit: 100 }));
-        
-        // Reload codes if this business voucher is expanded
-        if (expandedBusinessVoucher === businessVoucherId) {
-          setCodesLoading({ ...codesLoading, [businessVoucherId]: true });
-          await dispatch(getBusinessVoucherCodesApi({ businessVoucherId, page: 1, limit: 100 }));
-          setCodesLoading({ ...codesLoading, [businessVoucherId]: false });
-        }
+      // Reload codes if this business voucher is expanded
+      if (expandedBusinessVoucher === businessVoucherId) {
+        setCodesLoading({ ...codesLoading, [businessVoucherId]: true });
+        await dispatch(getBusinessVoucherCodesApi({ businessVoucherId, page: 1, limit: 100 }));
+        setCodesLoading({ ...codesLoading, [businessVoucherId]: false });
       }
     } catch (error) {
       // Error is handled by the thunk (toast notification)

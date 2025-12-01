@@ -15,16 +15,30 @@
   color: #666;
 }
 
-/* Reward Points Header */
-.reward-points-header {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  border-radius: 16px;
-  padding: 32px;
+/* Rewards Header */
+.rewards-header {
+  margin-bottom: 32px;
+}
+
+.rewards-title {
   display: flex;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 32px;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  gap: 12px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.rewards-title-icon {
+  font-size: 36px;
+  color: #22c55e;
+}
+
+.rewards-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
 }
 
 .reward-icon {
@@ -80,14 +94,16 @@
 }
 
 /* Sections */
-.vouchers-section,
-.my-vouchers-section,
-.points-history-section {
+.my-vouchers-section {
   background: white;
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-header {
+  margin-bottom: 16px;
 }
 
 .section-title {
@@ -175,6 +191,16 @@
   transform: translateY(-2px);
 }
 
+.voucher-card.expiring {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(to bottom, #fef3c7 0%, white 5%);
+}
+
+.voucher-card.expired {
+  opacity: 0.7;
+  border-color: #ef4444;
+}
+
 .voucher-header {
   display: flex;
   gap: 12px;
@@ -243,6 +269,16 @@
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
+}
+
+.expiring-text {
+  color: #f59e0b !important;
+  font-weight: 700 !important;
+}
+
+.expired-text {
+  color: #ef4444 !important;
+  text-decoration: line-through;
 }
 
 .voucher-footer {
@@ -456,64 +492,6 @@
   color: white;
 }
 
-/* Points History */
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
-.history-item:hover {
-  background: #f3f4f6;
-}
-
-.history-info {
-  flex: 1;
-}
-
-.history-action {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 6px 0;
-}
-
-.history-date {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.clock-icon {
-  font-size: 12px;
-}
-
-.history-points {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.history-points.positive {
-  color: #10b981;
-}
-
-.history-points.negative {
-  color: #ef4444;
-}
 
 /* Pagination */
 .pagination-container {
@@ -560,18 +538,12 @@
     padding: 16px;
   }
 
-  .reward-points-header {
-    flex-direction: column;
-    text-align: center;
-    padding: 24px;
+  .rewards-title {
+    font-size: 24px;
   }
 
-  .reward-points-info {
-    text-align: center;
-  }
-
-  .points-display {
-    width: 100%;
+  .rewards-title-icon {
+    font-size: 28px;
   }
 
   .vouchers-grid {
@@ -606,12 +578,12 @@
 }
 
 @media (max-width: 480px) {
-  .reward-title {
-    font-size: 22px;
+  .rewards-title {
+    font-size: 20px;
   }
 
-  .points-number {
-    font-size: 36px;
+  .rewards-title-icon {
+    font-size: 24px;
   }
 
   .section-title {
