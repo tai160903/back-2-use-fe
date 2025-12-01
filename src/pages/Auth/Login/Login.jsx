@@ -18,6 +18,7 @@ import { loginAPI } from "../../../store/slices/authSlice";
 import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
 import useAuth from "../../../hooks/useAuth"; 
+import { getUserRole, getRedirectPath } from "../../../utils/authUtils";
 
 
 const schema = yup
@@ -64,25 +65,13 @@ export default function Login() {
         // Lưu dữ liệu user vào localStorage
         localStorage.setItem("currentUser", JSON.stringify(payload.data));
 
-        // Decode JWT token để lấy role
-        const token = payload.data.accessToken;
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-        const userType = tokenPayload.role?.trim().toLowerCase();
-        
-        
+        // Lấy role hiện tại ưu tiên từ user object, fallback token qua authUtils
+        const userRole = getUserRole() || "customer";
+        const redirectPath = getRedirectPath(userRole);
+
         setTimeout(() => {
-          if (userType === "customer") {
-            navigate(PATH.HOME, { replace: true });
-          } else if (userType === "business") {
-            navigate(PATH.BUSINESS, { replace: true });
-          } else if (userType === "staff") {
-            navigate(PATH.STAFF, { replace: true });
-          } else if (userType === "admin" || userType === "administrator") {
-            navigate(PATH.ADMIN, { replace: true });
-          } else {
-            toast.error("Unknown user role. Please contact support.");
-          }
-        }, 100); 
+          navigate(redirectPath, { replace: true });
+        }, 100);
         
         toast.success("Login successful!");
       } else {

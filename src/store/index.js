@@ -13,6 +13,7 @@ import voucherSlice from "./slices/voucherSlice";
 import notificationSlice from "./slices/notificationSlice";
 import leaderBoardSlice from "./slices/leaderBoardSlice";
 import staffSlice from "./slices/staffSlice";
+import feedbackSlice from "./slices/feedbackSlice";
 export const store = configureStore({
   reducer: {
     auth: authSlice,
@@ -29,6 +30,7 @@ export const store = configureStore({
     notification: notificationSlice,
     leaderBoard: leaderBoardSlice,
     staff: staffSlice,
+    feedback: feedbackSlice,
   },
 });
 

@@ -588,6 +588,47 @@
   font-weight: 600;
 }
 
+.review-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.review-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.review-action-btn.edit {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.review-action-btn.edit:hover {
+  background: #bfdbfe;
+}
+
+.review-action-btn.delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.review-action-btn.delete:hover {
+  background: #fecaca;
+}
+
+.review-action-icon {
+  font-size: 14px;
+}
+
 /* Voucher Section */
 .cooperate-section {
   padding: 60px 0 !important;

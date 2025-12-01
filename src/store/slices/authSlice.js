@@ -149,6 +149,19 @@ export const switchAccountTypeAPI = createAsyncThunk(
   }
 )
 
+// change password
+export const changePasswordAPI = createAsyncThunk(
+  "auth/changePasswordAPI",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.put("/auth/change-password", data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+)
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -290,6 +303,19 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Đổi loại tài khoản thất bại. Vui lòng thử lại.");
+      })
+      .addCase(changePasswordAPI.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(changePasswordAPI.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentUser = payload;
+      })
+      .addCase(changePasswordAPI.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.");
       })
   },
 });

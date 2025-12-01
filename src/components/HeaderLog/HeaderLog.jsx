@@ -11,21 +11,25 @@ import { useEffect, useState, useRef } from "react";
 import {
   getProfileApi,
   getProfileBusiness,
+  getProfileStaff,
 } from "../../store/slices/userSlice";
 
 import { IoIosLogOut } from "react-icons/io";
 import { HiSwitchHorizontal } from "react-icons/hi";
 import Notification from "../Notification/Notification";
 import { io } from "socket.io-client";
+import toast from "react-hot-toast";
 export default function HeaderLog() {
   const dispatch = useDispatch();
-  const { userInfo, businessInfo } = useSelector((state) => state.user);
+  const { userInfo, businessInfo, staffInfo } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const userRole = getUserRole();
 
   useEffect(() => {
     if (userRole === "business") {
       dispatch(getProfileBusiness());
+    } else if (userRole === "staff") {
+      dispatch(getProfileStaff());
     } else {
       dispatch(getProfileApi());
     }
@@ -117,7 +121,8 @@ export default function HeaderLog() {
         navigate(redirectPath, { replace: true });
       }
     } catch (error) {
-      // lỗi đã được xử lý trong slice (toast), không cần làm thêm
+      toast.error(error.message||"Failed to switch to customer");
+
     }
   };
 
@@ -147,6 +152,16 @@ export default function HeaderLog() {
     </>
   );
 
+  // Render thông tin cho staff
+  const renderStaffInfo = () => (
+    <>
+      <Typography className="header-log-name" variant="h6" noWrap>
+        Staff at{" "}
+        {staffInfo?.data?.businessId?.businessName || "Store"}
+      </Typography>
+    </>
+  );
+
   return (
     <>
       <div className="header-log">
@@ -159,11 +174,15 @@ export default function HeaderLog() {
                     ? businessInfo?.data?.business?.businessLogoUrl ||
                       businessInfo?.data?.business?.avatar ||
                       ""
+                    : userRole === "staff"
+                    ? staffInfo?.data?.businessId?.businessLogoUrl || ""
                     : userInfo?.avatar || ""
                 }
                 alt={
                   userRole === "business"
                     ? businessInfo?.data?.business?.businessName || "Business"
+                    : userRole === "staff"
+                    ? staffInfo?.data?.businessId?.businessName || "Store"
                     : userInfo?.fullName || "User"
                 }
                 sx={{
@@ -174,6 +193,8 @@ export default function HeaderLog() {
               <div>
                 {userRole === "business"
                   ? renderBusinessInfo()
+                  : userRole === "staff"
+                  ? renderStaffInfo()
                   : renderCustomerInfo()}
               </div>
             </div>
