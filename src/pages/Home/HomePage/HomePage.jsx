@@ -411,11 +411,19 @@ export default function HomePage() {
                 const displayName =
                   (entry.customerId && entry.customerId.fullName) ||
                   `User #${entry.rank ?? index + 1}`;
+                const avatarUrl = entry.customerId?.userId?.avatar;
+                const initials = displayName.charAt(0).toUpperCase();
                 return (
                   <SwiperSlide key={entry._id || entry.id || index}>
                     <div className={`lb-card rank-${index + 1}`}>
                       <div className="lb-medal">{entry.rank ?? index + 1}</div>
-                      <div className="lb-avatar" />
+                      <div className="lb-avatar">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt={displayName} />
+                        ) : (
+                          <span>{initials}</span>
+                        )}
+                      </div>
                       <div className="lb-name">{displayName}</div>
                       <div className="lb-points">
                         {entry.rankingPoints ?? 0} pts

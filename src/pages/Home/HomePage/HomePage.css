@@ -1188,7 +1188,7 @@
 
 .leaderboard-swiper .swiper-wrapper {
   display: flex;
-  justify-content: center;
+
 }
 
 .leaderboard-swiper .swiper-slide {
@@ -1251,6 +1251,22 @@
   border-radius: 50%;
   margin: 32px auto 16px auto;
   background: #e4efe7;
+}
+
+.lb-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.lb-avatar span {
+  font-weight: 700;
+  font-size: 2rem;
+  color: #174c33;
+  line-height: 96px;
+  display: block;
 }
 
 .lb-name { font-weight: 800; color: #1b2d26; font-size: 1.05rem; }

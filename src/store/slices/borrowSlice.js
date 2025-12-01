@@ -28,7 +28,8 @@ export const getTransactionHistoryApi = createAsyncThunk(
                     params: {
                         status: data.status || undefined,
                         productName: data.productName || undefined,
-                    
+                        page: data.page || undefined,
+                        limit: data.limit || undefined,
                         borrowTransactionType:
                             data.borrowTransactionType || undefined,
                     },
@@ -54,7 +55,8 @@ export const getTransactionHistoryBusinessApi = createAsyncThunk(
                     params: {
                         status: data.status || undefined,
                         productName: data.productName || undefined,
-                    
+                        page: data.page || undefined,
+                        limit: data.limit || undefined,
                         borrowTransactionType:
                             data.borrowTransactionType || undefined,
                     },
@@ -186,11 +188,15 @@ export const extendBorrowProductApi = createAsyncThunk(
 const borrowSlice = createSlice({
     name: "borrow",
     initialState: {
-        borrow: [],
-        borrowDetail: null,
-        isLoading: false,
-        isDetailLoading: false,
-        error: null,
+      borrow: [],
+      borrowDetail: null,
+      isLoading: false,
+      isDetailLoading: false,
+      error: null,
+      total: 0,
+      page: 1,
+      limit: 0,
+      totalPages: 0,
     },
     reducers: {
        
@@ -220,6 +226,19 @@ const borrowSlice = createSlice({
                 ? payload
                 : payload?.items || []
             state.borrow = items
+            const total = Array.isArray(payload)
+                ? items.length
+                : payload?.total || items.length
+            const limit = Array.isArray(payload)
+                ? items.length
+                : payload?.limit || items.length
+            const page = Array.isArray(payload)
+                ? 1
+                : payload?.page || 1
+            state.total = total
+            state.limit = limit
+            state.page = page
+            state.totalPages = limit ? Math.ceil(total / limit) : 0
         })
         .addCase(getTransactionHistoryApi.rejected, (state, {payload}) => {
             state.isLoading = false
@@ -236,6 +255,19 @@ const borrowSlice = createSlice({
                 ? payload
                 : payload?.items || []
             state.borrow = items
+            const total = Array.isArray(payload)
+                ? items.length
+                : payload?.total || items.length
+            const limit = Array.isArray(payload)
+                ? items.length
+                : payload?.limit || items.length
+            const page = Array.isArray(payload)
+                ? 1
+                : payload?.page || 1
+            state.total = total
+            state.limit = limit
+            state.page = page
+            state.totalPages = limit ? Math.ceil(total / limit) : 0
         })
         .addCase(getTransactionHistoryBusinessApi.rejected, (state, {payload}) => {
             state.isLoading = false
