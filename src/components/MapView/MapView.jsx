@@ -183,6 +183,19 @@ export default function MapView({
               <Typography className="leaflet-popup-content-name">
                 {store.name}
               </Typography>
+              {/* Business type */}
+              {store.businessType && (
+                <Typography
+                  style={{
+                    fontSize: "12px",
+                    color: "#1b4d1b",
+                    marginTop: "2px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {store.businessType}
+                </Typography>
+              )}
               <Typography className="leaflet-popup-content-address">
                 {store.address}
               </Typography>

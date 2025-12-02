@@ -198,8 +198,6 @@ export default function ListStore() {
                 </Box>
               ) : (
                 paginatedStores.map((store) => {
-                  const visibleProducts = store.products?.slice(0, 3) || [];
-                  const extraCount = store.products?.length > 3 ? store.products.length - 3 : 0;
                   return (
                     <Paper
                       key={store.id}
@@ -243,38 +241,22 @@ export default function ListStore() {
                               />
                             )}
                           </Box>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '13px' }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '13px' }}>
                             <LocationOnIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} />
                             {store.address}
                           </Typography>
-                          {visibleProducts.length > 0 && (
-                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                              {visibleProducts.map((prod, i) => (
-                                <Chip
-                                  key={i}
-                                  label={prod}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: '#16a34a',
-                                    color: '#fff',
-                                    fontSize: '11px',
-                                    height: '22px',
-                                  }}
-                                />
-                              ))}
-                              {extraCount > 0 && (
-                                <Chip
-                                  label={`+${extraCount}`}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: '#16a34a',
-                                    color: '#fff',
-                                    fontSize: '11px',
-                                    height: '22px',
-                                  }}
-                                />
-                              )}
-                            </Box>
+                          {/* Business type chip */}
+                          {store.businessType && (
+                            <Chip
+                              label={store.businessType}
+                              size="small"
+                              sx={{
+                                backgroundColor: '#16a34a',
+                                color: '#fff',
+                                fontSize: '11px',
+                                height: '22px',
+                              }}
+                            />
                           )}
                         </Box>
                       </Box>

@@ -28,7 +28,6 @@ fetcher.interceptors.request.use((config) => {
   if (currentUser) {
     config.headers.Authorization = `Bearer ${currentUser.accessToken}`;
     
-    // Debug: Log token info để kiểm tra role
     try {
       const tokenPayload = JSON.parse(atob(currentUser.accessToken.split('.')[1]));
       console.log('Token payload:', tokenPayload);
