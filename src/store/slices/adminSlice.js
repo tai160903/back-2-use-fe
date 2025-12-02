@@ -350,6 +350,140 @@ export const getAdminDashboardOverviewApi = createAsyncThunk(
   }
 );
 
+// Get Borrow Transactions Monthly API
+export const getBorrowTransactionsMonthlyApi = createAsyncThunk(
+  "admin/getBorrowTransactionsMonthlyApi",
+  async ({ year, type, status }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/dashboard/borrow-transactions/monthly`;
+      const params = new URLSearchParams();
+      if (year) params.append('year', year);
+      if (type) params.append('type', type);
+      if (status) params.append('status', status);
+      if (params.toString()) url += `?${params.toString()}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Top Businesses API
+export const getTopBusinessesApi = createAsyncThunk(
+  "admin/getTopBusinessesApi",
+  async ({ top = 5, sortBy, order }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/dashboard/business`;
+      const params = new URLSearchParams();
+      if (top) params.append('top', top);
+      if (sortBy) params.append('sortBy', sortBy);
+      if (order) params.append('order', order);
+      if (params.toString()) url += `?${params.toString()}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Business Monthly API
+export const getBusinessMonthlyApi = createAsyncThunk(
+  "admin/getBusinessMonthlyApi",
+  async ({ year }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/dashboard/business/monthly`;
+      if (year) url += `?year=${year}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Top Customers API
+export const getTopCustomersApi = createAsyncThunk(
+  "admin/getTopCustomersApi",
+  async ({ top = 5, sortBy, order }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/dashboard/customer`;
+      const params = new URLSearchParams();
+      if (top) params.append('top', top);
+      if (sortBy) params.append('sortBy', sortBy);
+      if (order) params.append('order', order);
+      if (params.toString()) url += `?${params.toString()}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Customer Monthly API
+export const getCustomerMonthlyApi = createAsyncThunk(
+  "admin/getCustomerMonthlyApi",
+  async ({ year }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/dashboard/customer/monthly`;
+      if (year) url += `?year=${year}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Wallet Transactions API
+export const getWalletTransactionsApi = createAsyncThunk(
+  "admin/getWalletTransactionsApi",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/admin/dashboard/wallet-transactions");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Wallet Transactions By Month API
+export const getWalletTransactionsByMonthApi = createAsyncThunk(
+  "admin/getWalletTransactionsByMonthApi",
+  async ({ year, transactionType, direction, status }, { rejectWithValue }) => {
+    try {
+      let url = `/admin/dashboard/wallet-transactions/by-month`;
+      const params = new URLSearchParams();
+      if (year) params.append('year', year);
+      if (transactionType) params.append('transactionType', transactionType);
+      if (direction) params.append('direction', direction);
+      if (status) params.append('status', status);
+      if (params.toString()) url += `?${params.toString()}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // System Settings APIs
 export const getSystemSettingsApi = createAsyncThunk(
   "admin/getSystemSettingsApi",
@@ -460,6 +594,13 @@ const adminSlice = createSlice({
     systemSettings: [],
     dashboardOverview: null,
     dashboardLoading: false,
+    borrowTransactionsMonthly: null,
+    topBusinesses: [],
+    businessMonthly: null,
+    topCustomers: [],
+    customerMonthly: null,
+    walletTransactions: null,
+    walletTransactionsByMonth: null,
   },
   reducers: {
     clearError: (state) => {
@@ -1158,6 +1299,112 @@ const adminSlice = createSlice({
         state.dashboardLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to fetch dashboard overview");
+      })
+      
+      // Get Borrow Transactions Monthly
+      .addCase(getBorrowTransactionsMonthlyApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBorrowTransactionsMonthlyApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.borrowTransactionsMonthly = payload.data || payload;
+      })
+      .addCase(getBorrowTransactionsMonthlyApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        // Don't show toast for dashboard data to avoid spam
+      })
+      
+      // Get Top Businesses
+      .addCase(getTopBusinessesApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getTopBusinessesApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.topBusinesses = payload.data || (Array.isArray(payload) ? payload : []);
+      })
+      .addCase(getTopBusinessesApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      
+      // Get Business Monthly
+      .addCase(getBusinessMonthlyApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessMonthlyApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.businessMonthly = payload.data || payload;
+      })
+      .addCase(getBusinessMonthlyApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      
+      // Get Top Customers
+      .addCase(getTopCustomersApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getTopCustomersApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.topCustomers = payload.data || (Array.isArray(payload) ? payload : []);
+      })
+      .addCase(getTopCustomersApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      
+      // Get Customer Monthly
+      .addCase(getCustomerMonthlyApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getCustomerMonthlyApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.customerMonthly = payload.data || payload;
+      })
+      .addCase(getCustomerMonthlyApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      
+      // Get Wallet Transactions
+      .addCase(getWalletTransactionsApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getWalletTransactionsApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.walletTransactions = payload.data || payload;
+      })
+      .addCase(getWalletTransactionsApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      
+      // Get Wallet Transactions By Month
+      .addCase(getWalletTransactionsByMonthApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getWalletTransactionsByMonthApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.walletTransactionsByMonth = payload.data || payload;
+      })
+      .addCase(getWalletTransactionsByMonthApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
       })
   
   },
