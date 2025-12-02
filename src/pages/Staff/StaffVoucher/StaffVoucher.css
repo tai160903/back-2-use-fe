@@ -1,0 +1,58 @@
+.staff-voucher-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.voucher-page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.voucher-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Styles are now handled by Material-UI components */
+
+/* Responsive */
+@media (max-width: 768px) {
+  .staff-voucher-page {
+    padding: 16px;
+  }
+
+  .staff-voucher-content {
+    max-width: 100%;
+  }
+
+  .staff-voucher-input-container {
+    flex-direction: column;
+  }
+
+  .staff-voucher-apply-btn {
+    width: 100%;
+  }
+
+  .staff-voucher-info-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .staff-voucher-info-label {
+    min-width: auto;
+  }
+
+  .staff-voucher-info-value {
+    text-align: left;
+  }
+}
+

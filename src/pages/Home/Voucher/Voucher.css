@@ -162,6 +162,10 @@
   transform: translateY(-2px);
 }
 
+.voucher-card-custom.inactive:hover {
+  border-color: #ee4d2d;
+}
+
 /* Left Strip - Thanh dọc bên trái */
 .voucher-card-strip {
   width: 70px;
@@ -175,6 +179,11 @@
 
 .voucher-card-custom.exclusive .voucher-card-strip {
   background: linear-gradient(180deg, #ff6b35 0%, #ff8c42 100%);
+}
+
+/* Inactive vouchers - Orange/Red gradient */
+.voucher-card-custom.inactive .voucher-card-strip {
+  background: linear-gradient(180deg, #ee4d2d 0%, #ff6b4a 100%);
 }
 
 .voucher-strip-badge {
@@ -240,6 +249,10 @@
   color: #ff8c42 !important;
 }
 
+.voucher-card-custom.inactive .voucher-discount-text {
+  color: #ee4d2d !important;
+}
+
 /* Voucher Info Text */
 .voucher-max-discount-text,
 .voucher-min-order-text {
@@ -255,6 +268,10 @@
   font-weight: 500 !important;
   margin-top: 4px !important;
   margin-bottom: 8px !important;
+}
+
+.voucher-card-custom.inactive .voucher-category-text {
+  color: #ee4d2d !important;
 }
 
 /* Points Section */
@@ -273,6 +290,10 @@
   background: rgba(255, 140, 66, 0.1);
 }
 
+.voucher-card-custom.inactive .voucher-points-section {
+  background: rgba(238, 77, 45, 0.1);
+}
+
 .points-icon {
   font-size: 16px !important;
   color: #006C1E !important;
@@ -280,6 +301,10 @@
 
 .voucher-card-custom.exclusive .points-icon {
   color: #ff8c42 !important;
+}
+
+.voucher-card-custom.inactive .points-icon {
+  color: #ee4d2d !important;
 }
 
 .points-text {
@@ -290,6 +315,10 @@
 
 .voucher-card-custom.exclusive .points-text {
   color: #ff8c42 !important;
+}
+
+.voucher-card-custom.inactive .points-text {
+  color: #ee4d2d !important;
 }
 
 /* Usage Progress */
@@ -311,6 +340,10 @@
 
 .voucher-card-custom.exclusive .usage-bar .MuiLinearProgress-bar {
   background: linear-gradient(90deg, #ff6b35 0%, #ff8c42 100%) !important;
+}
+
+.voucher-card-custom.inactive .usage-bar .MuiLinearProgress-bar {
+  background: linear-gradient(90deg, #ee4d2d 0%, #ff6b4a 100%) !important;
 }
 
 .usage-percentage {
@@ -405,6 +438,14 @@
   background: #e67a32 !important;
 }
 
+.voucher-card-custom.inactive .save-btn {
+  background: #ee4d2d !important;
+}
+
+.voucher-card-custom.inactive .save-btn:hover {
+  background: #d63d1a !important;
+}
+
 /* View Detail Button */
 .view-detail-btn {
   border-color: #006C1E !important;
@@ -419,6 +460,16 @@
 .view-detail-btn:hover {
   background: rgba(0, 108, 30, 0.05) !important;
   border-color: #005014 !important;
+}
+
+.voucher-card-custom.inactive .view-detail-btn {
+  border-color: #ee4d2d !important;
+  color: #ee4d2d !important;
+}
+
+.voucher-card-custom.inactive .view-detail-btn:hover {
+  background: rgba(238, 77, 45, 0.05) !important;
+  border-color: #d63d1a !important;
 }
 
 /* Condition Link */
@@ -437,6 +488,14 @@
 .condition-link:hover {
   text-decoration: underline !important;
   color: #005014 !important;
+}
+
+.voucher-card-custom.inactive .condition-link {
+  color: #ee4d2d !important;
+}
+
+.voucher-card-custom.inactive .condition-link:hover {
+  color: #d63d1a !important;
 }
 
 /* Modals */

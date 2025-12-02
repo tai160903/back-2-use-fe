@@ -11,10 +11,18 @@ import {
   FaArrowRight,
   FaChartLine,
   FaCheckCircle,
-  FaClock
+  FaClock,
+  FaLeaf,
+  FaCoins,
+  FaStar,
+  FaMoneyBillWave,
+  FaBoxes,
+  FaExchangeAlt
 } from 'react-icons/fa';
 import { IoMdTrendingUp, IoMdTrendingDown } from 'react-icons/io';
 import { MdDashboard } from 'react-icons/md';
+import { getAdminDashboardOverviewApi } from '../../store/slices/adminSlice';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import {
   LineChart,
   Line,
@@ -38,39 +46,46 @@ import { PATH } from '../../routes/path';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
+  // Get dashboard data from Redux store
+  const { dashboardOverview, dashboardLoading } = useSelector((state) => state.admin);
 
-  // Mock data - sẽ thay thế bằng dữ liệu từ API
-  const stats = {
-    users: {
-      total: 1247,
-      growth: 12.5,
-      trend: 'up'
-    },
-    stores: {
-      total: 89,
-      growth: 8.3,
-      trend: 'up'
-    },
-    materials: {
-      total: 156,
-      growth: -2.4,
-      trend: 'down'
-    },
-    vouchers: {
-      total: 45,
-      growth: 15.2,
-      trend: 'up'
-    },
-    registrations: {
-      total: 23,
-      growth: 5.1,
-      trend: 'up'
-    },
-    subscriptions: {
-      total: 67,
-      growth: 18.7,
-      trend: 'up'
-    }
+  // Fetch dashboard data on component mount
+  useEffect(() => {
+    dispatch(getAdminDashboardOverviewApi());
+  }, [dispatch]);
+
+  // Calculate total users
+  const totalUsers = dashboardOverview?.users 
+    ? (dashboardOverview.users.customers || 0) + 
+      (dashboardOverview.users.businesses || 0) + 
+      (dashboardOverview.users.staffs || 0)
+    : 0;
+
+  // Calculate total vouchers
+  const totalVouchers = dashboardOverview?.vouchers
+    ? (dashboardOverview.vouchers.businessVouchers || 0) + 
+      (dashboardOverview.vouchers.leaderboardVouchers || 0)
+    : 0;
+
+  // Calculate total transactions
+  const totalTransactions = dashboardOverview?.transactions
+    ? (dashboardOverview.transactions.borrowTransactions || 0) + 
+      (dashboardOverview.transactions.walletTransactions || 0)
+    : 0;
+
+  // Calculate total products
+  const totalProducts = dashboardOverview?.products
+    ? (dashboardOverview.products.groups || 0) + 
+      (dashboardOverview.products.products || 0)
+    : 0;
+
+  // Format money
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount || 0);
   };
 
   const recentActivities = [
@@ -218,110 +233,267 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Statistics Grid */}
-      <div className="stats-grid">
-        <div className="stat-card stat-users">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper" style={{ backgroundColor: '#dbeafe' }}>
-              <FaUsers style={{ color: '#3b82f6' }} />
+      {/* Dashboard Overview */}
+      {dashboardLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <CircularProgress />
+        </Box>
+      ) : dashboardOverview ? (
+        <div className="dashboard-overview-container">
+          {/* Key Statistics Cards - 5 Cards Only */}
+          <div className="stats-grid">
+            {/* Card 1: Gradient Card - Users */}
+            <div className="stat-card stat-card-gradient stat-card-blue">
+              <div className="stat-icon-large">
+                <FaUsers />
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Total Users</h3>
+                <p className="stat-value">{totalUsers.toLocaleString()}</p>
+                <p className="stat-description">
+                  {dashboardOverview.users?.customers || 0} Customers, {dashboardOverview.users?.businesses || 0} Businesses, {dashboardOverview.users?.staffs || 0} Staffs
+                </p>
+              </div>
             </div>
-            <div className={`stat-trend ${stats.users.trend === 'up' ? 'trend-up' : 'trend-down'}`}>
-              {stats.users.trend === 'up' ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
-              <span>{Math.abs(stats.users.growth)}%</span>
-            </div>
-          </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Total Users</h3>
-            <p className="stat-value">{stats.users.total.toLocaleString()}</p>
-            <p className="stat-description">Active platform users</p>
-          </div>
-        </div>
 
-        <div className="stat-card stat-stores">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper" style={{ backgroundColor: '#e8f5e8' }}>
-              <FaStore style={{ color: '#12422a' }} />
+            {/* Card 2: Outlined Card - Vouchers */}
+            <div className="stat-card stat-card-outlined stat-card-purple">
+              <div className="stat-header">
+                <div className="stat-icon-wrapper">
+                  <FaGift />
+                </div>
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Vouchers</h3>
+                <p className="stat-value">{totalVouchers.toLocaleString()}</p>
+                <p className="stat-description">
+                  {dashboardOverview.vouchers?.businessVouchers || 0} Business, {dashboardOverview.vouchers?.leaderboardVouchers || 0} Leaderboard
+                </p>
+              </div>
             </div>
-            <div className={`stat-trend ${stats.stores.trend === 'up' ? 'trend-up' : 'trend-down'}`}>
-              {stats.stores.trend === 'up' ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
-              <span>{Math.abs(stats.stores.growth)}%</span>
-            </div>
-          </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Active Stores</h3>
-            <p className="stat-value">{stats.stores.total.toLocaleString()}</p>
-            <p className="stat-description">Registered businesses</p>
-          </div>
-        </div>
 
-        <div className="stat-card stat-materials">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper" style={{ backgroundColor: '#fef3c7' }}>
-              <FaRecycle style={{ color: '#f59e0b' }} />
+            {/* Card 3: Filled Card - Transactions */}
+            <div className="stat-card stat-card-filled stat-card-indigo">
+              <div className="stat-header">
+                <div className="stat-icon-wrapper">
+                  <FaExchangeAlt />
+                </div>
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Transactions</h3>
+                <p className="stat-value">{totalTransactions.toLocaleString()}</p>
+                <p className="stat-description">
+                  {dashboardOverview.transactions?.borrowTransactions || 0} Borrow, {dashboardOverview.transactions?.walletTransactions || 0} Wallet
+                </p>
+              </div>
             </div>
-            <div className={`stat-trend ${stats.materials.trend === 'up' ? 'trend-up' : 'trend-down'}`}>
-              {stats.materials.trend === 'up' ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
-              <span>{Math.abs(stats.materials.growth)}%</span>
-            </div>
-          </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Materials</h3>
-            <p className="stat-value">{stats.materials.total.toLocaleString()}</p>
-            <p className="stat-description">Recyclable materials</p>
-          </div>
-        </div>
 
-        <div className="stat-card stat-vouchers">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper" style={{ backgroundColor: '#f3e8ff' }}>
-              <FaGift style={{ color: '#8b5cf6' }} />
+            {/* Card 4: Border Highlight - Products */}
+            <div className="stat-card stat-card-border stat-card-green">
+              <div className="stat-header">
+                <div className="stat-icon-wrapper">
+                  <FaBoxes />
+                </div>
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Products</h3>
+                <p className="stat-value">{totalProducts.toLocaleString()}</p>
+                <p className="stat-description">
+                  {dashboardOverview.products?.groups || 0} Groups, {dashboardOverview.products?.products || 0} Items
+                </p>
+              </div>
             </div>
-            <div className={`stat-trend ${stats.vouchers.trend === 'up' ? 'trend-up' : 'trend-down'}`}>
-              {stats.vouchers.trend === 'up' ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
-              <span>{Math.abs(stats.vouchers.growth)}%</span>
-            </div>
-          </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Active Vouchers</h3>
-            <p className="stat-value">{stats.vouchers.total.toLocaleString()}</p>
-            <p className="stat-description">Available discounts</p>
-          </div>
-        </div>
 
-        <div className="stat-card stat-registrations">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper" style={{ backgroundColor: '#fee2e2' }}>
-              <FaClipboardList style={{ color: '#ef4444' }} />
-            </div>
-            <div className={`stat-trend ${stats.registrations.trend === 'up' ? 'trend-up' : 'trend-down'}`}>
-              {stats.registrations.trend === 'up' ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
-              <span>{Math.abs(stats.registrations.growth)}%</span>
+            {/* Card 5: Shadow Card - Money */}
+            <div className="stat-card stat-card-shadow stat-card-money">
+              <div className="stat-header">
+                <div className="stat-icon-wrapper">
+                  <FaMoneyBillWave />
+                </div>
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Total Money</h3>
+                <p className="stat-value-small">{formatMoney(dashboardOverview.totalMoneyInSystem || 0)}</p>
+                <p className="stat-description">In system</p>
+              </div>
             </div>
           </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Pending Registrations</h3>
-            <p className="stat-value">{stats.registrations.total.toLocaleString()}</p>
-            <p className="stat-description">Awaiting review</p>
-          </div>
-        </div>
 
-        <div className="stat-card stat-subscriptions">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper" style={{ backgroundColor: '#fce7f3' }}>
-              <FaCrown style={{ color: '#ec4899' }} />
+          {/* Additional Statistics - Table/List Design */}
+          <div className="additional-stats-container">
+            {/* Business & Materials Section */}
+            <div className="stats-table-section">
+              <div className="table-section-header">
+                <FaStore className="section-icon" style={{ color: '#12422a' }} />
+                <h2 className="section-title">Business & Materials</h2>
+              </div>
+              <div className="stats-table-wrapper">
+                <table className="stats-table">
+                  <tbody>
+                    <tr>
+                      <td className="table-label">
+                        <FaStore className="table-icon" />
+                        Businesses
+                      </td>
+                      <td className="table-value">{(dashboardOverview.users?.businesses || 0).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td className="table-label">
+                        <FaRecycle className="table-icon" />
+                        Materials
+                      </td>
+                      <td className="table-value">{(dashboardOverview.materials || 0).toLocaleString()}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className={`stat-trend ${stats.subscriptions.trend === 'up' ? 'trend-up' : 'trend-down'}`}>
-              {stats.subscriptions.trend === 'up' ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
-              <span>{Math.abs(stats.subscriptions.growth)}%</span>
+
+            {/* Environmental Impact Section */}
+            <div className="stats-list-section">
+              <div className="list-section-header">
+                <FaLeaf className="section-icon" style={{ color: '#10b981' }} />
+                <h2 className="section-title">Environmental Impact</h2>
+              </div>
+              <div className="stats-list">
+                <div className="stats-list-item">
+                  <div className="list-item-icon" style={{ backgroundColor: '#ecfdf5', color: '#10b981' }}>
+                    <FaRecycle />
+                  </div>
+                  <div className="list-item-content">
+                    <div className="list-item-label">Total Reuses</div>
+                    <div className="list-item-value">{(dashboardOverview.totalReuses || 0).toLocaleString()}</div>
+                  </div>
+                </div>
+                <div className="stats-list-item">
+                  <div className="list-item-icon" style={{ backgroundColor: '#fef3c7', color: '#f59e0b' }}>
+                    <FaChartLine />
+                  </div>
+                  <div className="list-item-content">
+                    <div className="list-item-label">Return Rate</div>
+                    <div className="list-item-value">{((dashboardOverview.returnRate || 0).toFixed(1))}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Performance Section */}
+            <div className="stats-badge-section">
+              <div className="badge-section-header">
+                <FaStar className="section-icon" style={{ color: '#fbbf24' }} />
+                <h2 className="section-title">Platform Performance</h2>
+              </div>
+              <div className="stats-badges">
+                <div className="stat-badge">
+                  <div className="badge-label">Average Rating</div>
+                  <div className="badge-value">
+                    <FaStar className="badge-star" />
+                    {(dashboardOverview.averageRating || 0).toFixed(1)}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="stat-content">
-            <h3 className="stat-label">Subscriptions</h3>
-            <p className="stat-value">{stats.subscriptions.total.toLocaleString()}</p>
-            <p className="stat-description">Active plans</p>
+
+          {/* CO2 Environmental Impact Section */}
+          <div className="co2-impact-section">
+            <div className="co2-section-header">
+              <div className="co2-header-icon">
+                <FaLeaf />
+              </div>
+              <div className="co2-header-content">
+                <h2 className="co2-section-title">CO2 Reduction Impact</h2>
+                <p className="co2-section-subtitle">Understanding our environmental contribution</p>
+              </div>
+              <div className="co2-stat-display">
+                <div className="co2-stat-value">{(dashboardOverview.co2Reduced || 0).toFixed(2)}</div>
+                <div className="co2-stat-unit">kg CO₂</div>
+              </div>
+            </div>
+
+            <div className="co2-content-grid">
+              {/* Left: CO2 Impact Information */}
+              <div className="co2-info-card">
+                <div className="co2-info-header">
+                  <FaLeaf className="co2-info-icon" />
+                  <h3 className="co2-info-title">How CO₂ Affects the Environment</h3>
+                </div>
+                <div className="co2-info-content">
+                  <div className="co2-impact-item">
+                    <div className="impact-icon impact-negative">⚠️</div>
+                    <div className="impact-content">
+                      <h4 className="impact-title">Climate Change</h4>
+                      <p className="impact-description">
+                        CO₂ is a greenhouse gas that traps heat in the atmosphere, contributing to global warming and climate change.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="co2-impact-item">
+                    <div className="impact-icon impact-negative">🌡️</div>
+                    <div className="impact-content">
+                      <h4 className="impact-title">Rising Temperatures</h4>
+                      <p className="impact-description">
+                        Increased CO₂ levels lead to higher global temperatures, causing extreme weather events and ecosystem disruption.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="co2-impact-item">
+                    <div className="impact-icon impact-negative">🌊</div>
+                    <div className="impact-content">
+                      <h4 className="impact-title">Ocean Acidification</h4>
+                      <p className="impact-description">
+                        Excess CO₂ dissolves in oceans, making them more acidic and harming marine life and coral reefs.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Benefits of CO2 Reduction */}
+              <div className="co2-benefits-card">
+                <div className="co2-benefits-header">
+                  <FaLeaf className="co2-benefits-icon" />
+                  <h3 className="co2-benefits-title">Benefits of Our CO₂ Reduction</h3>
+                </div>
+                <div className="co2-benefits-content">
+                  <div className="co2-benefit-item">
+                    <div className="benefit-icon benefit-positive">🌳</div>
+                    <div className="benefit-content">
+                      <h4 className="benefit-title">Equivalent to Planting Trees</h4>
+                      <p className="benefit-description">
+                        Reducing {(dashboardOverview.co2Reduced || 0).toFixed(2)} kg of CO₂ is equivalent to planting approximately {Math.round((dashboardOverview.co2Reduced || 0) * 0.5)} trees.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="co2-benefit-item">
+                    <div className="benefit-icon benefit-positive">🚗</div>
+                    <div className="benefit-content">
+                      <h4 className="benefit-title">Reduced Vehicle Emissions</h4>
+                      <p className="benefit-description">
+                        This reduction equals removing about {Math.round((dashboardOverview.co2Reduced || 0) / 4.6)} km of car emissions from the atmosphere.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="co2-benefit-item">
+                    <div className="benefit-icon benefit-positive">💚</div>
+                    <div className="benefit-content">
+                      <h4 className="benefit-title">Healthier Environment</h4>
+                      <p className="benefit-description">
+                        Lower CO₂ levels mean cleaner air, reduced health risks, and a more sustainable future for generations to come.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Typography>No data available</Typography>
+        </Box>
+      )}
+
 
       {/* Charts Section */}
       <div className="charts-section">

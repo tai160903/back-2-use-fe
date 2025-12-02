@@ -1010,7 +1010,7 @@ export default function ProductItems() {
               </Dialog>
 
               {/* Pagination */}
-              {filteredItems.length > 0 && (
+              {filteredItems.length > 0 && totalPages > 1 && (
                 <Box
                   sx={{
                     display: 'flex',
@@ -1031,6 +1031,18 @@ export default function ProductItems() {
                     sx={{
                       '& .MuiPaginationItem-root': {
                         fontSize: '1rem',
+                        fontWeight: 500,
+                      },
+                      '& .Mui-selected': {
+                        backgroundColor: '#12422a !important',
+                        color: '#ffffff !important',
+                        fontWeight: 600,
+                        '&:hover': {
+                          backgroundColor: '#0d2e1c !important',
+                        },
+                      },
+                      '& .MuiPaginationItem-root:hover': {
+                        backgroundColor: 'rgba(18, 66, 42, 0.1) !important',
                       },
                     }}
                   />

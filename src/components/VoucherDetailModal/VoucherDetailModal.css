@@ -17,11 +17,12 @@
 }
 
 .voucher-detail-item {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   min-height: 32px;
+  gap: 12px;
 }
 
 .voucher-detail-label {
@@ -29,8 +30,11 @@
   color: #6b7280;
   font-weight: 500;
   flex-shrink: 0;
-  min-width: 140px;
+  min-width: 120px;
+  max-width: 120px;
   text-align: left;
+  line-height: 1.5;
+  padding-top: 4px;
 }
 
 .voucher-detail-value {
@@ -38,11 +42,12 @@
   color: #111827;
   font-weight: 500;
   word-break: break-word;
-  text-align: right;
+  text-align: left;
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  line-height: 1.5;
 }
 
 .voucher-detail-value.code-value {

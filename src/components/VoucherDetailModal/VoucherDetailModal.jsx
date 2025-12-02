@@ -141,7 +141,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
       <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
         <DialogContent>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-            <Typography>Đang tải thông tin voucher...</Typography>
+            <Typography>Loading voucher information...</Typography>
           </Box>
         </DialogContent>
       </Dialog>
@@ -183,7 +183,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
           <VoucherIcon sx={{ fontSize: 28 }} />
           <Box>
             <Typography variant="h6" component="div" fontWeight="bold">
-              Chi tiết Voucher
+              Voucher Details
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
               {voucher.name}
@@ -205,51 +205,50 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
       </DialogTitle>
 
       <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
-        <Grid container spacing={2.5}>
+        <Grid container spacing={2.5} sx={{ '& .MuiGrid-item': { display: 'flex', alignItems: 'stretch' } }}>
           {/* Thông tin cơ bản */}
           <Grid item xs={12}>
             <Box className="voucher-detail-section">
               <Typography variant="h6" className="voucher-detail-section-title">
                 <FaInfoCircle style={{ marginRight: '8px' }} />
-                Thông tin cơ bản
+                Basic Information
               </Typography>
               <Divider sx={{ my: 1.5 }} />
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
+              <Grid container spacing={2.5}>
+                {/* Row 1: Voucher Name and Voucher Type */}
+                <Grid item xs={12} md={6}>
                   <Box className="voucher-detail-item">
-                    <Typography className="voucher-detail-label">Tên Voucher</Typography>
-                    <Typography className="voucher-detail-value" sx={{ fontWeight: 700, fontSize: '16px' }}>
+                    <Typography className="voucher-detail-label">Voucher Name</Typography>
+                    <Typography className="voucher-detail-value" sx={{ fontWeight: 700, fontSize: '16px', color: '#164c34' }}>
                       {voucher.name || 'N/A'}
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Box className="voucher-detail-item">
-                    <Typography className="voucher-detail-label">Loại Voucher</Typography>
+                    <Typography className="voucher-detail-label">Voucher Type</Typography>
                     <Chip
                       label={getVoucherTypeLabel(voucher.voucherType)}
                       color="primary"
                       size="small"
-                      sx={{ mt: 0.5 }}
+                      sx={{ 
+                        mt: 0.5,
+                        fontWeight: 600,
+                        backgroundColor: '#3b82f6',
+                        '&:hover': {
+                          backgroundColor: '#2563eb',
+                        }
+                      }}
                     />
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box className="voucher-detail-item">
-                    <Typography className="voucher-detail-label">Trạng thái</Typography>
-                    <Chip
-                      label={voucher.status || 'N/A'}
-                      className={`status-chip ${getStatusBadgeClass(voucher.status)}`}
-                      size="small"
-                      sx={{ mt: 0.5 }}
-                    />
-                  </Box>
-                </Grid>
+                
+                {/* Row 2: Display Status for Business (if applicable) */}
                 {voucher.voucherType === 'business' && (
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12}>
                     <Box className="voucher-detail-item">
                       <Typography className="voucher-detail-label">
-                        Trạng thái hiển thị cho Business
+                        Display Status for Business
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.5 }}>
                         <Chip
@@ -260,8 +259,8 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                         />
                         <Tooltip
                           title={voucher.isDisabled
-                            ? 'Click để enable voucher (business có thể xem và claim)'
-                            : 'Click để disable voucher (business không thể xem và claim)'}
+                            ? 'Click to enable voucher (business can view and claim)'
+                            : 'Click to disable voucher (business cannot view and claim)'}
                           arrow
                           placement="top"
                         >
@@ -291,14 +290,34 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                     </Box>
                   </Grid>
                 )}
+                
+                {/* Row 3: Description - Full width */}
                 <Grid item xs={12}>
-                  <Box className="voucher-detail-item" sx={{ flexDirection: 'column', alignItems: 'flex-start', gap: 0.5 }}>
-                    <Typography className="voucher-detail-label">Mô tả</Typography>
-                    <Typography className="voucher-detail-value" sx={{ textAlign: 'left', width: '100%', fontWeight: 400 }}>
-                      {voucher.description || 'Không có mô tả'}
+                  <Box sx={{ 
+                    p: 2, 
+                    backgroundColor: '#f9fafb', 
+                    borderRadius: 2, 
+                    border: '1px solid #e5e7eb',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.75
+                  }}>
+                    <Typography className="voucher-detail-label" sx={{ mb: 0 }}>
+                      Description
+                    </Typography>
+                    <Typography sx={{ 
+                      fontSize: '0.9375rem', 
+                      color: '#374151', 
+                      fontWeight: 400,
+                      lineHeight: 1.6,
+                      wordBreak: 'break-word'
+                    }}>
+                      {voucher.description || 'No description'}
                     </Typography>
                   </Box>
                 </Grid>
+                
+                {/* Row 4: Base Code - Full width */}
                 <Grid item xs={12}>
                   <Box className="voucher-detail-item">
                     <Typography className="voucher-detail-label">Base Code</Typography>
@@ -312,18 +331,18 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
             </Box>
           </Grid>
 
-          {/* Thông tin giảm giá và Thông tin thời gian - 2 cột */}
-          <Grid item xs={12} md={6}>
-            <Box className="voucher-detail-section">
+          {/* Discount Information and Time Information - 2 columns */}
+          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+            <Box className="voucher-detail-section" sx={{ width: '100%', height: '100%' }}>
               <Typography variant="h6" className="voucher-detail-section-title">
                 <FaGift style={{ marginRight: '8px' }} />
-                Thông tin giảm giá
+                Discount Information
               </Typography>
               <Divider sx={{ my: 1.5 }} />
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <Box className="voucher-detail-item">
-                    <Typography className="voucher-detail-label">Phần trăm giảm giá</Typography>
+                    <Typography className="voucher-detail-label">Discount Percentage</Typography>
                     <Typography className="voucher-detail-value discount-value">
                       {voucher.discountPercent || voucher.discount || 0}%
                     </Typography>
@@ -332,10 +351,10 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                 {voucher.rewardPointCost && (
                   <Grid item xs={12}>
                     <Box className="voucher-detail-item">
-                      <Typography className="voucher-detail-label">Chi phí điểm thưởng</Typography>
+                      <Typography className="voucher-detail-label">Reward Point Cost</Typography>
                       <Typography className="voucher-detail-value points-value">
                         <FaCoins style={{ marginRight: '6px', fontSize: '14px' }} />
-                        {voucher.rewardPointCost} điểm
+                        {voucher.rewardPointCost} points
                       </Typography>
                     </Box>
                   </Grid>
@@ -343,9 +362,9 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                 {voucher.maxUsage && (
                   <Grid item xs={12}>
                     <Box className="voucher-detail-item">
-                      <Typography className="voucher-detail-label">Số lần sử dụng tối đa</Typography>
+                      <Typography className="voucher-detail-label">Max Usage</Typography>
                       <Typography className="voucher-detail-value">
-                        {voucher.maxUsage} lần
+                        {voucher.maxUsage} times
                       </Typography>
                     </Box>
                   </Grid>
@@ -354,19 +373,19 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
             </Box>
           </Grid>
 
-          {/* Thông tin thời gian */}
-          <Grid item xs={12} md={6}>
-            <Box className="voucher-detail-section">
+          {/* Time Information */}
+          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+            <Box className="voucher-detail-section" sx={{ width: '100%', height: '100%' }}>
               <Typography variant="h6" className="voucher-detail-section-title">
                 <FaCalendarAlt style={{ marginRight: '8px' }} />
-                Thông tin thời gian
+                Time Information
               </Typography>
               <Divider sx={{ my: 1.5 }} />
               <Grid container spacing={2}>
                 {voucher.startDate && (
                   <Grid item xs={12}>
                     <Box className="voucher-detail-item">
-                      <Typography className="voucher-detail-label">Ngày bắt đầu</Typography>
+                      <Typography className="voucher-detail-label">Start Date</Typography>
                       <Typography className="voucher-detail-value">
                         {formatDate(voucher.startDate)}
                       </Typography>
@@ -376,7 +395,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                 {voucher.endDate && (
                   <Grid item xs={12}>
                     <Box className="voucher-detail-item">
-                      <Typography className="voucher-detail-label">Ngày kết thúc</Typography>
+                      <Typography className="voucher-detail-label">End Date</Typography>
                       <Typography className="voucher-detail-value">
                         {formatDate(voucher.endDate)}
                       </Typography>
@@ -386,7 +405,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                 {voucher.createdAt && (
                   <Grid item xs={12}>
                     <Box className="voucher-detail-item">
-                      <Typography className="voucher-detail-label">Ngày tạo</Typography>
+                      <Typography className="voucher-detail-label">Created At</Typography>
                       <Typography className="voucher-detail-value">
                         {formatDate(voucher.createdAt)}
                       </Typography>
@@ -396,7 +415,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                 {voucher.updatedAt && (
                   <Grid item xs={12}>
                     <Box className="voucher-detail-item">
-                      <Typography className="voucher-detail-label">Ngày cập nhật</Typography>
+                      <Typography className="voucher-detail-label">Updated At</Typography>
                       <Typography className="voucher-detail-value">
                         {formatDate(voucher.updatedAt)}
                       </Typography>
@@ -412,7 +431,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
             <Grid item xs={12}>
               <Box className="voucher-detail-section">
                 <Typography variant="h6" className="voucher-detail-section-title">
-                  Thông tin bổ sung
+                  Additional Information
                 </Typography>
                 <Divider sx={{ my: 1.5 }} />
                 <Grid container spacing={2}>
@@ -468,7 +487,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                   </Typography>
                   {businessVouchers && businessVouchers.length > 0 && (
                     <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
-                      💡 Sử dụng Switch để toggle isDisabled
+                      💡 Use Switch to toggle isDisabled
                     </Typography>
                   )}
                 </Box>
@@ -476,7 +495,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                 {adminLoading && businessVouchers.length === 0 ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
                     <CircularProgress size={24} />
-                    <Typography sx={{ ml: 2 }}>Đang tải business vouchers...</Typography>
+                    <Typography sx={{ ml: 2 }}>Loading business vouchers...</Typography>
                   </Box>
                 ) : businessVouchers && businessVouchers.length > 0 ? (
                   <Box sx={{ mt: 2 }}>
@@ -542,8 +561,8 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                                 />
                                 <Tooltip 
                                   title={businessVoucher.isDisabled 
-                                    ? 'Click để enable voucher (business có thể claim)' 
-                                    : 'Click để disable voucher (business không thể claim)'}
+                                    ? 'Click to enable voucher (business can claim)' 
+                                    : 'Click to disable voucher (business cannot claim)'}
                                   arrow
                                   placement="top"
                                 >
@@ -595,7 +614,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                               {loadingCodes ? (
                                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
                                   <CircularProgress size={20} />
-                                  <Typography variant="body2" sx={{ ml: 1 }}>Đang tải codes...</Typography>
+                                  <Typography variant="body2" sx={{ ml: 1 }}>Loading codes...</Typography>
                                 </Box>
                               ) : codes && codes.length > 0 ? (
                                 <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 300 }}>
@@ -639,9 +658,9 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                                   </Table>
                                 </TableContainer>
                               ) : (
-                                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                                  Không có codes nào
-                                </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                      No codes available
+                    </Typography>
                               )}
                             </Box>
                           </AccordionDetails>
@@ -653,10 +672,10 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                   <Box sx={{ py: 3, textAlign: 'center' }}>
                     <FaStore style={{ fontSize: '48px', color: '#9ca3af', marginBottom: '12px' }} />
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Không có business vouchers nào
+                      No business vouchers available
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Khi có business claim voucher này, bạn sẽ thấy Switch để toggle isDisabled ở đây
+                      When a business claims this voucher, you will see Switch to toggle isDisabled here
                     </Typography>
                   </Box>
                 )}
@@ -669,7 +688,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
             <Grid item xs={12}>
               <Box className="voucher-detail-section reject-section">
                 <Typography variant="h6" className="voucher-detail-section-title">
-                  Lý do từ chối
+                  Rejection Reason
                 </Typography>
                 <Divider sx={{ my: 1.5 }} />
                 <Box className="voucher-detail-item">
@@ -704,7 +723,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
             },
           }}
         >
-          Đóng
+          Close
         </Button>
       </DialogActions>
     </Dialog>

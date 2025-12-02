@@ -49,6 +49,7 @@ import {
 } from '../../../store/slices/bussinessSlice';
 import { getBusinessProductsByGroup } from '../../../store/slices/storeSilce';
 import { PATH } from '../../../routes/path';
+import toast from 'react-hot-toast';
 import './InventoryManagement.css';
 
 export default function InventoryManagement() {
@@ -223,15 +224,38 @@ export default function InventoryManagement() {
         image: selectedImage || null,
       };
 
-      await dispatch(createProductGroup(productGroupData)).unwrap();
+      const result = await dispatch(createProductGroup(productGroupData)).unwrap();
       
-      // Reload product groups after creation
-      dispatch(getMyProductGroups());
+      // Get the created product group ID
+      const createdProductGroupId = result?.data?.id || result?.data?._id || result?.id || result?._id;
       
-      handleCloseDialog();
+      if (createdProductGroupId) {
+        // Navigate to product size page and open create modal
+        navigate(`/business/inventory/${createdProductGroupId}/sizes?openDialog=true`);
+      } else {
+        // Fallback: reload product groups if ID not available
+        dispatch(getMyProductGroups());
+        toast.success('Product group created successfully!');
+        handleCloseDialog();
+      }
     } catch (error) {
       console.error('Error creating product group:', error);
-      // Handle error (you can add toast notification here)
+      
+      // Extract error message from API response
+      const errorMessage = 
+        error?.message || 
+        error?.data?.message || 
+        error?.response?.data?.message ||
+        error?.error?.message ||
+        'Failed to create product group. Please try again.';
+      
+      // Show error toast notification
+      toast.error(errorMessage, {
+        duration: 5000,
+        style: {
+          maxWidth: '500px',
+        },
+      });
     }
   };
 
@@ -510,17 +534,29 @@ export default function InventoryManagement() {
           <Typography>Loading...</Typography>
         </Box>
       ) : productGroupError ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <Typography color="error">
-            Error loading product groups: {
-              typeof productGroupError === 'string' 
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px" sx={{ px: 2 }}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              maxWidth: '600px',
+              width: '100%',
+              '& .MuiAlert-message': {
+                width: '100%'
+              }
+            }}
+          >
+            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+              Error loading product groups
+            </Typography>
+            <Typography variant="body2">
+              {typeof productGroupError === 'string' 
                 ? productGroupError 
                 : productGroupError?.message 
                 || productGroupError?.error 
                 || productGroupError?.data?.message
-                || 'Unknown error'
-            }
-          </Typography>
+                || 'Unknown error'}
+            </Typography>
+          </Alert>
         </Box>
       ) : filteredProducts.length === 0 ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -530,264 +566,243 @@ export default function InventoryManagement() {
         </Box>
       ) : (
         <>
-          <Grid 
-            container 
-            spacing={3} 
-            className="products-grid"
-            sx={{ alignItems: 'stretch' }}
+          {/* Table Header */}
+          <Paper 
+            elevation={0}
+            sx={{
+              borderRadius: 2,
+              border: '1px solid #e5e7eb',
+              mb: 2,
+              overflow: 'hidden',
+            }}
           >
-            {currentProducts.map((product) => (
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              key={product.id}
-              sx={{ 
-                display: 'flex'
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 120px',
+                gap: 2,
+                p: 2.5,
+                backgroundColor: '#f9fafb',
+                borderBottom: '1px solid #e5e7eb',
               }}
             >
-              <Card 
-                className="product-card"
-                onClick={() => navigate(`/business/inventory/${product.id}/items`)}
-                sx={{ 
-                  cursor: 'pointer', 
-                  height: '100%', 
-                  width: '100%',
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  overflow: 'hidden',
-                  borderRadius: 2,
-                  border: '1px solid #e5e7eb',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-                    transform: 'translateY(-4px)',
-                    borderColor: '#12422a',
-                  }
-                }}
-              >
-                <CardContent 
-                  sx={{ 
-                    flexGrow: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column',
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Product Type
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Material
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Available
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Non-Available
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Total
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem', textAlign: 'center' }}>
+                Actions
+              </Typography>
+            </Box>
+
+            {/* Product Types List */}
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              {currentProducts.map((product, index) => (
+                <Box
+                  key={product.id}
+                  onClick={() => navigate(`/business/inventory/${product.id}/items`)}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 120px',
+                    gap: 2,
                     p: 2.5,
-                    width: '100%'
+                    borderBottom: index < currentProducts.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: '#12422a',
+                      color: '#ffffff',
+                      '& .product-name, & .product-material, & .product-description, & .product-count': {
+                        color: '#ffffff !important',
+                      },
+                    },
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, flex: 1, minWidth: 0 }}>
-                      <Box
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 1.5,
-                          backgroundColor: '#f0f9f4',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <InventoryIcon sx={{ fontSize: 24, color: '#12422a' }} />
-                      </Box>
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography 
-                          variant="h6" 
-                          sx={{
-                            fontSize: '1.125rem',
-                            fontWeight: 700,
-                            color: '#1a1a1a',
-                            mb: 0.5,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          {product.typeName}
-                        </Typography>
-                        <Typography 
-                          variant="body2" 
-                          sx={{
-                            fontSize: '0.75rem',
-                            color: '#6b7280',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            fontWeight: 500,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {product.category}
-                        </Typography>
-                      </Box>
+                  {/* Product Type Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1,
+                        backgroundColor: '#f0f9f4',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <InventoryIcon sx={{ fontSize: 20, color: '#12422a' }} />
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/business/inventory/${product.id}/sizes`);
-                        }}
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography
+                        className="product-name"
                         sx={{
-                          color: '#0d9488',
-                          '&:hover': {
-                            backgroundColor: 'rgba(13, 148, 136, 0.1)',
-                          },
-                        }}
-                        title="Manage Sizes"
-                      >
-                        <SizeIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(product);
-                        }}
-                        sx={{
-                          color: '#12422a',
-                          '&:hover': {
-                            backgroundColor: 'rgba(18, 66, 42, 0.1)',
-                          },
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(product);
-                        }}
-                        sx={{
-                          color: '#ef4444',
-                          '&:hover': {
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          },
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flexGrow: 1 }}>
-                    <Box>
-                      <Typography 
-                        variant="body2" 
-                        sx={{
-                          fontSize: '0.75rem',
                           fontWeight: 600,
-                          color: '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                          mb: 0.5,
-                        }}
-                      >
-                        Description
-                      </Typography>
-                      <Typography 
-                        variant="body2" 
-                        sx={{
-                          fontSize: '0.875rem',
-                          color: '#374151',
-                          lineHeight: 1.6,
+                          fontSize: '0.9375rem',
+                          color: '#1a1a1a',
+                          mb: 0.25,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          wordBreak: 'break-word',
-                          overflowWrap: 'break-word'
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {product.typeName}
+                      </Typography>
+                      <Typography
+                        className="product-description"
+                        sx={{
+                          fontSize: '0.8125rem',
+                          color: '#6b7280',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {product.description || 'No description'}
                       </Typography>
                     </Box>
-                    <Box>
-                      <Typography 
-                        variant="body2" 
-                        sx={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          color: '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                          mb: 0.5,
-                        }}
-                      >
-                        Material
-                      </Typography>
-                      <Typography 
-                        variant="body2" 
-                        sx={{
-                          fontSize: '0.875rem',
-                          color: '#374151',
-                          fontWeight: 500,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {product.material}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 3, mt: 'auto', pt: 1.5, borderTop: '1px solid #f3f4f6' }}>
-                      <Box>
-                        <Typography 
-                          variant="body2" 
-                          sx={{
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: '#6b7280',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            mb: 0.5,
-                          }}
-                        >
-                          Available
-                        </Typography>
-                        <Typography variant="h6" sx={{ color: '#16a34a', fontWeight: 700, fontSize: '1.25rem' }}>
-                          {product.available}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography 
-                          variant="body2" 
-                          sx={{
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: '#6b7280',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            mb: 0.5,
-                          }}
-                        >
-                          Non-Available
-                        </Typography>
-                        <Typography variant="h6" sx={{ color: '#ef4444', fontWeight: 700, fontSize: '1.25rem' }}>
-                          {product.nonAvailable}
-                        </Typography>
-                      </Box>
-                    </Box>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            ))}
-          </Grid>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
+                  {/* Material Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      className="product-material"
+                      sx={{
+                        fontSize: '0.875rem',
+                        color: '#374151',
+                        fontWeight: 500,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {product.material}
+                    </Typography>
+                  </Box>
+
+                  {/* Available Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      className="product-count"
+                      sx={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: '#16a34a',
+                      }}
+                    >
+                      {product.available}
+                    </Typography>
+                  </Box>
+
+                  {/* Non-Available Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      className="product-count"
+                      sx={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: '#ef4444',
+                      }}
+                    >
+                      {product.nonAvailable}
+                    </Typography>
+                  </Box>
+
+                  {/* Total Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      className="product-count"
+                      sx={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: '#374151',
+                      }}
+                    >
+                      {product.available + product.nonAvailable}
+                    </Typography>
+                  </Box>
+
+                  {/* Actions Column */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      gap: 0.5,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/business/inventory/${product.id}/sizes`);
+                      }}
+                      sx={{
+                        color: '#0d9488',
+                        '&:hover': {
+                          backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                        },
+                      }}
+                      title="Manage Sizes"
+                    >
+                      <SizeIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(product);
+                      }}
+                      sx={{
+                        color: '#12422a',
+                        '&:hover': {
+                          backgroundColor: 'rgba(18, 66, 42, 0.1)',
+                        },
+                      }}
+                      title="Edit"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(product);
+                      }}
+                      sx={{
+                        color: '#ef4444',
+                        '&:hover': {
+                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        },
+                      }}
+                      title="Delete"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+        </>
+      )}
+
+      {/* Pagination */}
+      {!productGroupLoading && filteredProducts.length > 0 && totalPages > 1 && (
             <Box 
               sx={{ 
                 display: 'flex', 
@@ -818,8 +833,6 @@ export default function InventoryManagement() {
               />
             </Box>
           )}
-        </>
-      )}
 
       {/* Add/Edit Dialog */}
       <Dialog 
