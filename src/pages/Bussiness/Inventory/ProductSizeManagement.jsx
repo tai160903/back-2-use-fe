@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -52,6 +52,7 @@ export default function ProductSizeManagement() {
   const { productGroupId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const {
     productGroups,
@@ -93,6 +94,30 @@ export default function ProductSizeManagement() {
       dispatch(getProductSizes({ productGroupId, page: 1, limit: 1000 }));
     }
   }, [dispatch, productGroupId]);
+
+  // Check if we should open dialog automatically (from product type creation)
+  useEffect(() => {
+    const openDialog = searchParams.get('openDialog');
+    if (openDialog === 'true' && productGroupId) {
+      // Remove query param from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('openDialog');
+      setSearchParams(newSearchParams, { replace: true });
+      
+      // Open the create dialog
+      setEditMode(false);
+      setSelectedSize(null);
+      setFormData({
+        sizeName: '',
+        basePrice: '',
+        weight: '',
+        description: '',
+      });
+      setFormErrors({});
+      setOpenDialog(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productGroupId]);
 
   // Client-side pagination
   const totalPages = Math.ceil(productSizes.length / itemsPerPage);
@@ -301,128 +326,182 @@ export default function ProductSizeManagement() {
         </Box>
       ) : (
         <>
-          <Grid container spacing={3} className="sizes-grid">
-            {paginatedSizes.map((size) => (
-            <Grid item xs={12} sm={6} md={4} key={size.id || size._id}>
-              <Card className="size-card">
-                <CardContent>
-                  <Box className="card-header">
-                    <Box className="card-title-section">
-                      <SizeIcon className="card-icon" />
-                      <Box>
-                        <Typography variant="h6" className="card-title">
-                          {size.sizeName}
-                        </Typography>
-                      </Box>
+          {/* Table Header */}
+          <Paper 
+            elevation={0}
+            sx={{
+              borderRadius: 2,
+              border: '1px solid #e5e7eb',
+              mb: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr 1fr 1.5fr 100px',
+                gap: 2,
+                p: 2.5,
+                backgroundColor: '#f9fafb',
+                borderBottom: '1px solid #e5e7eb',
+              }}
+            >
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Size Name
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Base Price
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Weight
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem' }}>
+                Description
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: '#12422a', fontSize: '0.875rem', textAlign: 'center' }}>
+                Actions
+              </Typography>
+            </Box>
+
+            {/* Product Sizes List */}
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              {paginatedSizes.map((size, index) => (
+                <Box
+                  key={size.id || size._id}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr 1fr 1.5fr 100px',
+                    gap: 2,
+                    p: 2.5,
+                    borderBottom: index < paginatedSizes.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: '#12422a',
+                      color: '#ffffff',
+                      '& .size-name, & .size-price, & .size-weight, & .size-description': {
+                        color: '#ffffff !important',
+                      },
+                    },
+                  }}
+                >
+                  {/* Size Name Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1,
+                        backgroundColor: '#f0f9f4',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <SizeIcon sx={{ fontSize: 20, color: '#12422a' }} />
                     </Box>
-                    <Box className="card-actions">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEdit(size)}
-                        className="edit-button"
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography
+                        className="size-name"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: '0.9375rem',
+                          color: '#1a1a1a',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(size)}
-                        className="delete-button"
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                        {size.sizeName}
+                      </Typography>
                     </Box>
                   </Box>
 
-                  <Box className="card-details">
-                    <Box className="detail-row">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                        <MoneyIcon sx={{ fontSize: 18, color: '#16a34a', flexShrink: 0 }} />
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: '#6b7280',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          Base Price
-                        </Typography>
-                      </Box>
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          color: '#16a34a', 
-                          fontWeight: 700,
-                          fontSize: '1.125rem',
-                        }}
-                      >
-                        {formatPrice(size.basePrice)}
-                      </Typography>
-                    </Box>
-                    {size.weight && (
-                      <Box className="detail-row">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                          <ScaleIcon sx={{ fontSize: 18, color: '#12422a', flexShrink: 0 }} />
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              color: '#6b7280',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                            }}
-                          >
-                            Weight
-                          </Typography>
-                        </Box>
-                        <Typography 
-                          variant="body1" 
-                          sx={{ 
-                            color: '#374151',
-                            fontWeight: 600,
-                            fontSize: '1rem',
-                          }}
-                        >
-                          {size.weight} g
-                        </Typography>
-                      </Box>
-                    )}
-                    <Box className="detail-row">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                        <DescriptionIcon sx={{ fontSize: 18, color: '#12422a', flexShrink: 0 }} />
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: '#6b7280',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          Description
-                        </Typography>
-                      </Box>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: '#374151',
-                          fontSize: '0.875rem',
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {size.description}
-                      </Typography>
-                    </Box>
+                  {/* Base Price Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      className="size-price"
+                      sx={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: '#16a34a',
+                      }}
+                    >
+                      {formatPrice(size.basePrice)}
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-          </Grid>
+
+                  {/* Weight Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      className="size-weight"
+                      sx={{
+                        fontSize: '0.875rem',
+                        color: '#374151',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {size.weight ? `${size.weight} g` : 'N/A'}
+                    </Typography>
+                  </Box>
+
+                  {/* Description Column */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                    <Typography
+                      className="size-description"
+                      sx={{
+                        fontSize: '0.875rem',
+                        color: '#374151',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {size.description}
+                    </Typography>
+                  </Box>
+
+                  {/* Actions Column */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      gap: 0.5,
+                    }}
+                  >
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEdit(size)}
+                      sx={{
+                        color: '#12422a',
+                        '&:hover': {
+                          backgroundColor: 'rgba(18, 66, 42, 0.1)',
+                        },
+                      }}
+                      title="Edit"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(size)}
+                      sx={{
+                        color: '#ef4444',
+                        '&:hover': {
+                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        },
+                      }}
+                      title="Delete"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
 
           {/* Pagination */}
           {totalPages > 1 && (

@@ -161,7 +161,6 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
       </div>
 
       <div className="voucher-card-details">
-        {/* Chỉ hiển thị 3 thông tin: Discount, Base Code, Status */}
         <div className="voucher-detail-item">
           <span className="voucher-detail-label">Discount:</span>
           <span className="voucher-detail-value">
@@ -175,13 +174,6 @@ const VoucherCard = ({ voucher, onEdit, onViewDetail }) => {
           <span className="voucher-detail-label">Base Code:</span>
           <span className="voucher-detail-value">
             {voucher.baseCode}
-          </span>
-        </div>
-        
-        <div className="voucher-detail-item">
-          <span className="voucher-detail-label">Status:</span>
-          <span className={`status-badge ${getStatusBadgeClass(voucher.status)}`}>
-            {voucher.status}
           </span>
         </div>
 

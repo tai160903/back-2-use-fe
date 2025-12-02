@@ -51,6 +51,7 @@ export const PATH = {
     STAFF: "/staff",
     STAFF_PROFILE: "/staff/profile",
     STAFF_ONLINE_BORROW_ORDERS: "/staff/online-borrow-orders",
+    STAFF_VOUCHER: "/staff/voucher",
 
     // ADMIN
     ADMIN: "/admin",

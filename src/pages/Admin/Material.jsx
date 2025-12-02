@@ -134,12 +134,6 @@ const Material = () => {
   const getAllFilteredData = () => {
     const safeMaterials = Array.isArray(materials) ? materials : [];
     let filtered = [...safeMaterials];
-    if (filter !== "All") {
-      filtered = filtered.filter((item) => {
-        const status = (item?.status ?? '').toLowerCase();
-        return status === filter.toLowerCase();
-      });
-    }
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       filtered = filtered.filter((item) => {
@@ -243,36 +237,12 @@ const Material = () => {
         <div className="stat-card stat-card-1">
           <div className="stat-content">
             <div className="stat-info">
-              <h3 className="stat-title">Pending Review</h3>
+              <h3 className="stat-title">Active</h3>
               <span className="stat-number pending">
                 {materialRequestPagination?.total || materialRequests?.length || 0}
               </span>
             </div>
             <CiClock2 className="stat-icon pending" size={56} />
-          </div>
-        </div>
-
-        <div className="stat-card stat-card-2">
-          <div className="stat-content">
-            <div className="stat-info">
-              <h3 className="stat-title">Approved</h3>
-              <span className="stat-number approved">
-                {materials.filter((item) => item.status === "approved").length}
-              </span>
-            </div>
-            <SiTicktick className="stat-icon approved" size={56} />
-          </div>
-        </div>
-
-        <div className="stat-card stat-card-3">
-          <div className="stat-content">
-            <div className="stat-info">
-              <h3 className="stat-title">Rejected</h3>
-              <span className="stat-number rejected">
-                {materials.filter((item) => item.status === "rejected").length}
-              </span>
-            </div>
-            <BiMessageSquareX className="stat-icon rejected" size={56} />
           </div>
         </div>
       </div>
@@ -306,21 +276,7 @@ const Material = () => {
             onClick={() => handleFilterChange(null, "pending")}
           >
             <CiClock2 />
-            Pending ({materialRequestPagination?.total || materialRequests?.length || 0})
-          </button>
-          <button 
-            className={`filter-tab ${filter === "approved" ? "active" : ""}`}
-            onClick={() => handleFilterChange(null, "approved")}
-          >
-            <SiTicktick />
-            Approved ({materials.filter((item) => item.status === "approved").length})
-          </button>
-          <button 
-            className={`filter-tab ${filter === "rejected" ? "active" : ""}`}
-            onClick={() => handleFilterChange(null, "rejected")}
-          >
-            <BiMessageSquareX />
-            Rejected ({materials.filter((item) => item.status === "rejected").length})
+            Active ({materialRequestPagination?.total || materialRequests?.length || 0})
           </button>
         </div>
       </div>
@@ -341,7 +297,7 @@ const Material = () => {
                 <div key={request._id} className="material-card">
                   <div className="material-card-header">
                     <h3 className="material-card-title">{request.requestedMaterialName}</h3>
-                    <span className="material-card-status pending">Pending</span>
+                    <span className="material-card-status pending">Active</span>
                   </div>
                   <div className="material-card-body">
                     <p className="material-card-description">{request.description || 'No description'}</p>

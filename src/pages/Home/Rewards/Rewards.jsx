@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { FaGift, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 import { BiDetail } from 'react-icons/bi';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Close as CloseIcon, LocalFlorist as EcoIcon, CardGiftcard as GiftIcon } from '@mui/icons-material';
 import './Rewards.css';
 import toast from 'react-hot-toast';
 
@@ -40,14 +40,14 @@ export default function Rewards() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedVoucher, setSelectedVoucher] = useState(null);
 
-  // Load my vouchers - Load tất cả để có thể filter
+  // Load my vouchers - Load all vouchers to enable filtering
   useEffect(() => {
-    // Load tất cả vouchers đã redeem (status: redeemed, used, expired)
-    // Vì API có thể không hỗ trợ load tất cả, ta sẽ load redeemed và filter client-side
+    // Load all vouchers (status: redeemed includes all redeemed vouchers)
+    // The API returns all user's vouchers when status is 'redeemed'
     dispatch(getMyCustomerVouchers({
-      status: 'redeemed', // Load redeemed vouchers, sau đó filter client-side
+      status: 'redeemed', // This loads all user's vouchers
       page: myVouchersPage,
-      limit: itemsPerPage * 2, // Load nhiều hơn để có đủ data filter
+      limit: itemsPerPage,
     }));
   }, [dispatch, myVouchersPage]);
 
@@ -56,7 +56,7 @@ export default function Rewards() {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleDateString('vi-VN', {
+    return date.toLocaleDateString('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -86,7 +86,7 @@ export default function Rewards() {
       if (voucher.voucher?.discountPercent) {
         discountValue = `${voucher.voucher.discountPercent}%`;
       } else if (voucher.voucher?.discountAmount) {
-        discountValue = `${voucher.voucher.discountAmount.toLocaleString('vi-VN')}đ`;
+        discountValue = `${voucher.voucher.discountAmount.toLocaleString('en-US')}đ`;
       } else if (voucher.discountPercent) {
         discountValue = `${voucher.discountPercent}%`;
       }
@@ -121,7 +121,16 @@ export default function Rewards() {
         status: status,
         qrCode: voucher.qrCode || '',
         description: voucher.voucher?.description || voucher.voucherInfo?.description || '',
-        originalVoucher: voucher
+        originalVoucher: voucher,
+        // Add voucherInfo fields
+        customName: voucher.voucher?.customName || voucher.voucherInfo?.customName || voucher.customName || '',
+        customDescription: voucher.voucher?.customDescription || voucher.voucherInfo?.customDescription || voucher.customDescription || '',
+        baseCode: voucher.voucher?.baseCode || voucher.voucherInfo?.baseCode || voucher.baseCode || '',
+        maxUsage: voucher.voucher?.maxUsage || voucher.voucherInfo?.maxUsage || voucher.maxUsage || 0,
+        redeemedCount: voucher.voucher?.redeemedCount || voucher.voucherInfo?.redeemedCount || voucher.redeemedCount || 0,
+        startDate: voucher.voucher?.startDate || voucher.voucherInfo?.startDate || voucher.startDate || '',
+        endDate: voucher.voucher?.endDate || voucher.voucherInfo?.endDate || voucher.endDate || expiryDate,
+        rewardPointCost: voucher.voucher?.rewardPointCost || voucher.voucherInfo?.rewardPointCost || voucher.rewardPointCost || 0,
       };
     });
   }, [myCustomerVouchers]);
@@ -178,20 +187,38 @@ export default function Rewards() {
   if (isLoading) {
     return (
       <div className="rewards-page">
-        <div className="loading-state">Đang tải voucher...</div>
+        <div className="loading-state">Loading vouchers...</div>
       </div>
     );
   }
 
   return (
     <div className="rewards-page">
-      {/* Header Section */}
-      <div className="rewards-header">
-        <h2 className="rewards-title">
-          <FaGift className="rewards-title-icon" />
-          Voucher của tôi
-        </h2>
-        <p className="rewards-subtitle">Quản lý và sử dụng voucher của bạn</p>
+      {/* Wallet Header Section */}
+      <div className="wallet-header-section">
+        <div className="wallet-header-content">
+          <div className="wallet-icon-wrapper">
+            <FaGift className="wallet-icon" />
+          </div>
+          <div className="wallet-header-text">
+            <h2 className="wallet-title">My Voucher Wallet</h2>
+            <p className="wallet-subtitle">Manage and use your vouchers</p>
+          </div>
+        </div>
+        <div className="wallet-stats">
+          <div className="wallet-stat-item">
+            <Typography variant="h4" className="stat-number">{myVouchers.length}</Typography>
+            <Typography variant="body2" className="stat-label">Total Vouchers</Typography>
+          </div>
+          <div className="wallet-stat-item">
+            <Typography variant="h4" className="stat-number">{myVouchers.filter(v => v.status === 'redeemed' && !v.isExpired).length}</Typography>
+            <Typography variant="body2" className="stat-label">Available</Typography>
+          </div>
+          <div className="wallet-stat-item">
+            <Typography variant="h4" className="stat-number">{expiringCount}</Typography>
+            <Typography variant="body2" className="stat-label">Expiring Soon</Typography>
+          </div>
+        </div>
       </div>
 
       {/* Expiring Vouchers Alert */}
@@ -214,11 +241,11 @@ export default function Rewards() {
               onClick={() => handleMyVouchersStatusChange('expiring')}
               sx={{ color: '#92400e', fontWeight: 600 }}
             >
-              Xem ngay
+              View Now
             </Button>
           }
         >
-          Bạn có <strong>{expiringCount}</strong> voucher sắp hết hạn trong 7 ngày tới!
+          You have <strong>{expiringCount}</strong> voucher{expiringCount > 1 ? 's' : ''} expiring in the next 7 days!
         </Alert>
       )}
 
@@ -227,7 +254,7 @@ export default function Rewards() {
         <div className="section-header">
           <h3 className="section-title">
             <FaGift className="section-icon" />
-            Voucher đã lưu
+            My Vouchers
           </h3>
         </div>
 
@@ -237,7 +264,7 @@ export default function Rewards() {
             className={`filter-tab ${myVouchersStatus === 'all' ? 'active' : ''}`}
             onClick={() => handleMyVouchersStatusChange('all')}
           >
-            Tất cả
+            All
             <span className="tab-count">
               ({myVouchers.length})
             </span>
@@ -247,7 +274,7 @@ export default function Rewards() {
             onClick={() => handleMyVouchersStatusChange('expiring')}
           >
             <FaExclamationTriangle style={{ fontSize: '14px' }} />
-            Sắp hết hạn
+            Expiring Soon
             <span className="tab-count">
               ({expiringCount})
             </span>
@@ -256,7 +283,7 @@ export default function Rewards() {
             className={`filter-tab ${myVouchersStatus === 'redeemed' ? 'active' : ''}`}
             onClick={() => handleMyVouchersStatusChange('redeemed')}
           >
-            Đã lưu
+            Available
             <span className="tab-count">
               ({myVouchers.filter(v => v.status === 'redeemed' && !v.isExpired).length})
             </span>
@@ -265,7 +292,7 @@ export default function Rewards() {
             className={`filter-tab ${myVouchersStatus === 'used' ? 'active' : ''}`}
             onClick={() => handleMyVouchersStatusChange('used')}
           >
-            Đã sử dụng
+            Used
             <span className="tab-count">
               ({myVouchers.filter(v => v.status === 'used').length})
             </span>
@@ -274,7 +301,7 @@ export default function Rewards() {
             className={`filter-tab ${myVouchersStatus === 'expired' ? 'active' : ''}`}
             onClick={() => handleMyVouchersStatusChange('expired')}
           >
-            Đã hết hạn
+            Expired
             <span className="tab-count">
               ({myVouchers.filter(v => v.isExpired || v.status === 'expired').length})
             </span>
@@ -283,127 +310,136 @@ export default function Rewards() {
 
         <div className="vouchers-grid">
           {paginatedMyVouchers.length > 0 ? (
-            paginatedMyVouchers.map((voucher) => (
-              <div 
-                key={voucher.id} 
-                className={`voucher-card ${voucher.isExpiring ? 'expiring' : ''} ${voucher.isExpired ? 'expired' : ''}`}
-                style={{ position: 'relative' }}
-              >
-                {/* Status Badge */}
-                <Chip
-                  label={
-                    voucher.status === 'used' ? 'Đã sử dụng' : 
-                    voucher.isExpired ? 'Đã hết hạn' : 
-                    voucher.isExpiring ? 'Sắp hết hạn' : 
-                    'Đã lưu'}
-                  color={voucher.status === 'used' ? 'success' : voucher.isExpired ? 'error' : voucher.isExpiring ? 'warning' : 'success'}
-                  size="small"
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    fontWeight: 600,
-                    zIndex: 1,
-                    backgroundColor: voucher.status === 'used' ? '#22c55e' : 
-                                     voucher.isExpired ? '#ef4444' : 
-                                     voucher.isExpiring ? '#f59e0b' : 
-                                     '#22c55e',
-                    color: 'white',
-                    fontSize: '0.75rem'
-                  }}
-                />
-                
-                {/* Expiring Warning Badge */}
-                {voucher.isExpiring && !voucher.isExpired && voucher.status !== 'used' && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      left: 8,
-                      zIndex: 1,
-                      backgroundColor: '#fef3c7',
-                      color: '#92400e',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <FaExclamationTriangle style={{ fontSize: '12px' }} />
-                    {voucher.daysUntilExpiry === 0 ? 'Hết hạn hôm nay' : 
-                     voucher.daysUntilExpiry === 1 ? 'Còn 1 ngày' : 
-                     `Còn ${voucher.daysUntilExpiry} ngày`}
-                  </Box>
-                )}
-
-                <div className="voucher-header">
-                  <div className="voucher-icon">
-                    <FaGift />
-                  </div>
-                  <div className="voucher-info">
-                    <h4 className="voucher-name">{voucher.name}</h4>
-                    <p className="voucher-description">
-                      {voucher.description || 
-                       voucher.originalVoucher?.voucher?.description || 
-                       voucher.originalVoucher?.voucherInfo?.description || 
-                       voucher.originalVoucher?.description || 
-                       'Mô tả voucher'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="voucher-details">
-                  {voucher.code && (
-                    <div className="detail-item">
-                      <span className="detail-label">Mã voucher:</span>
-                      <span className="detail-value code-value">{voucher.code}</span>
+            paginatedMyVouchers.map((voucher) => {
+              const isInactive = voucher.isExpired || voucher.status === 'expired' || voucher.status === 'used';
+              const businessName = voucher.originalVoucher?.voucher?.businessInfo?.businessName || 
+                                   voucher.originalVoucher?.businessInfo?.businessName || 
+                                   voucher.originalVoucher?.voucherInfo?.businessInfo?.businessName || '';
+              const customName = voucher.originalVoucher?.voucher?.customName || 
+                                voucher.originalVoucher?.customName || 
+                                voucher.originalVoucher?.voucherInfo?.customName || '';
+              
+              return (
+                <div 
+                  key={voucher.id} 
+                  className={`voucher-card-custom ${isInactive ? 'inactive' : ''} ${voucher.isExpiring ? 'expiring' : ''}`}
+                  onClick={() => handleViewDetail(voucher)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Left Strip */}
+                  <div className="voucher-card-strip">
+                    <div className="voucher-strip-badge">
+                      <div className="badge-icon-wrapper">
+                        <EcoIcon className="strip-icon" />
+                      </div>
+                      <span className="strip-text">BACK2USE</span>
                     </div>
-                  )}
-                  {voucher.discountValue && (
-                    <div className="detail-item">
-                      <span className="detail-label">Giảm giá:</span>
-                      <span className="detail-value" style={{ color: '#2e7d32', fontWeight: 700 }}>{voucher.discountValue}</span>
-                    </div>
-                  )}
-                  <div className="detail-item">
-                    <span className="detail-label">Đã lưu:</span>
-                    <span className="detail-value">{voucher.redeemedAt}</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Hết hạn:</span>
-                    <span className={`detail-value ${voucher.isExpiring ? 'expiring-text' : voucher.isExpired ? 'expired-text' : ''}`}>
-                      {voucher.expiry}
-                      {voucher.daysUntilExpiry !== null && !voucher.isExpired && (
-                        <span style={{ marginLeft: '8px', fontSize: '0.85em', color: voucher.isExpiring ? '#f59e0b' : '#6b7280' }}>
-                          ({voucher.daysUntilExpiry === 0 ? 'Hôm nay' : 
-                            voucher.daysUntilExpiry === 1 ? '1 ngày nữa' : 
-                            `${voucher.daysUntilExpiry} ngày nữa`})
-                        </span>
+
+                  {/* Card Content */}
+                  <div className="voucher-card-body">
+                    <div className="voucher-main-info">
+                      <Typography variant="h3" className="voucher-discount-text">
+                        {voucher.discountValue || `${voucher.discount}%`}
+                      </Typography>
+                      <Typography variant="body2" className="voucher-category-text">
+                        {businessName || voucher.name}
+                      </Typography>
+                      {customName && (
+                        <Typography variant="body2" className="voucher-category-text" style={{ fontWeight: 600, marginTop: '4px' }}>
+                          {customName}
+                        </Typography>
                       )}
-                    </span>
-                  </div>
-                </div>
+                      
+                      {/* Voucher Code */}
+                      {voucher.code && (
+                        <Box sx={{ mt: 1, mb: 1 }}>
+                          <Typography variant="caption" sx={{ color: '#666', fontSize: '11px', display: 'block', mb: 0.5 }}>
+                            Voucher Code:
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontFamily: 'monospace',
+                              fontWeight: 700,
+                              color: '#006C1E',
+                              fontSize: '13px',
+                              backgroundColor: '#f5f5f5',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              display: 'inline-block',
+                              border: '1px dashed #d1d5db'
+                            }}
+                          >
+                            {voucher.code}
+                          </Typography>
+                        </Box>
+                      )}
 
-                <div className="voucher-footer">
-                  <div className="voucher-actions" style={{ width: '100%', justifyContent: 'flex-end' }}>
-                    <button 
-                      className="btn-view-detail"
-                      onClick={() => handleViewDetail(voucher)}
-                    >
-                      <BiDetail />
-                      Xem chi tiết
-                    </button>
+                      {/* Saved Date */}
+                      <Box sx={{ mt: 1, mb: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#666', fontSize: '11px', display: 'block', mb: 0.5 }}>
+                          Saved:
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#1f2937', fontSize: '13px', fontWeight: 500 }}>
+                          {voucher.redeemedAt}
+                        </Typography>
+                      </Box>
+
+                      {/* Expiry Date */}
+                      <Box sx={{ mt: 1, mb: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#666', fontSize: '11px', display: 'block', mb: 0.5 }}>
+                          Expires:
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: voucher.isExpiring ? '#f59e0b' : voucher.isExpired ? '#ef4444' : '#1f2937',
+                            fontSize: '13px',
+                            fontWeight: 500
+                          }}
+                        >
+                          {voucher.expiry}
+                          {voucher.daysUntilExpiry !== null && !voucher.isExpired && (
+                            <span style={{ marginLeft: '8px', fontSize: '0.85em', color: voucher.isExpiring ? '#f59e0b' : '#6b7280' }}>
+                              ({voucher.daysUntilExpiry === 0 ? 'Today' : 
+                                voucher.daysUntilExpiry === 1 ? '1 day' : 
+                                `${voucher.daysUntilExpiry} days`})
+                            </span>
+                          )}
+                        </Typography>
+                      </Box>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="voucher-card-footer-custom">
+                      <Button
+                        variant="outlined"
+                        className="view-detail-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetail(voucher);
+                        }}
+                        fullWidth
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          py: 1
+                        }}
+                      >
+                        <BiDetail style={{ marginRight: '8px' }} />
+                        View Details
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="empty-state">
               <FaGift className="empty-icon" />
-              <p>Bạn chưa có voucher nào</p>
+              <p>You don't have any vouchers yet</p>
             </div>
           )}
         </div>
@@ -461,7 +497,7 @@ export default function Rewards() {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <FaGift style={{ fontSize: '24px' }} />
-            <Typography variant="h6" fontWeight="bold">Chi tiết Voucher</Typography>
+            <Typography variant="h6" fontWeight="bold">Voucher Details</Typography>
           </Box>
           <IconButton
             onClick={handleCloseDetailModal}
@@ -475,55 +511,73 @@ export default function Rewards() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
+        <DialogContent sx={{ 
+          pt: 3, 
+          pb: 2, 
+          px: 3,
+          maxHeight: 'calc(90vh - 200px)',
+          overflowY: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '0px',
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'transparent',
+          },
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}>
           {selectedVoucher ? (
             <Box>
               {/* Voucher Header */}
               <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ mb: 1, fontWeight: 700, color: '#1a1a1a' }}>
-                  {selectedVoucher.voucher?.name || selectedVoucher.voucherInfo?.name || selectedVoucher.name || selectedVoucher.customName || 'Voucher'}
+                  {selectedVoucher.customName || selectedVoucher.voucher?.customName || selectedVoucher.voucherInfo?.customName || selectedVoucher.voucher?.name || selectedVoucher.voucherInfo?.name || selectedVoucher.name || 'Voucher'}
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6, maxWidth: '600px', mx: 'auto' }}>
-                  {selectedVoucher.voucher?.description || selectedVoucher.voucherInfo?.description || selectedVoucher.description || selectedVoucher.customDescription || 'No description'}
+                  {selectedVoucher.customDescription || selectedVoucher.voucher?.customDescription || selectedVoucher.voucherInfo?.customDescription || selectedVoucher.voucher?.description || selectedVoucher.voucherInfo?.description || selectedVoucher.description || 'No description'}
                 </Typography>
               </Box>
 
-              <Grid container spacing={3}>
-                {/* Left Column - QR Code (nếu có) */}
+              <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
+                {/* QR Code - Centered at top */}
                 {selectedVoucher.qrCode && (
-                  <Grid item xs={12} md={5}>
+                  <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
                     <Box sx={{ 
                       p: 2.5, 
                       borderRadius: 3, 
                       backgroundColor: '#f9fafb',
                       textAlign: 'center',
                       border: '2px dashed #22c55e',
-                      position: 'sticky',
-                      top: 20
+                      width: '100%',
+                      maxWidth: '300px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      mb: 3
                     }}>
-                      <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 600, color: '#22c55e', fontSize: '1rem' }}>
-                        Quét để sử dụng
+                      <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 600, color: '#22c55e', fontSize: '0.9rem' }}>
+                        Scan to Use
                       </Typography>
                       <Box
                         component="img"
                         src={selectedVoucher.qrCode}
                         alt="Voucher QR Code"
                         sx={{
-                          width: '100%',
-                          maxWidth: '200px',
-                          height: 'auto',
+                          width: '180px',
+                          height: '180px',
+                          objectFit: 'contain',
                           borderRadius: 2,
                           backgroundColor: 'white',
                           p: 1.5,
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                          mx: 'auto',
                           display: 'block'
                         }}
                       />
                       {selectedVoucher.fullCode && (
-                        <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
+                        <Box sx={{ mt: 1.5, p: 1, borderRadius: 2, backgroundColor: 'rgba(34, 197, 94, 0.1)', width: '100%' }}>
                           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontSize: '0.7rem' }}>
-                            Mã Voucher
+                            Voucher Code
                           </Typography>
                           <Typography 
                             variant="body1" 
@@ -532,7 +586,7 @@ export default function Rewards() {
                               color: '#22c55e',
                               fontFamily: 'monospace',
                               letterSpacing: 1,
-                              fontSize: '0.95rem'
+                              fontSize: '0.85rem'
                             }}
                           >
                             {selectedVoucher.fullCode}
@@ -543,8 +597,8 @@ export default function Rewards() {
                   </Grid>
                 )}
 
-                {/* Right Column - Voucher Details */}
-                <Grid item xs={12} md={selectedVoucher.qrCode ? 7 : 12}>
+                {/* Voucher Details */}
+                <Grid item xs={12}>
                   <Grid container spacing={2}>
                     {/* Voucher Code (nếu không có QR Code) */}
                     {!selectedVoucher.qrCode && (
@@ -559,7 +613,7 @@ export default function Rewards() {
                               textAlign: 'center'
                             }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                Mã Voucher
+                                Voucher Code
                               </Typography>
                               <Typography 
                                 variant="h4" 
@@ -585,7 +639,7 @@ export default function Rewards() {
                               textAlign: 'center'
                             }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                Mã cơ sở
+                                Base Code
                               </Typography>
                               <Typography 
                                 variant="h5" 
@@ -599,7 +653,7 @@ export default function Rewards() {
                                 {selectedVoucher.baseCode || selectedVoucher.code}
                               </Typography>
                               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                                Mã này sẽ được cập nhật sau khi bạn lưu voucher
+                                This code will be updated after you save the voucher
                               </Typography>
                             </Box>
                           </Grid>
@@ -620,7 +674,7 @@ export default function Rewards() {
                               textAlign: 'center'
                             }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                Giảm giá
+                                Discount
                               </Typography>
                               <Typography variant="h5" sx={{ fontWeight: 700, color: '#22c55e' }}>
                                 {selectedVoucher.voucher?.discountPercent || selectedVoucher.voucherInfo?.discountPercent || selectedVoucher.discountPercent || selectedVoucher.discount}%
@@ -638,7 +692,7 @@ export default function Rewards() {
                               textAlign: 'center'
                             }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                Điểm yêu cầu
+                                Points Required
                               </Typography>
                               <Typography variant="h5" sx={{ fontWeight: 700, color: '#f59e0b' }}>
                                 {selectedVoucher.rewardPointCost || selectedVoucher.points}
@@ -660,14 +714,14 @@ export default function Rewards() {
                             border: '1px solid #e5e7eb'
                           }}>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                              Trạng thái
+                              Status
                             </Typography>
                             <Chip
-                              label={selectedVoucher.status === 'used' ? 'Đã sử dụng' : 
-                                     selectedVoucher.status === 'expired' ? 'Đã hết hạn' : 
-                                     selectedVoucher.status === 'redeemed' ? 'Đã lưu' : 
-                                     selectedVoucher.status === 'active' ? 'Hoạt động' :
-                                     selectedVoucher.status === 'inactive' ? 'Không hoạt động' : 'Có sẵn'}
+                              label={selectedVoucher.status === 'used' ? 'Used' : 
+                                     selectedVoucher.status === 'expired' ? 'Expired' : 
+                                     selectedVoucher.status === 'redeemed' ? 'Available' : 
+                                     selectedVoucher.status === 'active' ? 'Active' :
+                                     selectedVoucher.status === 'inactive' ? 'Inactive' : 'Available'}
                               size="medium"
                               sx={{
                                 backgroundColor: selectedVoucher.status === 'used' ? '#d1fae5' :
@@ -696,7 +750,7 @@ export default function Rewards() {
                               border: '1px solid #e5e7eb'
                             }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                Đã lưu lúc
+                                Saved At
                               </Typography>
                               <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
                                 {formatDate(selectedVoucher.redeemedAt)}
@@ -719,7 +773,7 @@ export default function Rewards() {
                               border: '1px solid #e5e7eb'
                             }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                Ngày bắt đầu
+                                Start Date
                               </Typography>
                               <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
                                 {formatDate(selectedVoucher.startDate)}
@@ -736,7 +790,7 @@ export default function Rewards() {
                               border: '1px solid #e5e7eb'
                             }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                Hết hạn
+                                Expiry Date
                               </Typography>
                               <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
                                 {formatDate(selectedVoucher.expiryDate || selectedVoucher.leaderboardExpireAt || selectedVoucher.voucher?.endDate || selectedVoucher.voucherInfo?.endDate || selectedVoucher.endDate)}
@@ -747,8 +801,48 @@ export default function Rewards() {
                       </Grid>
                     </Grid>
 
-                    {/* Max Usage */}
-                    {selectedVoucher.maxUsage && (
+                    {/* Max Usage and Usage Count */}
+                    <Grid item xs={12}>
+                      <Grid container spacing={2}>
+                        {selectedVoucher.maxUsage && (
+                          <Grid item xs={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              borderRadius: 2, 
+                              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
+                                Max Usage
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
+                                {selectedVoucher.maxUsage} time{selectedVoucher.maxUsage > 1 ? 's' : ''}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        )}
+                        {(selectedVoucher.redeemedCount !== undefined || selectedVoucher.voucher?.redeemedCount || selectedVoucher.voucherInfo?.redeemedCount) && (
+                          <Grid item xs={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              borderRadius: 2, 
+                              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
+                                Usage Count
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
+                                {selectedVoucher.redeemedCount || selectedVoucher.voucher?.redeemedCount || selectedVoucher.voucherInfo?.redeemedCount || 0} time{((selectedVoucher.redeemedCount || selectedVoucher.voucher?.redeemedCount || selectedVoucher.voucherInfo?.redeemedCount || 0) > 1) ? 's' : ''}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        )}
+                      </Grid>
+                    </Grid>
+
+                    {/* Base Code */}
+                    {(selectedVoucher.baseCode || selectedVoucher.voucher?.baseCode || selectedVoucher.voucherInfo?.baseCode) && (
                       <Grid item xs={12}>
                         <Box sx={{ 
                           p: 2, 
@@ -757,10 +851,19 @@ export default function Rewards() {
                           border: '1px solid #e5e7eb'
                         }}>
                           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                            Số lần sử dụng tối đa
+                            Base Code
                           </Typography>
-                          <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
-                            {selectedVoucher.maxUsage} lần
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              fontWeight: 700, 
+                              color: '#22c55e',
+                              fontFamily: 'monospace',
+                              letterSpacing: 1,
+                              fontSize: '1rem'
+                            }}
+                          >
+                            {selectedVoucher.baseCode || selectedVoucher.voucher?.baseCode || selectedVoucher.voucherInfo?.baseCode}
                           </Typography>
                         </Box>
                       </Grid>
@@ -771,7 +874,7 @@ export default function Rewards() {
             </Box>
           ) : (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography color="text.secondary">Không có thông tin voucher</Typography>
+              <Typography color="text.secondary">No voucher information available</Typography>
             </Box>
           )}
         </DialogContent>
@@ -790,7 +893,7 @@ export default function Rewards() {
               }
             }}
           >
-            Đóng
+            Close
           </Button>
         </DialogActions>
       </Dialog>

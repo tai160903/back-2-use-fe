@@ -20,6 +20,8 @@ import { PATH } from "../../../routes/path";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getLeaderBoardApiCustomer } from "../../../store/slices/leaderBoardSlice";
+import { getCustomerVouchers, redeemCustomerVoucher } from "../../../store/slices/voucherSlice";
+import toast from "react-hot-toast";
 
 import { IoQrCodeOutline } from "react-icons/io5";
 import image1 from "../../../assets/image/cup6.png";
@@ -35,6 +37,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { leaderBoard, isLoading } = useSelector((state) => state.leaderBoard);
+  const { customerVouchers, isLoading: vouchersLoading } = useSelector((state) => state.vouchers);
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -62,6 +65,11 @@ export default function HomePage() {
       })
     );
   }, [dispatch, selectedMonth, selectedYear]);
+
+  // Load customer vouchers for homepage display
+  useEffect(() => {
+    dispatch(getCustomerVouchers({ page: 1, limit: 2 }));
+  }, [dispatch]);
   const stores = useMemo(
     () => [
       { id: 1, name: "Green Leaf Cafe", rating: 4.8, image: storeImg1, address: "84 Greenway St, District 1, HCMC" },
@@ -75,35 +83,81 @@ export default function HomePage() {
     ],
     []
   );
-  const vouchers = useMemo(
-    () => [
-      {
-        id: 'v1',
-        off: '25%',
-        note: 'First order only',
-        title: '25% OFF at Green Leaf Cafe',
-        code: 'GREEN25',
-        expire: '12/31',
-      },
-      {
-        id: 'v2',
-        off: '40%',
-        note: 'Limited stock',
-        title: '40% OFF at Eco Brew House',
-        code: 'ECO40',
-        expire: '11/15',
-      },
-      {
-        id: 'v3',
-        off: '15%',
-        note: 'For all orders',
-        title: '15% OFF network-wide',
-        code: 'REUSE15',
-        expire: '10/30',
-      },
-    ],
-    []
-  );
+  // Transform API vouchers to display format - only show active vouchers
+  const vouchers = useMemo(() => {
+    if (!customerVouchers || customerVouchers.length === 0) {
+      // Fallback to empty array if no vouchers
+      return [];
+    }
+
+    // Filter only active vouchers
+    const activeVouchers = customerVouchers.filter(
+      (voucher) => voucher.status === "active"
+    );
+
+    return activeVouchers.slice(0, 2).map((voucher) => {
+      // Get discount percent - check voucher directly first, then businessVoucher
+      const discountPercent = 
+        voucher.discountPercent || 
+        voucher.businessVoucher?.discountPercent || 
+        0;
+
+      // Get voucher name/title - customName is directly in voucher object
+      const voucherName = 
+        voucher.customName || 
+        voucher.businessVoucher?.customName || 
+        voucher.name || 
+        'Voucher';
+
+      // Format expiry date
+      const endDate = voucher.endDate || voucher.businessVoucher?.endDate;
+      let expireText = 'N/A';
+      if (endDate) {
+        const date = new Date(endDate);
+        if (!isNaN(date.getTime())) {
+          expireText = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+        }
+      }
+
+      // Get voucher code - use baseCode directly
+      const voucherCode = voucher.baseCode || voucher.businessVoucher?.baseCode || voucher.code || 'N/A';
+
+      // Get additional info - directly from voucher object
+      const maxUsage = voucher.maxUsage || voucher.businessVoucher?.maxUsage || 0;
+      const rewardPointCost = voucher.rewardPointCost || voucher.businessVoucher?.rewardPointCost || 0;
+
+      return {
+        id: voucher._id || voucher.id || `v-${Math.random()}`,
+        voucherId: voucher._id || voucher.id, // For redeem API
+        off: `${discountPercent}%`,
+        title: `${discountPercent}% OFF ${voucherName}`,
+        code: voucherCode,
+        expire: expireText,
+        maxUsage: maxUsage,
+        rewardPointCost: rewardPointCost,
+        discountPercent: discountPercent,
+        voucherName: voucherName,
+      };
+    });
+  }, [customerVouchers]);
+
+  // Handle redeem voucher
+  const handleRedeemVoucher = async (voucherId, e) => {
+    e.stopPropagation(); // Prevent navigation
+    try {
+      await dispatch(redeemCustomerVoucher({ voucherId })).unwrap();
+      toast.success('Voucher saved successfully!');
+      // Optionally refresh vouchers list
+      dispatch(getCustomerVouchers({ page: 1, limit: 2 }));
+    } catch (error) {
+      const errorMessage = 
+        error?.message || 
+        error?.error || 
+        error?.data?.message || 
+        'Failed to save voucher';
+      toast.error(errorMessage);
+    }
+  };
   const topTenLeaderBoard = useMemo(() => {
     if (!Array.isArray(leaderBoard)) return [];
     return leaderBoard.slice(0, 10);
@@ -315,19 +369,44 @@ export default function HomePage() {
             </div>
             <div className="promo-right">
               <div className="voucher-lists">
-                {vouchers.slice(0, 2).map((v) => (
-                  <div key={v.id} className="voucher-cards">
-                    <div className="voucher-left">
-                      <div className="voucher-off">{v.off}</div>
-                      <div className="voucher-note">{v.note}</div>
-                    </div>
-                    <div className="voucher-right">
-                      <div className="voucher-title">{v.title}</div>
-                      <div className="voucher-meta">Code: {v.code} • Exp: {v.expire}</div>
-                      <button className="voucher-btn">Save voucher</button>
-                    </div>
+                {vouchersLoading ? (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                    Loading vouchers...
                   </div>
-                ))}
+                ) : vouchers.length > 0 ? (
+                  vouchers.map((v) => (
+                    <div key={v.id} className="voucher-cards">
+                      <div className="voucher-left">
+                        <div className="voucher-off">{v.off}</div>
+                      </div>
+                      <div className="voucher-right">
+                        <div className="voucher-title">{v.voucherName}</div>
+                        <div className="voucher-meta">
+                          <div style={{ marginBottom: '4px' }}>
+                            <strong>Discount:</strong> {v.discountPercent}%
+                          </div>
+                          <div style={{ marginBottom: '4px' }}>
+                            <strong>Quantity:</strong> {v.maxUsage}
+                          </div>
+                          <div style={{ marginBottom: '4px' }}>
+                            <strong>Point Cost:</strong> {v.rewardPointCost} points
+                          </div>
+                          <div>Code: {v.code} • Exp: {v.expire}</div>
+                        </div>
+                        <button 
+                          className="voucher-btn"
+                          onClick={(e) => handleRedeemVoucher(v.voucherId, e)}
+                        >
+                          Save voucher
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                    No vouchers available
+                  </div>
+                )}
               </div>
             </div>
           </div>

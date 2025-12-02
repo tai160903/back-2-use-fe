@@ -7,13 +7,11 @@ import {
   getLeaderboardVouchersApi,
   createLeaderboardVoucherApi,
   getLeaderboardVoucherByIdApi,
+  getBusinessVouchersAdminApi,
   setVoucherNameFilter,
   resetVoucherFilters 
 } from '../../store/slices/voucherSlice';
-import { FaGift, FaPlus } from 'react-icons/fa';
-import { CiClock2 } from "react-icons/ci";
-import { SiTicktick } from "react-icons/si";
-import { BiMessageSquareX } from "react-icons/bi";
+import { FaGift, FaPlus, FaTrophy, FaStore } from 'react-icons/fa';
 import { PiClipboardTextBold } from "react-icons/pi";
 import { IoIosSearch } from "react-icons/io";
 import Pagination from "@mui/material/Pagination";
@@ -24,6 +22,7 @@ const Analytics = () => {
   const dispatch = useDispatch();
   const { 
     vouchers, 
+    adminBusinessVouchers,
     currentVoucher,
     isLoading, 
     error, 
@@ -39,8 +38,12 @@ const Analytics = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    // Load only leaderboard vouchers (admin-created vouchers) on component mount
+    // Load both leaderboard and business vouchers on component mount
     dispatch(getLeaderboardVouchersApi({
+      page: 1,
+      limit: 100,
+    }));
+    dispatch(getBusinessVouchersAdminApi({
       page: 1,
       limit: 100,
     }));
@@ -83,19 +86,35 @@ const Analytics = () => {
   };
 
 
-  // Get all filtered data - only leaderboard vouchers (admin-created)
+  // Get all vouchers (combine leaderboard and business)
+  const getAllVouchers = () => {
+    // Map leaderboard vouchers with voucherType
+    const leaderboardVouchers = vouchers
+      .filter((item) => item.voucherType === 'leaderboard')
+      .map(item => ({ ...item, voucherType: 'leaderboard' }));
+    
+    // Map business vouchers with voucherType
+    const businessVouchers = (adminBusinessVouchers || []).map(item => ({
+      ...item,
+      voucherType: 'business'
+    }));
+    
+    return [...leaderboardVouchers, ...businessVouchers];
+  };
+
+  // Get all filtered data
   const getAllFilteredData = () => {
-    // Filter only leaderboard vouchers (admin-created vouchers)
-    let filtered = vouchers.filter(
-      (item) => item.voucherType === 'leaderboard'
-    );
+    let filtered = getAllVouchers();
     
-    if (filter !== "All") {
-      filtered = filtered.filter(
-        (item) => item.status.toLowerCase() === filter.toLowerCase()
-      );
+    // Filter by voucher type
+    if (filter === "Leaderboard Voucher") {
+      filtered = filtered.filter((item) => item.voucherType === 'leaderboard');
+    } else if (filter === "Business Voucher") {
+      filtered = filtered.filter((item) => item.voucherType === 'business');
     }
+    // If filter is "All", show all vouchers
     
+    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
@@ -106,9 +125,14 @@ const Analytics = () => {
     return filtered;
   };
 
-  // Get only leaderboard vouchers for stats
-  const getLeaderboardVouchers = () => {
-    return vouchers.filter((item) => item.voucherType === 'leaderboard');
+  // Get leaderboard vouchers count
+  const getLeaderboardVouchersCount = () => {
+    return getAllVouchers().filter((item) => item.voucherType === 'leaderboard').length;
+  };
+
+  // Get business vouchers count
+  const getBusinessVouchersCount = () => {
+    return getAllVouchers().filter((item) => item.voucherType === 'business').length;
   };
 
   const renderGiftIcon = () => (
@@ -183,13 +207,13 @@ const Analytics = () => {
         </button>
       </div>
 
-      {/* Statistics Cards - Only Leaderboard Vouchers */}
+      {/* Statistics Cards - All Vouchers */}
       <div className="voucher-stats">
         <div className="stat-card stat-card-0">
           <div className="stat-content">
             <div className="stat-info">
               <h3 className="stat-title">Total Vouchers</h3>
-              <span className="stat-number">{getLeaderboardVouchers().length}</span>
+              <span className="stat-number">{getAllVouchers().length}</span>
             </div>
             <PiClipboardTextBold className="stat-icon" size={56} />
           </div>
@@ -198,36 +222,24 @@ const Analytics = () => {
         <div className="stat-card stat-card-1">
           <div className="stat-content">
             <div className="stat-info">
-              <h3 className="stat-title">Pending Review</h3>
-              <span className="stat-number pending">
-                {getLeaderboardVouchers().filter((item) => item.status === "pending").length}
+              <h3 className="stat-title">Leaderboard Vouchers</h3>
+              <span className="stat-number">
+                {getLeaderboardVouchersCount()}
               </span>
             </div>
-            <CiClock2 className="stat-icon pending" size={56} />
+            <FaTrophy className="stat-icon" size={56} style={{ color: '#fbbf24' }} />
           </div>
         </div>
 
         <div className="stat-card stat-card-2">
           <div className="stat-content">
             <div className="stat-info">
-              <h3 className="stat-title">Active</h3>
-              <span className="stat-number active">
-                {getLeaderboardVouchers().filter((item) => item.status === "active").length}
+              <h3 className="stat-title">Business Vouchers</h3>
+              <span className="stat-number">
+                {getBusinessVouchersCount()}
               </span>
             </div>
-            <SiTicktick className="stat-icon active" size={56} />
-          </div>
-        </div>
-
-        <div className="stat-card stat-card-3">
-          <div className="stat-content">
-            <div className="stat-info">
-              <h3 className="stat-title">Expired</h3>
-              <span className="stat-number expired">
-                {getLeaderboardVouchers().filter((item) => item.status === "expired").length}
-              </span>
-            </div>
-            <BiMessageSquareX className="stat-icon expired" size={56} />
+            <FaStore className="stat-icon" size={56} style={{ color: '#22c55e' }} />
           </div>
         </div>
       </div>
@@ -254,28 +266,21 @@ const Analytics = () => {
             onClick={() => handleFilterChange(null, "All")}
           >
             <PiClipboardTextBold />
-            All ({getLeaderboardVouchers().length})
+            All ({getAllVouchers().length})
           </button>
           <button 
-            className={`filter-tab ${filter === "pending" ? "active" : ""}`}
-            onClick={() => handleFilterChange(null, "pending")}
+            className={`filter-tab ${filter === "Leaderboard Voucher" ? "active" : ""}`}
+            onClick={() => handleFilterChange(null, "Leaderboard Voucher")}
           >
-            <CiClock2 />
-            Pending ({getLeaderboardVouchers().filter((item) => item.status === "pending").length})
+            <FaTrophy />
+            Leaderboard Voucher ({getLeaderboardVouchersCount()})
           </button>
           <button 
-            className={`filter-tab ${filter === "active" ? "active" : ""}`}
-            onClick={() => handleFilterChange(null, "active")}
+            className={`filter-tab ${filter === "Business Voucher" ? "active" : ""}`}
+            onClick={() => handleFilterChange(null, "Business Voucher")}
           >
-            <SiTicktick />
-            Active ({getLeaderboardVouchers().filter((item) => item.status === "active").length})
-          </button>
-          <button 
-            className={`filter-tab ${filter === "expired" ? "active" : ""}`}
-            onClick={() => handleFilterChange(null, "expired")}
-          >
-            <BiMessageSquareX />
-            Expired ({getLeaderboardVouchers().filter((item) => item.status === "expired").length})
+            <FaStore />
+            Business Voucher ({getBusinessVouchersCount()})
           </button>
         </div>
       </div>
@@ -305,7 +310,7 @@ const Analytics = () => {
       )}
 
       {/* Pagination */}
-      {!isLoading && getLeaderboardVouchers().length > 0 && (() => {
+      {!isLoading && getAllVouchers().length > 0 && (() => {
         const filteredData = getAllFilteredData();
         const perPage = 8;
         const filteredTotalPages = Math.ceil(filteredData.length / perPage);

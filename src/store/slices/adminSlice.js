@@ -335,6 +335,21 @@ export const toggleRewardSettingApi = createAsyncThunk(
 );
 
 
+// Get Admin Dashboard Overview API
+export const getAdminDashboardOverviewApi = createAsyncThunk(
+  "admin/getAdminDashboardOverviewApi",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/admin/dashboard/overview");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // System Settings APIs
 export const getSystemSettingsApi = createAsyncThunk(
   "admin/getSystemSettingsApi",
@@ -443,6 +458,8 @@ const adminSlice = createSlice({
       isBlocked: null, // null = all, true = blocked, false = unblocked
     },
     systemSettings: [],
+    dashboardOverview: null,
+    dashboardLoading: false,
   },
   reducers: {
     clearError: (state) => {
@@ -1125,6 +1142,22 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = payload;
         toast.error(payload?.message || "Failed to update system setting");
+      })
+      
+      // Get Admin Dashboard Overview
+      .addCase(getAdminDashboardOverviewApi.pending, (state) => {
+        state.dashboardLoading = true;
+        state.error = null;
+      })
+      .addCase(getAdminDashboardOverviewApi.fulfilled, (state, { payload }) => {
+        state.dashboardLoading = false;
+        state.error = null;
+        state.dashboardOverview = payload.data || payload;
+      })
+      .addCase(getAdminDashboardOverviewApi.rejected, (state, { payload }) => {
+        state.dashboardLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch dashboard overview");
       })
   
   },

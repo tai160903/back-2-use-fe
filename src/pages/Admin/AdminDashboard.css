@@ -69,7 +69,682 @@
   font-size: 18px;
 }
 
-/* Statistics Grid */
+/* Dashboard Overview Container */
+.dashboard-overview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+/* Statistics Grid - Multiple Card Variants */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Base Stat Card */
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card Variant 1: Gradient Cards */
+.stat-card-gradient {
+  color: white;
+  border: none;
+}
+
+.stat-card-gradient .stat-label,
+.stat-card-gradient .stat-value,
+.stat-card-gradient .stat-description {
+  color: white;
+}
+
+.stat-card-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+.stat-card-emerald {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+
+.stat-card-gradient:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon-large {
+  font-size: 48px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+
+/* Card Variant 2: Outlined Cards */
+.stat-card-outlined {
+  border: 2px solid;
+  background: white;
+}
+
+.stat-card-purple {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+}
+
+.stat-card-purple .stat-label {
+  color: #8b5cf6;
+}
+
+.stat-card-purple .stat-value {
+  color: #6d28d9;
+}
+
+.stat-card-amber {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.stat-card-amber .stat-label {
+  color: #f59e0b;
+}
+
+.stat-card-amber .stat-value {
+  color: #d97706;
+}
+
+.stat-card-outlined:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Variant 3: Filled Cards */
+.stat-card-filled {
+  border: none;
+}
+
+.stat-card-indigo {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+}
+
+.stat-card-indigo .stat-label,
+.stat-card-indigo .stat-value,
+.stat-card-indigo .stat-description {
+  color: white;
+}
+
+.stat-card-yellow {
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  color: white;
+}
+
+.stat-card-yellow .stat-label,
+.stat-card-yellow .stat-value,
+.stat-card-yellow .stat-description {
+  color: white;
+}
+
+.stat-card-filled:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+/* Card Variant 4: Border Highlight Cards */
+.stat-card-border {
+  border-left: 4px solid;
+  background: white;
+  position: relative;
+}
+
+.stat-card-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: inherit;
+  opacity: 0.3;
+}
+
+.stat-card-green {
+  border-left-color: #22c55e;
+}
+
+.stat-card-green .stat-label {
+  color: #22c55e;
+}
+
+.stat-card-green .stat-value {
+  color: #16a34a;
+}
+
+.stat-card-gold {
+  border-left-color: #fbbf24;
+}
+
+.stat-card-gold .stat-label {
+  color: #fbbf24;
+}
+
+.stat-card-gold .stat-value {
+  color: #f59e0b;
+}
+
+.stat-card-border:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Variant 5: Shadow Cards */
+.stat-card-shadow {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.stat-card-teal {
+  border-top: 3px solid #14b8a6;
+}
+
+.stat-card-teal .stat-icon-wrapper {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #14b8a6;
+}
+
+.stat-card-money {
+  border-top: 3px solid #10b981;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.stat-card-money .stat-icon-wrapper {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.stat-card-shadow:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Card Variant 6: Minimal Cards */
+.stat-card-minimal {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
+}
+
+.stat-card-orange .stat-icon-wrapper {
+  background: #fff7ed;
+  color: #f59e0b;
+}
+
+.stat-card-minimal:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+}
+
+/* Common Card Styles */
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stat-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.stat-value-small {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.stat-description {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Additional Statistics Container */
+.additional-stats-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+
+/* Table Section */
+.stats-table-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.table-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.stats-table-wrapper {
+  width: 100%;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+}
+
+.stats-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.stats-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table-label {
+  padding: 16px 0;
+  font-size: 15px;
+  color: #374151;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-icon {
+  font-size: 20px;
+  color: #6b7280;
+}
+
+.table-value {
+  padding: 16px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-align: right;
+}
+
+/* List Section */
+.stats-list-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.list-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stats-list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.stats-list-item:hover {
+  background: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.list-item-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.list-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.list-item-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.list-item-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Badge Section */
+.stats-badge-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.badge-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.stats-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-badge {
+  padding: 20px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-radius: 12px;
+  border: 2px solid #fbbf24;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+}
+
+.badge-label {
+  font-size: 13px;
+  color: #92400e;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #78350f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.badge-star {
+  color: #fbbf24;
+  font-size: 28px;
+}
+
+/* CO2 Environmental Impact Section */
+.co2-impact-section {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #ffffff 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-top: 32px;
+  border: 2px solid #10b981;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+}
+
+.co2-section-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid rgba(16, 185, 129, 0.2);
+}
+
+.co2-header-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  flex-shrink: 0;
+}
+
+.co2-header-content {
+  flex: 1;
+}
+
+.co2-section-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #065f46;
+  margin: 0 0 8px 0;
+}
+
+.co2-section-subtitle {
+  font-size: 16px;
+  color: #047857;
+  margin: 0;
+  font-weight: 500;
+}
+
+.co2-stat-display {
+  text-align: right;
+  padding: 16px 24px;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.co2-stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #10b981;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.co2-stat-unit {
+  font-size: 14px;
+  color: #047857;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.co2-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.co2-info-card,
+.co2-benefits-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.co2-info-header,
+.co2-benefits-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.co2-info-icon,
+.co2-benefits-icon {
+  font-size: 24px;
+  color: #10b981;
+}
+
+.co2-info-title,
+.co2-benefits-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.co2-info-content,
+.co2-benefits-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.co2-impact-item,
+.co2-benefit-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.co2-impact-item:hover,
+.co2-benefit-item:hover {
+  background: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.impact-icon,
+.benefit-icon {
+  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.impact-negative {
+  background: #fee2e2;
+}
+
+.benefit-positive {
+  background: #d1fae5;
+}
+
+.impact-content,
+.benefit-content {
+  flex: 1;
+}
+
+.impact-title,
+.benefit-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.impact-description,
+.benefit-description {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Old Statistics Grid - Keep for reference but not used */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -390,8 +1065,18 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1400px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
 @media (max-width: 1200px) {
   .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .additional-stats-container {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -401,6 +1086,30 @@
 
   .dashboard-content {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .additional-stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  .co2-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .co2-section-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .co2-stat-display {
+    width: 100%;
+    text-align: center;
   }
 }
 
@@ -415,6 +1124,23 @@
 
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stat-card {
+    padding: 20px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .stat-value-small {
+    font-size: 18px;
+  }
+
+  .stat-icon-large {
+    font-size: 40px;
   }
 
   .charts-section {

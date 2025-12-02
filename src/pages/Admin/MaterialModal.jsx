@@ -21,6 +21,8 @@ import {
   Close as CloseIcon,
   Add as AddIcon,
   Edit as EditIcon,
+  Scale as ScaleIcon,
+  CloudQueue as CloudIcon,
 } from '@mui/icons-material';
 import './MaterialModal.css';
 
@@ -29,7 +31,9 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
     materialName: '',
     reuseLimit: '',
     depositPercent: '',
-    description: ''
+    description: '',
+    plasticEquivalentMultiplier: '',
+    co2EmissionPerKg: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -40,14 +44,18 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
         materialName: material.materialName || '',
         reuseLimit: material.reuseLimit ?? material.maximumReuse ?? '',
         depositPercent: material.depositPercent ?? '',
-        description: material.description || ''
+        description: material.description || '',
+        plasticEquivalentMultiplier: material.plasticEquivalentMultiplier ?? '',
+        co2EmissionPerKg: material.co2EmissionPerKg ?? ''
       });
     } else {
       setFormData({
         materialName: '',
         reuseLimit: '',
         depositPercent: '',
-        description: ''
+        description: '',
+        plasticEquivalentMultiplier: '',
+        co2EmissionPerKg: ''
       });
     }
     setErrors({});
@@ -92,6 +100,18 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       newErrors.description = 'Description is required';
     }
 
+    if (formData.plasticEquivalentMultiplier === '' || formData.plasticEquivalentMultiplier === null) {
+      newErrors.plasticEquivalentMultiplier = 'Plastic equivalent multiplier is required';
+    } else if (isNaN(formData.plasticEquivalentMultiplier) || parseFloat(formData.plasticEquivalentMultiplier) < 0) {
+      newErrors.plasticEquivalentMultiplier = 'Plastic equivalent multiplier must be a positive number';
+    }
+
+    if (formData.co2EmissionPerKg === '' || formData.co2EmissionPerKg === null) {
+      newErrors.co2EmissionPerKg = 'CO2 emission per kg is required';
+    } else if (isNaN(formData.co2EmissionPerKg) || parseFloat(formData.co2EmissionPerKg) < 0) {
+      newErrors.co2EmissionPerKg = 'CO2 emission per kg must be a positive number';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -104,7 +124,9 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
         materialName: formData.materialName.trim(),
         reuseLimit: parseInt(formData.reuseLimit),
         depositPercent: parseInt(formData.depositPercent),
-        description: formData.description.trim()
+        description: formData.description.trim(),
+        plasticEquivalentMultiplier: parseFloat(formData.plasticEquivalentMultiplier),
+        co2EmissionPerKg: parseFloat(formData.co2EmissionPerKg)
       });
     }
   };
@@ -114,7 +136,9 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       materialName: '',
       reuseLimit: '',
       depositPercent: '',
-      description: ''
+      description: '',
+      plasticEquivalentMultiplier: '',
+      co2EmissionPerKg: ''
     });
     setErrors({});
     onClose();
@@ -321,6 +345,117 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">%
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#22c55e',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#22c55e',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* Plastic Equivalent Multiplier Field */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 0.5 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: '#16a34a', 
+                    fontWeight: 600,
+                    mb: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}
+                >
+                  <ScaleIcon sx={{ fontSize: 16 }} />
+                  Plastic Equivalent Multiplier <span style={{ color: '#f44336' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                placeholder="1"
+                name="plasticEquivalentMultiplier"
+                type="number"
+                value={formData.plasticEquivalentMultiplier}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+                inputProps={{ min: 0, step: 0.1 }}
+                error={!!errors.plasticEquivalentMultiplier}
+                helperText={errors.plasticEquivalentMultiplier || 'Multiplier for plastic equivalent calculation'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <ScaleIcon sx={{ color: '#22c55e' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#22c55e',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#22c55e',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* CO2 Emission Per Kg Field */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 0.5 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: '#16a34a', 
+                    fontWeight: 600,
+                    mb: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}
+                >
+                  <CloudIcon sx={{ fontSize: 16 }} />
+                  CO2 Emission Per Kg <span style={{ color: '#f44336' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                placeholder="3.4"
+                name="co2EmissionPerKg"
+                type="number"
+                value={formData.co2EmissionPerKg}
+                onChange={handleInputChange}
+                required
+                variant="outlined"
+                inputProps={{ min: 0, step: 0.1 }}
+                error={!!errors.co2EmissionPerKg}
+                helperText={errors.co2EmissionPerKg || 'CO2 emission in kg per kg of material'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CloudIcon sx={{ color: '#22c55e' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
+                        kg CO2/kg
+                      </Typography>
                     </InputAdornment>
                   ),
                 }}

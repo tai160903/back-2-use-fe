@@ -129,13 +129,17 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
     <Dialog 
       open={isOpen} 
       onClose={onClose}
-      maxWidth="lg"
-      fullWidth
+      maxWidth={false}
       PaperProps={{
         sx: {
           borderRadius: 4,
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
           overflow: 'hidden',
+          maxWidth: '900px',
+          width: '90%',
+          '@media (min-width: 600px)': {
+            width: '700px',
+          },
         }
       }}
     >
@@ -200,16 +204,50 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
 
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ pt: 4, pb: 2, px: 3 }}>
-          <Grid container spacing={2.5}>
+          <Grid 
+            container 
+            spacing={3} 
+            sx={{ 
+              '& .MuiGrid-item': { 
+                display: 'flex',
+                alignItems: 'stretch',
+              }
+            }}
+          >
             {/* Row 1: Voucher Name and Base Code */}
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                  <TitleIcon sx={{ fontSize: 20, color: '#22c55e' }} />
-                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                    Voucher Name
-                  </Typography>
-                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
+            <Grid item xs={12} sm={7} sx={{ display: 'flex' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                width: '100%', 
+                flex: 1,
+                minHeight: '140px',
+                height: '100%',
+                minWidth: 0,
+                overflow: 'hidden'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, minHeight: '36px', height: '36px' }}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(34, 197, 94, 0.2)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <TitleIcon sx={{ fontSize: 20, color: 'white' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600} color="text.primary" sx={{ lineHeight: 1.2 }}>
+                      Voucher Name
+                    </Typography>
+                    <Typography component="span" sx={{ color: 'error.main', fontSize: '0.875rem' }}>*</Typography>
+                  </Box>
                 </Box>
                 <TextField
                   name="name"
@@ -223,32 +261,91 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      height: '56.5px',
-                      '&:hover fieldset': {
-                        borderColor: '#22c55e',
+                      height: '56px !important',
+                      minHeight: '56px !important',
+                      maxHeight: '56px !important',
+                      fontSize: '15px',
+                      backgroundColor: '#fafafa',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                      overflow: 'hidden',
+                      width: '100%',
+                      maxWidth: '100%',
+                      '&:hover': {
+                        backgroundColor: '#f5f5f5',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#22c55e',
-                        borderWidth: 2,
+                      '&.Mui-focused': {
+                        backgroundColor: 'white',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
                       },
+                    },
+                    '& .MuiInputBase-input': {
+                      height: '100%',
+                      paddingTop: '16.5px',
+                      paddingBottom: '16.5px',
+                      lineHeight: '1.4375em',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
+                    '& .MuiFormHelperText-root': {
+                      marginLeft: 0,
+                      marginTop: 0.75,
+                      fontSize: '0.75rem',
+                      height: '18px',
+                      minHeight: '18px',
+                      lineHeight: '1.2',
+                      display: 'block',
                     },
                   }}
                 />
               </Box>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                  <CodeIcon sx={{ fontSize: 20, color: '#22c55e' }} />
-                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                    Base Code
-                  </Typography>
-                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
+            <Grid item xs={12} sm={5} sx={{ display: 'flex' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                width: '100%', 
+                flex: 1,
+                minHeight: '140px',
+                height: '100%',
+                minWidth: 0,
+                overflow: 'hidden'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, minHeight: '36px', height: '36px' }}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(34, 197, 94, 0.2)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <CodeIcon sx={{ fontSize: 20, color: 'white' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600} color="text.primary" sx={{ lineHeight: 1.2 }}>
+                      Base Code
+                    </Typography>
+                    <Typography component="span" sx={{ color: 'error.main', fontSize: '0.875rem' }}>*</Typography>
+                  </Box>
                 </Box>
                 <TextField
                   name="baseCode"
-                  placeholder="e.g. SUMMER2025"
+                  placeholder="E.G. SUMMER2025"
                   value={formData.baseCode}
                   onChange={handleChange}
                   error={!!errors.baseCode}
@@ -262,81 +359,89 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
+                      height: '56px !important',
+                      minHeight: '56px !important',
+                      maxHeight: '56px !important',
+                      fontSize: '15px',
                       fontFamily: 'monospace',
-                      height: '56.5px',
-                      '&:hover fieldset': {
-                        borderColor: '#22c55e',
+                      backgroundColor: '#fafafa',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                      overflow: 'hidden',
+                      width: '100%',
+                      maxWidth: '100%',
+                      '&:hover': {
+                        backgroundColor: '#f5f5f5',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#22c55e',
-                        borderWidth: 2,
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            </Grid>
-
-            {/* Row 2: Description and Discount Percent */}
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                  <DescriptionIcon sx={{ fontSize: 20, color: '#22c55e' }} />
-                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                    Description
-                  </Typography>
-                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
-                </Box>
-                <TextField
-                  name="description"
-                  placeholder="Enter voucher description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  onFocus={() => setIsDescriptionFocused(true)}
-                  onBlur={() => setIsDescriptionFocused(false)}
-                  error={!!errors.description}
-                  helperText={errors.description}
-                  multiline
-                  rows={calculateDescriptionRows()}
-                  fullWidth
-                  required
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      transition: 'all 0.3s ease',
-                      minHeight: isDescriptionFocused ? 'auto' : '56.5px',
-                      height: isDescriptionFocused ? 'auto' : '56.5px',
-                      alignItems: isDescriptionFocused ? 'flex-start' : 'center',
-                      '&:hover fieldset': {
-                        borderColor: '#22c55e',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#22c55e',
-                        borderWidth: 2,
+                      '&.Mui-focused': {
+                        backgroundColor: 'white',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
                       },
                     },
                     '& .MuiInputBase-input': {
-                      transition: 'all 0.3s ease',
-                      overflow: isDescriptionFocused ? 'auto' : 'hidden',
-                      paddingTop: isDescriptionFocused ? '16.5px' : '16.5px',
-                      paddingBottom: isDescriptionFocused ? '16.5px' : '16.5px',
-                      minHeight: isDescriptionFocused ? 'auto' : '23px',
-                      lineHeight: isDescriptionFocused ? '1.5' : '1.4375em',
-                      height: isDescriptionFocused ? 'auto' : '23px',
+                      height: '100%',
+                      paddingTop: '16.5px',
+                      paddingBottom: '16.5px',
+                      lineHeight: '1.4375em',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
+                    '& .MuiFormHelperText-root': {
+                      marginLeft: 0,
+                      marginTop: 0.75,
+                      fontSize: '0.75rem',
+                      height: '18px',
+                      minHeight: '18px',
+                      lineHeight: '1.2',
+                      display: 'block',
                     },
                   }}
                 />
               </Box>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                  <PercentIcon sx={{ fontSize: 20, color: '#22c55e' }} />
-                  <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                    Discount Percent
-                  </Typography>
-                  <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>*</Typography>
+            {/* Row 2: Discount Percent and Description */}
+            <Grid item xs={12} sm={5} sx={{ display: 'flex' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                width: '100%', 
+                flex: 1,
+                minHeight: '140px',
+                height: '100%',
+                minWidth: 0,
+                overflow: 'hidden'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, minHeight: '36px', height: '36px' }}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(34, 197, 94, 0.2)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <PercentIcon sx={{ fontSize: 20, color: 'white' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600} color="text.primary" sx={{ lineHeight: 1.2 }}>
+                      Discount Percent
+                    </Typography>
+                    <Typography component="span" sx={{ color: 'error.main', fontSize: '0.875rem' }}>*</Typography>
+                  </Box>
                 </Box>
                 <TextField
                   name="discountPercent"
@@ -352,7 +457,7 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <Typography variant="body2" sx={{ color: '#22c55e', fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ color: '#22c55e', fontWeight: 700, fontSize: '16px' }}>
                           %
                         </Typography>
                       </InputAdornment>
@@ -361,14 +466,149 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      height: '56.5px',
-                      '&:hover fieldset': {
-                        borderColor: '#22c55e',
+                      height: '56px !important',
+                      minHeight: '56px !important',
+                      maxHeight: '56px !important',
+                      fontSize: '15px',
+                      backgroundColor: '#fafafa',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                      overflow: 'hidden',
+                      width: '100%',
+                      maxWidth: '100%',
+                      '&:hover': {
+                        backgroundColor: '#f5f5f5',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#22c55e',
-                        borderWidth: 2,
+                      '&.Mui-focused': {
+                        backgroundColor: 'white',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
                       },
+                    },
+                    '& .MuiInputBase-input': {
+                      height: '100%',
+                      paddingTop: '16.5px',
+                      paddingBottom: '16.5px',
+                      lineHeight: '1.4375em',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
+                    '& .MuiFormHelperText-root': {
+                      marginLeft: 0,
+                      marginTop: 0.75,
+                      fontSize: '0.75rem',
+                      height: '18px',
+                      minHeight: '18px',
+                      lineHeight: '1.2',
+                      display: 'block',
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={7} sx={{ display: 'flex' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                width: '100%', 
+                flex: 1,
+                minHeight: '140px',
+                height: '100%',
+                minWidth: 0,
+                overflow: 'hidden'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, minHeight: '36px', height: '36px' }}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(34, 197, 94, 0.2)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <DescriptionIcon sx={{ fontSize: 20, color: 'white' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600} color="text.primary" sx={{ lineHeight: 1.2 }}>
+                      Description
+                    </Typography>
+                    <Typography component="span" sx={{ color: 'error.main', fontSize: '0.875rem' }}>*</Typography>
+                  </Box>
+                </Box>
+                <TextField
+                  name="description"
+                  placeholder="Enter voucher description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  onFocus={() => setIsDescriptionFocused(true)}
+                  onBlur={() => setIsDescriptionFocused(false)}
+                  error={!!errors.description}
+                  helperText={errors.description}
+                  multiline={isDescriptionFocused}
+                  rows={isDescriptionFocused ? 4 : undefined}
+                  maxRows={isDescriptionFocused ? 8 : undefined}
+                  fullWidth
+                  required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      fontSize: '15px',
+                      backgroundColor: '#fafafa',
+                      transition: 'all 0.2s ease',
+                      height: isDescriptionFocused ? 'auto !important' : '56px !important',
+                      minHeight: isDescriptionFocused ? 'auto' : '56px !important',
+                      maxHeight: isDescriptionFocused ? 'none' : '56px !important',
+                      boxSizing: 'border-box',
+                      overflow: 'hidden',
+                      width: '100%',
+                      maxWidth: '100%',
+                      '&:hover': {
+                        backgroundColor: '#f5f5f5',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: 'white',
+                        height: 'auto !important',
+                        minHeight: 'auto',
+                        maxHeight: 'none',
+                        '& fieldset': {
+                          borderColor: '#22c55e',
+                          borderWidth: '2px',
+                        },
+                      },
+                    },
+                    '& .MuiInputBase-input': {
+                      paddingTop: '16.5px',
+                      paddingBottom: '16.5px',
+                      lineHeight: isDescriptionFocused ? '1.5' : '1.4375em',
+                      height: isDescriptionFocused ? 'auto' : '100%',
+                      minHeight: isDescriptionFocused ? 'auto' : '23px',
+                      overflow: isDescriptionFocused ? 'auto' : 'hidden',
+                    },
+                    '& .MuiFormHelperText-root': {
+                      marginLeft: 0,
+                      marginTop: 0.75,
+                      fontSize: '0.75rem',
+                      height: '18px',
+                      minHeight: '18px',
+                      lineHeight: '1.2',
+                      display: 'block',
                     },
                   }}
                 />

@@ -2,14 +2,10 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
-  deleteMaterialApi, 
-  reviewMaterialApi 
+  deleteMaterialApi
 } from '../../store/slices/adminSlice';
 import { PATH } from '../../routes/path';
 import { 
-  FaRegEdit, 
-  FaCheck, 
-  FaTimes, 
   FaRecycle 
 } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
@@ -37,18 +33,7 @@ import {
 const MaterialCard = ({ material, onEdit }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric'
-    });
-  };
 
   const handleEdit = () => {
     if (onEdit) {
@@ -69,47 +54,6 @@ const MaterialCard = ({ material, onEdit }) => {
     setIsDeleteOpen(false);
   };
 
-  const handleApprove = () => {
-    dispatch(reviewMaterialApi({
-      materialId: material._id,
-      reviewData: {
-        status: 'approved'
-      }
-    }));
-  };
-
-  const handleReject = () => {
-    setRejectReason('');
-    setIsRejectOpen(true);
-  };
-
-  const submitReject = () => {
-    const reason = rejectReason.trim();
-    if (!reason) {
-      alert('Please enter a rejection reason.');
-      return;
-    }
-    dispatch(reviewMaterialApi({
-      materialId: material._id,
-      reviewData: {
-        status: 'rejected',
-        rejectReason: reason
-      }
-    }));
-    setIsRejectOpen(false);
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'status-approved';
-      case 'rejected':
-        return 'status-rejected';
-      case 'pending':
-      default:
-        return 'status-pending';
-    }
-  };
 
   const getRecycleIcon = () => {
     return <FaRecycle className="material-card-icon" />;
@@ -147,25 +91,6 @@ const MaterialCard = ({ material, onEdit }) => {
             </button>
           </div>
 
-          {/* Row 2: Approve & Reject (only for pending) */}
-          {material.status === 'pending' && (
-            <div className="material-card-actions-row">
-              <button 
-                className="action-btn approve-btn" 
-                onClick={handleApprove}
-                title="Approve"
-              >
-                <FaCheck size={16} />
-              </button>
-              <button 
-                className="action-btn reject-btn" 
-                onClick={handleReject}
-                title="Reject"
-              >
-                <FaTimes size={16} />
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -180,16 +105,23 @@ const MaterialCard = ({ material, onEdit }) => {
         </div>
         
         <div className="material-detail-item">
-          <span className="material-detail-label">Created:</span>
-          <span className="material-detail-value created-date">
-            {formatDate(material.createdAt)}
+          <span className="material-detail-label">Deposit Percent:</span>
+          <span className="material-detail-value">
+            {material.depositPercent ?? 'N/A'}%
           </span>
         </div>
         
         <div className="material-detail-item">
-          <span className="material-detail-label">Status:</span>
-          <span className={`status-badge ${getStatusBadgeClass(material.status)}`}>
-            {material.status}
+          <span className="material-detail-label">Plastic Equivalent Multiplier:</span>
+          <span className="material-detail-value">
+            {material.plasticEquivalentMultiplier ?? 'N/A'}
+          </span>
+        </div>
+        
+        <div className="material-detail-item">
+          <span className="material-detail-label">CO2 Emission Per Kg:</span>
+          <span className="material-detail-value">
+            {material.co2EmissionPerKg ?? 'N/A'} kg CO2/kg
           </span>
         </div>
         
@@ -201,41 +133,7 @@ const MaterialCard = ({ material, onEdit }) => {
             </span>
           </div>
         )}
-        
-        {material.status === 'rejected' && (material.adminNote || material.rejectReason) && (
-          <div className="material-detail-item">
-            <span className="material-detail-label">Rejection Reason:</span>
-            <span className="material-detail-value" style={{ fontSize: '13px', color: '#dc2626' }}>
-              {material.adminNote || material.rejectReason}
-            </span>
-          </div>
-        )}
       </div>
-      {/* Reject Modal */}
-      {isRejectOpen && (
-        <div className="mc-modal-overlay" onClick={() => setIsRejectOpen(false)}>
-          <div className="mc-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="mc-modal-header">
-              <h3 className="mc-modal-title">Reject Material</h3>
-              <button className="mc-modal-close" onClick={() => setIsRejectOpen(false)}>×</button>
-            </div>
-            <div className="mc-modal-body">
-              <label className="mc-label">Reason (required)</label>
-              <textarea
-                className="mc-textarea"
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Enter the reason for rejection..."
-                rows={4}
-              />
-            </div>
-            <div className="mc-modal-actions">
-              <button className="mc-btn" onClick={() => setIsRejectOpen(false)}>Cancel</button>
-              <button className="mc-btn-danger" onClick={submitReject}>Reject</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       <Dialog 

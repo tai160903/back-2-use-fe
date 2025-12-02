@@ -58,6 +58,7 @@ import LeaderBoard from "../pages/Admin/LeaderBoard/LeaderBoard";
 import StaffLayout from "../layouts/StaffLayout/StaffLayout";
 import StaffDashboard from "../pages/Staff/StaffDashboard/StaffDashboard";
 import StaffProfile from "../pages/Staff/StaffProfile/StaffProfile";
+import StaffVoucher from "../pages/Staff/StaffVoucher/StaffVoucher";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -365,6 +366,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["staff"]}>
               <OnlineBorrowOrders />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.STAFF_VOUCHER,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <StaffVoucher />
             </ProtectedRoute>
           ),
         },
