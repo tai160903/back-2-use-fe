@@ -34,6 +34,15 @@ import containerImg from "../../../assets/image/container.png";
 import cup3 from "../../../assets/image/cup3.png";
 import Loading from "../../../components/Loading/Loading";
 import toast from "react-hot-toast";
+import { getCustomerVouchers, redeemCustomerVoucher, getMyCustomerVouchers } from "../../../store/slices/voucherSlice";
+import { PATH } from "../../../routes/path";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import LinearProgress from "@mui/material/LinearProgress";
+import { LocalFlorist as EcoIcon, CardGiftcard as GiftIcon } from "@mui/icons-material";
 
 export default function StoreDetail() {
   const navigate = useNavigate();
@@ -52,32 +61,22 @@ export default function StoreDetail() {
   } = useSelector((state) => state.feedback);
   const { currentUser } = useSelector((state) => state.auth);
   const role = getUserRole();
-  const vouchers = [
-    {
-      id: "v1",
-      off: "25%",
-      note: "First order only",
-      title: "25% OFF at Green Leaf Cafe",
-      code: "GREEN25",
-      expire: "12/31",
-    },
-    {
-      id: "v2",
-      off: "40%",
-      note: "Limited stock",
-      title: "40% OFF at Eco Brew House",
-      code: "ECO40",
-      expire: "11/15",
-    },
-    {
-      id: "v3",
-      off: "15%",
-      note: "For all orders",
-      title: "15% OFF network-wide",
-      code: "REUSE15",
-      expire: "10/30",
-    },
-  ];
+  const {
+    customerVouchers,
+    myCustomerVouchers,
+    isLoading: isLoadingVouchers,
+  } = useSelector((state) => state.vouchers);
+  
+  const [businessVouchers, setBusinessVouchers] = useState([]);
+  const [exchangingVoucherId, setExchangingVoucherId] = useState(null);
+  const [savedVouchers, setSavedVouchers] = useState(new Set());
+  const [currentVoucherIndex, setCurrentVoucherIndex] = useState(0);
+  const vouchersPerPage = 5; // Show 5 vouchers at a time
+  const vouchersToScroll = 2; // Scroll 2 vouchers each time
+  const [exchangedVoucherIds, setExchangedVoucherIds] = useState(new Set());
+  const [openExchangeDialog, setOpenExchangeDialog] = useState(false);
+  const [voucherToExchange, setVoucherToExchange] = useState(null);
+  const userPoints = 350; // TODO: Get from actual user wallet/points
   const [selectedProductType, setSelectedProductType] = useState(null);
   const [materialFilter, setMaterialFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -188,6 +187,192 @@ export default function StoreDetail() {
       })
     );
   }, [dispatch, role, currentUser?.accessToken]);
+
+  // Load business vouchers and user's exchanged vouchers
+  useEffect(() => {
+    if (storeId) {
+      dispatch(getCustomerVouchers({
+        status: 'active',
+        page: 1,
+        limit: 100, // Load enough to filter
+      }));
+      // Load user's exchanged vouchers to check which ones have been exchanged
+      if (role === 'customer' && currentUser?.accessToken) {
+        dispatch(getMyCustomerVouchers({
+          status: 'redeemed',
+          page: 1,
+          limit: 1000, // Load all to check
+        }));
+      }
+    }
+  }, [dispatch, storeId, role, currentUser?.accessToken]);
+
+  // Filter vouchers by business ID
+  useEffect(() => {
+    if (customerVouchers && customerVouchers.length > 0 && storeId) {
+      const businessIdToMatch = storeId.toString();
+      
+      const filtered = customerVouchers
+        .filter((voucher) => {
+          // Only show business vouchers (not leaderboard)
+          if (voucher.voucherType === 'leaderboard') return false;
+          // Only show active vouchers
+          if (voucher.status !== 'active') return false;
+          
+          // Try multiple possible ways to get business ID from voucher
+          let voucherBusinessId = null;
+          
+          // Check businessInfo object (most common structure)
+          if (voucher.businessInfo) {
+            voucherBusinessId = 
+              voucher.businessInfo.businessId?.toString() || 
+              voucher.businessInfo._id?.toString() ||
+              voucher.businessInfo.id?.toString();
+          }
+          
+          // Check direct businessId field
+          if (!voucherBusinessId && voucher.businessId) {
+            voucherBusinessId = voucher.businessId.toString();
+          }
+          
+          // Check business object
+          if (!voucherBusinessId && voucher.business) {
+            voucherBusinessId = 
+              voucher.business._id?.toString() ||
+              voucher.business.id?.toString();
+          }
+          
+          // Compare both as strings to handle ObjectId comparison
+          const matches = voucherBusinessId && voucherBusinessId === businessIdToMatch;
+          
+          // Debug log (remove in production)
+          if (process.env.NODE_ENV === 'development' && voucherBusinessId) {
+            console.log('Voucher business ID:', voucherBusinessId, 'Store ID:', businessIdToMatch, 'Matches:', matches, 'Voucher:', {
+              id: voucher._id || voucher.id,
+              customName: voucher.customName,
+              businessName: voucher.businessInfo?.businessName,
+              claimedAt: voucher.claimedAt,
+              status: voucher.status
+            });
+          }
+          
+          return matches;
+        })
+        // Load all vouchers for carousel (no limit)
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Filtered vouchers for store:', storeId, filtered.length, 'vouchers found', filtered.map(v => ({
+          id: v._id || v.id,
+          customName: v.customName,
+          claimedAt: v.claimedAt,
+          businessId: v.businessInfo?.businessId || v.businessId
+        })));
+      }
+      setBusinessVouchers(filtered);
+      // Reset carousel index when vouchers change
+      setCurrentVoucherIndex(0);
+    } else {
+      setBusinessVouchers([]);
+      setCurrentVoucherIndex(0);
+    }
+  }, [customerVouchers, storeId]);
+
+  // Build set of exchanged voucher template IDs from user's vouchers
+  useEffect(() => {
+    if (myCustomerVouchers && myCustomerVouchers.length > 0) {
+      const exchangedIds = new Set();
+      myCustomerVouchers.forEach((myVoucher) => {
+        // Get the voucher template ID from user's voucher
+        const templateId = 
+          myVoucher.voucher?._id?.toString() || 
+          myVoucher.voucher?.id?.toString() ||
+          myVoucher.voucherId?.toString() ||
+          myVoucher.voucherTemplateId?.toString();
+        if (templateId) {
+          exchangedIds.add(templateId);
+        }
+      });
+      setExchangedVoucherIds(exchangedIds);
+    } else {
+      setExchangedVoucherIds(new Set());
+    }
+  }, [myCustomerVouchers]);
+
+  // Handle exchange voucher - opens confirmation dialog
+  const handleExchangeVoucher = (voucher) => {
+    setVoucherToExchange(voucher);
+    setOpenExchangeDialog(true);
+  };
+
+  // Confirm and execute voucher exchange
+  const handleConfirmExchange = async () => {
+    if (!voucherToExchange) return;
+    
+    const voucherId = voucherToExchange._id || voucherToExchange.id;
+    setOpenExchangeDialog(false);
+    setExchangingVoucherId(voucherId);
+    
+    try {
+      await dispatch(redeemCustomerVoucher({ voucherId })).unwrap();
+      
+      toast.success(
+        (t) => (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Voucher exchanged successfully!
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              View your vouchers in your voucher wallet
+            </Typography>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                toast.dismiss(t.id);
+                navigate(PATH.REWARDS);
+              }}
+              sx={{
+                mt: 0.5,
+                backgroundColor: '#22c55e',
+                '&:hover': { backgroundColor: '#16a34a' },
+                textTransform: 'none',
+                fontSize: '12px',
+                py: 0.5,
+                px: 1.5
+              }}
+            >
+              View Voucher Wallet
+            </Button>
+          </Box>
+        ),
+        {
+          duration: 5000,
+          position: 'top-right',
+        }
+      );
+      
+      // Refresh vouchers to update claimedAt status from API
+      await dispatch(getCustomerVouchers({
+        status: 'active',
+        page: 1,
+        limit: 100,
+      }));
+      
+      // Refresh user's exchanged vouchers to update the exchanged list
+      if (role === 'customer' && currentUser?.accessToken) {
+        await dispatch(getMyCustomerVouchers({
+          status: 'redeemed',
+          page: 1,
+          limit: 1000,
+        }));
+      }
+    } catch (error) {
+      // Error handled in slice
+    } finally {
+      setExchangingVoucherId(null);
+      setVoucherToExchange(null);
+    }
+  };
 
   const refreshFeedbackLists = () => {
     const ratingParam =
@@ -561,38 +746,239 @@ export default function StoreDetail() {
         </Stack>
       </div>
 
-        <section className="cooperate-section">
-          <div className="homePage-container">
-          <div className="promo-wrapper">
-            <div className="promo-left">
-              <p className="voucher-eyebrow">Featured deals</p>
-              <h2 className="voucher-heading">Collect green vouchers</h2>
-              <p className="voucher-copy">
-                Grab exclusive discount codes for partner stores. Collect now and
-                redeem when borrowing reusable cups and containers.
-              </p>
-              <button className="voucher-cta">Collect now</button>
-            </div>
-            <div className="promo-right">
-              <div className="voucher-lists">
-                {vouchers.slice(0, 2).map((v) => (
-                  <div key={v.id} className="voucher-cards">
-                    <div className="voucher-left">
-                      <div className="voucher-off">{v.off}</div>
-                      <div className="voucher-note">{v.note}</div>
+        {(businessVouchers.length > 0 || isLoadingVouchers) && (
+          <section className="cooperate-section">
+            <div className="voucher-section-wrapper">
+              <div className="voucher-section-header">
+                <Typography variant="h4" className="voucher-section-title">
+                  {businessName} Vouchers
+                </Typography>
+              </div>
+              <div className="voucher-carousel-wrapper-section">
+                  {isLoadingVouchers ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : businessVouchers.length > 0 ? (
+                    <div className="voucher-carousel-container">
+                      <IconButton
+                        className="carousel-arrow carousel-arrow-left"
+                        onClick={() => {
+                          setCurrentVoucherIndex((prev) => {
+                            const newIndex = Math.max(0, prev - vouchersToScroll);
+                            return newIndex;
+                          });
+                        }}
+                        disabled={currentVoucherIndex === 0 || businessVouchers.length <= vouchersPerPage}
+                        sx={{
+                          position: 'absolute',
+                          left: '-20px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          zIndex: 2,
+                          backgroundColor: 'white',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          '&:hover': {
+                            backgroundColor: '#f5f5f5',
+                          },
+                          '&.Mui-disabled': {
+                            opacity: 0.3,
+                          }
+                        }}
+                      >
+                        <ArrowBackIosIcon />
+                      </IconButton>
+                      
+                      <div className="voucher-carousel-wrapper">
+                        <div 
+                          className="voucher-carousel-track"
+                          style={{
+                            display: 'flex',
+                            transform: `translateX(-${(currentVoucherIndex * 100) / vouchersPerPage}%)`,
+                            transition: 'transform 0.3s ease-in-out'
+                          }}
+                        >
+                          {businessVouchers.map((voucher, index) => {
+                            const discountPercent = voucher.discountPercent || 0;
+                            const endDate = voucher.endDate;
+                            let expiryText = 'N/A';
+                            if (endDate) {
+                              const date = new Date(endDate);
+                              if (!isNaN(date.getTime())) {
+                                expiryText = date.toLocaleDateString('en-US', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric'
+                                });
+                              }
+                            }
+                            const voucherId = voucher._id || voucher.id;
+                            // Check if this voucher template has been exchanged by the current user
+                            // by comparing template ID with user's exchanged vouchers
+                            const templateId = voucherId.toString();
+                            const isExchanged = exchangedVoucherIds.has(templateId);
+                            const canSave = userPoints >= (voucher.rewardPointCost || 0);
+                            const maxUsage = voucher.maxUsage || 0;
+                            const redeemedCount = voucher.redeemedCount || 0;
+                            const usagePercentage = maxUsage > 0 ? Math.round((redeemedCount / maxUsage) * 100) : 0;
+
+                            return (
+                              <div 
+                                key={voucherId} 
+                                className={`voucher-card-custom-carousel ${voucher.status !== 'active' ? 'inactive' : ''}`}
+                                style={{
+                                  flex: '0 0 calc(100% / 5)',
+                                  minWidth: 'calc(100% / 5)',
+                                  padding: '0 8px'
+                                }}
+                              >
+                                {/* Left Strip */}
+                                <div className="voucher-card-strip">
+                                  <div className="voucher-strip-badge">
+                                    <div className="badge-icon-wrapper">
+                                      <EcoIcon className="strip-icon" />
+                                    </div>
+                                    <span className="strip-text">BACK2USE</span>
+                                  </div>
+                                </div>
+
+                                {/* Card Content */}
+                                <div className="voucher-card-body">
+                                  <div className="voucher-main-info">
+                                    <Typography variant="h3" className="voucher-discount-text">
+                                      {discountPercent}%
+                                    </Typography>
+                                    <Typography variant="body2" className="voucher-category-text">
+                                      {voucher.businessInfo?.businessName || businessName}
+                                    </Typography>
+                                    {voucher.customName && (
+                                      <Typography variant="body2" className="voucher-category-text" style={{ fontWeight: 600, marginTop: '4px' }}>
+                                        {voucher.customName}
+                                      </Typography>
+                                    )}
+                                    
+                                    {/* Points */}
+                                    <div className="voucher-points-section">
+                                      <GiftIcon className="points-icon" />
+                                      <Typography variant="caption" className="points-text">
+                                        {voucher.rewardPointCost || 0} points
+                                      </Typography>
+                                    </div>
+
+                                    {/* Usage Progress */}
+                                    {maxUsage > 0 && (
+                                      <div className="voucher-usage-section">
+                                        <LinearProgress 
+                                          variant="determinate" 
+                                          value={usagePercentage} 
+                                          className="usage-bar"
+                                        />
+                                        <Typography variant="caption" className="usage-percentage">
+                                          Used {usagePercentage}% ({redeemedCount}/{maxUsage})
+                                        </Typography>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Footer */}
+                                  <div className="voucher-card-footer-custom">
+                                    {/* Inactive notice */}
+                                    {voucher.status !== 'active' && (
+                                      <Box 
+                                        sx={{ 
+                                          mb: 1.5,
+                                          p: 1,
+                                          backgroundColor: 'rgba(238, 77, 45, 0.1)',
+                                          borderRadius: 1,
+                                          border: '1px solid rgba(238, 77, 45, 0.3)'
+                                        }}
+                                      >
+                                        <Typography 
+                                          variant="caption" 
+                                          sx={{ 
+                                            color: '#ee4d2d',
+                                            fontWeight: 600,
+                                            fontSize: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 0.5
+                                          }}
+                                        >
+                                          <span>⚠</span>
+                                          <span>Inactive - This voucher is not currently available</span>
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                    <Button
+                                      variant="contained"
+                                      className={`save-btn ${isExchanged ? 'saved' : ''} ${!canSave || voucher.status !== 'active' || isExchanged ? 'disabled' : ''}`}
+                                      onClick={() => handleExchangeVoucher(voucher)}
+                                      disabled={!canSave || isExchanged || voucher.status !== 'active' || exchangingVoucherId === voucherId}
+                                      fullWidth
+                                      sx={{
+                                        position: 'relative',
+                                        minHeight: '40px',
+                                        cursor: isExchanged ? 'not-allowed' : 'pointer'
+                                      }}
+                                    >
+                                      {exchangingVoucherId === voucherId ? (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                          <CircularProgress size={20} sx={{ color: 'white' }} />
+                                          <span>Processing...</span>
+                                        </Box>
+                                      ) : (
+                                        isExchanged ? 'Exchanged' : voucher.status !== 'active' ? 'Not Available' : canSave ? 'Exchange Voucher' : `Need ${(voucher.rewardPointCost || 0) - userPoints} more points`
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <IconButton
+                        className="carousel-arrow carousel-arrow-right"
+                        onClick={() => {
+                          setCurrentVoucherIndex((prev) => {
+                            const maxIndex = Math.max(0, businessVouchers.length - vouchersPerPage);
+                            const newIndex = Math.min(maxIndex, prev + vouchersToScroll);
+                            return newIndex;
+                          });
+                        }}
+                        disabled={currentVoucherIndex + vouchersPerPage >= businessVouchers.length || businessVouchers.length <= vouchersPerPage}
+                        sx={{
+                          position: 'absolute',
+                          right: '-20px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          zIndex: 2,
+                          backgroundColor: 'white',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          '&:hover': {
+                            backgroundColor: '#f5f5f5',
+                          },
+                          '&.Mui-disabled': {
+                            opacity: 0.3,
+                          }
+                        }}
+                      >
+                        <ArrowForwardIosIcon />
+                      </IconButton>
                     </div>
-                    <div className="voucher-right">
-                      <div className="voucher-title">{v.title}</div>
-                      <div className="voucher-meta">Code: {v.code} • Exp: {v.expire}</div>
-                      <button className="voucher-btn">Save voucher</button>
-                    </div>
-                  </div>
-                ))}
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        No vouchers available for this store
+                      </Typography>
+                    </Box>
+                  )}
               </div>
             </div>
-          </div>
-          </div>
-        </section>
+          </section>
+        )}
 
       {/* Customer Reviews */}
       <section className="reviews-section">
@@ -773,6 +1159,99 @@ export default function StoreDetail() {
             }}
           >
             {submittingFeedback ? "Saving..." : "Save changes"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Exchange Voucher Confirmation Dialog */}
+      <Dialog
+        open={openExchangeDialog}
+        onClose={() => setOpenExchangeDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          fontWeight: 700, 
+          color: '#164c34',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <GiftIcon sx={{ color: '#22c55e' }} />
+          Confirm Exchange Voucher
+        </DialogTitle>
+        <DialogContent dividers>
+          {voucherToExchange && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Are you sure you want to exchange this voucher?
+              </Typography>
+              
+              <Box sx={{ 
+                p: 2, 
+                backgroundColor: '#f0fdf4', 
+                borderRadius: 2,
+                border: '1px solid #dcfce7'
+              }}>
+                <Typography variant="h6" sx={{ color: '#22c55e', fontWeight: 700, mb: 1 }}>
+                  {voucherToExchange.discountPercent || 0}% OFF
+                </Typography>
+                {voucherToExchange.customName && (
+                  <Typography variant="body1" sx={{ fontWeight: 600, color: '#164c34', mb: 0.5 }}>
+                    {voucherToExchange.customName}
+                  </Typography>
+                )}
+                <Typography variant="body2" sx={{ color: '#16a34a', mb: 1 }}>
+                  {voucherToExchange.businessInfo?.businessName || businessName}
+                </Typography>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
+                  <GiftIcon sx={{ fontSize: 18, color: '#22c55e' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#164c34' }}>
+                    Cost: {voucherToExchange.rewardPointCost || 0} points
+                  </Typography>
+                </Box>
+                
+                {userPoints < (voucherToExchange.rewardPointCost || 0) && (
+                  <Typography variant="caption" sx={{ color: '#dc2626', mt: 1, display: 'block' }}>
+                    ⚠ You need {(voucherToExchange.rewardPointCost || 0) - userPoints} more points
+                  </Typography>
+                )}
+              </Box>
+              
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                This action cannot be undone. The points will be deducted from your account.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button 
+            onClick={() => setOpenExchangeDialog(false)}
+            disabled={exchangingVoucherId !== null}
+            sx={{ textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmExchange}
+            variant="contained"
+            disabled={exchangingVoucherId !== null || !voucherToExchange || userPoints < (voucherToExchange?.rewardPointCost || 0)}
+            sx={{
+              backgroundColor: '#22c55e',
+              '&:hover': { backgroundColor: '#16a34a' },
+              textTransform: 'none',
+              minWidth: '120px'
+            }}
+          >
+            {exchangingVoucherId ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} sx={{ color: 'white' }} />
+                <span>Exchanging...</span>
+              </Box>
+            ) : (
+              'Confirm Exchange'
+            )}
           </Button>
         </DialogActions>
       </Dialog>

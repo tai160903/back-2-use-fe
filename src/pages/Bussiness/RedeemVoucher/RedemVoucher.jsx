@@ -213,12 +213,29 @@ export default function RedemVoucher() {
     }
 
     try {
-      // Fix date handling: Format date as UTC to match server expectations
-      // Server expects dates in UTC, so we format the date string directly as UTC midnight
-      const startDateISO = `${createForm.startDate}T00:00:00.000Z`;
+      // Fix date handling: Convert local date to UTC properly
+      // For start date: ensure it's not in the past when converted to UTC
+      const selectedStartDate = new Date(createForm.startDate);
+      selectedStartDate.setHours(0, 0, 0, 0); // Start of day in local timezone
+      const startDateLocalISO = selectedStartDate.toISOString();
       
-      // For end date, set to end of day in UTC
-      const endDateISO = `${createForm.endDate}T23:59:59.999Z`;
+      // Get current UTC time
+      const nowUTC = new Date();
+      
+      // If the converted UTC time is in the past, use current UTC time instead
+      let startDateISO;
+      if (new Date(startDateLocalISO) < nowUTC) {
+        // If start date would be in the past in UTC, use current UTC time
+        startDateISO = nowUTC.toISOString();
+      } else {
+        // Use the start of day in local timezone converted to UTC
+        startDateISO = startDateLocalISO;
+      }
+      
+      // For end date, set to end of day in local timezone, then convert to UTC
+      const endDateLocal = new Date(createForm.endDate);
+      endDateLocal.setHours(23, 59, 59, 999); // End of day in local timezone
+      const endDateISO = endDateLocal.toISOString();
 
       await dispatch(
         createBusinessVoucher({
@@ -296,12 +313,29 @@ export default function RedemVoucher() {
     }
 
     try {
-      // Fix date handling: Format date as UTC to match server expectations
-      // Server expects dates in UTC, so we format the date string directly as UTC midnight
-      const startDateISO = `${editForm.startDate}T00:00:00.000Z`;
+      // Fix date handling: Convert local date to UTC properly
+      // For start date: ensure it's not in the past when converted to UTC
+      const selectedStartDate = new Date(editForm.startDate);
+      selectedStartDate.setHours(0, 0, 0, 0); // Start of day in local timezone
+      const startDateLocalISO = selectedStartDate.toISOString();
       
-      // For end date, set to end of day in UTC
-      const endDateISO = `${editForm.endDate}T23:59:59.999Z`;
+      // Get current UTC time
+      const nowUTC = new Date();
+      
+      // If the converted UTC time is in the past, use current UTC time instead
+      let startDateISO;
+      if (new Date(startDateLocalISO) < nowUTC) {
+        // If start date would be in the past in UTC, use current UTC time
+        startDateISO = nowUTC.toISOString();
+      } else {
+        // Use the start of day in local timezone converted to UTC
+        startDateISO = startDateLocalISO;
+      }
+      
+      // For end date, set to end of day in local timezone, then convert to UTC
+      const endDateLocal = new Date(editForm.endDate);
+      endDateLocal.setHours(23, 59, 59, 999); // End of day in local timezone
+      const endDateISO = endDateLocal.toISOString();
 
       const voucherId = selectedVoucher._id || selectedVoucher.id;
       await dispatch(

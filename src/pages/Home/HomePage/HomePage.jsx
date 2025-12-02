@@ -36,6 +36,7 @@ import storeImg2 from "../../../assets/image/item2.jpg";
 import storeImg3 from "../../../assets/image/item3.png";
 import storeImg4 from "../../../assets/image/banner.jpg";
 import storeImg5 from "../../../assets/image/banner1.jpg";
+import banner4Img from "../../../assets/image/banner4.jpg";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -213,22 +214,22 @@ export default function HomePage() {
           <div className="stats-container">
             <div className="stat-card">
               <h3>Trusted by</h3>
-              <div className="stat-number">1,900+</div>
+              <div className="stat-number" style={{ color: '#0b5529', fontWeight: '700' }}>1,900+</div>
               <p>Happy Plant Lovers</p>
             </div>
             <div className="stat-card">
               <h3>Explore</h3>
-              <div className="stat-number">8,000+</div>
+              <div className="stat-number" style={{ color: '#0b5529', fontWeight: '700' }}>8,000+</div>
               <p>Unique Green Beauties</p>
             </div>
             <div className="stat-card">
               <h3>Backed by</h3>
-              <div className="stat-number">520+</div>
+              <div className="stat-number" style={{ color: '#0b5529', fontWeight: '700' }}>520+</div>
               <p>Local Greenhouses</p>
             </div>
             <div className="stat-card">
               <h3>Rated</h3>
-              <div className="stat-number">4.9★</div>
+              <div className="stat-number" style={{ color: '#0b5529', fontWeight: '700' }}>4.9★</div>
               <p>by Our Customers</p>
             </div>
           </div>
@@ -424,7 +425,16 @@ export default function HomePage() {
       </section>
 
       {/* cooperate - Voucher collection banner */}
-      <section className="cooperate-section">
+      <section 
+        className="cooperate-section"
+        style={{
+          backgroundImage: `url(${banner4Img})`,
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'top'
+        }}
+      >
         <div className="homePage-container">
           <div className="promo-wrapper">
             <div className="promo-left">
