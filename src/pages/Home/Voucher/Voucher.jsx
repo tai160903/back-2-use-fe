@@ -22,15 +22,18 @@ import {
   Star as StarIcon,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
-import { getCustomerVouchers, redeemCustomerVoucher } from '../../../store/slices/voucherSlice';
+import { getCustomerVouchers, redeemCustomerVoucher, getMyCustomerVouchers } from '../../../store/slices/voucherSlice';
 import { PATH } from '../../../routes/path';
+import { getUserRole } from '../../../utils/authUtils';
+import { getCurrentUser } from '../../../utils/authUtils';
 import './Voucher.css';
 
 export default function Voucher() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { 
+  const {
     customerVouchers, 
+    myCustomerVouchers,
     customerVoucherPagination,
     isLoading 
   } = useSelector((state) => state.vouchers);
@@ -41,9 +44,15 @@ export default function Voucher() {
   const [savedVouchers, setSavedVouchers] = useState(new Set());
   const [page, setPage] = useState(1);
   const [exchangingVoucherId, setExchangingVoucherId] = useState(null);
+  const [exchangedVoucherIds, setExchangedVoucherIds] = useState(new Set());
+  const [openExchangeDialog, setOpenExchangeDialog] = useState(false);
+  const [voucherToExchange, setVoucherToExchange] = useState(null);
   const itemsPerPage = 12;
 
-  // Load vouchers from API
+  const role = getUserRole();
+  const currentUser = getCurrentUser();
+
+  // Load vouchers from API and user's exchanged vouchers
   useEffect(() => {
     // Map filter to API status
     let apiStatus = undefined;
@@ -54,12 +63,22 @@ export default function Voucher() {
       apiStatus = undefined; // Load all and filter client-side
     }
     
+    // Load more vouchers to enable carousel scrolling
     dispatch(getCustomerVouchers({ 
       status: apiStatus,
-      page,
-      limit: itemsPerPage 
+      page: 1, // Load from page 1
+      limit: 50 // Load enough vouchers for carousel
     }));
-  }, [dispatch, statusFilter, page]);
+
+    // Load user's exchanged vouchers to check which ones have been exchanged
+    if (role === 'customer' && currentUser?.accessToken) {
+      dispatch(getMyCustomerVouchers({
+        status: 'redeemed',
+        page: 1,
+        limit: 1000, // Load all to check
+      }));
+    }
+  }, [dispatch, statusFilter, page, role, currentUser?.accessToken]);
 
   // Transform API vouchers to display format
   const vouchers = useMemo(() => {
@@ -67,7 +86,12 @@ export default function Voucher() {
       return [];
     }
 
-    return customerVouchers.map((voucher) => {
+    // Filter out leaderboard vouchers - only show business vouchers
+    const businessVouchers = customerVouchers.filter(
+      (voucher) => voucher.voucherType !== 'leaderboard'
+    );
+
+    return businessVouchers.map((voucher) => {
       const discountPercent = voucher.discountPercent || 0;
       const maxUsage = voucher.maxUsage || 0;
       const redeemedCount = voucher.redeemedCount || 0;
@@ -87,13 +111,11 @@ export default function Voucher() {
         }
       }
 
-      // Check if voucher has been exchanged by user (has claimedAt)
-      const isExchanged = !!voucher.claimedAt;
-
+      // Template vouchers don't have claimedAt - will check against user's exchanged vouchers
       return {
         id: voucher._id || voucher.id,
         voucherId: voucher._id || voucher.id,
-        type: voucher.voucherType === 'leaderboard' ? 'exclusive' : 'regular',
+        type: 'regular', // Only business vouchers, no leaderboard
         discount: `${discountPercent}%`,
         maxDiscount: 0, // Not available in API
         minSpend: 0, // Not available in API
@@ -108,24 +130,51 @@ export default function Voucher() {
         baseCode: voucher.baseCode,
         description: voucher.customDescription,
         businessName: voucher.businessInfo?.businessName,
-        isExchanged: isExchanged,
-        claimedAt: voucher.claimedAt,
+        originalVoucher: voucher, // Keep original for reference
       };
     });
   }, [customerVouchers]);
 
+  // Build set of exchanged voucher template IDs from user's vouchers
+  useEffect(() => {
+    if (myCustomerVouchers && myCustomerVouchers.length > 0) {
+      const exchangedIds = new Set();
+      myCustomerVouchers.forEach((myVoucher) => {
+        // Get the voucher template ID from user's voucher
+        const templateId = 
+          myVoucher.voucher?._id?.toString() || 
+          myVoucher.voucher?.id?.toString() ||
+          myVoucher.voucherId?.toString() ||
+          myVoucher.voucherTemplateId?.toString();
+        if (templateId) {
+          exchangedIds.add(templateId);
+        }
+      });
+      setExchangedVoucherIds(exchangedIds);
+    } else {
+      setExchangedVoucherIds(new Set());
+    }
+  }, [myCustomerVouchers]);
+
   // Get user points from wallet or user state (mock for now)
   const userPoints = 350; // TODO: Get from actual user wallet/points
 
-  const handleSaveVoucher = async (voucherId) => {
+  // Handle exchange voucher - opens confirmation dialog
+  const handleSaveVoucher = (voucher) => {
+    setVoucherToExchange(voucher);
+    setOpenExchangeDialog(true);
+  };
+
+  // Confirm and execute voucher exchange
+  const handleConfirmExchange = async () => {
+    if (!voucherToExchange) return;
+    
+    const voucherId = voucherToExchange.voucherId || voucherToExchange.id;
+    setOpenExchangeDialog(false);
     setExchangingVoucherId(voucherId);
+    
     try {
       await dispatch(redeemCustomerVoucher({ voucherId })).unwrap();
-      // Add to saved vouchers set
-      const newSaved = new Set(savedVouchers);
-      newSaved.add(voucherId);
-      setSavedVouchers(newSaved);
-      
       // Show success toast with link to voucher wallet
       toast.success(
         (t) => (
@@ -141,7 +190,7 @@ export default function Voucher() {
               variant="contained"
               onClick={() => {
                 toast.dismiss(t.id);
-                navigate(PATH.VOUCHERS);
+                navigate(PATH.REWARDS);
               }}
               sx={{
                 mt: 0.5,
@@ -164,16 +213,26 @@ export default function Voucher() {
       );
       
       // Refresh vouchers list
-      dispatch(getCustomerVouchers({ 
+      await dispatch(getCustomerVouchers({ 
         status: statusFilter === 'all' ? undefined : statusFilter === 'active' ? 'active' : undefined,
         page,
         limit: itemsPerPage 
       }));
+
+      // Refresh user's exchanged vouchers to update the exchanged list
+      if (role === 'customer' && currentUser?.accessToken) {
+        await dispatch(getMyCustomerVouchers({
+          status: 'redeemed',
+          page: 1,
+          limit: 1000,
+        }));
+      }
     } catch (error) {
       // Error toast is already handled in the slice, no need to call again
       // Just update saved vouchers state if needed
     } finally {
       setExchangingVoucherId(null);
+      setVoucherToExchange(null);
     }
   };
 
@@ -264,8 +323,9 @@ export default function Voucher() {
             <>
               <div className="voucher-grid-custom">
                 {filteredVouchers.map((voucher) => {
-                  // Check if voucher is already exchanged (from API or local state)
-                  const isExchanged = voucher.isExchanged || savedVouchers.has(voucher.id);
+                  // Check if this voucher template has been exchanged by the current user
+                  const templateId = voucher.voucherId.toString();
+                  const isExchanged = exchangedVoucherIds.has(templateId);
                   const canSave = userPoints >= voucher.points;
               
               return (
@@ -370,7 +430,7 @@ export default function Voucher() {
                       <Button
                         variant="contained"
                         className={`save-btn ${isExchanged ? 'saved' : ''} ${!canSave || voucher.status !== 'active' || isExchanged ? 'disabled' : ''}`}
-                        onClick={() => handleSaveVoucher(voucher.voucherId)}
+                        onClick={() => handleSaveVoucher(voucher)}
                         disabled={!canSave || isExchanged || voucher.status !== 'active' || exchangingVoucherId === voucher.voucherId}
                         fullWidth
                         sx={{
@@ -548,6 +608,99 @@ export default function Voucher() {
             }}
           >
             Understood
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Exchange Voucher Confirmation Dialog */}
+      <Dialog
+        open={openExchangeDialog}
+        onClose={() => setOpenExchangeDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          fontWeight: 700, 
+          color: '#164c34',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <GiftIcon sx={{ color: '#22c55e' }} />
+          Confirm Exchange Voucher
+        </DialogTitle>
+        <DialogContent dividers>
+          {voucherToExchange && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Are you sure you want to exchange this voucher?
+              </Typography>
+              
+              <Box sx={{ 
+                p: 2, 
+                backgroundColor: '#f0fdf4', 
+                borderRadius: 2,
+                border: '1px solid #dcfce7'
+              }}>
+                <Typography variant="h6" sx={{ color: '#22c55e', fontWeight: 700, mb: 1 }}>
+                  {voucherToExchange.discount || '0%'}
+                </Typography>
+                {voucherToExchange.customName && (
+                  <Typography variant="body1" sx={{ fontWeight: 600, color: '#164c34', mb: 0.5 }}>
+                    {voucherToExchange.customName}
+                  </Typography>
+                )}
+                <Typography variant="body2" sx={{ color: '#16a34a', mb: 1 }}>
+                  {voucherToExchange.businessName || voucherToExchange.category}
+                </Typography>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
+                  <GiftIcon sx={{ fontSize: 18, color: '#22c55e' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#164c34' }}>
+                    Cost: {voucherToExchange.points || 0} points
+                  </Typography>
+                </Box>
+                
+                {userPoints < (voucherToExchange.points || 0) && (
+                  <Typography variant="caption" sx={{ color: '#dc2626', mt: 1, display: 'block' }}>
+                    ⚠ You need {(voucherToExchange.points || 0) - userPoints} more points
+                  </Typography>
+                )}
+              </Box>
+              
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                This action cannot be undone. The points will be deducted from your account.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button 
+            onClick={() => setOpenExchangeDialog(false)}
+            disabled={exchangingVoucherId !== null}
+            sx={{ textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmExchange}
+            variant="contained"
+            disabled={exchangingVoucherId !== null || !voucherToExchange || userPoints < (voucherToExchange?.points || 0)}
+            sx={{
+              backgroundColor: '#22c55e',
+              '&:hover': { backgroundColor: '#16a34a' },
+              textTransform: 'none',
+              minWidth: '120px'
+            }}
+          >
+            {exchangingVoucherId ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} sx={{ color: 'white' }} />
+                <span>Exchanging...</span>
+              </Box>
+            ) : (
+              'Confirm Exchange'
+            )}
           </Button>
         </DialogActions>
       </Dialog>

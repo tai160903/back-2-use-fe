@@ -308,11 +308,15 @@
   font-weight: 600;
 }
 
+.stat-card .stat-number,
+.statistics-section .stat-card .stat-number,
+.statistics-section .stat-number,
 .stat-number {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #2d5016;
-  margin-bottom: 0.5rem;
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  color: #052e16 !important;
+  margin-bottom: 0.5rem !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .stat-card p {
@@ -809,17 +813,18 @@
 
 /* cooperate */
 
+.homePage .cooperate-section,
 .cooperate-section {
   padding-top: 80px !important;
   padding-bottom: 80px !important;
   position: relative !important;
-  background-image: url("../../../assets/image/banner4.jpg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: top;
+  background-image: url("../../../assets/image/banner4.jpg") !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-position: top !important;
   margin-bottom: 100px;
+  background-color: transparent !important;
 }
 
 /* Top Rated Stores */
