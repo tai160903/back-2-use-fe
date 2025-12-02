@@ -16,7 +16,7 @@ import MainLayout from "../layouts/MainLayout/MainLayout";
 import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness";
 import BusinessRegistrationStatus from "../pages/Auth/BusinessRegistrationStatus/BusinessRegistrationStatus";
 import Profile from "../pages/Home/Profile/Profile";
-import StorePage from "../pages/Home/Store/StorePage";
+// import StorePage from "../pages/Home/Store/StorePage";
 import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
 import WalletCustomer from "../pages/Home/WalletCustomer/WalletCustomer";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
@@ -184,14 +184,14 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
-        {
-          path: PATH.STORE,
-          element: (
-            <ProtectedRoute allowedRoles={["customer", "business"]}>
-              <StorePage />
-            </ProtectedRoute>
-          ),
-        },
+        // {
+        //   path: PATH.STORE,
+        //   element: (
+        //     <ProtectedRoute allowedRoles={["customer", "business"]}>
+        //       <StorePage />
+        //     </ProtectedRoute>
+        //   ),
+        // },
         {
           path: PATH.TRANSACTION_HISTORY,
           element: (

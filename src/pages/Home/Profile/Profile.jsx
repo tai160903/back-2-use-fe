@@ -64,6 +64,13 @@ export default function Profile({ readOnly = false }) {
   const user = userInfo;
 
   const wallet = userInfo?.wallet;
+  const rewardPoints = user?.rewardPoints ?? 0;
+  const rankingPoints = user?.rankingPoints ?? 0;
+  const successReturns = user?.returnSuccessCount ?? 0;
+  const failedReturns = user?.returnFailedCount ?? 0;
+  const totalReturns = successReturns + failedReturns;
+  const successRate =
+    totalReturns > 0 ? Math.round((successReturns / totalReturns) * 100) : 0;
   const [isEditing, setIsEditing] = useState(false);
 
   // Avatar upload states
@@ -585,7 +592,7 @@ export default function Profile({ readOnly = false }) {
                           fontSize: "20px",
                         }}
                       >
-                        Pending Balance
+                        Holding Balance
                       </Typography>
                       <span>Processing transactions</span>
                     </div>
@@ -604,7 +611,7 @@ export default function Profile({ readOnly = false }) {
                         fontWeight: "600",
                       }}
                     >
-                      {(0).toLocaleString("vi-VN")} VNĐ
+                      {(wallet?.holdingBalance || 0).toLocaleString("vi-VN")} VNĐ
                     </Typography>
                   </div>
                 </div>
@@ -638,7 +645,7 @@ export default function Profile({ readOnly = false }) {
                           fontSize: "30px",
                         }}
                       >
-                        2,847 Points
+                        {rewardPoints.toLocaleString("vi-VN")} Points
                       </Typography>
                       <span>Current Legit Points</span>
                     </div>
@@ -657,7 +664,7 @@ export default function Profile({ readOnly = false }) {
                         fontWeight: "600",
                       }}
                     >
-                      #47
+                      {rankingPoints ? `#${rankingPoints}` : "N/A"}
                     </Typography>
                     <span style={{ color: "#6b7280" }}>Global Ranking</span>
                   </div>
@@ -683,9 +690,9 @@ export default function Profile({ readOnly = false }) {
                           fontSize: "18px",
                         }}
                       >
-                        Weekly Progress
+                      Successful Returns
                       </Typography>
-                      <span>+245 points this week</span>
+                      <span>Total successful returns</span>
                     </div>
                   </div>
                   <div
@@ -702,9 +709,9 @@ export default function Profile({ readOnly = false }) {
                         fontWeight: "600",
                       }}
                     >
-                      <ArrowUpwardIcon /> 3
+                      {successReturns.toLocaleString("vi-VN")}
                     </Typography>
-                    <span style={{ color: "#6b7280" }}>Rank improved</span>
+                    <span style={{ color: "#6b7280" }}>Successful returns</span>
                   </div>
                 </div>
                 <div className="profile-legitPoint-activity">
@@ -728,9 +735,9 @@ export default function Profile({ readOnly = false }) {
                           fontSize: "18px",
                         }}
                       >
-                        Recent Activity
+                      Failed Returns
                       </Typography>
-                      <span>Cup return bonus</span>
+                      <span>Total failed returns</span>
                     </div>
                   </div>
                   <div
@@ -747,9 +754,9 @@ export default function Profile({ readOnly = false }) {
                         fontWeight: "600",
                       }}
                     >
-                      <AddIcon /> 50
+                    {failedReturns.toLocaleString("vi-VN")}
                     </Typography>
-                    <span style={{ color: "#6b7280" }}>2 hours ago</span>
+                    <span style={{ color: "#6b7280" }}>Failed returns</span>
                   </div>
                 </div>
                 <div className="profile-legitPoint-achievement">
@@ -773,9 +780,9 @@ export default function Profile({ readOnly = false }) {
                           fontSize: "18px",
                         }}
                       >
-                        Achievement Level
+                      Success Rate
                       </Typography>
-                      <span>Gold Member Status</span>
+                      <span>Based on return history</span>
                     </div>
                   </div>
                   <div
@@ -792,9 +799,11 @@ export default function Profile({ readOnly = false }) {
                         fontWeight: "600",
                       }}
                     >
-                      <AddIcon /> Level 8
+                     {successRate}
                     </Typography>
-                    <span style={{ color: "#6b7280" }}>Next: 3,000 pts</span>
+                    <span style={{ color: "#6b7280" }}>
+                      Total: {totalReturns.toLocaleString("vi-VN")} returns
+                    </span>
                   </div>
                 </div>
               </div>

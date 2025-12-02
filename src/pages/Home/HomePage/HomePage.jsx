@@ -20,7 +20,11 @@ import { PATH } from "../../../routes/path";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getLeaderBoardApiCustomer } from "../../../store/slices/leaderBoardSlice";
-import { getCustomerVouchers, redeemCustomerVoucher } from "../../../store/slices/voucherSlice";
+import {
+  getCustomerVouchers,
+  redeemCustomerVoucher,
+} from "../../../store/slices/voucherSlice";
+import { getAllStoreApi } from "../../../store/slices/storeSilce";
 import toast from "react-hot-toast";
 
 import { IoQrCodeOutline } from "react-icons/io5";
@@ -38,6 +42,7 @@ export default function HomePage() {
   const dispatch = useDispatch();
   const { leaderBoard, isLoading } = useSelector((state) => state.leaderBoard);
   const { customerVouchers, isLoading: vouchersLoading } = useSelector((state) => state.vouchers);
+  const { allStores, isLoading: isLoadingStores } = useSelector((state) => state.store);
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -70,19 +75,35 @@ export default function HomePage() {
   useEffect(() => {
     dispatch(getCustomerVouchers({ page: 1, limit: 2 }));
   }, [dispatch]);
-  const stores = useMemo(
-    () => [
-      { id: 1, name: "Green Leaf Cafe", rating: 4.8, image: storeImg1, address: "84 Greenway St, District 1, HCMC" },
-      { id: 2, name: "Eco Brew House", rating: 4.9, image: storeImg2, address: "12 River Park, District 7, HCMC" },
-      { id: 3, name: "Urban Plant Hub", rating: 4.7, image: storeImg3, address: "33 Nguyen Hue Blvd, District 1, HCMC" },
-      { id: 4, name: "Forest Cup Station", rating: 5.0, image: image1, address: "55 Le Loi, District 1, HCMC" },
-      { id: 5, name: "Sunny Pots & More", rating: 4.6, image: plantIndoor, address: "102 Bach Dang, Binh Thanh, HCMC" },
-      { id: 6, name: "River Side Reuse", rating: 4.9, image: plantOutdoor, address: "9 Tran Nao, Thu Duc City, HCMC" },
-      { id: 7, name: "Mossy Market", rating: 4.8, image: storeImg4, address: "21 Ly Tu Trong, District 1, HCMC" },
-      { id: 8, name: "Roots & Beans", rating: 4.7, image: storeImg5, address: "7 Cach Mang Thang 8, District 3, HCMC" },
-    ],
-    []
-  );
+
+  // Load all businesses for home top stores section
+  useEffect(() => {
+    dispatch(getAllStoreApi());
+  }, [dispatch]);
+
+  // Top 8 stores: highest rating, newest
+  const topStores = Array.isArray(allStores) && allStores.length > 0
+    ? (() => {
+        const activeStores = allStores.filter(
+          (store) => store.isActive && !store.isBlocked
+        );
+
+        const sorted = [...activeStores].sort((a, b) => {
+          const ratingA =
+            typeof a.averageRating === "number" ? a.averageRating : 0;
+          const ratingB =
+            typeof b.averageRating === "number" ? b.averageRating : 0;
+
+          if (ratingB !== ratingA) return ratingB - ratingA;
+
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        });
+
+        return sorted.slice(0, 8);
+      })()
+    : [];
   // Transform API vouchers to display format - only show active vouchers
   const vouchers = useMemo(() => {
     if (!customerVouchers || customerVouchers.length === 0) {
@@ -323,31 +344,79 @@ export default function HomePage() {
           </div>
 
           <div className="store-grid">
-            {stores.map((store) => (
-              <div className="store-card" key={store.id}>
-                <div className="store-thumb">
-                  <img src={store.image} alt={store.name} />
-                </div>
-                <div className="store-info">
-                  <div className="store-name">{store.name}</div>
-                  <div className="store-rating">
-                    {Array.from({ length: 5 }).map((_, idx) => {
-                      const filled = idx < Math.round(store.rating);
-                      return filled ? (
-                        <FaStar className="star filled" key={idx} />
-                      ) : (
-                        <FaRegStar className="star" key={idx} />
-                      );
-                    })}
-                    <span className="rating-number">{store.rating.toFixed(1)}</span>
-                  </div>
-                  <div className="store-address">{store.address}</div>
-                </div>
-                <div className="store-actions">
-                  <button className="view-store-btn">View Store</button>
-                </div>
+            {isLoadingStores && topStores?.length === 0 ? (
+              <div
+                style={{
+                  padding: "20px",
+                  textAlign: "center",
+                  color: "#6b7280",
+                }}
+              >
+                Loading top stores...
               </div>
-            ))}
+            ) : topStores?.length === 0 ? (
+              <div
+                style={{
+                  padding: "20px",
+                  textAlign: "center",
+                  color: "#6b7280",
+                }}
+              >
+                No stores available
+              </div>
+            ) : (
+              topStores?.map((store) => {
+                const rating =
+                  typeof store.averageRating === "number"
+                    ? store.averageRating
+                    : 0;
+                const displayName = store.businessName || "Store";
+                const address = store.businessAddress || "";
+                const logo = store.businessLogoUrl || storeImg1;
+
+                return (
+                  <div
+                    className="store-card"
+                    key={store._id || displayName}
+                  >
+                    <div className="store-thumb">
+                      <img src={logo} alt={displayName} />
+                    </div>
+                    <div className="store-info">
+                      <div className="store-name">{displayName}</div>
+                      <div className="store-rating">
+                        {Array.from({ length: 5 }).map((_, idx) => {
+                          const filled = idx < Math.round(rating);
+                          return filled ? (
+                            <FaStar className="star filled" key={idx} />
+                          ) : (
+                            <FaRegStar className="star" key={idx} />
+                          );
+                        })}
+                        <span className="rating-number">
+                          {rating.toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="store-address">{address}</div>
+                    </div>
+                    <div className="store-actions">
+                      <button
+                        className="view-store-btn"
+                        onClick={() => {
+                          if (store._id) {
+                            navigate(
+                              PATH.STOREDETAIL.replace(":id", store._id)
+                            );
+                          }
+                        }}
+                      >
+                        View Store
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
          
