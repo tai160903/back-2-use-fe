@@ -19,18 +19,17 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 // Transform store data từ API
 const transformStoreData = (apiStores) => {
+ 
   return apiStores.map(store => ({
     id: store._id,
     name: store.businessName,
     address: store.businessAddress,
     coords: store.location?.coordinates ? [store.location.coordinates[1], store.location.coordinates[0]] : [10.762621, 106.660172], 
-    products: ["cup", "container", "bottle"], // Default products
     daily: `${store.openTime || '08:00'} - ${store.closeTime || '22:00'}`,
     image: store.businessLogoUrl,
-    rating: 4.5, // Default rating
-    businessType: store.businessType,
     phone: store.businessPhone,
-    isActive: store.isActive
+    isActive: store.isActive,
+    businessType: store.businessType,
   }));
 };
 
@@ -68,14 +67,14 @@ export const useStoreData = () => {
     }
     
     // Gọi API với radius rất lớn (100km) để lấy tất cả stores gần đó
-    const radiusInMeters = 100 * 10000; // 100km
+    const radiusInMeters = 100 * 10000; 
     
     dispatch(getNearbyStores({
       latitude: userLocation[0],
       longitude: userLocation[1],
       radius: radiusInMeters,
       page: 1,
-      limit: 1000 // Lấy nhiều stores
+      limit: 1000 
     }));
   }, [dispatch, userLocation]);
 

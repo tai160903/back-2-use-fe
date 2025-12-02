@@ -347,7 +347,7 @@ export default function StoreDetail() {
   const closeTime = business.closeTime || "22:00";
   const businessOpenCloseHours = `${openTime} - ${closeTime}`;
   const availableProductTypes = productTypes.length > 0 ? productTypes : ["cup", "container"];
-  const rating = business.rating || business.averageRating || 4.5;
+  const rating = business.averageRating;
   const reviewCount = business.reviewCount || business.totalReviews || 0;
 
   return (
