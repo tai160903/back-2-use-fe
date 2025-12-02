@@ -64,6 +64,7 @@ export default function Login() {
       if (payload && payload.data) {
         // Lưu dữ liệu user vào localStorage
         localStorage.setItem("currentUser", JSON.stringify(payload.data));
+        console.log("payload.data", payload.data);
 
         // Lấy role hiện tại ưu tiên từ user object, fallback token qua authUtils
         const userRole = getUserRole() || "customer";

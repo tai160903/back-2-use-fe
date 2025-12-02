@@ -2,9 +2,11 @@ import axios from "axios";
 
 export const fetcher = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  
   headers: {
     "Content-Type": "application/json",
   },
+  
 });
 
 // Biến trạng thái để tránh gọi refresh song song
