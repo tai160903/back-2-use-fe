@@ -88,7 +88,7 @@ const handleGoogleLogin = async () => {
   try {
     // Chuyển hướng đến backend endpoint /auth/google-redirect
     // Backend sẽ xử lý OAuth với Google và redirect về frontend
-    window.location.href = "http://localhost:8000/auth/google-redirect";
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google-redirect`;
   } catch {
     toast.error("Đăng nhập bằng Google thất bại, vui lòng thử lại.");
   }
