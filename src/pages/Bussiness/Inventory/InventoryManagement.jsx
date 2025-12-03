@@ -70,6 +70,7 @@ export default function InventoryManagement() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
     typeName: '',
     description: '',
@@ -123,6 +124,7 @@ export default function InventoryManagement() {
     setSelectedProduct(null);
     setSelectedImage(null);
     setImagePreview(null);
+    setIsCreating(false);
     setFormData({
       typeName: '',
       description: '',
@@ -138,6 +140,7 @@ export default function InventoryManagement() {
     setSelectedProduct(null);
     setSelectedImage(null);
     setImagePreview(null);
+    setIsCreating(false);
     setFormData({
       typeName: '',
       description: '',
@@ -215,6 +218,12 @@ export default function InventoryManagement() {
       return;
     }
 
+    // Prevent multiple submissions
+    if (isCreating) {
+      return;
+    }
+
+    setIsCreating(true);
     try {
       // Create product group with API
       const productGroupData = {
@@ -256,6 +265,8 @@ export default function InventoryManagement() {
           maxWidth: '500px',
         },
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -837,7 +848,7 @@ export default function InventoryManagement() {
       {/* Add/Edit Dialog */}
       <Dialog 
         open={openDialog} 
-        onClose={handleCloseDialog} 
+        onClose={isCreating ? undefined : handleCloseDialog}
         maxWidth="md" 
         fullWidth
         TransitionProps={{
@@ -868,6 +879,7 @@ export default function InventoryManagement() {
               onClick={handleCloseDialog}
               size="small"
               className="close-button"
+              disabled={isCreating}
             >
               <CloseIcon />
             </IconButton>
@@ -1143,17 +1155,18 @@ export default function InventoryManagement() {
               startIcon={<CloseIcon fontSize="small" />}
               className="cancel-button"
               size="small"
+              disabled={isCreating}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
-              disabled={!formData.typeName || !formData.materialId || productGroupLoading}
+              startIcon={!isCreating && (editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />)}
+              disabled={!formData.typeName || !formData.materialId || isCreating}
               className="create-button"
               size="small"
             >
-              {productGroupLoading ? (
+              {isCreating ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CircularProgress size={16} color="inherit" />
                   {editMode ? 'Updating...' : 'Creating...'}
