@@ -111,7 +111,6 @@ const getTimingInfo = (item) => {
 function BorrowCard({ item }) {
   const product = item.productId || {};
   const productGroup = product.productGroupId || {};
-  const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
   const customer = item.customerId || {};
 
@@ -121,10 +120,11 @@ function BorrowCard({ item }) {
     product.imageUrl ||
     "https://via.placeholder.com/150";
   const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
-  const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
 
-  const customerName = customer.fullName || "N/A";
+  // Ưu tiên fullName, nếu không có thì hiển thị email
+  const customerEmail = customer.userId?.email || customer.email || "N/A";
+  const customerName = customer.fullName || customerEmail;
   const quantity = item.quantity || 1;
   const extensions = item.extensionCount || 0;
 
@@ -174,9 +174,6 @@ function BorrowCard({ item }) {
                 </Typography>
                 <Typography variant="body2" className="borrow-content-qr">
                   <MdOutlineQrCode2 /> {qr}
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  <FiBox /> Material: {material}
                 </Typography>
                 <div className="borrow-content-time">
                   <Typography
@@ -296,7 +293,6 @@ function BorrowCard({ item }) {
 function SuccessCard({ item }) {
   const product = item.productId || {};
   const productGroup = product.productGroupId || {};
-  const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
   const customer = item.customerId || {};
 
@@ -306,10 +302,11 @@ function SuccessCard({ item }) {
     product.imageUrl ||
     "https://via.placeholder.com/150";
   const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
-  const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
 
-  const customerName = customer.fullName || "N/A";
+  // Ưu tiên fullName, nếu không có thì hiển thị email
+  const customerEmail = customer.userId?.email || customer.email || "N/A";
+  const customerName = customer.fullName || customerEmail;
   const quantity = item.quantity || 1;
   const extensions = item.extensionCount || 0;
 
@@ -359,9 +356,6 @@ function SuccessCard({ item }) {
                 </Typography>
                 <Typography variant="body2" className="borrow-content-qr">
                   <MdOutlineQrCode2 /> {qr}
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  <FiBox /> Material: {material}
                 </Typography>
                 <div className="borrow-content-time">
                   <Typography
@@ -501,7 +495,6 @@ function SuccessCard({ item }) {
 function FailedCard({ item }) {
   const product = item.productId || {};
   const productGroup = product.productGroupId || {};
-  const materialObj = productGroup.materialId || {};
   const sizeObj = product.productSizeId || {};
   const customer = item.customerId || {};
 
@@ -511,10 +504,11 @@ function FailedCard({ item }) {
     product.imageUrl ||
     "https://via.placeholder.com/150";
   const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
-  const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
 
-  const customerName = customer.fullName || "N/A";
+  // Ưu tiên fullName, nếu không có thì hiển thị email
+  const customerEmail = customer.userId?.email || customer.email || "N/A";
+  const customerName = customer.fullName || customerEmail;
   const quantity = item.quantity || 1;
   const extensions = item.extensionCount || 0;
 
@@ -564,9 +558,6 @@ function FailedCard({ item }) {
                 </Typography>
                 <Typography variant="body2" className="borrow-content-qr">
                   <MdOutlineQrCode2 /> {qr}
-                </Typography>
-                <Typography variant="body2" className="borrow-content-material">
-                  <FiBox /> Material: {material}
                 </Typography>
                 <div className="borrow-content-time">
                   <Typography
@@ -760,7 +751,6 @@ export default function BusinessTransaction() {
   const detail = borrowDetail || {};
   const detailProduct = detail.productId || {};
   const detailGroup = detailProduct.productGroupId || {};
-  const detailMaterial = detailGroup.materialId || {};
   const detailSize = detailProduct.productSizeId || {};
   const detailCustomer = detail.customerId || {};
   const detailPreviousImages = detail.previousConditionImages || {};
@@ -775,6 +765,11 @@ export default function BusinessTransaction() {
   if (rawType === "borrow") typeLabel = "Borrow";
   if (rawType === "return_success") typeLabel = "Return Success";
   if (rawType === "return_failed") typeLabel = "Return Failed";
+
+  // Hiển thị tên khách hàng trong popup: ưu tiên fullName, nếu không có thì dùng email
+  const detailCustomerEmail =
+    detailCustomer.userId?.email || detailCustomer.email || "N/A";
+  const detailCustomerName = detailCustomer.fullName || detailCustomerEmail;
 
   return (
     <div className="transaction">
@@ -1009,9 +1004,6 @@ export default function BusinessTransaction() {
                       </Box>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      Material: {detailMaterial.materialName || "N/A"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
                       Size: {detailSize.sizeName || "N/A"}
                     </Typography>
                     <Typography
@@ -1085,10 +1077,7 @@ export default function BusinessTransaction() {
                       Customer
                     </Typography>
                     <Typography variant="body2">
-                      Name:{" "}
-                      <strong>
-                        {detailCustomer.fullName || "N/A"}
-                      </strong>
+                      Name: <strong>{detailCustomerName}</strong>
                     </Typography>
                     <Typography variant="body2">
                       Phone: {detailCustomer.phone || "N/A"}
