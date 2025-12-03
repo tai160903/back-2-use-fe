@@ -39,7 +39,7 @@ const Material = () => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewingRequest, setReviewingRequest] = useState(null);
   const [reviewMode, setReviewMode] = useState(null); // 'approve' or 'reject'
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState("active");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -134,6 +134,20 @@ const Material = () => {
   const getAllFilteredData = () => {
     const safeMaterials = Array.isArray(materials) ? materials : [];
     let filtered = [...safeMaterials];
+    
+    // Filter by status - only show active materials
+    if (filter === "active") {
+      filtered = filtered.filter((item) => {
+        // Material is active if:
+        // 1. isActive is true
+        // 2. status is 'approved' or 'active'
+        return item.isActive === true || 
+               item.status === 'approved' || 
+               item.status === 'active';
+      });
+    }
+    
+    // Filter by search term
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       filtered = filtered.filter((item) => {
@@ -143,6 +157,16 @@ const Material = () => {
       });
     }
     return filtered;
+  };
+  
+  // Get active materials count
+  const getActiveMaterialsCount = () => {
+    const safeMaterials = Array.isArray(materials) ? materials : [];
+    return safeMaterials.filter((item) => {
+      return item.isActive === true || 
+             item.status === 'approved' || 
+             item.status === 'active';
+    }).length;
   };
 
   const renderRecycleIcon = () => (
@@ -227,7 +251,7 @@ const Material = () => {
         <div className="stat-card stat-card-0">
           <div className="stat-content">
             <div className="stat-info">
-              <h3 className="stat-title">Total Materials</h3>
+              <h3 className="stat-title">Total Active Materials</h3>
               <span className="stat-number">{materials.length}</span>
             </div>
             <PiClipboardTextBold className="stat-icon" size={56} />
@@ -237,7 +261,7 @@ const Material = () => {
         <div className="stat-card stat-card-1">
           <div className="stat-content">
             <div className="stat-info">
-              <h3 className="stat-title">Active</h3>
+              <h3 className="stat-title">Waiting Approve</h3>
               <span className="stat-number pending">
                 {materialRequestPagination?.total || materialRequests?.length || 0}
               </span>
@@ -265,18 +289,18 @@ const Material = () => {
         
         <div className="filter-tabs">
           <button 
-            className={`filter-tab ${filter === "All" ? "active" : ""}`}
-            onClick={() => handleFilterChange(null, "All")}
+            className={`filter-tab ${filter === "active" ? "active" : ""}`}
+            onClick={() => handleFilterChange(null, "active")}
           >
             <PiClipboardTextBold />
-            All ({materials.length})
+            Active ({getActiveMaterialsCount()})
           </button>
           <button 
             className={`filter-tab ${filter === "pending" ? "active" : ""}`}
             onClick={() => handleFilterChange(null, "pending")}
           >
             <CiClock2 />
-            Active ({materialRequestPagination?.total || materialRequests?.length || 0})
+            Waiting Approve ({materialRequestPagination?.total || materialRequests?.length || 0})
           </button>
         </div>
       </div>
