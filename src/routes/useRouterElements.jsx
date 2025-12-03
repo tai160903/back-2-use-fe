@@ -370,6 +370,14 @@ export default function useRouterElements() {
           ),
         },
         {
+          path: PATH.STAFF_TRANSACTION,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <BusinessTransaction />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: PATH.STAFF_VOUCHER,
           element: (
             <ProtectedRoute allowedRoles={["staff"]}>
