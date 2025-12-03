@@ -128,29 +128,35 @@ export default function Subscriptions() {
     return filtered;
   };
 
-  const renderSubscriptionIcon = () => (
+const renderSubscriptionIcon = () => (
+  <BiLayer 
+    size={32}
+    className="subscriptions-title-icon"
+  />
+);
+
+
+const renderEmptyState = () => (
+  <div className="subscriptions-empty">
     <BiLayer 
-      size={32}
-      className="subscriptions-title-icon"
+      size={64}
+      className="subscriptions-empty-icon"
     />
-  );
+    <h3 className="subscriptions-empty-title">No subscriptions found</h3>
+    <p className="subscriptions-empty-description">
+      {!searchTerm 
+        ? 'No subscription plans available at the moment.'
+        : `No subscriptions found matching "${searchTerm}". Try changing the search term.`
+      }
+    </p>
+  </div>
+);
 
-
-  const renderEmptyState = () => (
-    <div className="subscriptions-empty">
-      <BiLayer 
-        size={64}
-        className="subscriptions-empty-icon"
-      />
-      <h3 className="subscriptions-empty-title">No subscriptions found</h3>
-      <p className="subscriptions-empty-description">
-        {!searchTerm 
-          ? 'No subscription plans available at the moment.'
-          : `No subscriptions found matching "${searchTerm}". Try changing the search term.`
-        }
-      </p>
-    </div>
-  );
+const formatLimitValue = (value) => {
+  if (value === -1) return "NO LIMIT";
+  if (value == null) return "∞";
+  return value;
+};
 
 
   return (
@@ -260,13 +266,13 @@ export default function Subscriptions() {
                   <div className="limit-badge">
                     <span className="limit-badge-label">Groups</span>
                     <span className="limit-badge-value">
-                      {item.limits?.productGroupLimit ?? "∞"}
+                      {formatLimitValue(item.limits?.productGroupLimit)}
                     </span>
                   </div>
                   <div className="limit-badge">
                     <span className="limit-badge-label">Items / Group</span>
                     <span className="limit-badge-value">
-                      {item.limits?.productItemLimit ?? "∞"}
+                      {formatLimitValue(item.limits?.productItemLimit)}
                     </span>
                   </div>
                   <div className="limit-badge">

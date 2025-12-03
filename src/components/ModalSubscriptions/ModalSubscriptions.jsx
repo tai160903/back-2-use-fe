@@ -1,4 +1,4 @@
-import  {  useEffect } from "react";
+import  {  useEffect, useState } from "react";
 import "./ModalSubscriptions.css";
 import { IoClose } from "react-icons/io5";
 import { MdPayment } from "react-icons/md";
@@ -39,12 +39,12 @@ const subscriptionSchema = yup.object({
   productGroupLimit: yup
     .number()
     .required("Product group limit is required")
-    .min(0, "Product group limit cannot be negative")
+    .min(-1, "Product group limit cannot be less than -1")
     .integer("Product group limit must be an integer"),
   productItemLimit: yup
     .number()
     .required("Product item limit is required")
-    .min(0, "Product item limit cannot be negative")
+    .min(-1, "Product item limit cannot be less than -1")
     .integer("Product item limit must be an integer"),
   exportLevel: yup
     .string()
@@ -62,6 +62,8 @@ const subscriptionSchema = yup.object({
 export default function ModalSubscriptions({ open, onClose, selectedItem, mode = "view" }) {
   const dispatch = useDispatch();
   const { subscriptionDetails } = useSelector(state => state.subscription);
+  const [isUnlimitedGroup, setIsUnlimitedGroup] = useState(false);
+  const [isUnlimitedItem, setIsUnlimitedItem] = useState(false);
   const {
     control,
     handleSubmit,
@@ -86,6 +88,8 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
   useEffect(() => {
     if (mode === "edit" && selectedItem) {
       const limits = selectedItem.limits || {};
+      setIsUnlimitedGroup(limits.productGroupLimit === -1);
+      setIsUnlimitedItem(limits.productItemLimit === -1);
       reset({
         name: selectedItem.name || "",
         price: selectedItem.price || "",
@@ -98,6 +102,8 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
         isTrial: selectedItem.isTrial !== undefined ? selectedItem.isTrial : false
       });
     } else if (mode === "create") {
+      setIsUnlimitedGroup(false);
+      setIsUnlimitedItem(false);
       reset({
         name: "",
         price: "",
@@ -124,8 +130,8 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
       isActive: data.isActive,
       isTrial: data.isTrial,
       limits: {
-        productGroupLimit: Number(data.productGroupLimit),
-        productItemLimit: Number(data.productItemLimit),
+        productGroupLimit: isUnlimitedGroup ? -1 : Number(data.productGroupLimit),
+        productItemLimit: isUnlimitedItem ? -1 : Number(data.productItemLimit),
         exportLevel: data.exportLevel,
         ecoBonusPercent: Number(data.ecoBonusPercent),
       },
@@ -320,19 +326,24 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                     </Typography>
                     {(() => {
                       const limits = subscriptionDetails?.data?._doc?.limits || selectedItem?.limits || {};
+                      const formatLimitValue = (value) => {
+                        if (value === -1) return 'NO LIMIT';
+                        if (value == null) return 'N/A';
+                        return value;
+                      };
                       return (
                         <Box className="info-cards-grid">
                           <Box className="info-card">
                             <Typography className="info-card-label">Product Groups</Typography>
                             <Typography className="info-card-value">
-                              {limits.productGroupLimit ?? 'N/A'}
+                              {formatLimitValue(limits.productGroupLimit)}
                             </Typography>
                           </Box>
 
                           <Box className="info-card">
                             <Typography className="info-card-label">Products / Group</Typography>
                             <Typography className="info-card-value">
-                              {limits.productItemLimit ?? 'N/A'}
+                              {formatLimitValue(limits.productItemLimit)}
                             </Typography>
                           </Box>
 
@@ -503,39 +514,73 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                         name="productGroupLimit"
                         control={control}
                         render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Product Group Limit *"
-                            type="number"
-                            required
-                            placeholder="e.g., 12"
-                            variant="outlined"
-                            fullWidth
-                            error={!!errors.productGroupLimit}
-                            helperText={errors.productGroupLimit?.message}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value === "" ? "" : parseInt(value) || "");
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                              },
-                              '& .MuiInputLabel-root': {
-                                fontSize: '16px',
-                                fontWeight: 600,
-                                color: '#374151',
-                              },
-                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <TextField
+                              {...field}
+                              label="Product Group Limit *"
+                              type="number"
+                              required
+                              placeholder="e.g., 12"
+                              variant="outlined"
+                              fullWidth
+                              value={isUnlimitedGroup ? "" : field.value}
+                              error={!!errors.productGroupLimit}
+                              helperText={errors.productGroupLimit?.message}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setIsUnlimitedGroup(false);
+                                field.onChange(value === "" ? "" : parseInt(value) || "");
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '8px',
+                                  fontSize: '16px',
+                                },
+                                '& .MuiInputLabel-root': {
+                                  fontSize: '16px',
+                                  fontWeight: 600,
+                                  color: '#374151',
+                                },
+                                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#174d31',
+                                  borderWidth: '2px',
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                  color: '#174d31',
+                                }
+                              }}
+                            />
+                            <Button
+                              variant={isUnlimitedGroup ? "contained" : "outlined"}
+                              size="small"
+                              onClick={() => {
+                                const next = !isUnlimitedGroup;
+                                setIsUnlimitedGroup(next);
+                                if (next) {
+                                  field.onChange(-1);
+                                } else {
+                                  field.onChange("");
+                                }
+                              }}
+                              sx={{
+                                alignSelf: 'flex-start',
+                                textTransform: 'none',
+                                borderRadius: '999px',
+                                fontSize: '13px',
+                                paddingInline: 1.5,
+                                mt: 0.5,
+                                backgroundColor: isUnlimitedGroup ? '#174d31' : 'transparent',
+                                color: isUnlimitedGroup ? '#ffffff' : '#174d31',
                                 borderColor: '#174d31',
-                                borderWidth: '2px',
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: '#174d31',
-                              }
-                            }}
-                          />
+                                '&:hover': {
+                                  backgroundColor: isUnlimitedGroup ? '#0f3d26' : 'rgba(23,77,49,0.06)',
+                                  borderColor: '#174d31',
+                                },
+                              }}
+                            >
+                              NO LIMIT
+                            </Button>
+                          </Box>
                         )}
                       />
                     </Grid>
@@ -545,39 +590,73 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                         name="productItemLimit"
                         control={control}
                         render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Product Item Limit *"
-                            type="number"
-                            required
-                            placeholder="e.g., 2"
-                            variant="outlined"
-                            fullWidth
-                            error={!!errors.productItemLimit}
-                            helperText={errors.productItemLimit?.message}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value === "" ? "" : parseInt(value) || "");
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                              },
-                              '& .MuiInputLabel-root': {
-                                fontSize: '16px',
-                                fontWeight: 600,
-                                color: '#374151',
-                              },
-                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <TextField
+                              {...field}
+                              label="Product Item Limit *"
+                              type="number"
+                              required
+                              placeholder="e.g., 2"
+                              variant="outlined"
+                              fullWidth
+                              value={isUnlimitedItem ? "" : field.value}
+                              error={!!errors.productItemLimit}
+                              helperText={errors.productItemLimit?.message}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setIsUnlimitedItem(false);
+                                field.onChange(value === "" ? "" : parseInt(value) || "");
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '8px',
+                                  fontSize: '16px',
+                                },
+                                '& .MuiInputLabel-root': {
+                                  fontSize: '16px',
+                                  fontWeight: 600,
+                                  color: '#374151',
+                                },
+                                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#174d31',
+                                  borderWidth: '2px',
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                  color: '#174d31',
+                                }
+                              }}
+                            />
+                            <Button
+                              variant={isUnlimitedItem ? "contained" : "outlined"}
+                              size="small"
+                              onClick={() => {
+                                const next = !isUnlimitedItem;
+                                setIsUnlimitedItem(next);
+                                if (next) {
+                                  field.onChange(-1);
+                                } else {
+                                  field.onChange("");
+                                }
+                              }}
+                              sx={{
+                                alignSelf: 'flex-start',
+                                textTransform: 'none',
+                                borderRadius: '999px',
+                                fontSize: '13px',
+                                paddingInline: 1.5,
+                                mt: 0.5,
+                                backgroundColor: isUnlimitedItem ? '#174d31' : 'transparent',
+                                color: isUnlimitedItem ? '#ffffff' : '#174d31',
                                 borderColor: '#174d31',
-                                borderWidth: '2px',
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: '#174d31',
-                              }
-                            }}
-                          />
+                                '&:hover': {
+                                  backgroundColor: isUnlimitedItem ? '#0f3d26' : 'rgba(23,77,49,0.06)',
+                                  borderColor: '#174d31',
+                                },
+                              }}
+                            >
+                              NO LIMIT
+                            </Button>
+                          </Box>
                         )}
                       />
                     </Grid>

@@ -3,6 +3,7 @@ import { PATH } from "../../routes/path";
 import { IoHomeOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { IoGiftOutline } from "react-icons/io5";
+import { GoHistory } from "react-icons/go";
 
 const staffSidebarItems = [
   {
@@ -21,6 +22,12 @@ const staffSidebarItems = [
     id: "online-borrow-orders",
     label: "Online Orders",
     path: PATH.STAFF_ONLINE_BORROW_ORDERS,
+  },
+  {
+    id: "staff-transaction",
+    label: "Transaction History",
+    icon: <GoHistory className="navbar-icon" />,
+    path: PATH.STAFF_TRANSACTION,
   },
   {
     id: "staff-voucher",
