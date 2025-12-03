@@ -10,7 +10,7 @@ import Login from "../pages/Auth/Login/Login";
 import Register from "../pages/Auth/Register/Register";
 import HomePage from "../pages/Home/HomePage/HomePage";
 import { PATH } from "./path";
-import { useRoutes } from "react-router-dom";
+import { useRoutes, Navigate } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import RegisterBussiness from "../pages/Auth/RegisterBussiness/RegisterBussiness";
@@ -347,11 +347,7 @@ export default function useRouterElements() {
       children: [
         {
           index: true,
-          element: (
-            <ProtectedRoute allowedRoles={["staff"]}>
-              <StaffDashboard />
-            </ProtectedRoute>
-          ),
+          element: <Navigate to={PATH.STAFF_ONLINE_BORROW_ORDERS} replace />,
         },
         {
           path: PATH.STAFF_PROFILE,
