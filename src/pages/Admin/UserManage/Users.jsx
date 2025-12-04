@@ -33,11 +33,10 @@ export default function Users() {
   const { manageUser, totalPages, total, currentPage, isLoading, allUsers, isUpdating } = useSelector((state) => state.manageUser);
 
   useEffect(() => {
-    if (!manageUser || manageUser.length === 0) {
-      dispatch(getUserPaginationApi({ page: 1, limit }));
-    }
+    // Load dữ liệu ban đầu chỉ một lần (hoặc khi limit thay đổi) để tránh lặp vô hạn
+    dispatch(getUserPaginationApi({ page: 1, limit }));
     dispatch(getAllUserApi());
-  }, [dispatch, limit, manageUser]);
+  }, [dispatch, limit]);
 
   // Handle menu toggle
   const handleMenuToggle = (userId) => {
