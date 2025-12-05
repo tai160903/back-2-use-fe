@@ -94,6 +94,19 @@ export const getBusinessProductsByGroup = createAsyncThunk(
   )
 
 
+  export const getProductById = createAsyncThunk(
+    "store/getProductById",
+    async (id, { rejectWithValue }) => {
+      try {
+        const response = await fetcher.get(`/products/${id}`);
+        return response.data;
+      } catch (error) {
+        return rejectWithValue(error.response ? error.response.data : error.message);
+      }
+    }
+  )
+
+
 const storeSlice = createSlice({
 name: "store",
 initialState: {
@@ -190,6 +203,18 @@ extraReducers: (builder) => {
     })
     .addCase(getBusinessProductsByGroup.rejected, (state, {payload}) => {
         state.isLoadingBusinessProducts = false;
+        state.error = payload;
+    })
+    .addCase(getProductById.pending, (state) => {
+        state.isLoadingProduct = true;
+        state.error = null;
+    })
+    .addCase(getProductById.fulfilled, (state, {payload}) => {
+        state.isLoadingProduct = false;
+        state.error = null;
+    })
+    .addCase(getProductById.rejected, (state, {payload}) => {
+        state.isLoadingProduct = false;
         state.error = payload;
     })
 }

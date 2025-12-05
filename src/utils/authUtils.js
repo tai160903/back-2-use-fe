@@ -21,26 +21,46 @@ export const isAuthenticated = () => {
     return user && user.accessToken;
 };
 
+// Chuẩn hoá giá trị role (hỗ trợ cả string và array)
+const normalizeRoleValue = (role) => {
+    // Trường hợp BE trả về mảng role, ví dụ: ["customer", "business"]
+    if (Array.isArray(role) && role.length > 0) {
+        const primary = role[0];
+        return typeof primary === "string"
+            ? primary.trim().toLowerCase()
+            : null;
+    }
+
+    // Trường hợp cũ: role là string
+    if (typeof role === "string") {
+        return role.trim().toLowerCase();
+    }
+
+    return null;
+};
+
 export const getUserRole = () => {
     const user = getCurrentUser();
     if (!user) return null;
-    
-    // Ưu tiên role từ user object (đây là role hiện tại user đang sử dụng)
+
+    // Ưu tiên role từ object user trong payload
     if (user.user?.role) {
-        return user.user.role.trim().toLowerCase();
+        const normalized = normalizeRoleValue(user.user.role);
+        if (normalized) return normalized;
     }
-    
-    // Fallback: lấy từ token nếu không có trong user object
+
+    // Fallback: lấy từ accessToken (JWT)
     if (user.accessToken) {
         try {
             const tokenPayload = JSON.parse(atob(user.accessToken.split('.')[1]));
-            return tokenPayload.role?.trim().toLowerCase();
+            const normalized = normalizeRoleValue(tokenPayload.role);
+            if (normalized) return normalized;
         } catch (error) {
             console.error("Error decoding JWT token:", error);
             return null;
         }
     }
-    
+
     return null;
 };
 
@@ -51,7 +71,7 @@ export const getTokenRole = () => {
     
     try {
         const tokenPayload = JSON.parse(atob(user.accessToken.split('.')[1]));
-        return tokenPayload.role?.trim().toLowerCase();
+        return normalizeRoleValue(tokenPayload.role);
     } catch (error) {
         console.error("Error decoding JWT token:", error);
         return null;
