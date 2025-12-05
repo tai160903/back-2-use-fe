@@ -105,6 +105,20 @@ export default function HeaderLog() {
     navigate(PATH.LOGIN);
   };
 
+  // Chuẩn hoá role từ payload (hỗ trợ cả string và array)
+  const normalizeRoleFromPayload = (role) => {
+    if (Array.isArray(role) && role.length > 0) {
+      const primary = role[0];
+      return typeof primary === "string"
+        ? primary.toLowerCase()
+        : null;
+    }
+    if (typeof role === "string") {
+      return role.toLowerCase();
+    }
+    return null;
+  };
+
   const handleSwitchToCustomer = async () => {
     if (userRole !== "business") return;
 
@@ -115,8 +129,9 @@ export default function HeaderLog() {
 
       if (switchAccountTypeAPI.fulfilled.match(resultAction)) {
         const payload = resultAction.payload;
+        const rawRole = payload?.data?.user?.role;
         const newRole =
-          payload?.data?.user?.role?.trim().toLowerCase() || "customer";
+          normalizeRoleFromPayload(rawRole) || "customer";
         const redirectPath = getRedirectPath(newRole);
         navigate(redirectPath, { replace: true });
       }

@@ -30,12 +30,24 @@ export default function NotificationProvider({ children }) {
       return;
     }
 
-    // Ưu tiên role lấy từ token/localStorage (getUserRole)
-    // để đồng bộ với các chỗ khác trong app (Header, fetcher, ...)
-    const roleFromStore =
+    // Hàm chuẩn hoá role (hỗ trợ string hoặc array)
+    const normalizeRole = (role) => {
+      if (Array.isArray(role) && role.length > 0) {
+        const primary = role[0];
+        return typeof primary === "string"
+          ? primary.toLowerCase()
+          : null;
+      }
+      if (typeof role === "string") {
+        return role.toLowerCase();
+      }
+      return null;
+    };
+
+    const rawRole =
       getUserRole() || authUser?.user?.role || authUser?.role;
-    const mode =
-      (roleFromStore && roleFromStore.toLowerCase()) || "customer";
+    const normalizedRole = normalizeRole(rawRole);
+    const mode = normalizedRole || "customer";
 
     console.log("[NP] ✔ Bắt đầu connect socket với:", { userId, mode });
     connectSocket(userId, mode);

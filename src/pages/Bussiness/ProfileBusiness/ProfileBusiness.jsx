@@ -207,7 +207,17 @@ export default function ProfileBusiness() {
           </div>
           <div className="profile-title">
             <h1 className="business-name">{business?.businessName}</h1>
-            <p className="business-type">{business?.businessType}</p>
+            <p className="business-type">
+              {business?.businessType}
+              {typeof business?.co2Reduced === 'number' && (
+                <>
+                  <br />
+                  <span className="business-co2">
+                  CO₂ Emission Reduction: {business.co2Reduced} kg
+                  </span>
+                </>
+              )}
+            </p>
           </div>
           <div className="profile-actions">
             {!isEditing ? (

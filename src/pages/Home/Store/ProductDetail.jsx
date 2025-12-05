@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
 import { isAuthenticated } from "../../../utils/authUtils";
-import { getDetailsProductById } from "../../../store/slices/storeSilce";
+import { getDetailsProductById, getProductById } from "../../../store/slices/storeSilce";
 import { borrowProductOnlineApi } from "../../../store/slices/borrowSlice";
 
 export default function ProductDetail() {
@@ -35,6 +35,8 @@ export default function ProductDetail() {
   const [clientPage, setClientPage] = useState(1);
   const clientPageSize = 10;
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedProductDetail, setSelectedProductDetail] = useState(null);
+  const [isSelectedProductLoading, setIsSelectedProductLoading] = useState(false);
   const [borrowDialogOpen, setBorrowDialogOpen] = useState(false);
   const [borrowPayload, setBorrowPayload] = useState(null);
   const [borrowDays, setBorrowDays] = useState(1);
@@ -161,6 +163,35 @@ export default function ProductDetail() {
     setBorrowPayload(basePayload);
     setBorrowDays(30);
     setBorrowDialogOpen(true);
+  };
+
+  const handleOpenProductDetail = async (item) => {
+    if (!item?._id) return;
+
+    // Lưu item ban đầu để phục vụ logic mượn như hiện tại
+    setSelectedItem(item);
+    setIsSelectedProductLoading(true);
+    setSelectedProductDetail(null);
+
+    try {
+      const res = await dispatch(getProductById(item._id)).unwrap();
+      const productData = res?.data || res;
+      setSelectedProductDetail(productData);
+    } catch (err) {
+      const message =
+        err?.data?.message ||
+        err?.message ||
+        "Không thể tải chi tiết sản phẩm, vui lòng thử lại";
+      toast.error(message);
+    } finally {
+      setIsSelectedProductLoading(false);
+    }
+  };
+
+  const handleCloseProductDetail = () => {
+    setSelectedItem(null);
+    setSelectedProductDetail(null);
+    setIsSelectedProductLoading(false);
   };
 
   const handleConfirmBorrowOnline = async () => {
@@ -314,7 +345,7 @@ export default function ProductDetail() {
                   <div className="pd-line-sub">
                     {sizeName} • {groupName}
                   </div>
-                  <div className="pd-line-serial" onClick={() => setSelectedItem(item)}>
+                  <div className="pd-line-serial" onClick={() => handleOpenProductDetail(item)}>
                     <QrCode2RoundedIcon fontSize="small" />
                     <button className="pd-serial-link">{item.serialNumber}</button>
                   </div>
@@ -340,7 +371,7 @@ export default function ProductDetail() {
                   <Button
                     size="small"
                     className="pd-qr-view-btn"
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => handleOpenProductDetail(item)}
                   >
                     View QR Code
                   </Button>
@@ -444,82 +475,207 @@ export default function ProductDetail() {
       {/* Modal chi tiết sản phẩm */}
       <Dialog
         open={Boolean(selectedItem)}
-        onClose={() => setSelectedItem(null)}
+        onClose={handleCloseProductDetail}
         maxWidth="md"
         fullWidth
       >
         <DialogTitle sx={{ m: 0, p: 2 }}>
+          {(() => {
+            const displayProduct = selectedProductDetail || selectedItem;
+            return (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontWeight: 800, color: "#164c34" }}>{groupName}</span>
-            {selectedItem && (
-              <span className={`pd-item-status status-${selectedItem.status || "unknown"}`}>
-                {selectedItem.status || "unknown"}
-              </span>
-            )}
+                {displayProduct && (
+                  <span className={`pd-item-status status-${displayProduct.status || "unknown"}`}>
+                    {displayProduct.status || "unknown"}
+                  </span>
+                )}
           </div>
+            );
+          })()}
           <IconButton
             aria-label="close"
-            onClick={() => setSelectedItem(null)}
+            onClick={handleCloseProductDetail}
             sx={{ position: "absolute", right: 8, top: 8 }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          {selectedItem && (
-            <div className="pd-detail">
-              <div className="pd-detail-header">
-                <div>
-                  <span className="pd-meta-label">Size</span>
-                  <div className="pd-detail-value">{selectedItem?.productSizeId?.sizeName || "—"}</div>
-                </div>
-                <div>
-                  <span className="pd-meta-label">Price</span>
-                  <div className="pd-detail-value">
-                    {(selectedItem?.productSizeId?.basePrice || 0).toLocaleString()}đ
+          {isSelectedProductLoading && (
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Đang tải chi tiết sản phẩm...
+            </Typography>
+          )}
+          {(() => {
+            const displayProduct = selectedProductDetail || selectedItem;
+            if (!displayProduct) return null;
+
+            return (
+              <div className="pd-detail">
+                <div className="pd-detail-header">
+                  <div>
+                    <span className="pd-meta-label">Size</span>
+                    <div className="pd-detail-value">
+                      {displayProduct?.productSizeId?.sizeName || "—"}
+                    </div>
+                  </div>
+                  <div>
+                    {/* <span className="pd-meta-label">Price</span>
+                    <div className="pd-detail-value">
+                      {(displayProduct?.productSizeId?.basePrice || 0).toLocaleString()}đ
+                    </div> */}
+                  </div>
+                  <div>
+                    <span className="pd-meta-label">Deposit</span>
+                    <div className="pd-detail-value">
+                      {(displayProduct?.productSizeId?.depositValue || 0).toLocaleString()}đ
+                    </div>
+                  </div>
+                  <div>
+                    <span className="pd-meta-label">Reuse count</span>
+                    <div className="pd-detail-value">{displayProduct.reuseCount}</div>
                   </div>
                 </div>
-                <div>
-                  <span className="pd-meta-label">Deposit</span>
-                  <div className="pd-detail-value">
-                    {(selectedItem?.productSizeId?.depositValue || 0).toLocaleString()}đ
+
+                <div className="pd-modal-qr">
+                  <Typography className="pd-section" style={{ marginTop: 0 }}>
+                    Product QR Code
+                  </Typography>
+                  <div className="pd-modal-qr-box">
+                    <img
+                      src={displayProduct.qrCode}
+                      alt={`QR ${displayProduct.serialNumber}`}
+                    />
                   </div>
-                </div>
-                <div>
-                  <span className="pd-meta-label">Reuse count</span>
-                  <div className="pd-detail-value">{selectedItem.reuseCount}</div>
-                </div>
-             
-              
-              </div>
 
-              <div className="pd-modal-qr">
-                <Typography className="pd-section" style={{ marginTop: 0 }}>Product QR Code</Typography>
-                <div className="pd-modal-qr-box">
-                  <img src={selectedItem.qrCode} alt={`QR ${selectedItem.serialNumber}`} />
-                </div>
+                  <div className="pd-qr-serial">{displayProduct.serialNumber}</div>
 
-                <div className="pd-qr-serial">{selectedItem.serialNumber}</div>
-
-                <div style={{ marginTop: 16 }}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleOpenBorrowDialog(selectedItem)}
-                    sx={{
-                      backgroundColor: "#12422a",
-                      "&:hover": { backgroundColor: "#0c351c" },
+                  {/* Size từ product detail */}
+                  <div
+                    style={{
+                      marginTop: 12,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 16,
                     }}
                   >
-                    Borrow online
-                  </Button>
+                    <div>
+                      <span className="pd-meta-label">Size</span>
+                      <div className="pd-detail-value">
+                        {displayProduct?.productSizeId?.sizeName || "—"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Last condition images */}
+                  {displayProduct.lastConditionImages && (
+                    <div style={{ marginTop: 24 }}>
+                      <Typography className="pd-section">
+                        Last condition images
+                      </Typography>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+                          gap: 12,
+                          marginTop: 8,
+                        }}
+                      >
+                        {[
+                          { key: "topImage", label: "Top" },
+                          { key: "bottomImage", label: "Bottom" },
+                          { key: "frontImage", label: "Front" },
+                          { key: "backImage", label: "Back" },
+                          { key: "leftImage", label: "Left" },
+                          { key: "rightImage", label: "Right" },
+                        ].map(({ key, label }) => {
+                          const url = displayProduct.lastConditionImages[key];
+                          if (!url) return null;
+                          return (
+                            <div
+                              key={key}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <span className="pd-meta-label">{label}</span>
+                              <img
+                                src={url}
+                                alt={`${label} condition`}
+                                style={{
+                                  width: "100%",
+                                  aspectRatio: "1 / 1",
+                                  objectFit: "cover",
+                                  borderRadius: 8,
+                                  border: "1px solid #e0e0e0",
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Last damage faces */}
+                  {Array.isArray(displayProduct.lastDamageFaces) &&
+                    displayProduct.lastDamageFaces.length > 0 && (
+                      <div style={{ marginTop: 24 }}>
+                        <Typography className="pd-section">
+                          Last damage faces
+                        </Typography>
+                        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                          {displayProduct.lastDamageFaces.map((dmg) => (
+                            <div
+                              key={dmg._id || `${dmg.face}-${dmg.issue}`}
+                              style={{
+                                padding: "6px 10px",
+                                borderRadius: 999,
+                                border: "1px solid #e0e0e0",
+                                background:
+                                  dmg.issue && dmg.issue !== "none"
+                                    ? "rgba(211, 47, 47, 0.06)"
+                                    : "rgba(46, 125, 50, 0.06)",
+                                fontSize: 12,
+                              }}
+                            >
+                              <strong style={{ textTransform: "capitalize" }}>
+                                {dmg.face}
+                              </strong>
+                              {": "}
+                              <span style={{ textTransform: "capitalize" }}>
+                                {dmg.issue || "none"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  <div style={{ marginTop: 24 }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => handleOpenBorrowDialog(selectedItem)}
+                      sx={{
+                        backgroundColor: "#12422a",
+                        "&:hover": { backgroundColor: "#0c351c" },
+                      }}
+                    >
+                      Borrow online
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setSelectedItem(null)}>Close</Button>
+          <Button onClick={handleCloseProductDetail}>Close</Button>
         </DialogActions>
       </Dialog>
     </div>
