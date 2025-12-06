@@ -101,3 +101,105 @@
 .recentTransaction-tabs .MuiChip-root.MuiChip-clickable:hover {
   opacity: 0.8;
 }
+
+.wallet-main-tabs {
+  margin-top: 24px;
+}
+
+.wallet-balance-screen {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.wallet-balance-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.wallet-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.wallet-action-card {
+  display: flex;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.wallet-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.wallet-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+  font-size: 18px;
+}
+
+.wallet-action-content span {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  color: #555;
+}
+
+.wallet-action-deposit {
+  background: #e7f5ed;
+  color: #2e7d32;
+}
+
+.wallet-action-withdraw {
+  background: #ffe1e0;
+  color: #c10610;
+}
+
+.wallet-action-package {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.wallet-action-deposit .wallet-action-icon {
+  background: #ffffff;
+}
+
+.wallet-action-withdraw .wallet-action-icon {
+  background: #ffffff;
+}
+
+.wallet-action-package .wallet-action-icon {
+  background: #ffffff;
+}
+
+/* Hover effect cho các phần tử nhỏ */
+.recentTransaction-container .MuiTypography-caption:hover {
+  color: #1976d2 !important;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.recentTransaction-container .MuiChip-sizeSmall:hover {
+  color: #1976d2 !important;
+  transition: color 0.2s ease;
+}
+
+@media (max-width: 960px) {
+  .wallet-balance-screen {
+    grid-template-columns: 1fr;
+  }
+}

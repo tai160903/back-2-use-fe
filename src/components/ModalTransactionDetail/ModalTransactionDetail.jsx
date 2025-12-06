@@ -3,6 +3,65 @@ import "./ModalTransactionDetail.css";
 import { FiCheckCircle, FiClock, FiXCircle, FiArrowDownLeft, FiArrowUpRight, FiRotateCcw } from "react-icons/fi";
 
 export default function ModalTransactionDetail({ open, onClose, transaction, loading }) {
+  // Map transaction type to professional terminology
+  const getTransactionTypeLabel = (transactionType) => {
+    const typeMap = {
+      'top_up': 'Deposit',
+      'deposit': 'Deposit',
+      'withdrawal': 'Withdraw',
+      'withdraw': 'Withdraw',
+      'borrow': 'Borrow',
+      'borrow_deposit': 'Borrow Deposit',
+      'return': 'Return',
+      'return_refund': 'Return Refund',
+      'penalty': 'Penalty',
+      'refund': 'Refund',
+    };
+    return typeMap[String(transactionType).toLowerCase()] || transactionType;
+  };
+
+  // Format payment method to display
+  const formatPaymentMethod = (paymentMethod) => {
+    if (!paymentMethod) return null;
+    const methodMap = {
+      'momo': 'MoMo',
+      'vnpay': 'VNPay',
+      'bank': 'Bank Account',
+      'bank_account': 'Bank Account',
+      'manual': 'Manual',
+      'cash': 'Cash',
+    };
+    return methodMap[String(paymentMethod).toLowerCase()] || paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
+  };
+
+  // Format direction to professional terminology
+  const formatDirection = (direction) => {
+    if (!direction) return "-";
+    const dirMap = {
+      'in': 'Money In',
+      'out': 'Money Out',
+    };
+    return dirMap[String(direction).toLowerCase()] || direction;
+  };
+
+  // Format reference type
+  const formatReferenceType = (referenceType) => {
+    if (!referenceType) return "-";
+    return referenceType.charAt(0).toUpperCase() + referenceType.slice(1);
+  };
+
+  // Format balance type
+  const formatBalanceType = (balanceType) => {
+    if (!balanceType) return "-";
+    return balanceType.charAt(0).toUpperCase() + balanceType.slice(1);
+  };
+
+  // Format status
+  const formatStatus = (status) => {
+    if (!status) return "-";
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   const getStatusColor = (status) => {
     if (!status) return "default";
     const normalized = String(status).toLowerCase();
@@ -39,8 +98,33 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
     return ["withdraw", "withdrawal"].includes(normalizedType);
   };
 
-  const getTheme = (status, type) => {
+  const getTheme = (status, type, direction) => {
     const baseTheme = getStatusTheme(status);
+    
+    // Override color based on direction
+    if (direction === "out") {
+      return { 
+        ...baseTheme, 
+        bg: "linear-gradient(180deg, #ef4444, #f87171)", 
+        fg: "#ffffff", 
+        softBg: "#fde7e7", 
+        softBorder: "#ef4444",
+        Icon: FiArrowUpRight
+      };
+    }
+    
+    if (direction === "in") {
+      return { 
+        ...baseTheme, 
+        bg: "linear-gradient(180deg, #16a34a, #22c55e)", 
+        fg: "#ffffff", 
+        softBg: "#e6f4ea", 
+        softBorder: "#22c55e",
+        Icon: FiArrowDownLeft
+      };
+    }
+    
+    // Fallback to original logic if direction is not specified
     if (isWithdrawType(type)) {
       return { ...baseTheme, bg: "linear-gradient(180deg, #ef4444, #f87171)", fg: "#ffffff", softBg: "#fde7e7", softBorder: "#ef4444" };
     }
@@ -49,15 +133,22 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
 
   const formatDateTime = (iso) => {
     try {
-      return new Date(iso).toLocaleString("vi-VN");
+      const date = new Date(iso);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
     } catch {
       return iso || "";
     }
   };
 
-  const absAmountStr = (amount) => {
-    if (amount == null) return "";
-    return `${Math.abs(Number(amount)).toLocaleString("vi-VN")} VNĐ`;
+  const formatAmount = (amount, direction) => {
+    if (amount == null) return "-";
+    const sign = direction === "in" ? "+" : "-";
+    return `${sign}${Math.abs(Number(amount)).toLocaleString("en-US").replace(/,/g, ".")} VND`;
   };
 
 
@@ -73,7 +164,7 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ className: "transactionDetailHistory" }}>
       <DialogTitle sx={{ p: 0 }}>
         {(() => {
-          const theme = getTheme(transaction?.status, transaction?.transactionType);
+          const theme = getTheme(transaction?.status, transaction?.transactionType, transaction?.direction);
           const StatusIcon = theme.Icon;
           return (
             <Box className="transactionDetailHistory__header" sx={{
@@ -91,7 +182,7 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
             }}>
               <StatusIcon size={32} />
               <Typography variant="h5" sx={{ fontWeight: 900 }}>
-                {(transaction?.transactionType)}
+                {getTransactionTypeLabel(transaction?.transactionType)}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 {theme.subtitle}
@@ -116,7 +207,7 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
             }}>
               <Box className="transactionDetailHistory__amount-card" sx={{ px: 3, py: 2.5, borderBottom: "1px dashed #e0e0e0" }}>
                 {(() => {
-                  const theme = getTheme(transaction?.status, transaction?.transactionType);
+                  const theme = getTheme(transaction?.status, transaction?.transactionType, transaction?.direction);
                   const TypeIcon = getTypeIcon(transaction?.transactionType);
                   const isNegative = (transaction?.direction === "out" || ["failed","faild","rejected","canceled","cancelled","error"].includes(String(transaction?.status).toLowerCase()));
                   return (
@@ -132,12 +223,12 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
                       gap: 0.5,
                     }}>
                       <Typography variant="h3" sx={{ fontWeight: 900, color: isNegative ? "#d32f2f" : "#22c55e" }}>
-                        {absAmountStr(transaction?.amount)}
+                        {formatAmount(transaction?.amount, transaction?.direction)}
                       </Typography>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, color: "#6b7280" }}>
                         <TypeIcon size={16} />
                         <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                          {(transaction?.transactionType)} Amount
+                          {getTransactionTypeLabel(transaction?.transactionType)} Amount
                         </Typography>
                       </Box>
                     </Box>
@@ -152,9 +243,30 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
               </Box>
 
               <Box className="transactionDetailHistory__content" sx={{ px: 3, py: 2.5 }}>
+                {/* Payment Method - Prominent Display */}
+                {transaction?.paymentMethod && (
+                  <Box sx={{ mb: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Typography variant="overline" sx={{ color: "#9e9e9e", fontSize: "11px" }}>Payment Method</Typography>
+                    <Chip
+                      label={formatPaymentMethod(transaction.paymentMethod)}
+                      sx={{
+                        height: "40px",
+                        fontSize: "16px",
+                        fontWeight: 700,
+                        backgroundColor: "#1976d2",
+                        color: "#ffffff",
+                        width: "fit-content",
+                        "&:hover": {
+                          backgroundColor: "#1565c0",
+                        },
+                      }}
+                    />
+                  </Box>
+                )}
+
                 <Box className="transactionDetailHistory__description" sx={{ mb: 1.5 }}>
-                  <Typography variant="overline" sx={{ color: "#9e9e9e" }}>Description</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  <Typography variant="overline" sx={{ color: "#9e9e9e", fontSize: "11px" }}>Description</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: "13px" }}>
                     {transaction?.description || "-"}
                   </Typography>
                 </Box>
@@ -162,17 +274,26 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
                 <Divider sx={{ my: 1.5, borderStyle: "dashed" }} />
 
                 <Box className="transactionDetailHistory__table" sx={{ display: "flex", flexDirection: "column" }}>
-                  {labelValue("Transaction ID", transaction?._id, "transactionDetailHistory__row")}
+                  {/* {labelValue("Transaction ID", transaction?._id, "transactionDetailHistory__row")}
+                  <Divider sx={{ my: 1, borderStyle: "dashed" }} /> */}
+                  {labelValue("Transaction Type", getTransactionTypeLabel(transaction?.transactionType), "transactionDetailHistory__row")}
                   <Divider sx={{ my: 1, borderStyle: "dashed" }} />
-                  {labelValue("Transaction Type", (transaction?.transactionType), "transactionDetailHistory__row")}
+                  {labelValue("Direction", formatDirection(transaction?.direction), "transactionDetailHistory__row")}
                   <Divider sx={{ my: 1, borderStyle: "dashed" }} />
-                  {labelValue("Direction", transaction?.direction, "transactionDetailHistory__row")}
+                  {labelValue("Status", formatStatus(transaction?.status), "transactionDetailHistory__row")}
+                  {/* <Divider sx={{ my: 1, borderStyle: "dashed" }} />
+                  {labelValue("Amount", formatAmount(transaction?.amount, transaction?.direction), "transactionDetailHistory__row")} */}
                   <Divider sx={{ my: 1, borderStyle: "dashed" }} />
-                  {labelValue("Status", transaction?.status, "transactionDetailHistory__row")}
+                  {labelValue("Reference Type", formatReferenceType(transaction?.referenceType), "transactionDetailHistory__row")}
                   <Divider sx={{ my: 1, borderStyle: "dashed" }} />
-                  {labelValue("Transaction Date", formatDateTime(transaction?.createdAt), "transactionDetailHistory__row")}
-                  <Divider sx={{ my: 1, borderStyle: "dashed" }} />
-                  {labelValue("Payment Method", (transaction?.referenceType), "transactionDetailHistory__row")}
+                  {labelValue("Balance Type", formatBalanceType(transaction?.balanceType), "transactionDetailHistory__row")}
+                  {transaction?.toBalanceType && (
+                    <>
+                      <Divider sx={{ my: 1, borderStyle: "dashed" }} />
+                      {labelValue("To Balance Type", formatBalanceType(transaction?.toBalanceType), "transactionDetailHistory__row")}
+                    </>
+                  )}
+                
                 </Box>
               </Box>
 
