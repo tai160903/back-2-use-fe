@@ -83,6 +83,51 @@ export const getTransactionHistoryBusinessApiDetail = createAsyncThunk(
   }
 )
 
+// get transaction history with multiple typeGroups (for history mode with penalty)
+export const getTransactionHistoryWithPenaltyApi = createAsyncThunk(
+  "wallet/getTransactionHistoryWithPenaltyApi",
+  async({page,limit,direction,walletType}, {rejectWithValue}) => {
+    try {
+      const resolvedWalletType = walletType || (getUserRole?.() === "business" ? "business" : "customer");
+      const fetchLimit = Math.max(limit * 10, 100);
+      
+      const buildUrl = (typeGroup) => {
+        const params = [
+          `walletType=${resolvedWalletType}`,
+          `typeGroup=${typeGroup}`,
+          `page=1`,
+          `limit=${fetchLimit}`,
+          ...(direction && direction !== "all" ? [`direction=${direction}`] : [])
+        ];
+        return `/wallet-transactions/my?${params.join('&')}`;
+      };
+      
+      // Call both APIs in parallel
+      const [response1, response2] = await Promise.all([
+        fetcher.get(buildUrl("deposit_refund")),
+        fetcher.get(buildUrl("penalty"))
+      ]);
+      
+      const mergedData = [
+        ...(response1.data?.data || []),
+        ...(response2.data?.data || [])
+      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      const total = (response1.data?.total || 0) + (response2.data?.total || 0);
+      const startIndex = (page - 1) * limit;
+      
+      return {
+        data: mergedData.slice(startIndex, startIndex + limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+)
+
 
 
 const walletSlice = createSlice({
@@ -162,6 +207,22 @@ const walletSlice = createSlice({
         state.transactionCurrentPage = payload.currentPage;
       })
       .addCase(getTransactionHistoryApi.rejected, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(getTransactionHistoryWithPenaltyApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getTransactionHistoryWithPenaltyApi.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.transactionHistory = payload.data;
+        state.transactionTotalPages = payload.totalPages;
+        state.transactionTotal = payload.total;
+        state.transactionCurrentPage = payload.currentPage;
+      })
+      .addCase(getTransactionHistoryWithPenaltyApi.rejected, (state, {payload}) => {
         state.isLoading = false;
         state.error = payload;
       })
