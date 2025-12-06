@@ -157,7 +157,6 @@ export default function ProductDetail() {
       businessId,
       durationInDays: 30,
       depositValue,
-      type: "online",
     };
 
     setBorrowPayload(basePayload);
@@ -204,9 +203,10 @@ export default function ProductDetail() {
     }
 
     const payloadToSend = {
-      ...borrowPayload,
+      productId: borrowPayload.productId,
+      businessId: borrowPayload.businessId,
       durationInDays: days,
-      type: "online",
+      depositValue: borrowPayload.depositValue,
     };
 
     try {
