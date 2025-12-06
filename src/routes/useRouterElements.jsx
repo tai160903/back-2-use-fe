@@ -204,7 +204,15 @@ export default function useRouterElements() {
           path: PATH.WALLET_CUSTOMER,
           element: (
             <ProtectedRoute allowedRoles={["customer"]}>
-              <WalletCustomer />
+              <WalletCustomer mode="actions" />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.WALLET_CUSTOMER_HISTORY,
+          element: (
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <WalletCustomer mode="history" />
             </ProtectedRoute>
           ),
         },
@@ -275,9 +283,21 @@ export default function useRouterElements() {
 
         {
           path: PATH.BUSINESS_WALLET,
+          element: <Navigate to={PATH.BUSINESS_WALLET_ACTIONS} replace />,
+        },
+        {
+          path: PATH.BUSINESS_WALLET_ACTIONS,
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
-              <WalletBusiness />
+              <WalletBusiness mode="actions" />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_WALLET_HISTORY,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <WalletBusiness mode="history" />
             </ProtectedRoute>
           ),
         },

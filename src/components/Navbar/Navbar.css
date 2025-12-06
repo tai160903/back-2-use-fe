@@ -108,7 +108,7 @@
 .navbar-item.active:hover {
   padding: 15px !important;
   background: #ffffff !important;
-  color: #007c00;
+  color: #007c00 !important;
   cursor: pointer;
 }
 
@@ -124,7 +124,6 @@
   color: #ffffff !important;
 }
 
-.navbar-item:hover .navbar-icon { color: #007c00 !important; }
 
 /* Khoảng cách giữa icon và chữ trong menu */
 .navbar .MuiListItemIcon-root {
@@ -134,3 +133,79 @@
 
 /* Chiều cao tối thiểu cho mỗi item trong menu */
 .navbar .MuiListItem-root { min-height: 60px; }
+
+/* Sub items under Wallet transaction (smaller, indented like a tree) */
+.navbar-sub-item.MuiListItem-root {
+  min-height: 32px !important;
+}
+
+.navbar-sub-item {
+  margin-top: 2px;
+  padding: 2px 14px !important;
+}
+
+.navbar-sub-item .MuiListItemText-primary {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-transform: none;
+  letter-spacing: 0.5px;
+
+}
+
+.navbar-sub-item .navbar-icon {
+  font-size: 16px;
+}
+
+.navbar-sub-item {
+  color: #ffffff !important;
+}
+
+.navbar-sub-item:hover {
+  padding: 4px 14px !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.navbar-sub-item.active,
+.navbar-sub-item.Mui-selected {
+  background: #ffffff !important;
+  padding: 4px 14px !important;
+}
+
+.navbar-sub-item.active .navbar-icon,
+.navbar-sub-item.Mui-selected .navbar-icon,
+.navbar-item.navbar-sub-item.active .navbar-icon,
+.navbar-item.navbar-sub-item.Mui-selected .navbar-icon {
+  color: #007c00 !important;
+}
+
+.navbar-sub-item.active .MuiListItemText-primary,
+.navbar-sub-item.Mui-selected .MuiListItemText-primary,
+.navbar-item.navbar-sub-item.active .MuiListItemText-primary,
+.navbar-item.navbar-sub-item.Mui-selected .MuiListItemText-primary,
+.navbar-sub-item.active .MuiListItemText-root,
+.navbar-sub-item.Mui-selected .MuiListItemText-root {
+  color: #007c00 !important;
+}
+
+.navbar-sub-item:hover .navbar-icon {
+  color: #ffffff !important;
+}
+
+.navbar-sub-item:hover .MuiListItemText-primary {
+  color: #ffffff !important;
+}
+
+.navbar-sub-item.active:hover .navbar-icon,
+.navbar-sub-item.Mui-selected:hover .navbar-icon,
+.navbar-item.navbar-sub-item.active:hover .navbar-icon,
+.navbar-item.navbar-sub-item.Mui-selected:hover .navbar-icon {
+  color: #007c00 !important;
+}
+
+.navbar-sub-item.active:hover .MuiListItemText-primary,
+.navbar-sub-item.Mui-selected:hover .MuiListItemText-primary,
+.navbar-item.navbar-sub-item.active:hover .MuiListItemText-primary,
+.navbar-item.navbar-sub-item.Mui-selected:hover .MuiListItemText-primary {
+  color: #007c00 !important;
+}
