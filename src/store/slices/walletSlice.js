@@ -38,7 +38,7 @@ export const withdrawMoneyApi = createAsyncThunk(
 // get transaction history
 export const getTransactionHistoryApi = createAsyncThunk(
   "wallet/getTransactionHistoryApi",
-  async({page,limit,typeGroup = "personal",direction,walletType}, {rejectWithValue}) => {
+  async({page,limit,typeGroup = "personal",direction,walletType,transactionType}, {rejectWithValue}) => {
     try {
       let url = `/wallet-transactions/my`;
       const params = [];
@@ -59,6 +59,10 @@ export const getTransactionHistoryApi = createAsyncThunk(
       
       if (direction && direction !== "all") {
         params.push(`direction=${direction}`);
+      }
+      
+      if (transactionType && transactionType !== "all") {
+        params.push(`transactionType=${transactionType}`);
       }
       
       url += `?${params.join('&')}`;

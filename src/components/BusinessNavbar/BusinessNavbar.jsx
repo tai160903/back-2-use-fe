@@ -12,8 +12,6 @@ import {
   IoHomeOutline,
   IoPersonOutline,
   IoStorefrontOutline,
-  IoChevronDownOutline,
-  IoChevronForwardOutline,
 } from "react-icons/io5";
 import { MdOutlineAccountBalanceWallet, MdRedeem, MdPayment, MdShoppingCart, MdSubscriptions } from "react-icons/md";
 import { CiStar } from "react-icons/ci";
@@ -53,10 +51,7 @@ const businessSidebarItems = [
   {
     id: "wallet-transaction",
     label: "Wallet transaction",
-    children: [
-      { id: "wallet-actions", label: "Deposit/Withdraw History", path: PATH.BUSINESS_WALLET_ACTIONS },
-      { id: "wallet-history", label: "Borrow/Return History", path: PATH.BUSINESS_WALLET_HISTORY },
-    ],
+    path: PATH.BUSINESS_WALLET,
   },
   { id: "staff", label: "Staff Management", path: PATH.BUSINESS_STAFF },
   { id: "logout", label: "Logout", path: null },
@@ -67,7 +62,6 @@ const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
 
   // Notify parent when drawer toggles
   useEffect(() => {
@@ -94,7 +88,7 @@ const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
       "online-borrow-orders": <MdShoppingCart className="navbar-icon" />,
       subscriptions: <MdSubscriptions className="navbar-icon" />,
       "reedem-rewards": <AiOutlineGift className="navbar-icon" />,
-      wallet: <MdOutlineAccountBalanceWallet className="navbar-icon" />,
+      "wallet-transaction": <MdOutlineAccountBalanceWallet className="navbar-icon" />,
       staff: <GoPeople className="navbar-icon" />,
       logout: <CiLogout className="navbar-icon" />,
     };
@@ -130,90 +124,6 @@ const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
     </div>
       <List className="navbar-content">
         {itemsToRender.map((item) => {
-          if (item.id === "wallet-transaction") {
-            const isChildActive =
-              location.pathname === PATH.BUSINESS_WALLET_ACTIONS ||
-              location.pathname === PATH.BUSINESS_WALLET_HISTORY;
-            return (
-              <div key={item.id}>
-                <ListItem
-                  button
-                  onClick={() => setIsWalletMenuOpen((prev) => !prev)}
-                  className={`navbar-item ${isChildActive ? "active" : ""}`}
-                >
-                  <Tooltip title={!isOpen ? item.label : ""} placement="right">
-                    <ListItemIcon
-                      className={`navbar-icon navbar-icon-${item.id}`}
-                    >
-                      {getIconComponent("wallet")}
-                    </ListItemIcon>
-                  </Tooltip>
-                  {isOpen && (
-                    <>
-                      <ListItemText primary={item.label} />
-                      {isWalletMenuOpen ? (
-                        <IoChevronDownOutline size={16} color="#ffffff" />
-                      ) : (
-                        <IoChevronForwardOutline size={16} color="#ffffff" />
-                      )}
-                    </>
-                  )}
-                </ListItem>
-                {isWalletMenuOpen && isOpen && (
-                  <List component="div" disablePadding>
-                    {item.children.map((child) => {
-                      const isActive = location.pathname === child.path;
-                      return (
-                        <ListItem
-                          button
-                          key={child.id}
-                          selected={isActive}
-                          onClick={() => navigate(child.path)}
-                          className={`navbar-item navbar-sub-item ${
-                            isActive ? "active" : ""
-                          }`}
-                          sx={{ 
-                            pl: 4,
-                            ...(isActive && {
-                              backgroundColor: '#ffffff !important',
-                              borderRadius: '0 !important',
-                              '& .MuiListItemText-primary': {
-                                color: '#007c00 !important',
-                              },
-                              '& .navbar-icon': {
-                                color: '#007c00 !important',
-                              },
-                              '&:hover': {
-                                backgroundColor: '#ffffff !important',
-                                '& .MuiListItemText-primary': {
-                                  color: '#007c00 !important',
-                                },
-                                '& .navbar-icon': {
-                                  color: '#007c00 !important',
-                                }
-                              }
-                            })
-                          }}
-                        >
-                          <Tooltip
-                            title={!isOpen ? child.label : ""}
-                            placement="right"
-                          >
-                            <ListItemIcon
-                              className={`navbar-icon navbar-icon-${child.id}`}
-                            >
-                              <GoHistory className="navbar-icon" />
-                            </ListItemIcon>
-                          </Tooltip>
-                          {isOpen && <ListItemText primary={child.label} />}
-                        </ListItem>
-                      );
-                    })}
-                  </List>
-                )}
-              </div>
-            );
-          }
 
           return (
             <ListItem

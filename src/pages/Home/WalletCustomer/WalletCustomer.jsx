@@ -8,7 +8,8 @@ import { useState, useEffect } from "react";
 
 import { MdAttachMoney } from "react-icons/md";
 import { FiArrowDownLeft, FiArrowUpRight } from "react-icons/fi";
-import { Box, Chip } from "@mui/material";
+import { Box, Chip, Tabs, Tab, Button } from "@mui/material";
+import TabPanelRecent from "../../../components/TabPanelRecent/TabPanelRecent";
 
 import toast from "react-hot-toast";
 import { useUserInfo } from "../../../hooks/useUserInfo";
@@ -24,9 +25,9 @@ import {
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 
-export default function WalletCustomer({ mode = "actions" }) {
+export default function WalletCustomer() {
   const dispatch = useDispatch();
-  const { walletId, balance, holdingBalance, isLoading: profileLoading } = useUserInfo();
+  const { walletId, balance, isLoading: profileLoading } = useUserInfo();
   
   // Redux state for transaction history
   const { 
@@ -59,15 +60,18 @@ export default function WalletCustomer({ mode = "actions" }) {
 
   const [openAddFunds, setOpenAddFunds] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [direction, setDirection] = useState("all");
-  const [transactionTypeFilter, setTransactionTypeFilter] = useState("borrow_return");
+  const [penaltyFilter, setPenaltyFilter] = useState("all"); // "all" or "penalty"
   const limit = 3;
   const [openTxnDetail, setOpenTxnDetail] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-
-  const isHistoryMode = mode === "history";
+  const [depositRefundData, setDepositRefundData] = useState([]);
+  const [penaltyData, setPenaltyData] = useState([]);
+  const [depositRefundTotalPages, setDepositRefundTotalPages] = useState(0);
+  const [penaltyTotalPages, setPenaltyTotalPages] = useState(0);
 
   const getStatusColor = (status) => {
     if (!status) return "default";
@@ -102,53 +106,81 @@ export default function WalletCustomer({ mode = "actions" }) {
     setCurrentPage(1);
   };
 
-  const handleTransactionTypeFilterChange = (newFilter) => {
-    setTransactionTypeFilter(newFilter);
+  const handlePenaltyFilterChange = (newFilter) => {
+    setPenaltyFilter(newFilter);
     setCurrentPage(1);
   };
 
-  // Load transaction history
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+    setCurrentPage(1);
+  };
+
+  // Load transaction history for Tab 0: Deposit/Withdraw History (personal)
   useEffect(() => {
-    if (walletId) {
-      if (isHistoryMode) {
-        // In history mode, check transactionTypeFilter
-        if (transactionTypeFilter === "penalty") {
-          // When filter is "penalty", only get penalty
-          dispatch(
-            getTransactionHistoryApi({
-              page: currentPage,
-              limit,
-              typeGroup: "penalty",
-              direction,
-              walletType: "customer",
-            })
-          );
-        } else {
-          // When filter is "borrow_return", only get deposit_refund
-          dispatch(
-            getTransactionHistoryApi({
-              page: currentPage,
-              limit,
-              typeGroup: "deposit_refund",
-              direction,
-              walletType: "customer",
-            })
-          );
-        }
+    if (walletId && tabValue === 0) {
+      // If filter is penalty, fetch from backend with typeGroup="penalty"
+      if (penaltyFilter === "penalty") {
+        dispatch(
+          getTransactionHistoryApi({
+            page: currentPage,
+            limit,
+            typeGroup: "penalty",
+            direction: direction !== "all" ? direction : undefined,
+            walletType: "customer",
+          })
+        );
       } else {
-        // Use regular API for personal transactions
         dispatch(
           getTransactionHistoryApi({
             page: currentPage,
             limit,
             typeGroup: "personal",
-            direction,
+            direction: direction !== "all" ? direction : undefined,
             walletType: "customer",
           })
         );
       }
     }
-  }, [dispatch, walletId, currentPage, limit, direction, isHistoryMode, transactionTypeFilter]);
+  }, [dispatch, walletId, currentPage, limit, direction, tabValue, penaltyFilter]);
+
+  // Load transaction history for Tab 1: Borrow/Return History (deposit_refund + penalty)
+  useEffect(() => {
+    if (walletId && tabValue === 1) {
+      // Fetch deposit_refund
+      dispatch(
+        getTransactionHistoryApi({
+          page: currentPage,
+          limit,
+          typeGroup: "deposit_refund",
+          direction: direction !== "all" ? direction : undefined,
+          walletType: "customer",
+        })
+      ).then((result) => {
+        if (result.payload) {
+          setDepositRefundData(result.payload.data || []);
+          setDepositRefundTotalPages(result.payload.totalPages || 0);
+        }
+      });
+
+      // Fetch penalty
+      dispatch(
+        getTransactionHistoryApi({
+          page: currentPage,
+          limit,
+          typeGroup: "penalty",
+          direction: direction !== "all" ? direction : undefined,
+          walletType: "customer",
+        })
+      ).then((result) => {
+        if (result.payload) {
+          setPenaltyData(result.payload.data || []);
+          setPenaltyTotalPages(result.payload.totalPages || 0);
+        }
+      });
+    }
+  }, [dispatch, walletId, currentPage, limit, direction, tabValue]);
 
   // Handle page change
   const handlePageChange = (event, newPage) => {
@@ -233,7 +265,8 @@ export default function WalletCustomer({ mode = "actions" }) {
         status: transaction.status,
         direction: transaction.direction,
         transactionType: transaction.transactionType,
-        paymentMethod: transaction.paymentMethod ? formatPaymentMethod(transaction.paymentMethod) : null
+        paymentMethod: transaction.paymentMethod ? formatPaymentMethod(transaction.paymentMethod) : null,
+        paymentUrl: transaction.paymentUrl || null
       };
     });
   };
@@ -243,33 +276,20 @@ export default function WalletCustomer({ mode = "actions" }) {
   
 
   const realTransactionData = transactionHistory ? formatTransactionData(transactionHistory) : [];
+  
+  // Merge deposit_refund and penalty data for Tab 1
+  const mergedDepositPenaltyData = tabValue === 1 
+    ? [...formatTransactionData(depositRefundData), ...formatTransactionData(penaltyData)]
+        .sort((a, b) => {
+          const dateA = new Date(a.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.dateTime.split(' ')[1]);
+          const dateB = new Date(b.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + b.dateTime.split(' ')[1]);
+          return dateB - dateA;
+        })
+    : [];
+  
   const filterByDirection = (data) => {
     if (direction === "all") return data;
     return data.filter((item) => item.direction === direction);
-  };
-  const borrowPenaltyOnly = (data) =>
-    data.filter(
-      (item) =>
-        !["deposit", "top_up"].includes(
-          String(item.transactionType).toLowerCase()
-        )
-    );
-  
-  // Filter by transaction type (borrow_return, penalty)
-  const filterByTransactionType = (data) => {
-    if (transactionTypeFilter === "penalty") {
-      return data.filter((item) => 
-        String(item.transactionType).toLowerCase() === "penalty"
-      );
-    }
-    // When filter is "borrow_return", exclude penalty and deposit/top_up
-    if (transactionTypeFilter === "borrow_return") {
-      return data.filter((item) => 
-        String(item.transactionType).toLowerCase() !== "penalty" &&
-        !["deposit", "top_up"].includes(String(item.transactionType).toLowerCase())
-      );
-    }
-    return data;
   };
 
   if (profileLoading) {
@@ -300,79 +320,134 @@ export default function WalletCustomer({ mode = "actions" }) {
                 <LuWallet className="mr-2 text-black" /> Customer Wallet
               </Typography>
               <span style={{ color: "#787e7a" }}>
-                {isHistoryMode
-                  ? "View detailed borrow/return and penalty transaction history"
-                  : "Top up and withdraw money from your wallet"}
+                Manage your wallet transactions and history
               </span>
             </div>
           </div>
 
-          {!isHistoryMode && (
-            <>
-              {/* Action section: deposit & withdraw */}
-              <div className="wallet-balance">
-                <div className="wallet-balance-des">
-                  <Typography
-                    sx={{
-                      fontSize: "40px",
-                      color: "#007a00",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {balance.toLocaleString("vi-VN")} VND
-                  </Typography>
-                  <span>Available balance</span>
+          {/* Action section: deposit & withdraw - show in both tabs */}
+          <div className="wallet-balance">
+            <div className="wallet-balance-des">
+              <Typography
+                sx={{
+                  fontSize: "40px",
+                  color: "#007a00",
+                  fontWeight: "bold",
+                }}
+              >
+                {balance.toLocaleString("vi-VN")} VND
+              </Typography>
+              <span>Available balance</span>
+            </div>
+            {tabValue === 0 && (
+              <div>
+                <div
+                  className="wallet-balance-transaction"
+                  onClick={handleOpenAddFunds}
+                >
+                  <FaPlus className="mr-3" />
+                  Top up
                 </div>
-                <div>
-                  <div
-                    className="wallet-balance-transaction"
-                    onClick={handleOpenAddFunds}
-                  >
-                    <FaPlus className="mr-3" />
-                    Top up
-                  </div>
-                  <div
-                    className="wallet-balance-transaction-withdraw mt-4"
-                    onClick={handleOpenWithdraw}
-                  >
-                    <FaMinus className="mr-3" />
-                    Withdraw
-                  </div>
+                <div
+                  className="wallet-balance-transaction-withdraw mt-4"
+                  onClick={handleOpenWithdraw}
+                >
+                  <FaMinus className="mr-3" />
+                  Withdraw
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Deposit/Withdraw History */}
-              <div className="recentTransaction">
-                <div className="recentTransaction-container">
-                  <Typography className="recentTransaction-title">
-                    <MdAttachMoney className="mr-2 size-8" /> Deposit/Withdraw History
-                  </Typography>
+          {/* Recent Transactions with Tabs */}
+          <div className="recentTransaction">
+            <div className="recentTransaction-container">
+              <Typography className="recentTransaction-title">
+                <MdAttachMoney className="mr-2 size-8" /> Recent Transactions
+              </Typography>
+              <div className="recentTransaction-tabs">
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  aria-label="wallet transaction tabs"
+                  sx={{
+                    "& .MuiTabs-indicator": {
+                      backgroundColor: "transparent",
+                    },
+                    "& .MuiTab-root": {
+                      backgroundColor: "transparent",
+                      color: "#000000",
+                      textTransform: "none",
+                      fontSize: "16px",
+                      minWidth: "150px",
+                      borderRadius: "8px",
+                      "&.Mui-selected": {
+                        backgroundColor: "#2E7D32",
+                        color: "#FFFFFF",
+                      },
+                      width: "50%",
+                    },
+                  }}
+                >
+                  <Tab label="Deposit/Withdraw History" />
+                  <Tab label="Borrow/Return History" />
+                </Tabs>
+
+                {/* Tab 0: Deposit/Withdraw History (personal) */}
+                <TabPanelRecent value={tabValue} index={0}>
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
                       mb: 2,
-                      justifyContent: "flex-end",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: 2,
                     }}
                   >
-                    <Chip
-                      label="All"
-                      color={direction === "all" ? "primary" : "default"}
-                      onClick={() => handleDirectionChange("all")}
-                      sx={{ mr: 1, cursor: "pointer" }}
-                    />
-                    <Chip
-                      label="Money in"
-                      color={direction === "in" ? "success" : "default"}
-                      onClick={() => handleDirectionChange("in")}
-                      sx={{ mr: 1, cursor: "pointer" }}
-                    />
-                    <Chip
-                      label="Money out"
-                      color={direction === "out" ? "error" : "default"}
-                      onClick={() => handleDirectionChange("out")}
-                      sx={{ cursor: "pointer" }}
-                    />
+                    {/* Penalty Filter */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 1, color: "#424242" }}>
+                        Filter:
+                      </Typography>
+                      <Chip
+                        label="All"
+                        color={penaltyFilter === "all" ? "primary" : "default"}
+                        onClick={() => handlePenaltyFilterChange("all")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                      <Chip
+                        label="Penalty"
+                        color={penaltyFilter === "penalty" ? "primary" : "default"}
+                        onClick={() => handlePenaltyFilterChange("penalty")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                    </Box>
+                    
+                    {/* Direction Filters */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 1, color: "#424242" }}>
+                        Direction:
+                      </Typography>
+                      <Chip
+                        label="All"
+                        color={direction === "all" ? "primary" : "default"}
+                        onClick={() => handleDirectionChange("all")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                      <Chip
+                        label="Money in"
+                        color={direction === "in" ? "success" : "default"}
+                        onClick={() => handleDirectionChange("in")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                      <Chip
+                        label="Money out"
+                        color={direction === "out" ? "error" : "default"}
+                        onClick={() => handleDirectionChange("out")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                    </Box>
                   </Box>
                   {transactionLoading ? (
                     <div style={{ textAlign: "center", padding: "20px" }}>
@@ -525,6 +600,32 @@ export default function WalletCustomer({ mode = "actions" }) {
                                       height: "24px",
                                     }}
                                   />
+                                  
+                                  {/* Continue Payment Button for processing status */}
+                                  {item.status === "processing" && item.paymentUrl && (
+                                    <Box sx={{ mt: 1.5 }}>
+                                      <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(item.paymentUrl, '_blank');
+                                        }}
+                                        sx={{
+                                          backgroundColor: "#007c00",
+                                          color: "#ffffff",
+                                          fontWeight: 600,
+                                          fontSize: "12px",
+                                          textTransform: "none",
+                                          "&:hover": {
+                                            backgroundColor: "#006600",
+                                          },
+                                        }}
+                                      >
+                                        Continue Payment
+                                      </Button>
+                                    </Box>
+                                  )}
                                 </Box>
                               </Box>
                               
@@ -577,73 +678,29 @@ export default function WalletCustomer({ mode = "actions" }) {
                       )}
                     </>
                   )}
-                </div>
-              </div>
-            </>
-          )}
+                </TabPanelRecent>
 
-          {isHistoryMode && (
-            <>
-              {/* Holding Balance Display - Similar to Available Balance */}
-              <div className="wallet-balance">
-                <div className="wallet-balance-des">
-                  <Typography
+                {/* Tab 1: Borrow/Return History (deposit_refund + penalty) */}
+                <TabPanelRecent value={tabValue} index={1}>
+                  <Box
                     sx={{
-                      fontSize: "40px",
-                      color: "#007a00",
-                      fontWeight: "bold",
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 2,
+                      justifyContent: "flex-end",
                     }}
                   >
-                    {holdingBalance.toLocaleString("en-US").replace(/,/g, ".")} VND
-                  </Typography>
-                  <span>Holding balance</span>
-                </div>
-              </div>
-
-              <div className="recentTransaction">
-                <div className="recentTransaction-container">
-                  <Typography className="recentTransaction-title">
-                    <MdAttachMoney className="mr-2 size-8" /> Borrow/Return/Penalty History
-                  </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    mb: 2,
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: 1,
-                  }}
-                >
-                    {/* Transaction Type Filters */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                      <Chip
-                        label="Borrow/Return"
-                        color={transactionTypeFilter === "borrow_return" ? "primary" : "default"}
-                        onClick={() => handleTransactionTypeFilterChange("borrow_return")}
-                        sx={{ cursor: "pointer" }}
-                      />
-                      <Chip
-                        label="Penalty"
-                        color={transactionTypeFilter === "penalty" ? "primary" : "default"}
-                        onClick={() => handleTransactionTypeFilterChange("penalty")}
-                        sx={{ cursor: "pointer" }}
-                      />
-                    </Box>
-                  
-                  {/* Direction Filters */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
                     <Chip
                       label="All"
-                      color={direction === "all" ? "success" : "default"}
+                      color={direction === "all" ? "primary" : "default"}
                       onClick={() => handleDirectionChange("all")}
-                      sx={{ cursor: "pointer" }}
+                      sx={{ mr: 1, cursor: "pointer" }}
                     />
                     <Chip
                       label="Money in"
                       color={direction === "in" ? "success" : "default"}
                       onClick={() => handleDirectionChange("in")}
-                      sx={{ cursor: "pointer" }}
+                      sx={{ mr: 1, cursor: "pointer" }}
                     />
                     <Chip
                       label="Money out"
@@ -652,224 +709,240 @@ export default function WalletCustomer({ mode = "actions" }) {
                       sx={{ cursor: "pointer" }}
                     />
                   </Box>
-                </Box>
-                {transactionLoading ? (
-                  <div style={{ textAlign: "center", padding: "20px" }}>
-                    <Typography>Loading history...</Typography>
-                  </div>
-                ) : (
-                  <>
-                    {filterByDirection(
-                      filterByTransactionType(
-                        borrowPenaltyOnly(realTransactionData)
-                      )
-                    ).length === 0 ? (
-                      <div style={{ textAlign: "center", padding: 20 }}>
-                        <Typography>
-                          No transactions found.
-                        </Typography>
-                      </div>
-                    ) : (
-                      filterByDirection(
-                        filterByTransactionType(
-                          borrowPenaltyOnly(realTransactionData)
-                        )
-                      ).map((item) => {
-                        const failedStatuses = [
-                          "failed",
-                          "faild",
-                          "rejected",
-                          "canceled",
-                          "cancelled",
-                          "error",
-                        ];
-                        const isDepositLike = ["deposit", "top_up"].includes(
-                          String(item.transactionType).toLowerCase()
-                        );
-                        const isNegative =
-                          item.direction === "out" ||
-                          (isDepositLike &&
-                            failedStatuses.includes(
-                              String(item.status).toLowerCase()
-                            ));
-                        return (
-                          <Box
-                            key={item.id}
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "flex-start",
-                              p: 3,
-                              mb: 2,
-                              border: "1px solid #e0e0e0",
-                              borderRadius: "12px",
-                              backgroundColor: "#fff",
-                              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                              transition: "all 0.2s ease",
-                              "&:hover": {
-                                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                                borderColor: "#007c00",
-                              },
-                            }}
-                            onClick={() => handleOpenTxnDetail(item.id)}
-                            role="button"
-                            style={{ cursor: "pointer" }}
-                          >
-                            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, flex: 1 }}>
-                              <Box
-                                sx={{
-                                  width: 48,
-                                  height: 48,
-                                  borderRadius: "12px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  backgroundColor: isNegative
-                                    ? "#fee"
-                                    : "#e8f5e9",
-                                  color: isNegative ? "#d32f2f" : "#2e7d32",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {item.direction === "out" ? (
-                                  <FiArrowUpRight size={22} />
-                                ) : (
-                                  <FiArrowDownLeft size={22} />
-                                )}
+                  {transactionLoading ? (
+                    <div style={{ textAlign: "center", padding: "20px" }}>
+                      <Typography>Loading history...</Typography>
+                    </div>
+                  ) : (
+                    <>
+                      {filterByDirection(mergedDepositPenaltyData).length === 0 ? (
+                        <div style={{ textAlign: "center", padding: 20 }}>
+                          <Typography>No borrow/return transactions found.</Typography>
+                        </div>
+                      ) : (
+                        filterByDirection(mergedDepositPenaltyData).map((item) => {
+                          const failedStatuses = [
+                            "failed",
+                            "faild",
+                            "rejected",
+                            "canceled",
+                            "cancelled",
+                            "error",
+                          ];
+                          const isDepositLike = ["deposit", "top_up"].includes(
+                            String(item.transactionType).toLowerCase()
+                          );
+                          const isNegative =
+                            item.direction === "out" ||
+                            (isDepositLike &&
+                              failedStatuses.includes(
+                                String(item.status).toLowerCase()
+                              ));
+                          return (
+                            <Box
+                              key={item.id}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
+                                p: 3,
+                                mb: 2,
+                                border: "1px solid #e0e0e0",
+                                borderRadius: "12px",
+                                backgroundColor: "#fff",
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                                transition: "all 0.2s ease",
+                                "&:hover": {
+                                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                                  borderColor: "#007c00",
+                                },
+                              }}
+                              onClick={() => handleOpenTxnDetail(item.id)}
+                              role="button"
+                              style={{ cursor: "pointer" }}
+                            >
+                              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, flex: 1 }}>
+                                <Box
+                                  sx={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: "12px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor: isNegative
+                                      ? "#fee"
+                                      : "#e8f5e9",
+                                    color: isNegative ? "#d32f2f" : "#2e7d32",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {item.direction === "out" ? (
+                                    <FiArrowUpRight size={22} />
+                                  ) : (
+                                    <FiArrowDownLeft size={22} />
+                                  )}
+                                </Box>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                  {/* Transaction Type - Most Prominent */}
+                                  <Typography
+                                    variant="h6"
+                                    sx={{
+                                      fontWeight: 700,
+                                      fontSize: "18px",
+                                      color: isNegative ? "#d32f2f" : "#2e7d32",
+                                      mb: 0.5,
+                                    }}
+                                  >
+                                    {item.transactionTypeLabel}
+                                  </Typography>
+                                  
+                                  {/* Description */}
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontWeight: 500,
+                                      color: "#424242",
+                                      mb: 1,
+                                      wordBreak: "break-word",
+                                    }}
+                                  >
+                                    {item.description}
+                                  </Typography>
+                                  
+                                  {/* Payment Method */}
+                                  {item.paymentMethod && (
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          color: "#757575",
+                                          fontSize: "12px",
+                                        }}
+                                      >
+                                        Payment Method:
+                                      </Typography>
+                                      <Chip
+                                        label={item.paymentMethod}
+                                        size="small"
+                                        sx={{
+                                          height: "20px",
+                                          fontSize: "11px",
+                                          fontWeight: 600,
+                                          backgroundColor: "#e3f2fd",
+                                          color: "#1976d2",
+                                        }}
+                                      />
+                                    </Box>
+                                  )}
+                                  
+                                  {/* Date and Time */}
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: "#757575",
+                                      fontSize: "13px",
+                                      display: "block",
+                                      mb: 1,
+                                    }}
+                                  >
+                                    {item.dateTime}
+                                  </Typography>
+                                  
+                                  {/* Status */}
+                                  <Chip
+                                    label={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                    color={getStatusColor(item.status)}
+                                    size="small"
+                                    sx={{
+                                      fontWeight: 600,
+                                      fontSize: "11px",
+                                      height: "24px",
+                                    }}
+                                  />
+                                  
+                                  {/* Continue Payment Button for processing status */}
+                                  {item.status === "processing" && item.paymentUrl && (
+                                    <Box sx={{ mt: 1.5 }}>
+                                      <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(item.paymentUrl, '_blank');
+                                        }}
+                                        sx={{
+                                          backgroundColor: "#007c00",
+                                          color: "#ffffff",
+                                          fontWeight: 600,
+                                          fontSize: "12px",
+                                          textTransform: "none",
+                                          "&:hover": {
+                                            backgroundColor: "#006600",
+                                          },
+                                        }}
+                                      >
+                                        Continue Payment
+                                      </Button>
+                                    </Box>
+                                  )}
+                                </Box>
                               </Box>
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
-                                {/* Transaction Type - Most Prominent */}
+                              
+                              {/* Amount - Right Side, Prominent */}
+                              <Box sx={{ textAlign: "right", ml: 2, flexShrink: 0 }}>
                                 <Typography
                                   variant="h6"
                                   sx={{
                                     fontWeight: 700,
-                                    fontSize: "18px",
+                                    fontSize: "20px",
                                     color: isNegative ? "#d32f2f" : "#2e7d32",
                                     mb: 0.5,
                                   }}
                                 >
-                                  {item.transactionTypeLabel}
+                                  {item.amountFormatted}
                                 </Typography>
-                                
-                                {/* Description */}
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    fontWeight: 500,
-                                    color: "#424242",
-                                    mb: 1,
-                                    wordBreak: "break-word",
-                                  }}
-                                >
-                                  {item.description}
-                                </Typography>
-                                
-                                {/* Payment Method */}
-                                {item.paymentMethod && (
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                                    <Typography
-                                      variant="caption"
-                                      sx={{
-                                        color: "#757575",
-                                        fontSize: "12px",
-                                      }}
-                                    >
-                                      Payment Method:
-                                    </Typography>
-                                    <Chip
-                                      label={item.paymentMethod}
-                                      size="small"
-                                      sx={{
-                                        height: "20px",
-                                        fontSize: "11px",
-                                        fontWeight: 600,
-                                        backgroundColor: "#e3f2fd",
-                                        color: "#1976d2",
-                                      }}
-                                    />
-                                  </Box>
-                                )}
-                                
-                                {/* Date and Time */}
                                 <Typography
                                   variant="caption"
                                   sx={{
                                     color: "#757575",
-                                    fontSize: "13px",
-                                    display: "block",
-                                    mb: 1,
+                                    fontSize: "11px",
                                   }}
                                 >
-                                  {item.dateTime}
+                                  {item.direction === "in" ? "Money In" : "Money Out"}
                                 </Typography>
-                                
-                                {/* Status */}
-                                <Chip
-                                  label={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                                  color={getStatusColor(item.status)}
-                                  size="small"
-                                  sx={{
-                                    fontWeight: 600,
-                                    fontSize: "11px",
-                                    height: "24px",
-                                  }}
-                                />
                               </Box>
                             </Box>
-                            
-                            {/* Amount - Right Side, Prominent */}
-                            <Box sx={{ textAlign: "right", ml: 2, flexShrink: 0 }}>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  fontWeight: 700,
-                                  fontSize: "20px",
-                                  color: isNegative ? "#d32f2f" : "#2e7d32",
-                                  mb: 0.5,
-                                }}
-                              >
-                                {item.amountFormatted}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: "#757575",
-                                  fontSize: "11px",
-                                }}
-                              >
-                                {item.direction === "in" ? "Money In" : "Money Out"}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        );
-                      })
-                    )}
+                          );
+                        })
+                      )}
 
-                    {transactionTotalPages > 1 && (
-                      <Stack
-                        spacing={2}
-                        className="mt-4"
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Pagination
-                          count={transactionTotalPages}
-                          page={currentPage}
-                          onChange={handlePageChange}
-                          variant="outlined"
-                          shape="rounded"
-                        />
-                      </Stack>
-                    )}
-                  </>
-                )}
+                      {/* Calculate total pages from merged data */}
+                      {Math.max(depositRefundTotalPages, penaltyTotalPages) > 1 && (
+                        <Stack
+                          spacing={2}
+                          className="mt-4"
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Pagination
+                            count={Math.max(depositRefundTotalPages, penaltyTotalPages)}
+                            page={currentPage}
+                            onChange={handlePageChange}
+                            variant="outlined"
+                            shape="rounded"
+                          />
+                        </Stack>
+                      )}
+                    </>
+                  )}
+                </TabPanelRecent>
               </div>
             </div>
-            </>
-          )}
+          </div>
         </div>
       </div>
 

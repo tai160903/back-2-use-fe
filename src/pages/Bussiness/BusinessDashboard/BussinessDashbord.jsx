@@ -151,7 +151,7 @@ export default function BussinessDashbord() {
       title: 'Manage Wallet',
       description: 'View wallet balance',
       icon: <FaMoneyBillWave />,
-      path: PATH.BUSINESS_WALLET_ACTIONS,
+      path: PATH.BUSINESS_WALLET,
       color: '#8b5cf6'
     },
   ];
