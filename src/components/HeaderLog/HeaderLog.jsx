@@ -3,11 +3,11 @@ import Typography from "@mui/material/Typography";
 import { FaWallet } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { PATH } from "../../routes/path";
-import { logout, switchAccountTypeAPI } from "../../store/slices/authSlice";
+import { logout, switchAccountTypeAPI, syncWithLocalStorage } from "../../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import { getUserRole, getRedirectPath } from "../../utils/authUtils";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   getProfileApi,
   getProfileBusiness,
@@ -21,11 +21,21 @@ import { io } from "socket.io-client";
 import toast from "react-hot-toast";
 export default function HeaderLog() {
   const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.auth);
   const { userInfo, businessInfo, staffInfo } = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const userRole = getUserRole();
+  // Sử dụng state để đảm bảo userRole được tính lại khi currentUser thay đổi
+  const [userRole, setUserRole] = useState(() => getUserRole());
+  
+  useEffect(() => {
+    setUserRole(getUserRole());
+  }, [currentUser]);
 
   useEffect(() => {
+    if (userRole === "admin") {
+      // Không gọi API profile cho admin
+      return;
+    }
     if (userRole === "business") {
       dispatch(getProfileBusiness());
     } else if (userRole === "staff") {
@@ -39,6 +49,9 @@ export default function HeaderLog() {
   const socketRef = useRef(null);
 
   useEffect(() => {
+    // Không kết nối socket cho admin
+    if (userRole === "admin") return;
+    
     const userId = userInfo?._id;
     if (!userId) return;
 
@@ -105,20 +118,6 @@ export default function HeaderLog() {
     navigate(PATH.LOGIN);
   };
 
-  // Chuẩn hoá role từ payload (hỗ trợ cả string và array)
-  const normalizeRoleFromPayload = (role) => {
-    if (Array.isArray(role) && role.length > 0) {
-      const primary = role[0];
-      return typeof primary === "string"
-        ? primary.toLowerCase()
-        : null;
-    }
-    if (typeof role === "string") {
-      return role.toLowerCase();
-    }
-    return null;
-  };
-
   const handleSwitchToCustomer = async () => {
     if (userRole !== "business") return;
 
@@ -128,16 +127,18 @@ export default function HeaderLog() {
       );
 
       if (switchAccountTypeAPI.fulfilled.match(resultAction)) {
-        const payload = resultAction.payload;
-        const rawRole = payload?.data?.user?.role;
-        const newRole =
-          normalizeRoleFromPayload(rawRole) || "customer";
-        const redirectPath = getRedirectPath(newRole);
-        navigate(redirectPath, { replace: true });
+        // Đảm bảo state được sync với localStorage
+        dispatch(syncWithLocalStorage());
+        
+        // Sử dụng "customer" trực tiếp vì chúng ta biết chắc chắn role mới là gì
+        // Đợi một chút để đảm bảo Redux state và localStorage đã được cập nhật
+        setTimeout(() => {
+          const redirectPath = getRedirectPath("customer");
+          navigate(redirectPath, { replace: true });
+        }, 100);
       }
     } catch (error) {
-      toast.error(error.message||"Failed to switch to customer");
-
+      toast.error(error?.message || "Có lỗi xảy ra khi chuyển đổi loại tài khoản.");
     }
   };
 
@@ -177,6 +178,15 @@ export default function HeaderLog() {
     </>
   );
 
+  // Render thông tin cho admin
+  const renderAdminInfo = () => (
+    <>
+      <Typography className="header-log-name" variant="h6" noWrap>
+        Welcome admin
+      </Typography>
+    </>
+  );
+
   return (
     <>
       <div className="header-log">
@@ -185,7 +195,9 @@ export default function HeaderLog() {
             <div className="header-log-info">
               <Avatar
                 src={
-                  userRole === "business"
+                  userRole === "admin"
+                    ? ""
+                    : userRole === "business"
                     ? businessInfo?.data?.business?.businessLogoUrl ||
                       businessInfo?.data?.business?.avatar ||
                       ""
@@ -194,7 +206,9 @@ export default function HeaderLog() {
                     : userInfo?.avatar || ""
                 }
                 alt={
-                  userRole === "business"
+                  userRole === "admin"
+                    ? "Admin"
+                    : userRole === "business"
                     ? businessInfo?.data?.business?.businessName || "Business"
                     : userRole === "staff"
                     ? staffInfo?.data?.businessId?.businessName || "Store"
@@ -204,9 +218,13 @@ export default function HeaderLog() {
                   marginRight: 2,
                   cursor: "pointer",
                 }}
-              ></Avatar>
+              >
+                {userRole === "admin" ? "A" : ""}
+              </Avatar>
               <div>
-                {userRole === "business"
+                {userRole === "admin"
+                  ? renderAdminInfo()
+                  : userRole === "business"
                   ? renderBusinessInfo()
                   : userRole === "staff"
                   ? renderStaffInfo()
@@ -226,21 +244,23 @@ export default function HeaderLog() {
                 </span>
               </div>
             )}
-            <div className="header-log-icon-notificate">
-              <Notification
-                userId={
-                  userRole === "business"
-                    ? businessInfo?.data?.business?._id ||
-                      businessInfo?.data?.business?._uid
-                    : userInfo?._id
-                }
-                initialNotifications={notifications}
-                socket={socketRef.current}
-                mode={
-                  userRole === "business" ? "business" : "customer"
-                }
-              />
-            </div>
+            {userRole !== "admin" && (
+              <div className="header-log-icon-notificate">
+                <Notification
+                  userId={
+                    userRole === "business"
+                      ? businessInfo?.data?.business?._id ||
+                        businessInfo?.data?.business?._uid
+                      : userInfo?._id
+                  }
+                  initialNotifications={notifications}
+                  socket={socketRef.current}
+                  mode={
+                    userRole === "business" ? "business" : "customer"
+                  }
+                />
+              </div>
+            )}
             <IoIosLogOut className="header-log-icon" onClick={handleLogout} />
           </div>
         </div>

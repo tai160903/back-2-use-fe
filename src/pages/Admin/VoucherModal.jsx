@@ -137,9 +137,6 @@ const VoucherModal = ({ isOpen, onClose, voucher, onSubmit }) => {
           overflow: 'hidden',
           maxWidth: '900px',
           width: '90%',
-          '@media (min-width: 600px)': {
-            width: '700px',
-          },
         }
       }}
     >

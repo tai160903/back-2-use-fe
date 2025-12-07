@@ -211,6 +211,14 @@ export default function Subscription() {
     return `${days} days`;
   };
 
+  // Hàm để format limit (hiển thị "Unlimited" nếu là -1)
+  const formatLimit = (limit) => {
+    if (limit === -1 || limit === null || limit === undefined) {
+      return 'Unlimited';
+    }
+    return limit;
+  };
+
   return (
     <>
       <div className='subscriptionBusiness'>
@@ -283,13 +291,13 @@ export default function Subscription() {
                         <div className='package-limit-badge'>
                           <span className='package-limit-label'>Groups</span>
                           <span className='package-limit-value'>
-                            {subscriptionPackage.limits?.productGroupLimit ?? '∞'}
+                            {formatLimit(subscriptionPackage.limits?.productGroupLimit)}
                           </span>
                         </div>
                         <div className='package-limit-badge'>
                           <span className='package-limit-label'>Items / Group</span>
                           <span className='package-limit-value'>
-                            {subscriptionPackage.limits?.productItemLimit ?? '∞'}
+                            {formatLimit(subscriptionPackage.limits?.productItemLimit)}
                           </span>
                         </div>
                         <div className='package-limit-badge'>

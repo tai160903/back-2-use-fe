@@ -195,6 +195,14 @@ const Pricing = () => {
     }
   };
 
+
+  const formatLimit = (limit) => {
+    if (limit === -1 || limit === null || limit === undefined) {
+      return 'Unlimited';
+    }
+    return limit;
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -263,13 +271,13 @@ const Pricing = () => {
                     <Box className="pricing-limit-badge">
                       <span className="pricing-limit-label">Groups</span>
                       <span className="pricing-limit-value">
-                        {subscription.limits?.productGroupLimit ?? '∞'}
+                        {formatLimit(subscription.limits?.productGroupLimit)}
                       </span>
                     </Box>
                     <Box className="pricing-limit-badge">
                       <span className="pricing-limit-label">Items / Group</span>
                       <span className="pricing-limit-value">
-                        {subscription.limits?.productItemLimit ?? '∞'}
+                        {formatLimit(subscription.limits?.productItemLimit)}
                       </span>
                     </Box>
                     <Box className="pricing-limit-badge">

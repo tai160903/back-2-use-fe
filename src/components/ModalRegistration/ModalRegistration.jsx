@@ -87,7 +87,6 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
       maxWidth={false}
       sx={{
         "& .MuiDialog-paper": {
-          width: "550px",
           maxWidth: "90vw",
           overflow: "hidden",
         },
@@ -138,6 +137,9 @@ const ModalRegistration = ({ open, onClose, selectedItem }) => {
             </Typography>
             <Typography className="popUp-info">
               <strong>Tax ID</strong> {selectedItem?.taxCode || "N/A"}
+            </Typography>
+            <Typography className="popUp-info">
+              <strong>Opening Hours</strong> {selectedItem?.openTime || "N/A"} - {selectedItem?.closeTime || "N/A"}
             </Typography>
           </Box>
           <Box className="info-section">

@@ -204,15 +204,7 @@ export default function useRouterElements() {
           path: PATH.WALLET_CUSTOMER,
           element: (
             <ProtectedRoute allowedRoles={["customer"]}>
-              <WalletCustomer mode="actions" />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: PATH.WALLET_CUSTOMER_HISTORY,
-          element: (
-            <ProtectedRoute allowedRoles={["customer"]}>
-              <WalletCustomer mode="history" />
+              <WalletCustomer />
             </ProtectedRoute>
           ),
         },

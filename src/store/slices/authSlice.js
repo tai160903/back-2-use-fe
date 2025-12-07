@@ -2,9 +2,17 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import fetcher from "../../apis/fetcher";
 import toast from "react-hot-toast";
 
-
-
-const userLocal = JSON.parse(localStorage.getItem("currentUser"));
+// Helper function để lấy user từ localStorage (đọc mỗi lần gọi, không cache)
+const getUserFromLocalStorage = () => {
+  try {
+    const user = localStorage.getItem("currentUser");
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error("Error parsing currentUser from localStorage:", error);
+    localStorage.removeItem("currentUser");
+    return null;
+  }
+};
 
 // Register API
 export const registerApi = createAsyncThunk(
@@ -164,11 +172,11 @@ export const changePasswordAPI = createAsyncThunk(
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    currentUser: userLocal,
+  initialState: () => ({
+    currentUser: getUserFromLocalStorage(),
     isLoading: false,
     error: null,
-  },
+  }),
   reducers: {
     logout: (state) => {
       state.currentUser = null;
@@ -178,6 +186,16 @@ const authSlice = createSlice({
     login: (state, { payload }) => {
       state.currentUser = payload;
       localStorage.setItem("currentUser", JSON.stringify(payload));
+    },
+    syncWithLocalStorage: (state) => {
+      // Sync state với localStorage (dùng khi app reload)
+      const userFromStorage = getUserFromLocalStorage();
+      if (userFromStorage) {
+        state.currentUser = userFromStorage;
+      } else if (state.currentUser) {
+        // Nếu localStorage không có nhưng state có, xóa state
+        state.currentUser = null;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -319,5 +337,5 @@ const authSlice = createSlice({
       })
   },
 });
-export const { logout, login } = authSlice.actions;
+export const { logout, login, syncWithLocalStorage } = authSlice.actions;
 export default authSlice.reducer;
