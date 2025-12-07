@@ -7,7 +7,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import logoImage from "../../assets/image/Logo.png";
 import useAuth from "../../hooks/useAuth";
-import { logout, switchAccountTypeAPI } from "../../store/slices/authSlice";
+import { logout, switchAccountTypeAPI, syncWithLocalStorage } from "../../store/slices/authSlice";
 import { useSelector } from "react-redux";
 import { getProfileApi } from "../../store/slices/userSlice";
 import { getUserRole, getRedirectPath } from "../../utils/authUtils";
@@ -20,6 +20,7 @@ import { HiSwitchHorizontal } from "react-icons/hi";
 import Notification from "../Notification/Notification";
 import { io } from "socket.io-client";
 import { getHistoryBusinessForm } from "../../store/slices/bussinessSlice";
+import toast from "react-hot-toast";
 
 export default function Header() {
   const location = useLocation();
@@ -28,7 +29,10 @@ export default function Header() {
   const { businessFormHistory } = useSelector((state) => state.businesses);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  const userRole = currentUser ? getUserRole() : null;
+  // Sử dụng useMemo để đảm bảo userRole được tính lại khi currentUser thay đổi
+  const userRole = React.useMemo(() => {
+    return currentUser ? getUserRole() : null;
+  }, [currentUser]);
   const [notifications, setNotifications] = useState([]);
   const socketRef = useRef(null);
 
@@ -161,36 +165,24 @@ export default function Header() {
 
     if (!targetRole) return;
 
-    // Hàm chuẩn hoá role từ payload (hỗ trợ cả string và array)
-    const normalizeRoleFromPayload = (role) => {
-      if (Array.isArray(role) && role.length > 0) {
-        const primary = role[0];
-        return typeof primary === "string"
-          ? primary.toLowerCase()
-          : null;
-      }
-      if (typeof role === "string") {
-        return role.toLowerCase();
-      }
-      return null;
-    };
-
     try {
       const resultAction = await dispatch(
         switchAccountTypeAPI({ role: targetRole })
       );
 
       if (switchAccountTypeAPI.fulfilled.match(resultAction)) {
-        const payload = resultAction.payload;
-        const rawRole = payload?.data?.user?.role;
-        const newRole =
-          normalizeRoleFromPayload(rawRole) || getUserRole();
-
-        if (newRole) {
-          const redirectPath = getRedirectPath(newRole);
+        // Đảm bảo state được sync với localStorage
+        dispatch(syncWithLocalStorage());
+        
+        // Sử dụng targetRole trực tiếp vì chúng ta biết chắc chắn role mới là gì
+        // Đợi một chút để đảm bảo Redux state và localStorage đã được cập nhật
+        setTimeout(() => {
+          const redirectPath = getRedirectPath(targetRole);
           navigate(redirectPath, { replace: true });
-        }
+        }, 100);
       }
+    } catch (error) {
+      toast.error(error?.message || "Có lỗi xảy ra khi chuyển đổi loại tài khoản.");
     } finally {
       handleMenuClose();
     }

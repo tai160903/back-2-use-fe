@@ -43,6 +43,7 @@ const SubscriptionConfirmModal = ({
 
   const hasEnoughBalance = userBalance >= subscription?.price;
   const featureList = subscription?.features || [];
+  const isFreePlan = subscription?.isTrial || subscription?.price === 0;
 
   return (
     <Dialog 
@@ -135,22 +136,24 @@ const SubscriptionConfirmModal = ({
               )}
             </Box>
 
-            <Box className="auto-renew-row">
-              <FormControlLabel
-                control={
-                  <Switch
-                    color="success"
-                    checked={autoRenew}
-                    onChange={onToggleAutoRenew}
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    Enable auto-renewal for the next period
-                  </Typography>
-                }
-              />
-            </Box>
+            {!isFreePlan && (
+              <Box className="auto-renew-row">
+                <FormControlLabel
+                  control={
+                    <Switch
+                      color="success"
+                      checked={autoRenew}
+                      onChange={onToggleAutoRenew}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">
+                      Enable auto-renewal for the next period
+                    </Typography>
+                  }
+                />
+              </Box>
+            )}
 
            
           </Box>

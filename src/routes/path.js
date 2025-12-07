@@ -18,7 +18,6 @@ export const PATH = {
     STORE:"/store",
     TRANSACTION_HISTORY:"/transaction_history",
     WALLET_CUSTOMER:"/walllet_customer",
-    WALLET_CUSTOMER_HISTORY:"/wallet_customer_history",
     USER_DASHBOARD:"/user_dashborad",
     LISTSTORE:"/liststore",
     STOREDETAIL:"/storeDetail/:id",

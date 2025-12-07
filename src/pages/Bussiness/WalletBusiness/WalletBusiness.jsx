@@ -7,7 +7,7 @@ import { FaMinus } from "react-icons/fa";
 import { useState, useEffect } from "react";
 
 import { MdAttachMoney } from "react-icons/md";
-import { FiArrowDownLeft, FiArrowUpRight } from "react-icons/fi";
+import { FiArrowDownLeft, FiArrowUpRight, FiUser } from "react-icons/fi";
 import { Box, Chip, Tabs, Tab, Button } from "@mui/material";
 import TabPanelRecent from "../../../components/TabPanelRecent/TabPanelRecent";
 
@@ -24,7 +24,7 @@ import Stack from "@mui/material/Stack";
 
 export default function WalletBusiness() {
   const dispatch = useDispatch();
-  const { walletId, balance, availableBalance, isLoading: profileLoading } = useUserInfo();
+  const { walletId, balance, availableBalance, holdingBalance, isLoading: profileLoading } = useUserInfo();
   
   // Redux state for transaction history
   const { 
@@ -59,8 +59,8 @@ export default function WalletBusiness() {
   const [openWithdraw, setOpenWithdraw] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [direction, setDirection] = useState("all");
   const [depositWithdrawFilter, setDepositWithdrawFilter] = useState("all"); 
+  const [borrowReturnFilter, setBorrowReturnFilter] = useState("all"); // "all", "borrow_deposit", "return_refund", "penalty"
   const limit = 3;
   const [openTxnDetail, setOpenTxnDetail] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState(null);
@@ -130,13 +130,13 @@ export default function WalletBusiness() {
     resetWithdraw(); 
   };
 
-  const handleDirectionChange = (newDirection) => {
-    setDirection(newDirection);
+  const handleDepositWithdrawFilterChange = (newFilter) => {
+    setDepositWithdrawFilter(newFilter);
     setCurrentPage(1);
   };
 
-  const handleDepositWithdrawFilterChange = (newFilter) => {
-    setDepositWithdrawFilter(newFilter);
+  const handleBorrowReturnFilterChange = (newFilter) => {
+    setBorrowReturnFilter(newFilter);
     setCurrentPage(1);
   };
 
@@ -148,70 +148,78 @@ export default function WalletBusiness() {
 
   useEffect(() => {
     if (walletId && tabValue === 0) {
-      // If filter is penalty, fetch from backend with typeGroup="penalty"
-      if (depositWithdrawFilter === "penalty") {
+      // Other filters: filter on frontend
+      const fetchLimit = depositWithdrawFilter !== "all" ? 100 : limit;
+      const fetchPage = depositWithdrawFilter !== "all" ? 1 : currentPage;
+      dispatch(
+        getTransactionHistoryApi({
+          page: fetchPage,
+          limit: fetchLimit,
+          typeGroup: "personal",
+          walletType: "business",
+        })
+      );
+    }
+  }, [dispatch, walletId, currentPage, limit, tabValue, depositWithdrawFilter]);
+
+  // Load transaction history for Tab 1: Borrow/Return History (deposit_refund + penalty)
+  useEffect(() => {
+    if (walletId && tabValue === 1) {
+      // If filter is penalty, only fetch penalty from backend
+      if (borrowReturnFilter === "penalty") {
         dispatch(
           getTransactionHistoryApi({
             page: currentPage,
             limit,
             typeGroup: "penalty",
-            direction: direction !== "all" ? direction : undefined,
             walletType: "business",
           })
-        );
+        ).then((result) => {
+          if (result.payload) {
+            setPenaltyData(result.payload.data || []);
+            setPenaltyTotalPages(result.payload.totalPages || 0);
+            setDepositRefundData([]);
+            setDepositRefundTotalPages(0);
+          }
+        });
       } else {
-        // Other filters: filter on frontend
-        const fetchLimit = depositWithdrawFilter !== "all" ? 100 : limit;
-        const fetchPage = depositWithdrawFilter !== "all" ? 1 : currentPage;
+        // Fetch deposit_refund for borrow_deposit, return_refund, or all
         dispatch(
           getTransactionHistoryApi({
-            page: fetchPage,
-            limit: fetchLimit,
-            typeGroup: "personal",
-            direction: direction !== "all" ? direction : undefined,
+            page: currentPage,
+            limit: borrowReturnFilter === "all" ? limit : 100, // Fetch more if need to filter on FE
+            typeGroup: "deposit_refund",
             walletType: "business",
           })
-        );
+        ).then((result) => {
+          if (result.payload) {
+            setDepositRefundData(result.payload.data || []);
+            setDepositRefundTotalPages(result.payload.totalPages || 0);
+          }
+        });
+
+        // Fetch penalty only if filter is "all"
+        if (borrowReturnFilter === "all") {
+          dispatch(
+            getTransactionHistoryApi({
+              page: currentPage,
+              limit,
+              typeGroup: "penalty",
+              walletType: "business",
+            })
+          ).then((result) => {
+            if (result.payload) {
+              setPenaltyData(result.payload.data || []);
+              setPenaltyTotalPages(result.payload.totalPages || 0);
+            }
+          });
+        } else {
+          setPenaltyData([]);
+          setPenaltyTotalPages(0);
+        }
       }
     }
-  }, [dispatch, walletId, currentPage, limit, direction, tabValue, depositWithdrawFilter]);
-
-  // Load transaction history for Tab 1: Borrow/Return History (deposit_refund + penalty)
-  useEffect(() => {
-    if (walletId && tabValue === 1) {
-      // Fetch deposit_refund
-      dispatch(
-        getTransactionHistoryApi({
-          page: currentPage,
-          limit,
-          typeGroup: "deposit_refund",
-          direction: direction !== "all" ? direction : undefined,
-          walletType: "business",
-        })
-      ).then((result) => {
-        if (result.payload) {
-          setDepositRefundData(result.payload.data || []);
-          setDepositRefundTotalPages(result.payload.totalPages || 0);
-        }
-      });
-
-      // Fetch penalty
-      dispatch(
-        getTransactionHistoryApi({
-          page: currentPage,
-          limit,
-          typeGroup: "penalty",
-          direction: direction !== "all" ? direction : undefined,
-          walletType: "business",
-        })
-      ).then((result) => {
-        if (result.payload) {
-          setPenaltyData(result.payload.data || []);
-          setPenaltyTotalPages(result.payload.totalPages || 0);
-        }
-      });
-    }
-  }, [dispatch, walletId, currentPage, limit, direction, tabValue]);
+  }, [dispatch, walletId, currentPage, limit, tabValue, borrowReturnFilter]);
 
   // Handle page change
   const handlePageChange = (event, newPage) => {
@@ -276,7 +284,9 @@ export default function WalletBusiness() {
         transactionType: transaction.transactionType,
         paymentMethod: transaction.paymentMethod ? formatPaymentMethod(transaction.paymentMethod) : null,
         paymentUrl: transaction.paymentUrl || null,
-        referenceDetail: transaction.referenceDetail
+        referenceDetail: transaction.referenceDetail,
+        relatedUser: transaction.relatedUser || null,
+        relatedUserType: transaction.relatedUserType || null
       };
     });
   };
@@ -284,23 +294,56 @@ export default function WalletBusiness() {
   // Get real transaction data
   const realTransactionData = transactionHistory ? formatTransactionData(transactionHistory) : [];
   
+  // Filter by transaction type for Tab 1 (FE filtering for borrow_deposit and return_refund)
+  const filterByBorrowReturnType = (data) => {
+    if (borrowReturnFilter === "all" || borrowReturnFilter === "penalty") {
+      return data; // Already filtered from backend
+    }
+    if (borrowReturnFilter === "borrow_deposit") {
+      return data.filter((item) => 
+        item.transactionType === "borrow_deposit"
+      );
+    }
+    if (borrowReturnFilter === "return_refund") {
+      return data.filter((item) => 
+        item.transactionType === "return_refund" || item.transactionType === "deposit_refund"
+      );
+    }
+    return data;
+  };
+  
   // Merge deposit_refund and penalty data for Tab 1
   const mergedDepositPenaltyData = tabValue === 1 
-    ? [...formatTransactionData(depositRefundData), ...formatTransactionData(penaltyData)]
-        .sort((a, b) => {
+    ? (() => {
+        let dataToMerge = [];
+        
+        // If filter is penalty, only use penalty data
+        if (borrowReturnFilter === "penalty") {
+          dataToMerge = formatTransactionData(penaltyData);
+        }
+        // If filter is borrow_deposit or return_refund, only use deposit_refund data and filter on FE
+        else if (borrowReturnFilter === "borrow_deposit" || borrowReturnFilter === "return_refund") {
+          dataToMerge = filterByBorrowReturnType(formatTransactionData(depositRefundData));
+        }
+        // If filter is "all", merge both
+        else {
+          dataToMerge = [
+            ...formatTransactionData(depositRefundData), 
+            ...formatTransactionData(penaltyData)
+          ];
+        }
+        
+        return dataToMerge.sort((a, b) => {
           const dateA = new Date(a.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.dateTime.split(' ')[1]);
           const dateB = new Date(b.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + b.dateTime.split(' ')[1]);
           return dateB - dateA;
-        })
+        });
+      })()
     : [];
   
-  // Filter by transactionType
-  // Note: penalty is filtered from backend, so no need to filter here
+  // Filter by transactionType for Tab 0
   const filterByTransactionType = (data) => {
     if (depositWithdrawFilter === "all") return data;
-    
-    // Penalty is already filtered from backend, return as is
-    if (depositWithdrawFilter === "penalty") return data;
     
     if (depositWithdrawFilter === "top_up") {
       return data.filter((item) => 
@@ -321,15 +364,9 @@ export default function WalletBusiness() {
     return data;
   };
   
-  // Filter by direction (money in/out)
-  const filterByDirection = (data) => {
-    if (direction === "all") return data;
-    return data.filter((item) => item.direction === direction);
-  };
-  
   // Apply filters to transaction data for Tab 0
   const filteredTransactionData = tabValue === 0 
-    ? filterByDirection(filterByTransactionType(realTransactionData))
+    ? filterByTransactionType(realTransactionData)
     : [];
 
   if (profileLoading) {
@@ -355,11 +392,12 @@ export default function WalletBusiness() {
                   alignItems: "center",
                   fontSize: "30px",
                   fontWeight: "bold",
+                  color: "#164e31",
                 }}
               >
-                <LuWallet className="mr-2 text-black" /> Business Wallet
+                <LuWallet className="mr-2" style={{ color: "#164e31" }} /> Business Wallet
               </Typography>
-              <span style={{ color: "#787e7a" }}>
+              <span style={{ color: "#000000" }}>
                 Manage your wallet transactions and history
               </span>
             </div>
@@ -367,17 +405,31 @@ export default function WalletBusiness() {
 
           {/* Action section: deposit & withdraw - show in both tabs */}
           <div className="wallet-balance">
-            <div className="wallet-balance-des">
-              <Typography
-                sx={{
-                  fontSize: "40px",
-                  color: "#007a00",
-                  fontWeight: "bold",
-                }}
-              >
-                {(availableBalance ?? balance).toLocaleString('en-US').replace(/,/g, ".")} VND
-              </Typography>
-              <span>Available balance</span>
+            <div style={{ display: "flex", gap: "120px", alignItems: "flex-start", flexWrap: "wrap" }}>
+              <div className="wallet-balance-des">
+                <Typography
+                  sx={{
+                    fontSize: "40px",
+                    color: "#007a00",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {(availableBalance ?? balance).toLocaleString('en-US').replace(/,/g, ".")} VND
+                </Typography>
+                <span>Available balance</span>
+              </div>
+              <div className="wallet-balance-des">
+                <Typography
+                  sx={{
+                    fontSize: "40px",
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {(holdingBalance || 0).toLocaleString('en-US').replace(/,/g, ".")} VND
+                </Typography>
+                <span>Holding balance</span>
+              </div>
             </div>
             {tabValue === 0 && (
               <div>
@@ -472,37 +524,6 @@ export default function WalletBusiness() {
                         label="Subscription"
                         color={depositWithdrawFilter === "subscription_fee" ? "primary" : "default"}
                         onClick={() => handleDepositWithdrawFilterChange("subscription_fee")}
-                        sx={{ cursor: "pointer" }}
-                      />
-                      <Chip
-                        label="Penalty"
-                        color={depositWithdrawFilter === "penalty" ? "primary" : "default"}
-                        onClick={() => handleDepositWithdrawFilterChange("penalty")}
-                        sx={{ cursor: "pointer" }}
-                      />
-                    </Box>
-                    
-                    {/* Direction Filters */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 1, color: "#424242" }}>
-                        Direction:
-                      </Typography>
-                      <Chip
-                        label="All"
-                        color={direction === "all" ? "primary" : "default"}
-                        onClick={() => handleDirectionChange("all")}
-                        sx={{ cursor: "pointer" }}
-                      />
-                      <Chip
-                        label="Money In"
-                        color={direction === "in" ? "success" : "default"}
-                        onClick={() => handleDirectionChange("in")}
-                        sx={{ cursor: "pointer" }}
-                      />
-                      <Chip
-                        label="Money Out"
-                        color={direction === "out" ? "error" : "default"}
-                        onClick={() => handleDirectionChange("out")}
                         sx={{ cursor: "pointer" }}
                       />
                     </Box>
@@ -709,8 +730,8 @@ export default function WalletBusiness() {
                     );
                   }))}
                   
-                  {/* Show pagination when no filter or when filter is penalty (filtered from backend) */}
-                  {((depositWithdrawFilter === "all" || depositWithdrawFilter === "penalty") && transactionTotalPages > 1) && (
+                  {/* Show pagination only when filter is "all" */}
+                  {depositWithdrawFilter === "all" && transactionTotalPages > 1 && (
                     <Stack
                       spacing={2}
                       className="mt-4"
@@ -740,27 +761,41 @@ export default function WalletBusiness() {
                       display: "flex",
                       alignItems: "center",
                       mb: 2,
-                      justifyContent: "flex-end",
+                      justifyContent: "flex-start",
+                      flexWrap: "wrap",
+                      gap: 2,
                     }}
                   >
-                    <Chip
-                      label="All"
-                      color={direction === "all" ? "primary" : "default"}
-                      onClick={() => handleDirectionChange("all")}
-                      sx={{ mr: 1, cursor: "pointer" }}
-                    />
-                    <Chip
-                      label="Money in"
-                      color={direction === "in" ? "success" : "default"}
-                      onClick={() => handleDirectionChange("in")}
-                      sx={{ mr: 1, cursor: "pointer" }}
-                    />
-                    <Chip
-                      label="Money out"
-                      color={direction === "out" ? "error" : "default"}
-                      onClick={() => handleDirectionChange("out")}
-                      sx={{ cursor: "pointer" }}
-                    />
+                    {/* Transaction Type Filters */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mr: 1, color: "#424242" }}>
+                        Transaction Type:
+                      </Typography>
+                      <Chip
+                        label="All"
+                        color={borrowReturnFilter === "all" ? "primary" : "default"}
+                        onClick={() => handleBorrowReturnFilterChange("all")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                      <Chip
+                        label="Borrow Deposit"
+                        color={borrowReturnFilter === "borrow_deposit" ? "primary" : "default"}
+                        onClick={() => handleBorrowReturnFilterChange("borrow_deposit")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                      <Chip
+                        label="Return Refund"
+                        color={borrowReturnFilter === "return_refund" ? "primary" : "default"}
+                        onClick={() => handleBorrowReturnFilterChange("return_refund")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                      <Chip
+                        label="Penalty"
+                        color={borrowReturnFilter === "penalty" ? "primary" : "default"}
+                        onClick={() => handleBorrowReturnFilterChange("penalty")}
+                        sx={{ cursor: "pointer" }}
+                      />
+                    </Box>
                   </Box>
                   {transactionLoading ? (
                     <div style={{ textAlign: "center", padding: "20px" }}>
@@ -768,12 +803,12 @@ export default function WalletBusiness() {
                     </div>
                   ) : (
                     <>
-                      {filterByDirection(mergedDepositPenaltyData).length === 0 ? (
+                      {mergedDepositPenaltyData.length === 0 ? (
                         <div style={{ textAlign: "center", padding: 20 }}>
                           <Typography>No borrow/return transactions found.</Typography>
                         </div>
                       ) : (
-                        filterByDirection(mergedDepositPenaltyData).map((item) => {
+                        mergedDepositPenaltyData.map((item) => {
                           const failedStatuses = [
                             "failed",
                             "faild",
@@ -863,6 +898,22 @@ export default function WalletBusiness() {
                                     {item.description}
                                   </Typography>
                                   
+                                  {/* Related User - Customer Name */}
+                                  {item.relatedUser && item.relatedUserType === "customer" && item.relatedUser.fullName && (
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                      <FiUser size={14} style={{ color: "#757575" }} />
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          color: "#757575",
+                                          fontSize: "12px",
+                                        }}
+                                      >
+                                        Borrower: <span style={{ fontWeight: 600, color: "#424242" }}>{item.relatedUser.fullName}</span>
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                  
                                   {/* Payment Method */}
                                   {item.paymentMethod && (
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -944,26 +995,43 @@ export default function WalletBusiness() {
                         })
                       )}
 
-                      {/* Calculate total pages from merged data */}
-                      {Math.max(depositRefundTotalPages, penaltyTotalPages) > 1 && (
-                        <Stack
-                          spacing={2}
-                          className="mt-4"
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Pagination
-                            count={Math.max(depositRefundTotalPages, penaltyTotalPages)}
-                            page={currentPage}
-                            onChange={handlePageChange}
-                            variant="outlined"
-                            shape="rounded"
-                          />
-                        </Stack>
-                      )}
+                      {/* Pagination */}
+                      {(() => {
+                        let totalPages = 0;
+                        let showPagination = false;
+                        
+                        if (borrowReturnFilter === "penalty") {
+                          totalPages = penaltyTotalPages;
+                          showPagination = penaltyTotalPages > 1;
+                        } else if (borrowReturnFilter === "borrow_deposit" || borrowReturnFilter === "return_refund") {
+                          // No pagination for FE-filtered data (fetch 100 records, filter on FE)
+                          showPagination = false;
+                        } else {
+                          // Filter is "all"
+                          totalPages = Math.max(depositRefundTotalPages, penaltyTotalPages);
+                          showPagination = totalPages > 1;
+                        }
+                        
+                        return showPagination ? (
+                          <Stack
+                            spacing={2}
+                            className="mt-4"
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Pagination
+                              count={totalPages}
+                              page={currentPage}
+                              onChange={handlePageChange}
+                              variant="outlined"
+                              shape="rounded"
+                            />
+                          </Stack>
+                        ) : null;
+                      })()}
                     </>
                   )}
                 </TabPanelRecent>
