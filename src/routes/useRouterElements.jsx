@@ -283,21 +283,9 @@ export default function useRouterElements() {
 
         {
           path: PATH.BUSINESS_WALLET,
-          element: <Navigate to={PATH.BUSINESS_WALLET_ACTIONS} replace />,
-        },
-        {
-          path: PATH.BUSINESS_WALLET_ACTIONS,
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
-              <WalletBusiness mode="actions" />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: PATH.BUSINESS_WALLET_HISTORY,
-          element: (
-            <ProtectedRoute allowedRoles={["business"]}>
-              <WalletBusiness mode="history" />
+              <WalletBusiness />
             </ProtectedRoute>
           ),
         },

@@ -44,8 +44,6 @@ export const PATH = {
     BUSINESS_SUBSCRIPTIONS:"/business/subscriptions",
     BUSINESS_REEDEM_REWARDS:"/business/reedem-rewards",
     BUSINESS_WALLET:"/business/wallet",
-    BUSINESS_WALLET_ACTIONS:"/business/wallet/actions",
-    BUSINESS_WALLET_HISTORY:"/business/wallet/history",
     BUSINESS_PROFILE:"/business/profile",
     BUSINESS_MY_CUSTOMER_HISTORY:"/business/my-customer-history",
     BUSINESS_STAFF:"/business/staff",

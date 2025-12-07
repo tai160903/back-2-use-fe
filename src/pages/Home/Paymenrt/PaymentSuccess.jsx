@@ -82,7 +82,7 @@ export default function PaymentSuccess() {
   const getWalletRoute = () => {
     const userRole = getUserRole();
     if (userRole === "business") {
-      return PATH.BUSINESS_WALLET_ACTIONS;
+      return PATH.BUSINESS_WALLET;
     }
     return PATH.WALLET_CUSTOMER;
   };

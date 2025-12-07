@@ -16,6 +16,7 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
       'return_refund': 'Return Refund',
       'penalty': 'Penalty',
       'refund': 'Refund',
+      'subscription_fee': 'Subscription Purchase',
     };
     return typeMap[String(transactionType).toLowerCase()] || transactionType;
   };
@@ -182,7 +183,9 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
             }}>
               <StatusIcon size={32} />
               <Typography variant="h5" sx={{ fontWeight: 900 }}>
-                {getTransactionTypeLabel(transaction?.transactionType)}
+                {transaction?.transactionType === 'subscription_fee' && transaction?.referenceDetail?.subscriptionInfo?.name
+                  ? transaction.referenceDetail.subscriptionInfo.name
+                  : getTransactionTypeLabel(transaction?.transactionType)}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 {theme.subtitle}
@@ -243,6 +246,27 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
               </Box>
 
               <Box className="transactionDetailHistory__content" sx={{ px: 3, py: 2.5 }}>
+                {/* Subscription Package - Prominent Display */}
+                {transaction?.transactionType === 'subscription_fee' && transaction?.referenceDetail?.subscriptionInfo?.name && (
+                  <Box sx={{ mb: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Typography variant="overline" sx={{ color: "#9e9e9e", fontSize: "11px" }}>Subscription Package</Typography>
+                    <Chip
+                      label={transaction.referenceDetail.subscriptionInfo.name}
+                      sx={{
+                        height: "40px",
+                        fontSize: "16px",
+                        fontWeight: 700,
+                        backgroundColor: "#007c00",
+                        color: "#ffffff",
+                        width: "fit-content",
+                        "&:hover": {
+                          backgroundColor: "#006600",
+                        },
+                      }}
+                    />
+                  </Box>
+                )}
+
                 {/* Payment Method - Prominent Display */}
                 {transaction?.paymentMethod && (
                   <Box sx={{ mb: 2, display: "flex", flexDirection: "column", gap: 1 }}>
@@ -276,8 +300,19 @@ export default function ModalTransactionDetail({ open, onClose, transaction, loa
                 <Box className="transactionDetailHistory__table" sx={{ display: "flex", flexDirection: "column" }}>
                   {/* {labelValue("Transaction ID", transaction?._id, "transactionDetailHistory__row")}
                   <Divider sx={{ my: 1, borderStyle: "dashed" }} /> */}
-                  {labelValue("Transaction Type", getTransactionTypeLabel(transaction?.transactionType), "transactionDetailHistory__row")}
-                  <Divider sx={{ my: 1, borderStyle: "dashed" }} />
+                  {transaction?.transactionType === 'subscription_fee' && transaction?.referenceDetail?.subscriptionInfo?.name
+                    ? (
+                      <>
+                        {labelValue("Purchased Package", transaction.referenceDetail.subscriptionInfo.name, "transactionDetailHistory__row")}
+                        <Divider sx={{ my: 1, borderStyle: "dashed" }} />
+                      </>
+                    )
+                    : (
+                      <>
+                        {labelValue("Transaction Type", getTransactionTypeLabel(transaction?.transactionType), "transactionDetailHistory__row")}
+                        <Divider sx={{ my: 1, borderStyle: "dashed" }} />
+                      </>
+                    )}
                   {labelValue("Direction", formatDirection(transaction?.direction), "transactionDetailHistory__row")}
                   <Divider sx={{ my: 1, borderStyle: "dashed" }} />
                   {labelValue("Status", formatStatus(transaction?.status), "transactionDetailHistory__row")}
