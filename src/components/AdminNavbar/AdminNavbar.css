@@ -111,4 +111,34 @@
   line-height: 1.3 !important;
 }
 
+/* Sub-items styling */
+.navbar-sub-item {
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+  padding: 6px 12px !important;
+  color: #ffffff !important;
+  min-height: 48px !important;
+}
+
+.navbar-sub-item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.navbar-sub-item.active {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px !important;
+  color: #007c00 !important;
+}
+
+.navbar-sub-item .MuiListItemIcon-root {
+  min-width: 24px !important;
+  margin-right: 12px !important;
+}
+
+.navbar-sub-item .MuiListItemText-primary {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
 

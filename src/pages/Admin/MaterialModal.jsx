@@ -10,19 +10,10 @@ import {
   Typography,
   IconButton,
   InputAdornment,
-  Grid,
-  Divider,
 } from '@mui/material';
 import {
   Recycling as EcoIcon,
-  Category as CategoryIcon,
-  Replay as ReplayIcon,
-  Description as DescriptionIcon,
   Close as CloseIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Scale as ScaleIcon,
-  CloudQueue as CloudIcon,
 } from '@mui/icons-material';
 import './MaterialModal.css';
 
@@ -155,34 +146,53 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       TransitionProps={{
         timeout: 400,
       }}
+      maxWidth="md"
+      fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
-          boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
+          borderRadius: '20px',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
           overflow: 'hidden',
-          background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-          maxHeight: '90vh'
+          maxWidth: '700px',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
     >
       <DialogTitle 
         sx={{ 
-          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+          background: 'linear-gradient(135deg, #164e31 0%, #0f3d20 100%)',
           color: 'white',
           py: 2,
           px: 3,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          borderRadius: '20px 20px 0 0',
+          flexShrink: 0,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <EcoIcon sx={{ fontSize: 28 }} />
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <EcoIcon sx={{ fontSize: 20, color: 'white' }} />
+          </Box>
           <Box>
-            <Typography variant="h6" component="div" fontWeight="bold">
-              {editMode ? 'Edit Material' : 'Add New Material'}
+            <Typography variant="h6" component="div" fontWeight={700} sx={{ fontSize: '22px', mb: 0.25 }}>
+              {editMode ? 'Edit Material' : 'Create New Material'}
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
+            <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '14px' }}>
               {editMode ? 'Update recyclable material details' : 'Add a new recyclable material to the platform'}
             </Typography>
           </Box>
@@ -192,8 +202,11 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
           size="small"
           sx={{ 
             color: 'white',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
             '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              transform: 'scale(1.05)',
             }
           }}
         >
@@ -201,400 +214,281 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
         </IconButton>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
-          <Grid container spacing={2.5}>
-            {/* Material Name Field */}
-            <Grid item xs={12} md={7}>
-              <Box sx={{ mb: 0.5 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#16a34a', 
-                    fontWeight: 600,
-                    mb: 0.75,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}
-                >
-                  <CategoryIcon sx={{ fontSize: 16 }} />
-                  Material Name <span style={{ color: '#f44336' }}>*</span>
-                </Typography>
-              </Box>
-              <TextField
-                fullWidth
-                placeholder="e.g., Plastic, Glass, Aluminum"
-                name="materialName"
-                value={formData.materialName}
-                onChange={handleInputChange}
-                required
-                variant="outlined"
-                error={!!errors.materialName}
-                helperText={errors.materialName || 'Enter a clear and descriptive name'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CategoryIcon sx={{ color: '#22c55e' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    '&:hover fieldset': {
-                      borderColor: '#22c55e',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#22c55e',
-                      borderWidth: 2,
-                    },
-                  },
-                }}
-              />
-            </Grid>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <DialogContent 
+          sx={{ 
+            pt: 2, 
+            pb: 1, 
+            px: 2.5,
+            overflowY: 'auto',
+            flex: 1,
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#164e31',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: '#0f3d20',
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              name="materialName"
+              label="Material Name *"
+              placeholder="e.g., Plastic, Glass, Aluminum"
+              value={formData.materialName}
+              onChange={handleInputChange}
+              error={!!errors.materialName}
+              helperText={errors.materialName || 'Enter a clear and descriptive name'}
+              fullWidth
+              required
+              variant="outlined"
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#374151',
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#164e31',
+                  borderWidth: '2px',
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#164e31',
+                }
+              }}
+            />
 
-            {/* Reuse Limit Field */}
-            <Grid item xs={12} md={5}>
-              <Box sx={{ mb: 0.5 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#16a34a', 
-                    fontWeight: 600,
-                    mb: 0.75,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}
-                >
-                  <ReplayIcon sx={{ fontSize: 16 }} />
-                  Reuse Limit <span style={{ color: '#f44336' }}>*</span>
-                </Typography>
-              </Box>
-              <TextField
-                fullWidth
-                placeholder="100"
-                name="reuseLimit"
-                type="number"
-                value={formData.reuseLimit}
-                onChange={handleInputChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 1 }}
-                error={!!errors.reuseLimit}
-                helperText={errors.reuseLimit || 'Max times a material can be reused'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <ReplayIcon sx={{ color: '#22c55e' }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
-                        times
-                      </Typography>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    '&:hover fieldset': {
-                      borderColor: '#22c55e',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#22c55e',
-                      borderWidth: 2,
-                    },
-                  },
-                }}
-              />
-            </Grid>
+            <TextField
+              name="reuseLimit"
+              label="Reuse Limit *"
+              placeholder="100"
+              type="number"
+              value={formData.reuseLimit}
+              onChange={handleInputChange}
+              error={!!errors.reuseLimit}
+              helperText={errors.reuseLimit || 'Max times a material can be reused'}
+              fullWidth
+              required
+              variant="outlined"
+              inputProps={{ min: 1 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Typography variant="body2" sx={{ color: '#164e31', fontWeight: 600 }}>
+                      times
+                    </Typography>
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#374151',
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#164e31',
+                  borderWidth: '2px',
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#164e31',
+                }
+              }}
+            />
 
-            {/* Deposit Percent Field */}
-            <Grid item xs={12} md={5}>
-              <Box sx={{ mb: 0.5 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#16a34a', 
-                    fontWeight: 600,
-                    mb: 0.75,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}
-                >
-                  Deposit Percent <span style={{ color: '#f44336' }}>*</span>
-                </Typography>
-              </Box>
-              <TextField
-                fullWidth
-                placeholder="20"
-                name="depositPercent"
-                type="number"
-                value={formData.depositPercent}
-                onChange={handleInputChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0, max: 100 }}
-                error={!!errors.depositPercent}
-                helperText={errors.depositPercent || 'Deposit percentage (0-100)'}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">%
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    '&:hover fieldset': {
-                      borderColor: '#22c55e',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#22c55e',
-                      borderWidth: 2,
-                    },
-                  },
-                }}
-              />
-            </Grid>
+            <TextField
+              name="depositPercent"
+              label="Deposit Percent (%) *"
+              placeholder="20"
+              type="number"
+              value={formData.depositPercent}
+              onChange={handleInputChange}
+              error={!!errors.depositPercent}
+              helperText={errors.depositPercent || 'Deposit percentage (0-100)'}
+              fullWidth
+              required
+              variant="outlined"
+              inputProps={{ min: 0, max: 100 }}
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#374151',
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#164e31',
+                  borderWidth: '2px',
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#164e31',
+                }
+              }}
+            />
 
-            {/* Plastic Equivalent Multiplier Field */}
-            <Grid item xs={12} md={6}>
-              <Box sx={{ mb: 0.5 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#16a34a', 
-                    fontWeight: 600,
-                    mb: 0.75,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}
-                >
-                  <ScaleIcon sx={{ fontSize: 16 }} />
-                  Plastic Equivalent Multiplier <span style={{ color: '#f44336' }}>*</span>
-                </Typography>
-              </Box>
-              <TextField
-                fullWidth
-                placeholder="1"
-                name="plasticEquivalentMultiplier"
-                type="number"
-                value={formData.plasticEquivalentMultiplier}
-                onChange={handleInputChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0, step: 0.1 }}
-                error={!!errors.plasticEquivalentMultiplier}
-                helperText={errors.plasticEquivalentMultiplier || 'Multiplier for plastic equivalent calculation'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <ScaleIcon sx={{ color: '#22c55e' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    '&:hover fieldset': {
-                      borderColor: '#22c55e',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#22c55e',
-                      borderWidth: 2,
-                    },
-                  },
-                }}
-              />
-            </Grid>
+            <TextField
+              name="plasticEquivalentMultiplier"
+              label="Plastic Equivalent Multiplier *"
+              placeholder="1"
+              type="number"
+              value={formData.plasticEquivalentMultiplier}
+              onChange={handleInputChange}
+              error={!!errors.plasticEquivalentMultiplier}
+              helperText={errors.plasticEquivalentMultiplier || 'Multiplier for plastic equivalent calculation'}
+              fullWidth
+              required
+              variant="outlined"
+              inputProps={{ min: 0, step: 0.1 }}
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#374151',
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#164e31',
+                  borderWidth: '2px',
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#164e31',
+                }
+              }}
+            />
 
-            {/* CO2 Emission Per Kg Field */}
-            <Grid item xs={12} md={6}>
-              <Box sx={{ mb: 0.5 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#16a34a', 
-                    fontWeight: 600,
-                    mb: 0.75,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}
-                >
-                  <CloudIcon sx={{ fontSize: 16 }} />
-                  CO2 Emission Per Kg <span style={{ color: '#f44336' }}>*</span>
-                </Typography>
-              </Box>
-              <TextField
-                fullWidth
-                placeholder="3.4"
-                name="co2EmissionPerKg"
-                type="number"
-                value={formData.co2EmissionPerKg}
-                onChange={handleInputChange}
-                required
-                variant="outlined"
-                inputProps={{ min: 0, step: 0.1 }}
-                error={!!errors.co2EmissionPerKg}
-                helperText={errors.co2EmissionPerKg || 'CO2 emission in kg per kg of material'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CloudIcon sx={{ color: '#22c55e' }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
-                        kg CO2/kg
-                      </Typography>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    '&:hover fieldset': {
-                      borderColor: '#22c55e',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#22c55e',
-                      borderWidth: 2,
-                    },
-                  },
-                }}
-              />
-            </Grid>
+            <TextField
+              name="co2EmissionPerKg"
+              label="CO2 Emission Per Kg *"
+              placeholder="3.4"
+              type="number"
+              value={formData.co2EmissionPerKg}
+              onChange={handleInputChange}
+              error={!!errors.co2EmissionPerKg}
+              helperText={errors.co2EmissionPerKg || 'CO2 emission in kg per kg of material'}
+              fullWidth
+              required
+              variant="outlined"
+              inputProps={{ min: 0, step: 0.1 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Typography variant="body2" sx={{ color: '#164e31', fontWeight: 600 }}>
+                      kg CO2/kg
+                    </Typography>
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#374151',
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#164e31',
+                  borderWidth: '2px',
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#164e31',
+                }
+              }}
+            />
 
-            {/* Description Field */}
-            <Grid item xs={12}>
-              <Box sx={{ mb: 0.5 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#16a34a', 
-                    fontWeight: 600,
-                    mb: 0.75,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}
-                >
-                  <DescriptionIcon sx={{ fontSize: 16 }} />
-                  Description <span style={{ color: '#f44336' }}>*</span>
-                </Typography>
-              </Box>
-              <TextField
-                fullWidth
-                placeholder="Describe the material properties and characteristics..."
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                multiline
-                rows={3}
-                variant="outlined"
-                error={!!errors.description}
-                helperText={errors.description || 'Provide detailed information about this material'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
-                      <DescriptionIcon sx={{ color: '#22c55e', fontSize: 18 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    '&:hover fieldset': {
-                      borderColor: '#22c55e',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#22c55e',
-                      borderWidth: 2,
-                    },
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Info Box */}
-            <Grid item xs={12}>
-              <Box 
-                sx={{ 
-                  p: 2, 
-                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%)',
-                  borderRadius: 2,
-                  border: '2px solid rgba(34, 197, 94, 0.3)',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 1.5,
-                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.1)'
-                }}
-              >
-                <Box 
-                  sx={{ 
-                    backgroundColor: '#22c55e',
-                    borderRadius: '50%',
-                    p: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minWidth: '36px',
-                    height: '36px'
-                  }}
-                >
-                  <EcoIcon sx={{ color: 'white', fontSize: 20 }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 700, mb: 0.5 }}>
-                    ♻️ Recyclable Material
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#15803d', lineHeight: 1.5, display: 'block' }}>
-                    By adding recyclable materials, you're helping reduce waste and promote sustainability.
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
+            <TextField
+              name="description"
+              label="Description *"
+              placeholder="Describe the material properties and characteristics..."
+              value={formData.description}
+              onChange={handleInputChange}
+              error={!!errors.description}
+              helperText={errors.description || 'Provide detailed information about this material'}
+              fullWidth
+              required
+              multiline
+              rows={2}
+              variant="outlined"
+              size="small"
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#374151',
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#164e31',
+                  borderWidth: '2px',
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#164e31',
+                }
+              }}
+            />
+          </Box>
         </DialogContent>
-
-        <Divider />
 
         <DialogActions 
           sx={{ 
-            px: 3, 
-            py: 2, 
-            gap: 2,
-            backgroundColor: 'rgba(34, 197, 94, 0.02)',
-            display: 'flex',
-            justifyContent: 'space-between'
+            px: 2.5, 
+            py: 1.5, 
+            gap: 2, 
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: '#fafafa',
+            justifyContent: 'flex-end',
+            flexShrink: 0,
           }}
         >
           <Button 
             onClick={handleClose}
             variant="outlined"
-            startIcon={<CloseIcon fontSize="small" />}
             sx={{
-              color: '#666',
-              borderColor: '#ccc',
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '16px',
               px: 3,
-              py: 1,
-              fontSize: '0.9375rem',
-              borderWidth: 1.5,
-              fontWeight: 500,
+              py: 1.5,
+              borderWidth: '1px',
+              color: '#374151',
+              borderColor: '#d1d5db',
               '&:hover': {
-                borderColor: '#999',
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                borderWidth: 1.5,
+                borderColor: '#9ca3af',
+                backgroundColor: '#f9fafb',
               }
             }}
           >
@@ -603,20 +497,17 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
           <Button 
             type="submit" 
             variant="contained"
-            startIcon={editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />}
             sx={{
-              backgroundColor: '#22c55e',
-              px: 3,
-              py: 1,
-              fontSize: '0.9375rem',
+              borderRadius: '12px',
+              textTransform: 'none',
               fontWeight: 600,
-              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
-              transition: 'all 0.3s ease',
+              fontSize: '16px',
+              px: 4,
+              py: 1.5,
+              backgroundColor: '#164e31',
               '&:hover': {
-                backgroundColor: '#16a34a',
-                boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
-                transform: 'translateY(-2px)',
-              }
+                backgroundColor: '#0f3d20',
+              },
             }}
           >
             {editMode ? 'Update Material' : 'Create Material'}

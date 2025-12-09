@@ -10,11 +10,13 @@ import {
   FaArrowUp,
   FaArrowDown,
   FaRecycle,
+  FaLeaf,
   FaShoppingCart,
   FaDollarSign,
   FaShoppingBag,
   FaBoxes,
-  FaUserFriends
+  FaUserFriends,
+  FaStar
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
@@ -45,28 +47,78 @@ import {
 } from 'recharts';
 import './BussinessDashbord.css';
 import { PATH } from '../../../routes/path';
+import { 
+  getBusinessDashboardOverview, 
+  getBusinessBorrowTransactionsMonthly,
+  getBusinessTopBorrowed
+} from '../../../store/slices/bussinessSlice';
+import { Box, CircularProgress, TextField, Grid, Avatar, Chip, Typography } from '@mui/material';
 
 export default function BussinessDashbord() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Mock data - Replace with actual Redux state later
-  const stats = {
-    totalRevenue: { amount: 45678000, trend: 12.5, isUp: true },
-    totalOrders: { count: 156, trend: 8.3, isUp: true },
-    totalMaterials: { count: 48, trend: -2.1, isUp: false },
-    totalCustomers: { count: 234, trend: 15.2, isUp: true },
+  // Get dashboard data from Redux store
+  const { 
+    dashboardOverview, 
+    dashboardLoading,
+    borrowTransactionsMonthly,
+    borrowTransactionsMonthlyLoading,
+    topBorrowed,
+    topBorrowedLoading
+  } = useSelector((state) => state.businesses);
+
+  // Cho phép nhập tạm thời (string) để không tự nhảy về 5 khi xóa ô input
+  const [topBorrowedLimit, setTopBorrowedLimit] = useState('5');
+
+  // Fetch dashboard data on component mount
+  useEffect(() => {
+    dispatch(getBusinessDashboardOverview());
+    dispatch(getBusinessBorrowTransactionsMonthly({ 
+      year: new Date().getFullYear(),
+      type: '',
+      status: ''
+    }));
+  }, [dispatch]);
+
+  useEffect(() => {
+    const topNumber = Number(topBorrowedLimit);
+    dispatch(getBusinessTopBorrowed({ top: Number.isFinite(topNumber) && topNumber > 0 ? topNumber : 5 }));
+  }, [dispatch, topBorrowedLimit]);
+
+  // Calculate stats from dashboard overview
+  const stats = dashboardOverview ? {
+    borrowTransactions: { count: dashboardOverview.borrowTransactions || 0 },
+    businessVouchers: { count: dashboardOverview.businessVouchers || 0 },
+    productGroups: { count: dashboardOverview.productGroups || 0 },
+    products: { count: dashboardOverview.products || 0 },
+    staffs: { count: dashboardOverview.staffs || 0 },
+    co2Reduced: { amount: dashboardOverview.co2Reduced || 0 },
+    ecoPoints: { count: dashboardOverview.ecoPoints || 0 },
+    averageRating: { value: dashboardOverview.averageRating || 0 },
+    totalReviews: { count: dashboardOverview.totalReviews || 0 },
+  } : null;
+
+  // Format borrow transactions monthly data for chart
+  const formatBorrowTransactionsData = () => {
+    if (!borrowTransactionsMonthly || !borrowTransactionsMonthly.data) {
+      return [];
+    }
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    return borrowTransactionsMonthly.data
+      .map(item => ({
+        month: monthNames[item.month - 1] || `Month ${item.month}`,
+        count: item.count || 0,
+        monthNumber: item.month
+      }))
+      .sort((a, b) => a.monthNumber - b.monthNumber);
   };
 
-  // Revenue data for line chart
-  const revenueData = [
-    { month: 'Jan', revenue: 28000000, orders: 98 },
-    { month: 'Feb', revenue: 32000000, orders: 112 },
-    { month: 'Mar', revenue: 35000000, orders: 125 },
-    { month: 'Apr', revenue: 38000000, orders: 138 },
-    { month: 'May', revenue: 42000000, orders: 148 },
-    { month: 'Jun', revenue: 45678000, orders: 156 },
-  ];
+  const borrowTransactionsChartData = formatBorrowTransactionsData();
+
+  const topBorrowedList = Array.isArray(topBorrowed?.data) ? topBorrowed.data : Array.isArray(topBorrowed) ? topBorrowed : [];
 
   // Material sales data
   const materialSalesData = [
@@ -167,6 +219,58 @@ export default function BussinessDashbord() {
     return new Intl.NumberFormat('vi-VN').format(num);
   };
 
+  const getBorrowedName = (item) => {
+    return (
+      item?.productName ||
+      item?.name ||
+      item?.materialName ||
+      item?.productGroupName ||
+      'Unknown item'
+    );
+  };
+
+  const getBorrowedCategory = (item) => {
+    return (
+      item?.category ||
+      item?.productGroupName ||
+      item?.materialType ||
+      item?.type ||
+      item?.label ||
+      'N/A'
+    );
+  };
+
+  const getBorrowedCount = (item) => {
+    const count =
+      item?.totalBorrowed ??
+      item?.borrowCount ??
+      item?.totalBorrowTransactions ??
+      item?.count ??
+      item?.quantity ??
+      0;
+    return typeof count === 'number' ? count : Number(count) || 0;
+  };
+
+  const getBorrowedCo2 = (item) => {
+    const co2 = item?.totalCo2Reduced ?? item?.co2Reduced ?? item?.co2 ?? 0;
+    return typeof co2 === 'number' ? co2 : Number(co2) || 0;
+  };
+
+  const getBorrowedEcoPoints = (item) => {
+    const points = item?.totalEcoPoints ?? item?.ecoPoints ?? item?.points ?? 0;
+    return typeof points === 'number' ? points : Number(points) || 0;
+  };
+
+  if (dashboardLoading) {
+    return (
+      <div className="business-dashboard">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <CircularProgress />
+        </Box>
+      </div>
+    );
+  }
+
   return (
     <div className="business-dashboard">
       {/* Header */}
@@ -183,244 +287,399 @@ export default function BussinessDashbord() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="dashboard-stats">
-        <div className="dashboard-stat-card">
-          <div className="stat-card-header">
-            <div className="stat-info">
-              <h3 className="stat-label">Total Revenue</h3>
-              <p className="stat-value">{formatCurrency(stats.totalRevenue.amount)}</p>
-            </div>
-            <div className="stat-icon-container revenue">
-              <MdAttachMoney className="stat-icon" color="#ffffff" size={32} />
+      {stats && (
+        <div className="dashboard-stats">
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">Borrow Transactions</h3>
+                <p className="stat-value">{formatNumber(stats.borrowTransactions.count)}</p>
+              </div>
+              <div className="stat-icon-container revenue">
+                <FaShoppingBag className="stat-icon" color="#ffffff" size={32} />
+              </div>
             </div>
           </div>
-          <div className="stat-trend">
-            {stats.totalRevenue.isUp ? (
-              <span className="trend-up">
-                <FaArrowUp /> {stats.totalRevenue.trend}%
-              </span>
-            ) : (
-              <span className="trend-down">
-                <FaArrowDown /> {Math.abs(stats.totalRevenue.trend)}%
-              </span>
-            )}
-            <span className="trend-label">vs last month</span>
-          </div>
-        </div>
 
-        <div className="dashboard-stat-card">
-          <div className="stat-card-header">
-            <div className="stat-info">
-              <h3 className="stat-label">Total Orders</h3>
-              <p className="stat-value">{formatNumber(stats.totalOrders.count)}</p>
-            </div>
-            <div className="stat-icon-container orders">
-              <FaShoppingBag className="stat-icon" color="#ffffff" size={32} />
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">Business Vouchers</h3>
+                <p className="stat-value">{formatNumber(stats.businessVouchers.count)}</p>
+              </div>
+              <div className="stat-icon-container orders">
+                <FaShoppingCart className="stat-icon" color="#ffffff" size={32} />
+              </div>
             </div>
           </div>
-          <div className="stat-trend">
-            {stats.totalOrders.isUp ? (
-              <span className="trend-up">
-                <FaArrowUp /> {stats.totalOrders.trend}%
-              </span>
-            ) : (
-              <span className="trend-down">
-                <FaArrowDown /> {Math.abs(stats.totalOrders.trend)}%
-              </span>
-            )}
-            <span className="trend-label">vs last month</span>
-          </div>
-        </div>
 
-        <div className="dashboard-stat-card">
-          <div className="stat-card-header">
-            <div className="stat-info">
-              <h3 className="stat-label">Materials Listed</h3>
-              <p className="stat-value">{formatNumber(stats.totalMaterials.count)}</p>
-            </div>
-            <div className="stat-icon-container materials">
-              <FaBoxes className="stat-icon" color="#ffffff" size={32} />
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">Product Groups</h3>
+                <p className="stat-value">{formatNumber(stats.productGroups.count)}</p>
+              </div>
+              <div className="stat-icon-container materials">
+                <FaBoxes className="stat-icon" color="#ffffff" size={32} />
+              </div>
             </div>
           </div>
-          <div className="stat-trend">
-            {stats.totalMaterials.isUp ? (
-              <span className="trend-up">
-                <FaArrowUp /> {stats.totalMaterials.trend}%
-              </span>
-            ) : (
-              <span className="trend-down">
-                <FaArrowDown /> {Math.abs(stats.totalMaterials.trend)}%
-              </span>
-            )}
-            <span className="trend-label">vs last month</span>
-          </div>
-        </div>
 
-        <div className="dashboard-stat-card">
-          <div className="stat-card-header">
-            <div className="stat-info">
-              <h3 className="stat-label">Total Customers</h3>
-              <p className="stat-value">{formatNumber(stats.totalCustomers.count)}</p>
-            </div>
-            <div className="stat-icon-container customers">
-              <FaUserFriends className="stat-icon" color="#ffffff" size={32} />
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">Products</h3>
+                <p className="stat-value">{formatNumber(stats.products.count)}</p>
+              </div>
+              <div className="stat-icon-container customers">
+                <BiPackage className="stat-icon" color="#ffffff" size={32} />
+              </div>
             </div>
           </div>
-          <div className="stat-trend">
-            {stats.totalCustomers.isUp ? (
-              <span className="trend-up">
-                <FaArrowUp /> {stats.totalCustomers.trend}%
-              </span>
-            ) : (
-              <span className="trend-down">
-                <FaArrowDown /> {Math.abs(stats.totalCustomers.trend)}%
-              </span>
-            )}
-            <span className="trend-label">vs last month</span>
+
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">Staffs</h3>
+                <p className="stat-value">{formatNumber(stats.staffs.count)}</p>
+              </div>
+              <div className="stat-icon-container customers">
+                <FaUserFriends className="stat-icon" color="#ffffff" size={32} />
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">CO₂ Reduced</h3>
+                <p className="stat-value">{stats.co2Reduced.amount.toFixed(2)} kg</p>
+              </div>
+              <div className="stat-icon-container revenue">
+                <FaRecycle className="stat-icon" color="#ffffff" size={32} />
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">Eco Points</h3>
+                <p className="stat-value">{formatNumber(stats.ecoPoints.count)}</p>
+              </div>
+              <div className="stat-icon-container orders">
+                <FaChartLine className="stat-icon" color="#ffffff" size={32} />
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboard-stat-card">
+            <div className="stat-card-header">
+              <div className="stat-info">
+                <h3 className="stat-label">Average Rating</h3>
+                <p className="stat-value">{stats.averageRating.value.toFixed(1)} ⭐</p>
+              </div>
+              <div className="stat-icon-container customers">
+                <FaStar className="stat-icon" color="#ffffff" size={32} />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Charts Row 1 */}
       <div className="charts-row">
-        {/* Revenue Chart */}
+        {/* Borrow Transactions Chart */}
         <div className="chart-card large">
           <div className="chart-header">
             <div>
-              <h3 className="chart-title">Revenue Overview</h3>
-              <p className="chart-subtitle">Monthly revenue and orders trend</p>
+              <h3 className="chart-title">Borrow Transactions Overview</h3>
+              <p className="chart-subtitle">Monthly borrow transactions trend</p>
             </div>
             <FaChartLine className="chart-icon" />
           </div>
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueData}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#12422a" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#12422a" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                  formatter={(value) => formatCurrency(value)}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#12422a" 
-                  fillOpacity={1} 
-                  fill="url(#colorRevenue)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {borrowTransactionsMonthlyLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+                <CircularProgress />
+              </Box>
+            ) : borrowTransactionsChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={borrowTransactionsChartData}>
+                  <defs>
+                    <linearGradient id="colorTransactions" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#12422a" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#12422a" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="#12422a" 
+                    fillOpacity={1} 
+                    fill="url(#colorTransactions)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, color: '#6b7280' }}>
+                No data available
+              </Box>
+            )}
           </div>
         </div>
 
-        {/* Material Distribution Pie Chart */}
-        <div className="chart-card small">
-          <div className="chart-header">
-            <div>
-              <h3 className="chart-title">Material Distribution</h3>
-              <p className="chart-subtitle">Sales by category</p>
+        {/* Totals Summary */}
+        {borrowTransactionsMonthly && borrowTransactionsMonthly.totals && (
+          <div className="chart-card small">
+            <div className="chart-header">
+              <div>
+                <h3 className="chart-title">Transaction Totals</h3>
+                <p className="chart-subtitle">Summary statistics</p>
+              </div>
+              <FaMoneyBillWave className="chart-icon" />
             </div>
-            <BiPackage className="chart-icon" />
-          </div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={materialDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {materialDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="charts-row">
-        {/* Material Sales Bar Chart */}
-        <div className="chart-card large">
-          <div className="chart-header">
-            <div>
-              <h3 className="chart-title">Material Sales Performance</h3>
-              <p className="chart-subtitle">Sales count by material type</p>
-            </div>
-            <FaBoxOpen className="chart-icon" />
-          </div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={materialSalesData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Bar dataKey="sales" fill="#12422a" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Recent Transactions */}
-        <div className="chart-card small">
-          <div className="chart-header">
-            <div>
-              <h3 className="chart-title">Recent Transactions</h3>
-              <p className="chart-subtitle">Latest 4 transactions</p>
-            </div>
-            <FaMoneyBillWave className="chart-icon" />
-          </div>
-          <div className="transactions-list">
-            {recentTransactions.map((transaction) => (
-              <div key={transaction.id} className="transaction-item">
+            <div className="transactions-list">
+              <div className="transaction-item">
                 <div className="transaction-info">
-                  <div className="transaction-customer">{transaction.customer}</div>
-                  <div className="transaction-type">{transaction.type}</div>
+                  <div className="transaction-customer">Total Reward Points</div>
                 </div>
                 <div className="transaction-details">
-                  <div className={`transaction-amount ${transaction.amount < 0 ? 'negative' : 'positive'}`}>
-                    {transaction.amount < 0 ? '-' : '+'}{formatCurrency(Math.abs(transaction.amount))}
+                  <div className="transaction-amount positive">
+                    {formatNumber(borrowTransactionsMonthly.totals.totalRewardPoints || 0)}
                   </div>
-                  <span className={`transaction-status ${transaction.status.toLowerCase()}`}>
-                    {transaction.status}
-                  </span>
                 </div>
               </div>
-            ))}
-            <button 
-              className="view-all-btn"
-              onClick={() => navigate(PATH.BUSINESS_TRANSACTION)}
-            >
-              View All Transactions →
-            </button>
+              <div className="transaction-item">
+                <div className="transaction-info">
+                  <div className="transaction-customer">Total Ranking Points</div>
+                </div>
+                <div className="transaction-details">
+                  <div className="transaction-amount positive">
+                    {formatNumber(borrowTransactionsMonthly.totals.totalRankingPoints || 0)}
+                  </div>
+                </div>
+              </div>
+              <div className="transaction-item">
+                <div className="transaction-info">
+                  <div className="transaction-customer">Total Eco Points</div>
+                </div>
+                <div className="transaction-details">
+                  <div className="transaction-amount positive">
+                    {formatNumber(borrowTransactionsMonthly.totals.totalEcoPoints || 0)}
+                  </div>
+                </div>
+              </div>
+              <div className="transaction-item">
+                <div className="transaction-info">
+                  <div className="transaction-customer">Total CO₂ Reduced</div>
+                </div>
+                <div className="transaction-details">
+                  <div className="transaction-amount positive">
+                    {(borrowTransactionsMonthly.totals.totalCo2Reduced || 0).toFixed(2)} kg
+                  </div>
+                </div>
+              </div>
+              <div className="transaction-item">
+                <div className="transaction-info">
+                  <div className="transaction-customer">Total Deposit Amount</div>
+                </div>
+                <div className="transaction-details">
+                  <div className="transaction-amount positive">
+                    {formatCurrency(borrowTransactionsMonthly.totals.totalDepositAmount || 0)}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Top Borrowed Ranking (giống top business admin) */}
+      <div className="top-ranking-section">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Top Borrowed</h3>
+            <p className="chart-subtitle">Các mặt hàng được mượn nhiều nhất</p>
+          </div>
+          <FaShoppingBag className="chart-icon" />
         </div>
+
+        <div className="ranking-filters-section">
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
+            Bộ lọc
+          </Typography>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={4} md={3}>
+              <TextField
+                label="Top N"
+                type="number"
+                value={topBorrowedLimit}
+                onChange={(e) => setTopBorrowedLimit(e.target.value)}
+                variant="outlined"
+                size="small"
+                inputProps={{ min: 1, max: 50 }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    borderRadius: '10px',
+                    transition: 'all 0.3s ease',
+                    '&:hover fieldset': {
+                      borderColor: '#12422a',
+                      borderWidth: '2px',
+                      boxShadow: '0 2px 8px rgba(18, 66, 42, 0.15)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#12422a',
+                      borderWidth: '2px',
+                      boxShadow: '0 4px 12px rgba(18, 66, 42, 0.25)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    fontWeight: 600,
+                    color: '#4b5563',
+                    '&.Mui-focused': {
+                      color: '#12422a',
+                      fontWeight: 700,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+          </Grid>
+        </div>
+
+        {topBorrowedLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '260px' }}>
+            <CircularProgress />
+          </Box>
+        ) : topBorrowedList.length > 0 ? (
+          <div className="ranking-cards-grid">
+            {topBorrowedList.map((item, index) => {
+              const rank = index + 1;
+              const isTopThree = rank <= 3;
+              const rankColors = {
+                1: { bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', text: '#000' },
+                2: { bg: 'linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%)', text: '#000' },
+                3: { bg: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)', text: '#fff' }
+              };
+              const rankColor = isTopThree ? rankColors[rank] : { bg: '#ffffff', text: '#6b7280' };
+
+              const name = getBorrowedName(item);
+              const category = getBorrowedCategory(item);
+              const borrowCount = getBorrowedCount(item);
+              const co2Value = getBorrowedCo2(item);
+              const ecoPointsValue = getBorrowedEcoPoints(item);
+              const imageUrl = item?.imageUrl || item?.productImage || item?.thumbnail || item?.photo;
+
+              return (
+                <div 
+                  key={item?._id || item?.id || index} 
+                  className={`ranking-card ${isTopThree ? 'top-rank' : ''}`}
+                  style={isTopThree ? {
+                    border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
+                    background: rankColor.bg
+                  } : {}}
+                >
+                  <div className="ranking-card-rank-badge" style={isTopThree ? { background: rankColor.bg, color: rankColor.text } : {}}>
+                    #{rank}
+                  </div>
+                  
+                  <div className="ranking-card-avatar-container">
+                    <Avatar
+                      src={imageUrl}
+                      alt={name}
+                      sx={{ 
+                        width: 96, 
+                        height: 96, 
+                        border: isTopThree ? `4px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}` : '4px solid #12422a',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        fontSize: '28px',
+                        backgroundColor: '#12422a',
+                        color: '#fff'
+                      }}
+                    >
+                      {!imageUrl && name?.[0]}
+                    </Avatar>
+                    {isTopThree && (
+                      <div className="ranking-medal">
+                        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="ranking-card-content">
+                    <div className="ranking-card-header-info">
+                      <h3 className="ranking-card-name" style={isTopThree ? { color: rankColor.text } : {}}>
+                        {name}
+                      </h3>
+                      <Chip
+                        label={category}
+                        color="success"
+                        size="small"
+                        sx={{ 
+                          fontWeight: 600,
+                          height: '24px',
+                          fontSize: '11px'
+                        }}
+                      />
+                    </div>
+
+                    <div className="ranking-card-metrics">
+                      <div className="ranking-metric-item">
+                        <div className="ranking-metric-icon" style={{ backgroundColor: '#12422a15', color: '#12422a' }}>
+                          <FaShoppingBag />
+                        </div>
+                        <div className="ranking-metric-info">
+                          <span className="ranking-metric-label">Borrow Count</span>
+                          <span className="ranking-metric-value">
+                            {formatNumber(borrowCount)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ranking-metric-item">
+                        <div className="ranking-metric-icon" style={{ backgroundColor: '#f59e0b15', color: '#f59e0b' }}>
+                          <FaRecycle />
+                        </div>
+                        <div className="ranking-metric-info">
+                          <span className="ranking-metric-label">CO₂ Reduced</span>
+                          <span className="ranking-metric-value">
+                            {co2Value.toFixed(2)} kg
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ranking-metric-item">
+                        <div className="ranking-metric-icon" style={{ backgroundColor: '#10b98115', color: '#10b981' }}>
+                          <FaLeaf />
+                        </div>
+                        <div className="ranking-metric-info">
+                          <span className="ranking-metric-label">Eco Points</span>
+                          <span className="ranking-metric-value">
+                            {formatNumber(ecoPointsValue)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '240px', backgroundColor: 'white', borderRadius: '16px', border: '2px dashed #e5e7eb' }}>
+            <Typography color="text.secondary" sx={{ fontSize: '16px' }}>Không có dữ liệu</Typography>
+          </Box>
+        )}
       </div>
 
       {/* Quick Actions */}

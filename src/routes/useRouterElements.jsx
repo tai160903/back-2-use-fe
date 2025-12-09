@@ -1,5 +1,13 @@
 import BussinessLayout from "../layouts/BussinessLayout/BussinessLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
+import BorrowTransactionsStatistics from "../pages/Admin/Dashboard/BorrowTransactionsStatistics";
+import BusinessMonthlyStatistics from "../pages/Admin/Dashboard/BusinessMonthlyStatistics";
+import WalletOverview from "../pages/Admin/Dashboard/WalletOverview";
+import WalletTransactionsMonthly from "../pages/Admin/Dashboard/WalletTransactionsMonthly";
+import TopBusinesses from "../pages/Admin/Dashboard/TopBusinesses";
+import TopCustomers from "../pages/Admin/Dashboard/TopCustomers";
+import ChartsAnalytics from "../pages/Admin/Dashboard/ChartsAnalytics";
+import QuickActions from "../pages/Admin/Dashboard/QuickActions";
 import Subscriptions from "../pages/Admin/Subscriptions/Subscriptions";
 import Analytics from "../pages/Admin/Analytics";
 import Store from "../pages/Admin/Store";
@@ -398,6 +406,38 @@ export default function useRouterElements() {
           ),
         },
         {
+          path: PATH.ADMIN_DASHBOARD_BORROW_TRANSACTIONS,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <BorrowTransactionsStatistics />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_BUSINESS_MONTHLY,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <BusinessMonthlyStatistics />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_WALLET_OVERVIEW,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <WalletOverview />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_WALLET_TRANSACTIONS_MONTHLY,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <WalletTransactionsMonthly />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: PATH.ADMIN_USERS,
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -480,6 +520,38 @@ export default function useRouterElements() {
           ),
         },
 
+        {
+          path: PATH.ADMIN_DASHBOARD_TOP_BUSINESSES,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TopBusinesses />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_TOP_CUSTOMERS,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TopCustomers />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_CHARTS,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ChartsAnalytics />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_QUICK_ACTIONS,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <QuickActions />
+            </ProtectedRoute>
+          ),
+        },
         {
           path: PATH.ADMIN_REGISTRATION,
           element: (

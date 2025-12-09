@@ -63,6 +63,19 @@ export const getBusinessVouchersAdminApi = createAsyncThunk(
   }
 );
 
+// GET /admin/vouchers/businessVoucher/{businessVoucherId} - Get Business Voucher by ID API
+export const getBusinessVoucherByIdAdminApi = createAsyncThunk(
+  "vouchers/getBusinessVoucherByIdAdminApi",
+  async (businessVoucherId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/admin/vouchers/businessVoucher/${businessVoucherId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
 // GET /admin/vouchers/businessVoucher/{businessVoucherId}/codes - Get Business Voucher Codes API
 export const getBusinessVoucherCodesApi = createAsyncThunk(
   "vouchers/getBusinessVoucherCodesApi",
@@ -296,6 +309,9 @@ const voucherSlice = createSlice({
     clearCurrentVoucher: (state) => {
       state.currentVoucher = null;
     },
+    setCurrentVoucher: (state, { payload }) => {
+      state.currentVoucher = payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -348,6 +364,33 @@ const voucherSlice = createSlice({
       .addCase(getLeaderboardVoucherByIdApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+        if (payload?.message) {
+          toast.error(payload.message);
+        }
+      })
+      // Get Business Voucher by ID (Admin)
+      .addCase(getBusinessVoucherByIdAdminApi.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessVoucherByIdAdminApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        // Map business voucher data to match expected format
+        const businessVoucher = payload.data || payload;
+        state.currentVoucher = {
+          ...businessVoucher,
+          name: businessVoucher.customName || businessVoucher.name,
+          description: businessVoucher.customDescription || businessVoucher.description,
+          discountPercent: businessVoucher.discountPercent || businessVoucher.discount,
+          voucherType: 'business',
+        };
+      })
+      .addCase(getBusinessVoucherByIdAdminApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        if (payload?.message) {
+          toast.error(payload.message);
+        }
       })
       // Get Business Vouchers (Admin)
       .addCase(getBusinessVouchersAdminApi.pending, (state) => {
@@ -554,6 +597,7 @@ export const {
   setVoucherNameFilter,
   resetVoucherFilters,
   clearCurrentVoucher,
+  setCurrentVoucher,
 } = voucherSlice.actions;
 
 export default voucherSlice.reducer;

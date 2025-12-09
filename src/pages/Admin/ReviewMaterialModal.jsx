@@ -10,15 +10,11 @@ import {
   Typography,
   IconButton,
   InputAdornment,
-  Grid,
-  Divider,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Close as CloseIcon,
-  Description as DescriptionIcon,
-  Warning as WarningIcon,
 } from '@mui/icons-material';
 import './MaterialModal.css';
 
@@ -154,42 +150,60 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
       TransitionProps={{
         timeout: 400,
       }}
+      maxWidth="md"
+      fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
+          borderRadius: '20px',
           boxShadow: isApprove 
-            ? '0 12px 40px rgba(34, 197, 94, 0.2)' 
-            : '0 12px 40px rgba(239, 68, 68, 0.2)',
+            ? '0 25px 50px rgba(22, 78, 49, 0.25)' 
+            : '0 25px 50px rgba(239, 68, 68, 0.25)',
           overflow: 'hidden',
-          background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-          maxHeight: '90vh'
+          maxWidth: '700px',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
     >
       <DialogTitle 
         sx={{ 
           background: isApprove 
-            ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+            ? 'linear-gradient(135deg, #164e31 0%, #0f3d20 100%)'
             : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
           color: 'white',
           py: 2,
           px: 3,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          borderRadius: '20px 20px 0 0',
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {isApprove ? (
-            <CheckCircleIcon sx={{ fontSize: 28 }} />
-          ) : (
-            <CancelIcon sx={{ fontSize: 28 }} />
-          )}
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            {isApprove ? (
+              <CheckCircleIcon sx={{ fontSize: 20, color: 'white' }} />
+            ) : (
+              <CancelIcon sx={{ fontSize: 20, color: 'white' }} />
+            )}
+          </Box>
           <Box>
-            <Typography variant="h6" component="div" fontWeight="bold">
+            <Typography variant="h6" component="div" fontWeight={700} sx={{ fontSize: '22px', mb: 0.25 }}>
               {isApprove ? 'Approve Material Request' : 'Reject Material Request'}
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block' }}>
+            <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '14px' }}>
               {isApprove 
                 ? 'Confirm approval of this material request' 
                 : 'Provide a reason for rejecting this material request'}
@@ -201,8 +215,11 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
           size="small"
           sx={{ 
             color: 'white',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
             '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              transform: 'scale(1.05)',
             }
           }}
         >
@@ -210,349 +227,282 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
         </IconButton>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <DialogContent 
+          sx={{ 
+            pt: 2, 
+            pb: 1, 
+            px: 2.5,
+            overflowY: 'auto',
+            flex: 1,
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#164e31',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: '#0f3d20',
+            },
+          }}
+        >
           {/* Material Request Info */}
           {materialRequest && (
             <Box 
               sx={{ 
                 p: 2, 
-                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%)',
+                background: isApprove
+                  ? 'linear-gradient(135deg, rgba(22, 78, 49, 0.1) 0%, rgba(15, 61, 32, 0.05) 100%)'
+                  : 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%)',
                 borderRadius: 2,
-                border: '2px solid rgba(34, 197, 94, 0.3)',
-                mb: 3,
+                border: isApprove
+                  ? '2px solid rgba(22, 78, 49, 0.3)'
+                  : '2px solid rgba(239, 68, 68, 0.3)',
+                mb: 2,
               }}
             >
-              <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 700, mb: 1 }}>
+              <Typography variant="body2" sx={{ color: isApprove ? '#164e31' : '#dc2626', fontWeight: 700, mb: 1 }}>
                 Material Request Details
               </Typography>
-              <Typography variant="body2" sx={{ color: '#15803d', mb: 0.5 }}>
+              <Typography variant="body2" sx={{ color: isApprove ? '#0f3d20' : '#991b1b', mb: 0.5 }}>
                 <strong>Name:</strong> {materialRequest.requestedMaterialName}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#15803d', mb: 0.5 }}>
+              <Typography variant="body2" sx={{ color: isApprove ? '#0f3d20' : '#991b1b', mb: 0.5 }}>
                 <strong>Description:</strong> {materialRequest.description || 'No description'}
               </Typography>
               {materialRequest.businessId && (
-                <Typography variant="body2" sx={{ color: '#15803d' }}>
+                <Typography variant="body2" sx={{ color: isApprove ? '#0f3d20' : '#991b1b' }}>
                   <strong>Business:</strong> {materialRequest.businessId.businessName || 'N/A'}
                 </Typography>
               )}
             </Box>
           )}
 
-          <Grid container spacing={2.5}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {isReject && (
-              <Grid item xs={12}>
-                <Box sx={{ mb: 0.5 }}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: '#dc2626', 
-                      fontWeight: 600,
-                      mb: 0.75,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.75
-                    }}
-                  >
-                    <DescriptionIcon sx={{ fontSize: 16 }} />
-                    Admin Note <span style={{ color: '#f44336' }}>*</span>
-                  </Typography>
-                </Box>
-                <TextField
-                  fullWidth
-                  placeholder="Explain why this material request is being rejected..."
-                  name="adminNote"
-                  value={formData.adminNote}
-                  onChange={handleInputChange}
-                  required
-                  multiline
-                  rows={4}
-                  variant="outlined"
-                  error={!!errors.adminNote}
-                  helperText={errors.adminNote || 'This note will be sent to the business explaining the rejection reason'}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
-                        <WarningIcon sx={{ color: '#ef4444', fontSize: 18 }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      '&:hover fieldset': {
-                        borderColor: '#ef4444',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#ef4444',
-                        borderWidth: 2,
-                      },
-                    },
-                  }}
-                />
-              </Grid>
+              <TextField
+                name="adminNote"
+                label="Admin Note *"
+                placeholder="Explain why this material request is being rejected..."
+                value={formData.adminNote}
+                onChange={handleInputChange}
+                error={!!errors.adminNote}
+                helperText={errors.adminNote || 'This note will be sent to the business explaining the rejection reason'}
+                fullWidth
+                required
+                multiline
+                rows={2}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                  },
+                  '& .MuiInputLabel-root': {
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: '#374151',
+                  },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#ef4444',
+                    borderWidth: '2px',
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#ef4444',
+                  }
+                }}
+              />
             )}
 
             {isApprove && (
               <>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 0.5 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#16a34a', 
-                        fontWeight: 600,
-                        mb: 0.75,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.75
-                      }}
-                    >
-                      Reuse Limit <span style={{ color: '#f44336' }}>*</span>
-                    </Typography>
-                  </Box>
-                  <TextField
-                    fullWidth
-                    placeholder="100"
-                    name="reuseLimit"
-                    type="number"
-                    value={formData.reuseLimit}
-                    onChange={handleInputChange}
-                    required
-                    variant="outlined"
-                    inputProps={{ min: 1 }}
-                    error={!!errors.reuseLimit}
-                    helperText={errors.reuseLimit || 'Max times a material can be reused'}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
-                            times
-                          </Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#22c55e',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#22c55e',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
+                <TextField
+                  name="reuseLimit"
+                  label="Reuse Limit *"
+                  placeholder="100"
+                  type="number"
+                  value={formData.reuseLimit}
+                  onChange={handleInputChange}
+                  error={!!errors.reuseLimit}
+                  helperText={errors.reuseLimit || 'Max times a material can be reused'}
+                  fullWidth
+                  required
+                  variant="outlined"
+                  inputProps={{ min: 1 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Typography variant="body2" sx={{ color: '#164e31', fontWeight: 600 }}>
+                          times
+                        </Typography>
+                      </InputAdornment>
+                    ),
+                  }}
+                  size="small"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#374151',
+                    },
+                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#164e31',
+                      borderWidth: '2px',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: '#164e31',
+                    }
+                  }}
+                />
 
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 0.5 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#16a34a', 
-                        fontWeight: 600,
-                        mb: 0.75,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.75
-                      }}
-                    >
-                      Deposit Percent <span style={{ color: '#f44336' }}>*</span>
-                    </Typography>
-                  </Box>
-                  <TextField
-                    fullWidth
-                    placeholder="20"
-                    name="depositPercent"
-                    type="number"
-                    value={formData.depositPercent}
-                    onChange={handleInputChange}
-                    required
-                    variant="outlined"
-                    inputProps={{ min: 0, max: 100, step: 0.1 }}
-                    error={!!errors.depositPercent}
-                    helperText={errors.depositPercent || 'Deposit percentage (0-100)'}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">%</InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#22c55e',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#22c55e',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
+                <TextField
+                  name="depositPercent"
+                  label="Deposit Percent (%) *"
+                  placeholder="20"
+                  type="number"
+                  value={formData.depositPercent}
+                  onChange={handleInputChange}
+                  error={!!errors.depositPercent}
+                  helperText={errors.depositPercent || 'Deposit percentage (0-100)'}
+                  fullWidth
+                  required
+                  variant="outlined"
+                  inputProps={{ min: 0, max: 100, step: 0.1 }}
+                  size="small"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#374151',
+                    },
+                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#164e31',
+                      borderWidth: '2px',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: '#164e31',
+                    }
+                  }}
+                />
 
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 0.5 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#16a34a', 
-                        fontWeight: 600,
-                        mb: 0.75,
-                      }}
-                    >
-                      Plastic Equivalent Multiplier
-                    </Typography>
-                  </Box>
-                  <TextField
-                    fullWidth
-                    placeholder="1"
-                    name="plasticEquivalentMultiplier"
-                    type="number"
-                    value={formData.plasticEquivalentMultiplier}
-                    onChange={handleInputChange}
-                    variant="outlined"
-                    inputProps={{ min: 0, step: 0.1 }}
-                    helperText="Optional: Plastic equivalent multiplier"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#22c55e',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#22c55e',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
+                <TextField
+                  name="plasticEquivalentMultiplier"
+                  label="Plastic Equivalent Multiplier"
+                  placeholder="1"
+                  type="number"
+                  value={formData.plasticEquivalentMultiplier}
+                  onChange={handleInputChange}
+                  helperText="Optional: Plastic equivalent multiplier"
+                  fullWidth
+                  variant="outlined"
+                  inputProps={{ min: 0, step: 0.1 }}
+                  size="small"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#374151',
+                    },
+                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#164e31',
+                      borderWidth: '2px',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: '#164e31',
+                    }
+                  }}
+                />
 
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 0.5 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#16a34a', 
-                        fontWeight: 600,
-                        mb: 0.75,
-                      }}
-                    >
-                      CO2 Emission Per Kg
-                    </Typography>
-                  </Box>
-                  <TextField
-                    fullWidth
-                    placeholder="3.4"
-                    name="co2EmissionPerKg"
-                    type="number"
-                    value={formData.co2EmissionPerKg}
-                    onChange={handleInputChange}
-                    variant="outlined"
-                    inputProps={{ min: 0, step: 0.1 }}
-                    helperText="Optional: CO2 emission per kg"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#22c55e',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#22c55e',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
+                <TextField
+                  name="co2EmissionPerKg"
+                  label="CO2 Emission Per Kg"
+                  placeholder="3.4"
+                  type="number"
+                  value={formData.co2EmissionPerKg}
+                  onChange={handleInputChange}
+                  helperText="Optional: CO2 emission per kg"
+                  fullWidth
+                  variant="outlined"
+                  inputProps={{ min: 0, step: 0.1 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Typography variant="body2" sx={{ color: '#164e31', fontWeight: 600 }}>
+                          kg CO2/kg
+                        </Typography>
+                      </InputAdornment>
+                    ),
+                  }}
+                  size="small"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#374151',
+                    },
+                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#164e31',
+                      borderWidth: '2px',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: '#164e31',
+                    }
+                  }}
+                />
               </>
             )}
-
-            {/* Info Box */}
-            <Grid item xs={12}>
-              <Box 
-                sx={{ 
-                  p: 2, 
-                  background: isApprove
-                    ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%)'
-                    : 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%)',
-                  borderRadius: 2,
-                  border: isApprove
-                    ? '2px solid rgba(34, 197, 94, 0.3)'
-                    : '2px solid rgba(239, 68, 68, 0.3)',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 1.5,
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                }}
-              >
-                <Box 
-                  sx={{ 
-                    backgroundColor: isApprove ? '#22c55e' : '#ef4444',
-                    borderRadius: '50%',
-                    p: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minWidth: '36px',
-                    height: '36px'
-                  }}
-                >
-                  {isApprove ? (
-                    <CheckCircleIcon sx={{ color: 'white', fontSize: 20 }} />
-                  ) : (
-                    <CancelIcon sx={{ color: 'white', fontSize: 20 }} />
-                  )}
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" sx={{ color: isApprove ? '#16a34a' : '#dc2626', fontWeight: 700, mb: 0.5 }}>
-                    {isApprove ? '✓ Approve Material Request' : '✗ Reject Material Request'}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: isApprove ? '#15803d' : '#991b1b', lineHeight: 1.5, display: 'block' }}>
-                    {isApprove 
-                      ? 'By approving this request, the material will be added to the platform and businesses can use it.'
-                      : 'This rejection will be sent to the business with the note you provide above.'}
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
+          </Box>
         </DialogContent>
-
-        <Divider />
 
         <DialogActions 
           sx={{ 
-            px: 3, 
-            py: 2, 
+            px: 2.5, 
+            py: 1.5, 
             gap: 2,
-            backgroundColor: 'rgba(0, 0, 0, 0.01)',
-            display: 'flex',
-            justifyContent: 'space-between'
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: '#fafafa',
+            justifyContent: 'flex-end',
+            flexShrink: 0,
           }}
         >
           <Button 
             onClick={handleClose}
             variant="outlined"
-            startIcon={<CloseIcon fontSize="small" />}
             sx={{
-              color: '#666',
-              borderColor: '#ccc',
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '16px',
               px: 3,
-              py: 1,
-              fontSize: '0.9375rem',
-              borderWidth: 1.5,
-              fontWeight: 500,
+              py: 1.5,
+              borderWidth: '1px',
+              color: '#374151',
+              borderColor: '#d1d5db',
               '&:hover': {
-                borderColor: '#999',
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                borderWidth: 1.5,
+                borderColor: '#9ca3af',
+                backgroundColor: '#f9fafb',
               }
             }}
           >
@@ -563,19 +513,20 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
             variant="contained"
             startIcon={isApprove ? <CheckCircleIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
             sx={{
-              backgroundColor: isApprove ? '#22c55e' : '#ef4444',
+              backgroundColor: isApprove ? '#164e31' : '#ef4444',
               px: 3,
               py: 1,
               fontSize: '0.9375rem',
               fontWeight: 600,
+              borderRadius: '12px',
               boxShadow: isApprove 
-                ? '0 4px 12px rgba(34, 197, 94, 0.35)'
+                ? '0 4px 12px rgba(22, 78, 49, 0.35)'
                 : '0 4px 12px rgba(239, 68, 68, 0.35)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: isApprove ? '#16a34a' : '#dc2626',
+                backgroundColor: isApprove ? '#0f3d20' : '#dc2626',
                 boxShadow: isApprove 
-                  ? '0 6px 16px rgba(34, 197, 94, 0.45)'
+                  ? '0 6px 16px rgba(22, 78, 49, 0.45)'
                   : '0 6px 16px rgba(239, 68, 68, 0.45)',
                 transform: 'translateY(-2px)',
               }

@@ -8,12 +8,15 @@ import {
   createLeaderboardVoucherApi,
   getLeaderboardVoucherByIdApi,
   getBusinessVouchersAdminApi,
+  getBusinessVoucherByIdAdminApi,
   setVoucherNameFilter,
-  resetVoucherFilters 
+  resetVoucherFilters,
+  setCurrentVoucher
 } from '../../store/slices/voucherSlice';
 import { FaGift, FaPlus, FaTrophy, FaStore } from 'react-icons/fa';
 import { PiClipboardTextBold } from "react-icons/pi";
 import { IoIosSearch } from "react-icons/io";
+import { CiEdit } from "react-icons/ci";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import './AdminVoucher.css';
@@ -67,8 +70,25 @@ const Analytics = () => {
   const handleViewDetail = (voucher) => {
     const voucherId = voucher._id || voucher.id;
     if (voucherId) {
-      dispatch(getLeaderboardVoucherByIdApi(voucherId));
-      setIsDetailModalOpen(true);
+      // Check voucher type to call appropriate API
+      if (voucher.voucherType === 'business') {
+        // For business vouchers, use the data we already have from list API
+        // The list API already returns full voucher details, no need to call detail API
+        // Map the business voucher data to match the expected format
+        const mappedVoucher = {
+          ...voucher,
+          name: voucher.customName || voucher.name,
+          description: voucher.customDescription || voucher.description,
+          discountPercent: voucher.discountPercent || voucher.discount,
+          voucherType: 'business',
+        };
+        dispatch(setCurrentVoucher(mappedVoucher));
+        setIsDetailModalOpen(true);
+      } else {
+        // For leaderboard vouchers, call the API
+        dispatch(getLeaderboardVoucherByIdApi(voucherId));
+        setIsDetailModalOpen(true);
+      }
     }
   };
 
@@ -285,27 +305,80 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Voucher Cards */}
+      {/* Voucher List */}
       {isLoading ? (
         renderLoadingState()
       ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className="voucher-grid leaderboard">
-          {(() => {
-            const filteredData = getAllFilteredData();
-            const perPage = 8;
-            const startIndex = (currentPage - 1) * perPage;
-            const endIndex = startIndex + perPage;
-            return filteredData.slice(startIndex, endIndex).map((voucher) => (
-              <VoucherCard 
-                key={voucher._id} 
-                voucher={voucher}
-                onEdit={handleEditVoucher}
-                onViewDetail={handleViewDetail}
-              />
-            ));
-          })()}
+        <div className="voucher-list-container">
+          <div className="voucher-list-header">
+            <div className="voucher-list-header-cell" style={{ flex: '2' }}>Voucher Name</div>
+            <div className="voucher-list-header-cell" style={{ flex: '1' }}>Type</div>
+            <div className="voucher-list-header-cell" style={{ flex: '1' }}>Discount</div>
+            <div className="voucher-list-header-cell" style={{ flex: '1' }}>Base Code</div>
+            <div className="voucher-list-header-cell" style={{ flex: '1', textAlign: 'center' }}>Actions</div>
+          </div>
+          <div className="voucher-list">
+            {(() => {
+              const filteredData = getAllFilteredData();
+              const perPage = 10;
+              const startIndex = (currentPage - 1) * perPage;
+              const endIndex = startIndex + perPage;
+              return filteredData.slice(startIndex, endIndex).map((voucher) => (
+                <div key={voucher._id || voucher.id} className="voucher-list-item">
+                  <div className="voucher-list-cell" style={{ flex: '2' }}>
+                    <div className="voucher-list-name">
+                      <FaGift className="voucher-list-icon" />
+                      <div>
+                        <div className="voucher-list-title">{voucher.name}</div>
+                        <div className="voucher-list-subtitle">
+                          {voucher.voucherType === 'leaderboard' ? 'Leaderboard Voucher' : 'Business Voucher'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="voucher-list-cell" style={{ flex: '1' }}>
+                    <span className={`voucher-type-badge ${voucher.voucherType === 'leaderboard' ? 'type-leaderboard' : 'type-business'}`}>
+                      {voucher.voucherType === 'leaderboard' ? 'Leaderboard' : 'Business'}
+                    </span>
+                  </div>
+                  <div className="voucher-list-cell" style={{ flex: '1' }}>
+                    <span className="discount-badge-list">
+                      {voucher.discountPercent || voucher.discount || 0}%
+                    </span>
+                  </div>
+                  <div className="voucher-list-cell" style={{ flex: '1' }}>
+                    <span className="base-code-text">{voucher.baseCode || 'N/A'}</span>
+                  </div>
+                  <div className="voucher-list-cell" style={{ flex: '1', textAlign: 'center', justifyContent: 'center' }}>
+                    <div className="voucher-list-actions">
+                      <button 
+                        className="action-btn-list edit-btn-list" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditVoucher(voucher);
+                        }}
+                        title="Edit"
+                      >
+                        <CiEdit size={18} />
+                      </button>
+                      <button 
+                        className="action-btn-list view-btn-list" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetail(voucher);
+                        }}
+                        title="View Details"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
         </div>
       )}
 
@@ -336,15 +409,15 @@ const Analytics = () => {
               sx={{
                 "& .MuiPaginationItem-root": {
                   "&.Mui-selected": {
-                    backgroundColor: "#12422a",
+                    backgroundColor: "#164e31",
                     color: "#ffffff",
                     fontWeight: 600,
                     "&:hover": {
-                      backgroundColor: "#0d2e1c",
+                      backgroundColor: "#0f3d20",
                     },
                   },
                   "&:hover": {
-                    backgroundColor: "rgba(18, 66, 42, 0.1)",
+                    backgroundColor: "rgba(22, 78, 49, 0.1)",
                   },
                 },
               }}

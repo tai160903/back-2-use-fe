@@ -1235,7 +1235,7 @@ export default function Materials() {
       <Dialog 
         open={openDialog} 
         onClose={handleCloseDialog} 
-        maxWidth="md" 
+        maxWidth="sm" 
         fullWidth
         TransitionProps={{
           timeout: 400,
@@ -1287,8 +1287,8 @@ export default function Materials() {
         </DialogTitle>
 
         <form onSubmit={handleSubmit}>
-          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
-             <Grid container spacing={2}>
+          <DialogContent sx={{ pt: 2.25, pb: 2, px: 2.25, maxHeight: 'calc(90vh - 170px)', overflowY: 'auto' }}>
+            <Grid container spacing={1.5}>
               {/* Material Name Field */}
               <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
@@ -1503,7 +1503,7 @@ export default function Materials() {
       <Dialog 
         open={openViewDialog} 
         onClose={handleCloseViewDialog} 
-        maxWidth="md" 
+        maxWidth="sm" 
         fullWidth
         PaperProps={{
           sx: {
@@ -1546,15 +1546,15 @@ export default function Materials() {
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 4, pb: 3 }}>
+        <DialogContent sx={{ pt: 1.75, pb: 1.5, px: 2, maxHeight: 'calc(90vh - 150px)', overflowY: 'auto' }}>
           {selectedMaterial && (
-            <Grid container spacing={3}>
+            <Grid container spacing={1.25} sx={{ mt: 0.5 }}>
               {/* Material Name */}
               <Grid item xs={12}>
                 <Paper 
                   elevation={0} 
                   sx={{ 
-                    p: 3, 
+                    p: 2.25, 
                     backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
                     border: '1px solid rgba(18, 66, 42, 0.2)'
@@ -1577,11 +1577,11 @@ export default function Materials() {
                 <Paper 
                   elevation={0} 
                   sx={{ 
-                    p: 3, 
+                    p: 1.6, 
                     backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
                     border: '1px solid rgba(18, 66, 42, 0.2)',
-                    height: '100%'
+                    minHeight: 90
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -1604,11 +1604,11 @@ export default function Materials() {
                 <Paper 
                   elevation={0} 
                   sx={{ 
-                    p: 3, 
+                    p: 1.6, 
                     backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
                     border: '1px solid rgba(18, 66, 42, 0.2)',
-                    height: '100%'
+                    minHeight: 90
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -1628,7 +1628,7 @@ export default function Materials() {
                 <Paper 
                   elevation={0} 
                   sx={{ 
-                    p: 3, 
+                    p: 1.6, 
                     backgroundColor: 'rgba(18, 66, 42, 0.05)',
                     borderRadius: 2,
                     border: '1px solid rgba(18, 66, 42, 0.2)'
@@ -1673,7 +1673,7 @@ export default function Materials() {
 
         <Divider />
 
-        <DialogActions sx={{ px: 3, py: 2.5 }}>
+        <DialogActions sx={{ px: 2.25, py: 1.75 }}>
           <Button 
             onClick={handleCloseViewDialog}
             variant="contained"

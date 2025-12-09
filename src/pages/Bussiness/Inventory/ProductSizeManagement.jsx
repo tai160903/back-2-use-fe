@@ -555,7 +555,7 @@ export default function ProductSizeManagement() {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth="md"
+        maxWidth="sm"
         fullWidth
         TransitionProps={{
           timeout: 400,
@@ -593,9 +593,9 @@ export default function ProductSizeManagement() {
 
         <form onSubmit={handleSubmit} className="dialog-form">
           <DialogContent className="dialog-content-custom">
-            <Grid container spacing={2}>
+            <Grid container spacing={1.5}>
               {/* Size Name Field */}
-              <Grid item xs={6}>
+              <Grid item xs={12} md={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -654,7 +654,7 @@ export default function ProductSizeManagement() {
               </Grid>
 
               {/* Base Price Field */}
-              <Grid item xs={6}>
+              <Grid item xs={12} md={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -713,7 +713,7 @@ export default function ProductSizeManagement() {
               </Grid>
 
               {/* Weight Field */}
-              <Grid item xs={6}>
+              <Grid item xs={12} md={6}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -778,7 +778,7 @@ export default function ProductSizeManagement() {
               </Grid>
 
               {/* Description Field */}
-              <Grid item size={12}>
+              <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"

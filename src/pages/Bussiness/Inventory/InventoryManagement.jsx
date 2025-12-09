@@ -849,7 +849,7 @@ export default function InventoryManagement() {
       <Dialog 
         open={openDialog} 
         onClose={isCreating ? undefined : handleCloseDialog}
-        maxWidth="md" 
+        maxWidth="sm" 
         fullWidth
         TransitionProps={{
           timeout: 400,
@@ -890,7 +890,7 @@ export default function InventoryManagement() {
           <DialogContent className="dialog-content-custom">
             <Grid container spacing={2}>
               {/* Product Type Name Field */}
-              <Grid item xs={4}>
+              <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -939,7 +939,7 @@ export default function InventoryManagement() {
               </Grid>
 
               {/* Material Select Field */}
-              <Grid item xs={4}>
+              <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
@@ -993,7 +993,7 @@ export default function InventoryManagement() {
                 </FormControl>
               </Grid>
                    {/* Upload Image Field */}
-              <Grid item xs={4}>
+              <Grid item xs={12}>
                 <Box sx={{ mb: 0.5 }}>
                   <Typography
                     variant="body2"
