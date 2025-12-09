@@ -26,7 +26,7 @@ export const PATH = {
     PRICING:"/pricing",
     ABOUT:"/about",
     RANKINGS: "/rankings",
-    REWARDS:"/rewards",
+    REWARDS:"/voucherwallet",
     BUSINESS_REGISTRATION_STATUS: "/business-registration-status",
 
     // PAYMENT
@@ -67,4 +67,13 @@ export const PATH = {
     ADMIN_MATERIAL_DETAIL: "/admin/material/:id",
     ADMIN_ECO_REWARD: "/admin/eco-reward",
     ADMIN_LEADERBOARD: "/admin/leaderboard",
+    // Admin Dashboard Sub Pages
+    ADMIN_DASHBOARD_BORROW_TRANSACTIONS: "/admin/dashboard/borrow-transactions",
+    ADMIN_DASHBOARD_BUSINESS_MONTHLY: "/admin/dashboard/business-monthly",
+    ADMIN_DASHBOARD_WALLET_OVERVIEW: "/admin/dashboard/wallet-overview",
+    ADMIN_DASHBOARD_WALLET_TRANSACTIONS_MONTHLY: "/admin/dashboard/wallet-transactions-monthly",
+    ADMIN_DASHBOARD_TOP_BUSINESSES: "/admin/dashboard/top-businesses",
+    ADMIN_DASHBOARD_TOP_CUSTOMERS: "/admin/dashboard/top-customers",
+    ADMIN_DASHBOARD_CHARTS: "/admin/dashboard/charts",
+    ADMIN_DASHBOARD_QUICK_ACTIONS: "/admin/dashboard/quick-actions",
 }

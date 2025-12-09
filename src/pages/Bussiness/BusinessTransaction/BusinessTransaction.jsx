@@ -464,6 +464,17 @@ function SuccessCard({ item }) {
                 </span>
               </Typography>
 
+              {item.co2Changed !== undefined && item.co2Changed !== null && (
+                <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
+                  CO2 Point:{" "}
+                  <span style={{ color: "#1b4c2d", fontWeight: "bold" }}>
+                    {typeof item.co2Changed === 'number' 
+                      ? item.co2Changed.toFixed(3) 
+                      : item.co2Changed}
+                  </span>
+                </Typography>
+              )}
+
               <div className="borrow-receivePoint">
                 <Typography>
                   Receive Money: {}
@@ -1067,6 +1078,16 @@ export default function BusinessTransaction() {
                     <Typography variant="body2" sx={{ mt: 1 }}>
                       Status: <strong>{detail.status}</strong>
                     </Typography>
+                    {detail.co2Changed !== undefined && detail.co2Changed !== null && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        CO2 Point:{" "}
+                        <span style={{ color: "#1b4c2d", fontWeight: "bold" }}>
+                          {typeof detail.co2Changed === 'number' 
+                            ? detail.co2Changed.toFixed(3) 
+                            : detail.co2Changed}
+                        </span>
+                      </Typography>
+                    )}
                   </Box>
 
                   <Box>

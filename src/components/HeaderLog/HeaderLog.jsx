@@ -19,10 +19,14 @@ import { HiSwitchHorizontal } from "react-icons/hi";
 import Notification from "../Notification/Notification";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
+import { getBusinessDashboardOverview } from "../../store/slices/bussinessSlice";
+import { FaLeaf, FaCrown, FaCoins } from "react-icons/fa";
+import Box from "@mui/material/Box";
 export default function HeaderLog() {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.auth);
   const { userInfo, businessInfo, staffInfo } = useSelector((state) => state.user);
+  const { dashboardOverview } = useSelector((state) => state.businesses);
   const navigate = useNavigate();
   // Sử dụng state để đảm bảo userRole được tính lại khi currentUser thay đổi
   const [userRole, setUserRole] = useState(() => getUserRole());
@@ -38,6 +42,7 @@ export default function HeaderLog() {
     }
     if (userRole === "business") {
       dispatch(getProfileBusiness());
+      dispatch(getBusinessDashboardOverview());
     } else if (userRole === "staff") {
       dispatch(getProfileStaff());
     } else {
@@ -143,30 +148,186 @@ export default function HeaderLog() {
   };
 
   // Render thông tin cho customer
-  const renderCustomerInfo = () => (
-    <>
-      <Typography className="header-log-name" variant="h6" noWrap>
-        Welcome, {userInfo?.fullName || "User"}
-      </Typography>
-      <Typography className="header-log-balance">
-        <FaWallet className="mr-2" /> {userInfo?.wallet?.availableBalance || 0}{" "}
-        {"VND"}
-      </Typography>
-    </>
-  );
+  const renderCustomerInfo = () => {
+    const rewardPoints = userInfo?.rewardPoints || 0;
+    const co2Reduced = userInfo?.co2Reduced || 0;
+
+    const commonCardStyle = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      padding: '10px 14px',
+      backgroundColor: '#007c00',
+      borderRadius: '10px',
+      color: 'white',
+      flexShrink: 0,
+      minWidth: '170px',
+    };
+
+    const commonTitleStyle = {
+      fontSize: '11px',
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontWeight: 500,
+      lineHeight: 1.2,
+      margin: 0,
+    };
+
+    const commonValueStyle = {
+      fontSize: '14px',
+      color: 'white',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      margin: 0,
+    };
+
+    return (
+      <>
+        <Typography className="header-log-name" variant="h6" noWrap>
+          Welcome, {userInfo?.fullName || "User"} 
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Wallet Card */}
+          <Box sx={commonCardStyle}>
+            <FaWallet style={{ fontSize: '18px', color: 'white' }} />
+            <Box>
+              <Typography sx={commonTitleStyle}>
+                Wallet
+              </Typography>
+              <Typography sx={commonValueStyle}>
+                {userInfo?.wallet?.availableBalance?.toLocaleString('en-US') || 0} VND
+              </Typography>
+            </Box>
+          </Box>
+          {/* Reward Points Card */}
+          <Box sx={commonCardStyle}>
+            <FaCoins style={{ fontSize: '18px', color: 'white' }} />
+            <Box>
+              <Typography sx={commonTitleStyle}>
+                Reward Points
+              </Typography>
+              <Typography sx={commonValueStyle}>
+                {typeof rewardPoints === 'number' 
+                  ? rewardPoints.toLocaleString('en-US') 
+                  : '0'}
+              </Typography>
+            </Box>
+          </Box>
+          {/* CO2 Reduced Card */}
+          <Box sx={commonCardStyle}>
+            <FaLeaf style={{ fontSize: '18px', color: 'white' }} />
+            <Box>
+              <Typography sx={commonTitleStyle}>
+                CO₂ Reduced
+              </Typography>
+              <Typography sx={commonValueStyle}>
+                {typeof co2Reduced === 'number' 
+                  ? `${co2Reduced.toFixed(2)} kg` 
+                  : '0.00 kg'}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </>
+    );
+  };
 
   // Render thông tin cho business
-  const renderBusinessInfo = () => (
-    <>
-      <Typography className="header-log-name" variant="h6" noWrap>
-        Welcome, {businessInfo?.data?.business?.businessName || "Business"}
-      </Typography>
-      <Typography className="header-log-balance">
-        <FaWallet className="mr-2" />{" "}
-        {businessInfo?.data?.wallet?.availableBalance || 0} {"VND"}
-      </Typography>
-    </>
-  );
+  const renderBusinessInfo = () => {
+    const business = businessInfo?.data?.business;
+    const activeSubscription = businessInfo?.data?.activeSubscription;
+    const rawActive = activeSubscription;
+    const subscriptions = Array.isArray(rawActive) ? rawActive : (rawActive ? [rawActive] : []);
+    const now = new Date();
+    const currentSubscriptions = subscriptions.filter((s) => {
+      const endDate = s?.endDate ? new Date(s.endDate) : null;
+      const notExpired = !endDate || (!isNaN(endDate.getTime()) && endDate >= now);
+      const statusOk = s?.status === 'active' || s?.status === 'pending';
+      return statusOk && notExpired;
+    });
+    
+    const co2Reduced = business?.co2Reduced !== undefined 
+      ? business.co2Reduced 
+      : (dashboardOverview?.co2Reduced || 0);
+
+    const commonCardStyle = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      padding: '10px 14px',
+      backgroundColor: '#007c00',
+      borderRadius: '10px',
+      color: 'white',
+      flexShrink: 0,
+      minWidth: '170px',
+    };
+
+    const commonTitleStyle = {
+      fontSize: '11px',
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontWeight: 500,
+      lineHeight: 1.2,
+      margin: 0,
+    };
+
+    const commonValueStyle = {
+      fontSize: '14px',
+      color: 'white',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      margin: 0,
+    };
+
+    return (
+      <>
+        <Typography className="header-log-name" variant="h6" noWrap>
+          Welcome, {business?.businessName || "Business"}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Wallet Card */}
+          <Box sx={commonCardStyle}>
+            <FaWallet style={{ fontSize: '18px', color: 'white' }} />
+            <Box>
+              <Typography sx={commonTitleStyle}>
+                Wallet
+              </Typography>
+              <Typography sx={commonValueStyle}>
+                {businessInfo?.data?.wallet?.availableBalance?.toLocaleString('en-US') || 0} VND
+              </Typography>
+            </Box>
+          </Box>
+          {/* CO2 Card */}
+          <Box sx={commonCardStyle}>
+            <FaLeaf style={{ fontSize: '18px', color: 'white' }} />
+            <Box>
+              <Typography sx={commonTitleStyle}>
+                CO₂ Reduced
+              </Typography>
+              <Typography sx={commonValueStyle}>
+                {typeof co2Reduced === 'number' 
+                  ? `${co2Reduced.toFixed(2)} kg` 
+                  : '0.00 kg'}
+              </Typography>
+            </Box>
+          </Box>
+          {/* Subscription Card */}
+          <Box sx={commonCardStyle}>
+            <FaCrown style={{ fontSize: '18px', color: 'white' }} />
+            <Box>
+              <Typography sx={commonTitleStyle}>
+                Subscription
+              </Typography>
+              <Typography sx={commonValueStyle}>
+                {currentSubscriptions.length > 0
+                  ? currentSubscriptions[0]?.subscriptionId?.name || 'Active'
+                  : 'No subscription'}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </>
+    );
+  };
+
 
   // Render thông tin cho staff
   const renderStaffInfo = () => (
@@ -221,7 +382,7 @@ export default function HeaderLog() {
               >
                 {userRole === "admin" ? "A" : ""}
               </Avatar>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                 {userRole === "admin"
                   ? renderAdminInfo()
                   : userRole === "business"

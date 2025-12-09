@@ -427,39 +427,93 @@ export default function Voucher() {
                           </Typography>
                         </Box>
                       )}
-                      <Button
-                        variant="contained"
-                        className={`save-btn ${isExchanged ? 'saved' : ''} ${!canSave || voucher.status !== 'active' || isExchanged ? 'disabled' : ''}`}
-                        onClick={() => handleSaveVoucher(voucher)}
-                        disabled={!canSave || isExchanged || voucher.status !== 'active' || exchangingVoucherId === voucher.voucherId}
-                        fullWidth
-                        sx={{
-                          position: 'relative',
-                          minHeight: '40px',
-                          cursor: isExchanged ? 'not-allowed' : 'pointer'
-                        }}
-                      >
-                        {exchangingVoucherId === voucher.voucherId ? (
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                            <CircularProgress size={20} sx={{ color: 'white' }} />
-                            <span>Processing...</span>
+                      {isExchanged ? (
+                        <>
+                          {/* Exchanged notice */}
+                          <Box 
+                            sx={{ 
+                              mb: 1.5,
+                              p: 1,
+                              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                              borderRadius: 1,
+                              border: '1px solid rgba(34, 197, 94, 0.3)'
+                            }}
+                          >
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                color: '#16a34a',
+                                fontWeight: 600,
+                                fontSize: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 0.5
+                              }}
+                            >
+                              <span>✓</span>
+                              <span>You have already exchanged this voucher</span>
+                            </Typography>
                           </Box>
-                        ) : (
-                          isExchanged ? 'Exchanged' : voucher.status !== 'active' ? 'Not Available' : canSave ? 'Exchange Voucher' : `Need ${voucher.points - userPoints} more points`
-                        )}
-                      </Button>
-                      <Link
-                        component="button"
-                        variant="caption"
-                        className="condition-link"
-                        onClick={() => handleShowConditions(voucher)}
-                        sx={{
-                          pointerEvents: isExchanged ? 'none' : 'auto',
-                          opacity: isExchanged ? 0.6 : 1
-                        }}
-                      >
-                        Conditions
-                      </Link>
+                          <Button
+                            variant="contained"
+                            onClick={() => navigate(PATH.REWARDS)}
+                            fullWidth
+                            sx={{
+                              backgroundColor: '#22c55e',
+                              color: 'white',
+                              minHeight: '40px',
+                              fontWeight: 600,
+                              textTransform: 'none',
+                              mb: 1,
+                              '&:hover': {
+                                backgroundColor: '#16a34a',
+                              }
+                            }}
+                          >
+                            View in Voucher Wallet
+                          </Button>
+                          <Link
+                            component="button"
+                            variant="caption"
+                            className="condition-link"
+                            onClick={() => handleShowConditions(voucher)}
+                          >
+                            Conditions
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="contained"
+                            className={`save-btn ${!canSave || voucher.status !== 'active' ? 'disabled' : ''}`}
+                            onClick={() => handleSaveVoucher(voucher)}
+                            disabled={!canSave || voucher.status !== 'active' || exchangingVoucherId === voucher.voucherId}
+                            fullWidth
+                            sx={{
+                              position: 'relative',
+                              minHeight: '40px',
+                            }}
+                          >
+                            {exchangingVoucherId === voucher.voucherId ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                <CircularProgress size={20} sx={{ color: 'white' }} />
+                                <span>Processing...</span>
+                              </Box>
+                            ) : (
+                              voucher.status !== 'active' ? 'Not Available' : canSave ? 'Exchange Voucher' : `Need ${voucher.points - userPoints} more points`
+                            )}
+                          </Button>
+                          <Link
+                            component="button"
+                            variant="caption"
+                            className="condition-link"
+                            onClick={() => handleShowConditions(voucher)}
+                          >
+                            Conditions
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

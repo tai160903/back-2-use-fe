@@ -13,7 +13,7 @@ import MaterialCard from '../../components/MaterialCard/MaterialCard';
 import MaterialModal from './MaterialModal';
 import ReviewMaterialModal from './ReviewMaterialModal';
 import { FaRecycle, FaPlus } from 'react-icons/fa';
-import { CiClock2 } from "react-icons/ci";
+import { CiClock2, CiEdit } from "react-icons/ci";
 import { SiTicktick } from "react-icons/si";
 import { BiMessageSquareX } from "react-icons/bi";
 import { PiClipboardTextBold } from "react-icons/pi";
@@ -313,64 +313,136 @@ const Material = () => {
         materialRequests.length === 0 ? (
           renderEmptyState()
         ) : (
-          <div className="material-grid">
-            {(() => {
-              const startIndex = (currentPage - 1) * 6;
-              const endIndex = startIndex + 6;
-              return materialRequests.slice(startIndex, endIndex).map((request) => (
-                <div key={request._id} className="material-card">
-                  <div className="material-card-header">
-                    <h3 className="material-card-title">{request.requestedMaterialName}</h3>
-                    <span className="material-card-status pending">Active</span>
-                  </div>
-                  <div className="material-card-body">
-                    <p className="material-card-description">{request.description || 'No description'}</p>
-                    {request.businessId && (
-                      <div className="material-card-business">
-                        <strong>Business:</strong> {request.businessId.businessName || 'N/A'}
+          <div className="material-list-container">
+            <div className="material-list-header">
+              <div className="material-list-header-cell" style={{ flex: '2' }}>Material Name</div>
+              <div className="material-list-header-cell" style={{ flex: '1.5' }}>Business</div>
+              <div className="material-list-header-cell" style={{ flex: '1' }}>Requested Date</div>
+              <div className="material-list-header-cell" style={{ flex: '1', textAlign: 'center' }}>Actions</div>
+            </div>
+            <div className="material-list">
+              {(() => {
+                const perPage = 10;
+                const startIndex = (currentPage - 1) * perPage;
+                const endIndex = startIndex + perPage;
+                return materialRequests.slice(startIndex, endIndex).map((request) => (
+                  <div key={request._id} className="material-list-item">
+                    <div className="material-list-cell" style={{ flex: '2' }}>
+                      <div className="material-list-name">
+                        <FaRecycle className="material-list-icon" />
+                        <div>
+                          <div className="material-list-title">{request.requestedMaterialName}</div>
+                          <div className="material-list-subtitle">
+                            {request.description ? (request.description.length > 50 ? request.description.substring(0, 50) + '...' : request.description) : 'No description'}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div className="material-card-date">
-                      <strong>Requested:</strong> {new Date(request.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="material-list-cell" style={{ flex: '1.5' }}>
+                      <span style={{ fontWeight: 500, color: '#374151' }}>
+                        {request.businessId?.businessName || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="material-list-cell" style={{ flex: '1' }}>
+                      <span style={{ fontSize: '13px', color: '#6b7280' }}>
+                        {new Date(request.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="material-list-cell" style={{ flex: '1', textAlign: 'center', justifyContent: 'center' }}>
+                      <div className="material-list-actions">
+                        <button
+                          className="action-btn-list approve-btn-list"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenReviewModal(request, 'approve');
+                          }}
+                          title="Approve"
+                        >
+                          <SiTicktick size={16} />
+                          Approve
+                        </button>
+                        <button
+                          className="action-btn-list reject-btn-list"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenReviewModal(request, 'reject');
+                          }}
+                          title="Reject"
+                        >
+                          <BiMessageSquareX size={16} />
+                          Reject
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div className="material-card-actions">
-                    <button
-                      className="material-card-btn approve-btn"
-                      onClick={() => handleOpenReviewModal(request, 'approve')}
-                    >
-                      <SiTicktick />
-                      Approve
-                    </button>
-                    <button
-                      className="material-card-btn reject-btn"
-                      onClick={() => handleOpenReviewModal(request, 'reject')}
-                    >
-                      <BiMessageSquareX />
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ));
-            })()}
+                ));
+              })()}
+            </div>
           </div>
         )
       ) : getAllFilteredData().length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className="material-grid">
-          {(() => {
-            const filteredData = getAllFilteredData();
-            const startIndex = (currentPage - 1) * 6;
-            const endIndex = startIndex + 6;
-            return filteredData.slice(startIndex, endIndex).map((material) => (
-              <MaterialCard 
-                key={material._id} 
-                material={material}
-                onEdit={handleEditMaterial}
-              />
-            ));
-          })()}
+        <div className="material-list-container">
+          <div className="material-list-header">
+            <div className="material-list-header-cell" style={{ flex: '2' }}>Material Name</div>
+            <div className="material-list-header-cell" style={{ flex: '1' }}>Reuse Limit</div>
+            <div className="material-list-header-cell" style={{ flex: '1' }}>Deposit %</div>
+            <div className="material-list-header-cell" style={{ flex: '1' }}>Status</div>
+            <div className="material-list-header-cell" style={{ flex: '1', textAlign: 'center' }}>Actions</div>
+          </div>
+          <div className="material-list">
+            {(() => {
+              const filteredData = getAllFilteredData();
+              const perPage = 10;
+              const startIndex = (currentPage - 1) * perPage;
+              const endIndex = startIndex + perPage;
+              return filteredData.slice(startIndex, endIndex).map((material) => (
+                <div key={material._id} className="material-list-item">
+                  <div className="material-list-cell" style={{ flex: '2' }}>
+                    <div className="material-list-name">
+                      <FaRecycle className="material-list-icon" />
+                      <div>
+                        <div className="material-list-title">{material.materialName}</div>
+                        <div className="material-list-subtitle">
+                          {material.description ? (material.description.length > 50 ? material.description.substring(0, 50) + '...' : material.description) : 'No description'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="material-list-cell" style={{ flex: '1' }}>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#374151' }}>
+                      {material.reuseLimit || material.maximumReuse || 'N/A'} times
+                    </span>
+                  </div>
+                  <div className="material-list-cell" style={{ flex: '1' }}>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#374151' }}>
+                      {material.depositPercent || 0}%
+                    </span>
+                  </div>
+                  <div className="material-list-cell" style={{ flex: '1' }}>
+                    <span className={`material-status-badge ${material.isActive ? 'status-active' : 'status-pending'}`}>
+                      {material.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div className="material-list-cell" style={{ flex: '1', textAlign: 'center', justifyContent: 'center' }}>
+                    <div className="material-list-actions">
+                      <button 
+                        className="action-btn-list edit-btn-list" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditMaterial(material);
+                        }}
+                        title="Edit"
+                      >
+                        <CiEdit size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
         </div>
       )}
 
@@ -381,11 +453,13 @@ const Material = () => {
         
         if (filter === "pending") {
           totalItems = materialRequests.length;
-          totalPages = Math.ceil(totalItems / 6);
+          const perPage = 10;
+          totalPages = Math.ceil(totalItems / perPage);
         } else {
           const filteredData = getAllFilteredData();
           totalItems = filteredData.length;
-          totalPages = Math.ceil(totalItems / 6);
+          const perPage = 10;
+          totalPages = Math.ceil(totalItems / perPage);
         }
         
         return totalItems > 0 ? (
@@ -410,15 +484,15 @@ const Material = () => {
               sx={{
                 "& .MuiPaginationItem-root": {
                   "&.Mui-selected": {
-                    backgroundColor: "#12422a",
+                    backgroundColor: "#164e31",
                     color: "#ffffff",
                     fontWeight: 600,
                     "&:hover": {
-                      backgroundColor: "#0d2e1c",
+                      backgroundColor: "#0f3d20",
                     },
                   },
                   "&:hover": {
-                    backgroundColor: "rgba(18, 66, 42, 0.1)",
+                    backgroundColor: "rgba(22, 78, 49, 0.1)",
                   },
                 },
               }}

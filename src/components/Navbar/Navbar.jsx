@@ -27,13 +27,11 @@ import logoImage from "../../assets/image/Logo.png";
 
 const sidebarItems = [
   { id: "home", label: "Home", path: PATH.HOME },
-  { id: "ai-checker", label: "AI Check", path: PATH.AI_CHECK },
   { id: "profile", label: "Profile", path: PATH.PROFILE },
   { id: "wallet-transaction", label: "Wallet transaction", path: PATH.WALLET_CUSTOMER },
   // { id: "stores", label: "Stores", path: PATH.STORE },
   { id: "history", label: "History", path: PATH.TRANSACTION_HISTORY },
-  { id: "rewards", label: "Rewards", path: PATH.REWARDS },
-  { id: "assistant", label: "Assistant", path: PATH.ASSISTANT },
+  { id: "rewards", label: "Voucher Wallet", path: PATH.REWARDS },
   { id: "logout", label: "Logout", path: null },
 ];
 

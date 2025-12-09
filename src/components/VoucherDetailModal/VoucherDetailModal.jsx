@@ -12,90 +12,15 @@ import {
   Divider,
   Grid,
   Chip,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Switch,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   CardGiftcard as VoucherIcon,
-  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
-import Tooltip from '@mui/material/Tooltip';
-import { FaGift, FaCoins, FaCalendarAlt, FaCode, FaInfoCircle, FaStore } from 'react-icons/fa';
-import {
-  getBusinessVoucherCodesApi,
-} from '../../store/slices/voucherSlice';
+import { FaGift, FaCoins, FaCalendarAlt, FaCode, FaInfoCircle } from 'react-icons/fa';
 import './VoucherDetailModal.css';
 
 const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
-  const dispatch = useDispatch();
-  const { adminBusinessVouchers: businessVouchers, adminBusinessVoucherCodes: businessVoucherCodes, isLoading: adminLoading } = useSelector(state => state.vouchers);
-  const [expandedBusinessVoucher, setExpandedBusinessVoucher] = useState(null);
-  const [codesLoading, setCodesLoading] = useState({});
-  const [togglingVouchers, setTogglingVouchers] = useState({});
-  const [togglingTemplate, setTogglingTemplate] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && voucher && voucher.voucherType === 'business') {
-      // Note: getBusinessVouchersByVoucherIdApi has been removed
-      console.warn('getBusinessVouchersByVoucherIdApi has been removed');
-    } else if (!isOpen) {
-      // Reset state when modal closes
-      setExpandedBusinessVoucher(null);
-      setCodesLoading({});
-      setTogglingVouchers({});
-    }
-  }, [isOpen, voucher, dispatch]);
-
-  const handleToggleBusinessVoucher = (businessVoucherId) => {
-    if (expandedBusinessVoucher === businessVoucherId) {
-      setExpandedBusinessVoucher(null);
-    } else {
-      setExpandedBusinessVoucher(businessVoucherId);
-      // Load codes when expanding
-      setCodesLoading({ ...codesLoading, [businessVoucherId]: true });
-      dispatch(getBusinessVoucherCodesApi({ businessVoucherId, page: 1, limit: 100 }))
-        .finally(() => {
-          setCodesLoading({ ...codesLoading, [businessVoucherId]: false });
-        });
-    }
-  };
-
-  const handleToggleTemplateIsDisabled = async (currentIsDisabled) => {
-    // Note: updateVoucherTemplateIsDisabledApi and getVoucherByIdApi have been removed
-    console.warn('Toggle template isDisabled functionality has been removed');
-    setTogglingTemplate(false);
-  };
-
-  const handleToggleIsDisabled = async (businessVoucherId, currentIsDisabled) => {
-    // Note: updateBusinessVoucherIsDisabledApi and getBusinessVouchersByVoucherIdApi have been removed
-    console.warn('Toggle business voucher isDisabled functionality has been removed');
-    setTogglingVouchers({ ...togglingVouchers, [businessVoucherId]: false });
-    
-    try {
-      // Reload codes if this business voucher is expanded
-      if (expandedBusinessVoucher === businessVoucherId) {
-        setCodesLoading({ ...codesLoading, [businessVoucherId]: true });
-        await dispatch(getBusinessVoucherCodesApi({ businessVoucherId, page: 1, limit: 100 }));
-        setCodesLoading({ ...codesLoading, [businessVoucherId]: false });
-      }
-    } catch (error) {
-      // Error is handled by the thunk (toast notification)
-      console.error('Failed to toggle isDisabled:', error);
-    } finally {
-      setTogglingVouchers({ ...togglingVouchers, [businessVoucherId]: false });
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -161,7 +86,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
       PaperProps={{
         sx: {
           borderRadius: 3,
-          boxShadow: '0 12px 40px rgba(34, 197, 94, 0.2)',
+            boxShadow: '0 12px 40px rgba(22, 78, 49, 0.2)',
           overflow: 'hidden',
           background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
           maxHeight: '90vh',
@@ -170,7 +95,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
     >
       <DialogTitle
         sx={{
-          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+          background: 'linear-gradient(135deg, #164e31 0%, #0f3d20 100%)',
           color: 'white',
           py: 2,
           px: 3,
@@ -204,7 +129,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+      <DialogContent sx={{ pt: 2, pb: 1.5, px: 2.5, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
         <Grid container spacing={2.5} sx={{ '& .MuiGrid-item': { display: 'flex', alignItems: 'stretch' } }}>
           {/* Thông tin cơ bản */}
           <Grid item xs={12}>
@@ -243,55 +168,7 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
                   </Box>
                 </Grid>
                 
-                {/* Row 2: Display Status for Business (if applicable) */}
-                {voucher.voucherType === 'business' && (
-                  <Grid item xs={12}>
-                    <Box className="voucher-detail-item">
-                      <Typography className="voucher-detail-label">
-                        Display Status for Business
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.5 }}>
-                        <Chip
-                          label={voucher.isDisabled ? 'Disabled' : 'Enabled'}
-                          color={voucher.isDisabled ? 'error' : 'success'}
-                          size="small"
-                          sx={{ minWidth: '80px', fontWeight: 600 }}
-                        />
-                        <Tooltip
-                          title={voucher.isDisabled
-                            ? 'Click to enable voucher (business can view and claim)'
-                            : 'Click to disable voucher (business cannot view and claim)'}
-                          arrow
-                          placement="top"
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                            {togglingTemplate ? (
-                              <CircularProgress size={20} sx={{ color: '#22c55e' }} />
-                            ) : (
-                              <Switch
-                                checked={!voucher.isDisabled}
-                                onChange={() => handleToggleTemplateIsDisabled(voucher.isDisabled)}
-                                size="medium"
-                                color="primary"
-                                disabled={togglingTemplate}
-                                sx={{
-                                  '& .MuiSwitch-switchBase.Mui-checked': {
-                                    color: '#22c55e',
-                                  },
-                                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                    backgroundColor: '#22c55e',
-                                  },
-                                }}
-                              />
-                            )}
-                          </Box>
-                        </Tooltip>
-                      </Box>
-                    </Box>
-                  </Grid>
-                )}
-                
-                {/* Row 3: Description - Full width */}
+                {/* Row 2: Description - Full width */}
                 <Grid item xs={12}>
                   <Box sx={{ 
                     p: 2, 
@@ -476,213 +353,6 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
             </Grid>
           )}
 
-          {/* Business Vouchers List - Only for business type vouchers */}
-          {voucher.voucherType === 'business' && (
-            <Grid item xs={12}>
-              <Box className="voucher-detail-section">
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="h6" className="voucher-detail-section-title" sx={{ mb: 0 }}>
-                    <FaStore style={{ marginRight: '8px' }} />
-                    Business Vouchers ({businessVouchers?.length || 0})
-                  </Typography>
-                  {businessVouchers && businessVouchers.length > 0 && (
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
-                      💡 Use Switch to toggle isDisabled
-                    </Typography>
-                  )}
-                </Box>
-                <Divider sx={{ my: 1.5 }} />
-                {adminLoading && businessVouchers.length === 0 ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                    <CircularProgress size={24} />
-                    <Typography sx={{ ml: 2 }}>Loading business vouchers...</Typography>
-                  </Box>
-                ) : businessVouchers && businessVouchers.length > 0 ? (
-                  <Box sx={{ mt: 2 }}>
-                    {businessVouchers.map((businessVoucher) => {
-                      const businessVoucherId = businessVoucher._id || businessVoucher.id;
-                      const isExpanded = expandedBusinessVoucher === businessVoucherId;
-                      const codes = isExpanded ? businessVoucherCodes : [];
-                      const loadingCodes = codesLoading[businessVoucherId];
-
-                      return (
-                        <Accordion
-                          key={businessVoucherId}
-                          expanded={isExpanded}
-                          onChange={() => handleToggleBusinessVoucher(businessVoucherId)}
-                          sx={{
-                            mb: 1.5,
-                            '&:before': { display: 'none' },
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                            borderRadius: '8px !important',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            sx={{
-                              backgroundColor: isExpanded ? 'rgba(34, 197, 94, 0.05)' : 'transparent',
-                              '&:hover': {
-                                backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                              },
-                              minHeight: '64px',
-                              '& .MuiAccordionSummary-content': {
-                                margin: '12px 0',
-                                alignItems: 'center',
-                              },
-                            }}
-                          >
-                            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 2, gap: 2 }}>
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.5 }}>
-                                  {businessVoucher.businessId?.name || businessVoucher.businessName || 'Business Voucher'}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                  ID: {businessVoucherId}
-                                </Typography>
-                              </Box>
-                              <Box 
-                                sx={{ 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  gap: 1.5,
-                                  flexShrink: 0,
-                                  padding: '4px 8px',
-                                  borderRadius: '8px',
-                                  backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Chip
-                                  label={businessVoucher.isDisabled ? 'Disabled' : 'Enabled'}
-                                  color={businessVoucher.isDisabled ? 'error' : 'success'}
-                                  size="small"
-                                  sx={{ minWidth: '80px', fontWeight: 600 }}
-                                />
-                                <Tooltip 
-                                  title={businessVoucher.isDisabled 
-                                    ? 'Click to enable voucher (business can claim)' 
-                                    : 'Click to disable voucher (business cannot claim)'}
-                                  arrow
-                                  placement="top"
-                                >
-                                  <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                                    {togglingVouchers[businessVoucherId] ? (
-                                      <CircularProgress size={20} sx={{ color: '#22c55e' }} />
-                                    ) : (
-                                      <Switch
-                                        checked={!businessVoucher.isDisabled}
-                                        onChange={() => handleToggleIsDisabled(businessVoucherId, businessVoucher.isDisabled)}
-                                        size="medium"
-                                        color="primary"
-                                        sx={{
-                                          '& .MuiSwitch-switchBase.Mui-checked': {
-                                            color: '#22c55e',
-                                          },
-                                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                            backgroundColor: '#22c55e',
-                                          },
-                                        }}
-                                      />
-                                    )}
-                                  </Box>
-                                </Tooltip>
-                              </Box>
-                            </Box>
-                          </AccordionSummary>
-                          <AccordionDetails>
-                            <Box sx={{ pt: 1 }}>
-                              <Grid container spacing={2} sx={{ mb: 2 }}>
-                                <Grid item xs={12} md={6}>
-                                  <Typography variant="body2" color="text.secondary">
-                                    <strong>Created:</strong> {formatDate(businessVoucher.createdAt)}
-                                  </Typography>
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                  <Typography variant="body2" color="text.secondary">
-                                    <strong>Updated:</strong> {formatDate(businessVoucher.updatedAt)}
-                                  </Typography>
-                                </Grid>
-                              </Grid>
-                              
-                              <Divider sx={{ my: 2 }} />
-                              
-                              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
-                                Voucher Codes ({businessVoucherCodes?.length || 0})
-                              </Typography>
-                              
-                              {loadingCodes ? (
-                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                                  <CircularProgress size={20} />
-                                  <Typography variant="body2" sx={{ ml: 1 }}>Loading codes...</Typography>
-                                </Box>
-                              ) : codes && codes.length > 0 ? (
-                                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 300 }}>
-                                  <Table size="small" stickyHeader>
-                                    <TableHead>
-                                      <TableRow>
-                                        <TableCell><strong>Code</strong></TableCell>
-                                        <TableCell><strong>Status</strong></TableCell>
-                                        <TableCell><strong>Used At</strong></TableCell>
-                                        <TableCell><strong>Created At</strong></TableCell>
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {codes.map((code, index) => (
-                                        <TableRow key={code._id || code.id || index}>
-                                          <TableCell>
-                                            <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                                              {code.code || 'N/A'}
-                                            </Typography>
-                                          </TableCell>
-                                          <TableCell>
-                                            <Chip
-                                              label={code.status || 'N/A'}
-                                              size="small"
-                                              color={code.status === 'used' ? 'success' : code.status === 'expired' ? 'error' : 'default'}
-                                            />
-                                          </TableCell>
-                                          <TableCell>
-                                            <Typography variant="body2" fontSize="0.75rem">
-                                              {code.usedAt ? formatDate(code.usedAt) : 'N/A'}
-                                            </Typography>
-                                          </TableCell>
-                                          <TableCell>
-                                            <Typography variant="body2" fontSize="0.75rem">
-                                              {code.createdAt ? formatDate(code.createdAt) : 'N/A'}
-                                            </Typography>
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </TableContainer>
-                              ) : (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                      No codes available
-                    </Typography>
-                              )}
-                            </Box>
-                          </AccordionDetails>
-                        </Accordion>
-                      );
-                    })}
-                  </Box>
-                ) : (
-                  <Box sx={{ py: 3, textAlign: 'center' }}>
-                    <FaStore style={{ fontSize: '48px', color: '#9ca3af', marginBottom: '12px' }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      No business vouchers available
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      When a business claims this voucher, you will see Switch to toggle isDisabled here
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Grid>
-          )}
-
           {/* Lý do từ chối */}
           {voucher.status === 'expired' && voucher.rejectReason && (
             <Grid item xs={12}>
@@ -709,16 +379,16 @@ const VoucherDetailModal = ({ isOpen, onClose, voucher, isLoading }) => {
           onClick={onClose}
           variant="contained"
           sx={{
-            backgroundColor: '#22c55e',
+            backgroundColor: '#164e31',
             px: 3,
             py: 1,
             fontSize: '0.9375rem',
             fontWeight: 600,
-            boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+            boxShadow: '0 4px 12px rgba(22, 78, 49, 0.35)',
             transition: 'all 0.3s ease',
             '&:hover': {
-              backgroundColor: '#16a34a',
-              boxShadow: '0 6px 16px rgba(34, 197, 94, 0.45)',
+              backgroundColor: '#0f3d20',
+              boxShadow: '0 6px 16px rgba(22, 78, 49, 0.45)',
               transform: 'translateY(-2px)',
             },
           }}

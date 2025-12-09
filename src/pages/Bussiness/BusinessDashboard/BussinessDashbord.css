@@ -451,6 +451,214 @@
   transform: translateX(4px);
 }
 
+/* Top Borrowed Ranking (giống top business admin) */
+.top-ranking-section {
+  margin-top: 32px;
+  background: #f7f7f7;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+}
+
+.ranking-filters-section {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.ranking-filters-section:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  border-color: #12422a;
+}
+
+.ranking-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.ranking-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e5e7eb;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ranking-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #12422a 0%, #10b981 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ranking-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(18, 66, 42, 0.15);
+  border-color: #12422a;
+}
+
+.ranking-card:hover::before {
+  opacity: 1;
+}
+
+.ranking-card.top-rank {
+  border-width: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.ranking-card-rank-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #12422a 0%, #0d2e1c 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(18, 66, 42, 0.3);
+  z-index: 2;
+}
+
+.ranking-card.top-rank .ranking-card-rank-badge {
+  width: 60px;
+  height: 60px;
+  font-size: 22px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.ranking-card-avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.ranking-medal {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 32px;
+  z-index: 3;
+}
+
+.ranking-card-content {
+  text-align: center;
+}
+
+.ranking-card-header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ranking-card-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.ranking-card-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 2px solid #f3f4f6;
+}
+
+.ranking-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.ranking-metric-item:hover {
+  background: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.ranking-metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ranking-metric-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ranking-metric-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ranking-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+@media (max-width: 1200px) {
+  .ranking-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-ranking-section {
+    padding: 20px;
+  }
+
+  .ranking-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .ranking-card {
+    padding: 20px;
+  }
+}
+
 /* Responsive */
 @media (max-width: 1400px) {
   .dashboard-stats {

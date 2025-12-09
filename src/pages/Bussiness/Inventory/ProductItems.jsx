@@ -99,6 +99,48 @@ export default function ProductItems() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [editFormErrors, setEditFormErrors] = useState({});
+  const formatVnd = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+
+  // Modal UI (đồng bộ với style modal admin)
+  const modalPaperSx = {
+    borderRadius: 3.5,
+    boxShadow: '0 24px 70px rgba(0, 0, 0, 0.16)',
+    overflow: 'hidden',
+    background: '#f6f7f9',
+    maxHeight: '90vh',
+  };
+
+  const modalTitleSx = {
+    background: 'linear-gradient(135deg, #12422a 0%, #0b2a1b 100%)',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    py: 1.75,
+    px: 2.25,
+  };
+
+  const modalContentSx = {
+    pt: 2.5,
+    pb: 2,
+    px: 2.75,
+    maxHeight: 'calc(90vh - 220px)',
+    overflowY: 'auto',
+    backgroundColor: '#ffffff',
+    borderRadius: 2,
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 6px 14px rgba(0,0,0,0.06)',
+  };
+
+  const modalActionsSx = {
+    px: 2.5,
+    py: 1.75,
+    gap: 1.25,
+    display: 'flex',
+    justifyContent: 'flex-end',
+    backgroundColor: '#f5f6f7',
+    borderTop: '1px solid #e5e7eb',
+  };
 
   // Get current product group
   const productGroup = productGroups.find(
@@ -160,6 +202,8 @@ export default function ProductItems() {
         }
       }
 
+      const sizeDeposit = product?.productSizeId?.depositValue;
+      const sizeCo2 = product?.productSizeId?.co2Reduced ?? product?.productSizeId?.co2EmissionPerKg;
       return {
         id: product.id || product._id,
         qrCode: product.serialNumber || product.qrCode || 'N/A',
@@ -167,7 +211,8 @@ export default function ProductItems() {
         material: getMaterialName(),
         createdAt: product.createdAt || product.created_at,
         uses: product.useCount || product.uses || 0,
-        deposit: product.deposit || 0,
+        guaranteeFee: product.depositValue ?? sizeDeposit ?? product.deposit ?? 0,
+        co2Reduced: product.co2Reduced ?? product.totalCo2Reduced ?? sizeCo2 ?? 0,
         status: product.status || 'available',
         nonAvailableStatus: product.nonAvailableStatus || null,
         product: product, // Store full product object
@@ -663,7 +708,8 @@ export default function ProductItems() {
                       <TableCell className="table-header-cell">Material</TableCell>
                       <TableCell className="table-header-cell">Created</TableCell>
                       <TableCell className="table-header-cell">Uses</TableCell>
-                      <TableCell className="table-header-cell">Deposit</TableCell>
+                      <TableCell className="table-header-cell">Guarantee fee</TableCell>
+                      <TableCell className="table-header-cell">CO₂ Reduced</TableCell>
                       <TableCell className="table-header-cell">Status</TableCell>
                       <TableCell className="table-header-cell" align="center">Actions</TableCell>
                     </TableRow>
@@ -714,7 +760,12 @@ export default function ProductItems() {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
-                            ${item.deposit?.toFixed(2) || '0.00'}/day
+                            {formatVnd(item.guaranteeFee)} VND
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {Number(item.co2Reduced || 0).toFixed(2)} kg
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -760,31 +811,17 @@ export default function ProductItems() {
               <Dialog
                 open={itemDetailDialogOpen}
                 onClose={() => handleCloseItemDetails()}
-                maxWidth="md"
-                fullWidth
+          maxWidth="sm"
+          fullWidth
                 TransitionProps={{
                   timeout: 400,
                 }}
                 PaperProps={{
-                  sx: {
-                    borderRadius: 3,
-                    boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
-                    overflow: 'hidden',
-                    background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-                    maxHeight: '90vh',
-                  },
+                  sx: modalPaperSx,
                 }}
               >
                 <DialogTitle
-                  sx={{
-                    background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    py: 1.5,
-                    px: 2,
-                  }}
+                  sx={modalTitleSx}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <QrCodeIcon sx={{ fontSize: 28 }} />
@@ -811,24 +848,18 @@ export default function ProductItems() {
                   </IconButton>
                 </DialogTitle>
                 <DialogContent
-                  sx={{
-                    pt: 3,
-                    pb: 2,
-                    px: 3,
-                    maxHeight: 'calc(90vh - 200px)',
-                    overflowY: 'auto',
-                  }}
+                  sx={modalContentSx}
                 >
                   {selectedItem ? (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         <Paper
                           elevation={0}
                           sx={{
-                            p: 3,
-                            borderRadius: 3,
-                            border: '1px solid rgba(76, 175, 80, 0.25)',
-                            background: 'linear-gradient(145deg, #f1fdf4, #ecfdf5)',
+                            p: 2.5,
+                            borderRadius: 2,
+                            border: '1px solid #e5e7eb',
+                            background: '#f8fbf8',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -836,89 +867,86 @@ export default function ProductItems() {
                         >
                           <Box
                             component="img"
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
                               selectedItem.qrCode || ''
                             )}`}
                             alt={`QR Code for ${selectedItem.qrCode}`}
                             sx={{
-                              width: 220,
-                              height: 220,
+                              width: 200,
+                              height: 200,
                               objectFit: 'contain',
-                              borderRadius: 2,
+                              borderRadius: 1.5,
                               backgroundColor: '#fff',
-                              p: 1.5,
-                              border: '1px solid rgba(76, 175, 80, 0.2)',
+                              p: 1.25,
+                              border: '1px solid #e5e7eb',
                             }}
                           />
                         </Paper>
                       </Box>
 
-                      <Divider />
-
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="caption" sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-                            Product Type
-                          </Typography>
-                          <Typography variant="body1" fontWeight={600}>
-                            {productGroup?.name || 'N/A'}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="caption" sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-                            Size
-                          </Typography>
-                          <Typography variant="body1" fontWeight={600}>
-                            {selectedItem.size || 'N/A'}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="caption" sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-                            Material
-                          </Typography>
-                          <Typography variant="body1">
-                            {selectedItem.material || getMaterialName() || 'N/A'}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="caption" sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-                            Created Date
-                          </Typography>
-                          <Typography variant="body1">
-                            {formatDate(selectedItem.createdAt)}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="caption" sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-                            Uses
-                          </Typography>
-                          <Typography variant="body1">
-                            {selectedItem.uses ?? '/'}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="caption" sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-                            Deposit
-                          </Typography>
-                          <Typography variant="body1" sx={{ color: '#16a34a', fontWeight: 600 }}>
-                            ${selectedItem.deposit?.toFixed(2) || '0.00'}/day
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Typography variant="caption" sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-                            Status
-                          </Typography>
-                          <Chip
-                            label={
-                              selectedItem.status === 'available'
-                                ? 'Available'
-                                : getNonAvailableStatusLabel(selectedItem.nonAvailableStatus) || 'Non-available'
-                            }
-                            color={selectedItem.status === 'available' ? 'success' : 'error'}
-                            sx={{ fontWeight: 600, px: 1, py: 0.5 }}
-                          />
-                        </Grid>
-                      </Grid>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                          gap: 1.25,
+                          backgroundColor: '#f8faf9',
+                          borderRadius: 2,
+                          border: '1px solid #e5e7eb',
+                          p: 1.75,
+                        }}
+                      >
+                        {[
+                          { label: 'Product Type', value: productGroup?.name || 'N/A' },
+                          { label: 'Size', value: selectedItem.size || 'N/A' },
+                          { label: 'Material', value: selectedItem.material || getMaterialName() || 'N/A' },
+                          { label: 'Created Date', value: formatDate(selectedItem.createdAt) },
+                          { label: 'Uses', value: selectedItem.uses ?? '/' },
+                          { label: 'Guarantee fee', value: `${formatVnd(selectedItem.guaranteeFee)} VND`, highlight: '#16a34a' },
+                          { label: 'CO₂ Reduced', value: `${Number(selectedItem.co2Reduced || 0).toFixed(2)} kg`, highlight: '#111827' },
+                          {
+                            label: 'Status',
+                            value: (
+                              <Chip
+                                label={
+                                  selectedItem.status === 'available'
+                                    ? 'Available'
+                                    : getNonAvailableStatusLabel(selectedItem.nonAvailableStatus) || 'Non-available'
+                                }
+                                color={selectedItem.status === 'available' ? 'success' : 'error'}
+                                sx={{ fontWeight: 700, px: 1, py: 0.5 }}
+                                size="small"
+                              />
+                            ),
+                          },
+                        ].map((item, idx) => (
+                          <Box
+                            key={idx}
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 0.5,
+                              padding: 1.1,
+                              borderRadius: 1.5,
+                              backgroundColor: 'white',
+                              border: '1px solid #eef2f2',
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 600, letterSpacing: 0.2 }}>
+                              {item.label}
+                            </Typography>
+                            {typeof item.value === 'string' ? (
+                              <Typography
+                                variant="body1"
+                                sx={{ fontWeight: 700, color: item.highlight || '#111827', wordBreak: 'break-word' }}
+                              >
+                                {item.value}
+                              </Typography>
+                            ) : (
+                              item.value
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
                     </Box>
                   ) : (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -927,16 +955,7 @@ export default function ProductItems() {
                   )}
                 </DialogContent>
                 <Divider sx={{ mx: 0, my: 0 }} />
-                <DialogActions
-                  sx={{
-                    px: 2,
-                    py: 1.5,
-                    gap: 2,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    backgroundColor: 'rgba(76, 175, 80, 0.02)',
-                  }}
-                >
+                <DialogActions sx={modalActionsSx}>
                   <Button
                     onClick={() => handleCloseItemDetails()}
                     variant="outlined"
@@ -969,14 +988,15 @@ export default function ProductItems() {
                       }}
                       sx={{
                         textTransform: 'none',
-                        fontWeight: 600,
-                        px: 2.5,
-                        py: 0.75,
-                        background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-                        boxShadow: '0 8px 20px rgba(76, 175, 80, 0.15)',
+                        fontWeight: 700,
+                        px: 2.4,
+                        py: 0.9,
+                        background: 'linear-gradient(135deg, #12422a 0%, #0b2a1b 100%)',
+                        boxShadow: '0 6px 16px rgba(18, 66, 42, 0.35)',
+                        borderRadius: 2,
                         '&:hover': {
-                          background: 'linear-gradient(135deg, #43A047 0%, #1B5E20 100%)',
-                          boxShadow: '0 10px 24px rgba(76, 175, 80, 0.25)',
+                          background: 'linear-gradient(135deg, #0f3d26 0%, #082018 100%)',
+                          boxShadow: '0 8px 18px rgba(18, 66, 42, 0.45)',
                         },
                       }}
                     >
@@ -1071,17 +1091,44 @@ export default function ProductItems() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete item "{selectedItem?.qrCode}"? This action cannot be undone.
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: modalPaperSx,
+        }}
+      >
+        <DialogTitle sx={modalTitleSx}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DeleteIcon />
+            <Typography variant="subtitle1" fontWeight={700}>
+              Confirm Delete
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={() => setOpenDeleteDialog(false)}
+            size="small"
+            sx={{
+              color: 'white',
+              '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
+          <Typography sx={{ color: '#374151', lineHeight: 1.6 }}>
+            Bạn có chắc chắn muốn xóa item "{selectedItem?.qrCode}"? Thao tác này không thể hoàn tác.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error">
-            Delete
+        <DialogActions sx={modalActionsSx}>
+          <Button variant="outlined" onClick={() => setOpenDeleteDialog(false)} sx={{ textTransform: 'none' }}>
+            Hủy
+          </Button>
+          <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ textTransform: 'none' }}>
+            Xóa
           </Button>
         </DialogActions>
       </Dialog>
@@ -1090,31 +1137,17 @@ export default function ProductItems() {
       <Dialog
         open={openAddDialog}
         onClose={handleCloseAddDialog}
-        maxWidth="md"
-        fullWidth
+          maxWidth="sm"
+          fullWidth
         TransitionProps={{
           timeout: 400,
         }}
         PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
-            overflow: 'hidden',
-            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-            maxHeight: '90vh'
-          }
+          sx: modalPaperSx
         }}
       >
         <DialogTitle
-          sx={{
-            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-            color: 'white',
-            py: 1.5,
-            px: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
+          sx={modalTitleSx}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <AddIcon sx={{ fontSize: 28 }} />
@@ -1142,7 +1175,7 @@ export default function ProductItems() {
         </DialogTitle>
 
         <form onSubmit={handleSubmitCreateProducts}>
-          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+          <DialogContent sx={{ ...modalContentSx, maxHeight: 'calc(90vh - 180px)' }}>
             <Grid container spacing={2}>
               {/* Product Type Details */}
               <Grid item xs={12}>
@@ -1436,16 +1469,7 @@ export default function ProductItems() {
 
           <Divider />
 
-          <DialogActions
-            sx={{
-              px: 2,
-              py: 1.5,
-              gap: 2,
-              backgroundColor: 'rgba(76, 175, 80, 0.02)',
-              display: 'flex',
-              justifyContent: 'space-between'
-            }}
-          >
+          <DialogActions sx={modalActionsSx}>
             <Button
               onClick={handleCloseAddDialog}
               variant="outlined"
@@ -1474,21 +1498,24 @@ export default function ProductItems() {
               startIcon={<AddIcon fontSize="small" />}
               disabled={productLoading}
               sx={{
-                backgroundColor: '#4CAF50',
-                px: 2,
-                py: 0.75,
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)',
-                transition: 'all 0.3s ease',
+                background: 'linear-gradient(135deg, #12422a 0%, #0b2a1b 100%)',
+                px: 2.4,
+                py: 0.9,
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                boxShadow: '0 6px 16px rgba(18, 66, 42, 0.35)',
+                borderRadius: 2,
+                transition: 'all 0.25s ease',
+                textTransform: 'none',
                 '&:hover': {
-                  backgroundColor: '#388E3C',
-                  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.45)',
-                  transform: 'translateY(-2px)',
+                  background: 'linear-gradient(135deg, #0f3d26 0%, #082018 100%)',
+                  boxShadow: '0 8px 18px rgba(18, 66, 42, 0.45)',
+                  transform: 'translateY(-1px)',
                 },
                 '&:disabled': {
                   backgroundColor: '#d1d5db',
                   color: '#9ca3af',
+                  boxShadow: 'none',
                 }
               }}
               size="small"
@@ -1516,25 +1543,11 @@ export default function ProductItems() {
           timeout: 400,
         }}
         PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 12px 40px rgba(46, 125, 50, 0.2)',
-            overflow: 'hidden',
-            background: 'linear-gradient(to bottom, #ffffff 0%, #f9fdf9 100%)',
-            maxHeight: '90vh'
-          }
+          sx: modalPaperSx
         }}
       >
         <DialogTitle
-          sx={{
-            background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-            color: 'white',
-            py: 1.5,
-            px: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
+          sx={modalTitleSx}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <EditIcon sx={{ fontSize: 28 }} />
@@ -1562,7 +1575,7 @@ export default function ProductItems() {
         </DialogTitle>
 
         <form onSubmit={handleSubmitEdit}>
-          <DialogContent sx={{ pt: 3, pb: 2, px: 3, maxHeight: 'calc(90vh - 200px)', overflowY: 'auto' }}>
+          <DialogContent sx={{ ...modalContentSx, maxHeight: 'calc(90vh - 180px)' }}>
             {editingItem && (
               <Grid container spacing={2}>
                 {/* Product Info */}
@@ -1794,16 +1807,7 @@ export default function ProductItems() {
 
           <Divider />
 
-          <DialogActions
-            sx={{
-              px: 2,
-              py: 1.5,
-              gap: 2,
-              backgroundColor: 'rgba(76, 175, 80, 0.02)',
-              display: 'flex',
-              justifyContent: 'space-between'
-            }}
-          >
+          <DialogActions sx={modalActionsSx}>
             <Button
               onClick={handleCloseEditDialog}
               variant="outlined"

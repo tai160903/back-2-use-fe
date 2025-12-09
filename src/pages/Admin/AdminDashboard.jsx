@@ -22,6 +22,7 @@ import {
 } from 'react-icons/fa';
 import { IoMdTrendingUp, IoMdTrendingDown } from 'react-icons/io';
 import { MdDashboard } from 'react-icons/md';
+import { MdExpandMore, MdChevronRight } from 'react-icons/md';
 import { 
   getAdminDashboardOverviewApi,
   getBorrowTransactionsMonthlyApi,
@@ -32,7 +33,7 @@ import {
   getWalletTransactionsApi,
   getWalletTransactionsByMonthApi
 } from '../../store/slices/adminSlice';
-import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Rating, Avatar, Chip } from '@mui/material';
+import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Rating, Avatar, Chip, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import {
   LineChart,
   Line,
@@ -52,6 +53,17 @@ import {
 } from 'recharts';
 import './AdminDashboard.css';
 import { PATH } from '../../routes/path';
+
+const dashboardSubItems = [
+  { id: "borrow-transactions", label: "Borrow Transactions Statistics", path: PATH.ADMIN_DASHBOARD_BORROW_TRANSACTIONS, icon: <FaExchangeAlt /> },
+  { id: "business-monthly", label: "Business Monthly Statistics", path: PATH.ADMIN_DASHBOARD_BUSINESS_MONTHLY, icon: <FaStore /> },
+  { id: "wallet-overview", label: "Wallet Overview", path: PATH.ADMIN_DASHBOARD_WALLET_OVERVIEW, icon: <FaWallet /> },
+  { id: "wallet-transactions-monthly", label: "Wallet Transactions Monthly", path: PATH.ADMIN_DASHBOARD_WALLET_TRANSACTIONS_MONTHLY, icon: <FaWallet /> },
+  { id: "top-businesses", label: "Top Businesses", path: PATH.ADMIN_DASHBOARD_TOP_BUSINESSES, icon: <FaStore /> },
+  { id: "top-customers", label: "Top Customers", path: PATH.ADMIN_DASHBOARD_TOP_CUSTOMERS, icon: <FaUsers /> },
+  { id: "charts", label: "Charts & Analytics", path: PATH.ADMIN_DASHBOARD_CHARTS, icon: <FaChartLine /> },
+  { id: "quick-actions", label: "Quick Actions", path: PATH.ADMIN_DASHBOARD_QUICK_ACTIONS, icon: <FaClipboardList /> },
+];
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -91,6 +103,51 @@ const AdminDashboard = () => {
     direction: '',
     status: ''
   });
+
+  // Accordion expanded states
+  const [expandedSections, setExpandedSections] = useState({
+    overview: true,
+    borrowTransactions: false,
+    businessMonthly: false,
+    walletOverview: false,
+    walletTransactionsMonthly: false,
+    topBusinesses: false,
+    topCustomers: false,
+    charts: false,
+    quickActions: false
+  });
+
+  const handleAccordionChange = (section) => (event, isExpanded) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: isExpanded
+    }));
+  };
+
+  // Listen for expand section event from sidebar
+  useEffect(() => {
+    const handleExpandSection = (event) => {
+      const { section } = event.detail;
+      if (section && expandedSections.hasOwnProperty(section)) {
+        setExpandedSections(prev => ({
+          ...prev,
+          [section]: true
+        }));
+        // Scroll to section after a short delay
+        setTimeout(() => {
+          const accordionElement = document.querySelector(`[data-section="${section}"]`);
+          if (accordionElement) {
+            accordionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      }
+    };
+
+    window.addEventListener('expandDashboardSection', handleExpandSection);
+    return () => {
+      window.removeEventListener('expandDashboardSection', handleExpandSection);
+    };
+  }, [expandedSections]);
   
   // Get dashboard data from Redux store
   const { 
@@ -498,13 +555,67 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Dashboard Overview */}
+      {/* Dashboard Overview Accordion */}
+      <Accordion 
+        expanded={expandedSections.overview} 
+        onChange={handleAccordionChange('overview')}
+        sx={{
+          mb: 2,
+          borderRadius: '12px !important',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e5e7eb',
+          '&:before': { display: 'none' },
+          '&.Mui-expanded': {
+            margin: '0 0 16px 0',
+          }
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<MdExpandMore style={{ color: '#164e31', fontSize: '24px' }} />}
+          sx={{
+            backgroundColor: '#f9fafb',
+            borderRadius: '12px',
+            minHeight: '64px',
+            '&.Mui-expanded': {
+              minHeight: '64px',
+              borderBottom: '1px solid #e5e7eb',
+            },
+            '& .MuiAccordionSummary-content': {
+              margin: '12px 0',
+              alignItems: 'center',
+            }
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+            <Box sx={{ 
+              width: 40, 
+              height: 40, 
+              borderRadius: '10px', 
+              background: 'linear-gradient(135deg, #164e31 0%, #0f3d20 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white'
+            }}>
+              <MdDashboard style={{ fontSize: '20px' }} />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '18px' }}>
+                Dashboard Overview
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '14px' }}>
+                Key statistics and metrics
+              </Typography>
+            </Box>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>
       {dashboardLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
           <CircularProgress />
         </Box>
       ) : dashboardOverview ? (
-        <div className="dashboard-overview-container">
+            <div className="dashboard-overview-container" style={{ padding: '24px' }}>
           {/* Key Statistics Cards - 5 Cards Only */}
           <div className="stats-grid">
             {/* Card 1: Gradient Card - Users */}
@@ -758,1559 +869,56 @@ const AdminDashboard = () => {
           <Typography>No data available</Typography>
         </Box>
       )}
+        </AccordionDetails>
+      </Accordion>
 
-      {/* Borrow Transactions Statistics Section */}
-      <div className="borrow-transactions-section">
-          <div className="borrow-section-header">
-            <div>
-              <h2 className="borrow-section-title">Borrow Transactions Statistics</h2>
-            </div>
-          </div>
-
-          {/* Filters Section */}
-          <div className="borrow-filters-section">
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
-              Filters
+      {/* Dashboard Navigation Cards */}
+      <div className="dashboard-navigation-section">
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 3, fontSize: '24px' }}>
+          Dashboard Sections
             </Typography>
-            <Grid container spacing={2} alignItems="flex-start">
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth>
-                  <TextField
-                    label="Year to Filter"
-                    type="number"
-                    value={borrowFilters.year}
-                    onChange={(e) => setBorrowFilters({ ...borrowFilters, year: parseInt(e.target.value) || new Date().getFullYear() })}
-                    variant="outlined"
-                    size="small"
-                    helperText="Filter by year"
-                    inputProps={{ min: 2000, max: 2100 }}
+        <div className="dashboard-cards-grid">
+          {dashboardSubItems.map((item) => (
+            <Box
+              key={item.id}
+              className="dashboard-nav-card"
+              onClick={() => navigate(item.path)}
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                        borderRadius: '10px',
+                cursor: 'pointer',
                         transition: 'all 0.3s ease',
-                        '&:hover fieldset': {
-                          borderColor: '#10b981',
-                          borderWidth: '2px',
-                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#10b981',
-                          borderWidth: '2px',
-                          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontWeight: 600,
-                        color: '#4b5563',
-                        '&.Mui-focused': {
-                          color: '#10b981',
-                          fontWeight: 700,
-                        },
-                      },
-                      '& .MuiFormHelperText-root': {
-                        color: '#6b7280',
-                        fontSize: '0.75rem',
-                        marginTop: '4px',
-                      },
-                    }}
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth size="small" variant="outlined">
-                  <InputLabel 
-                    id="borrow-type-filter-label"
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 8px 24px rgba(22, 78, 49, 0.15)',
+                }
+              }}
+            >
+              <Box
                     sx={{
-                      backgroundColor: 'white',
-                      px: 0.5,
-                    }}
-                  >
-                    Filter by Transaction Type
-                  </InputLabel>
-                  <Select
-                    labelId="borrow-type-filter-label"
-                    value={borrowFilters.type}
-                    onChange={(e) => setBorrowFilters({ ...borrowFilters, type: e.target.value })}
-                    label="Filter by Transaction Type"
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 300,
-                          zIndex: 1300
-                        }
-                      },
-                      style: {
-                        zIndex: 1300
-                      }
-                    }}
-                    sx={{
-                      backgroundColor: 'white',
-                      borderRadius: '10px',
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#10b981',
-                        borderWidth: '2px',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#10b981',
-                        borderWidth: '2px',
-                      },
-                      '& .MuiSelect-select': {
-                        py: 1.25,
-                        fontWeight: 500,
-                      },
-                    }}
-                  >
-                    <MenuItem value="">All Types</MenuItem>
-                    <MenuItem value="borrow">borrow</MenuItem>
-                    <MenuItem value="return_success">return_success</MenuItem>
-                    <MenuItem value="return_failed">return_failed</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth size="small" variant="outlined">
-                  <InputLabel 
-                    id="borrow-status-filter-label"
-                    sx={{
-                      backgroundColor: 'white',
-                      px: 0.5,
-                    }}
-                  >
-                    Filter by Transaction Status
-                  </InputLabel>
-                  <Select
-                    labelId="borrow-status-filter-label"
-                    value={borrowFilters.status}
-                    onChange={(e) => setBorrowFilters({ ...borrowFilters, status: e.target.value })}
-                    label="Filter by Transaction Status"
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 300,
-                          zIndex: 1300
-                        }
-                      },
-                      style: {
-                        zIndex: 1300
-                      }
-                    }}
-                    sx={{
-                      backgroundColor: 'white',
-                      borderRadius: '10px',
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#10b981',
-                        borderWidth: '2px',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#10b981',
-                        borderWidth: '2px',
-                      },
-                      '& .MuiSelect-select': {
-                        py: 1.25,
-                        fontWeight: 500,
-                      },
-                    }}
-                  >
-                    <MenuItem value="">All Statuses</MenuItem>
-                    <MenuItem value="pending_pickup">pending_pickup</MenuItem>
-                    <MenuItem value="borrowing">borrowing</MenuItem>
-                    <MenuItem value="returned">returned</MenuItem>
-                    <MenuItem value="return_late">return_late</MenuItem>
-                    <MenuItem value="rejected">rejected</MenuItem>
-                    <MenuItem value="cancelled">cancelled</MenuItem>
-                    <MenuItem value="lost">lost</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </div>
-
-          <div className="borrow-transactions-content">
-            {/* Chart Card */}
-            <div className="borrow-chart-card">
-              <div className="chart-header">
-                <h3 className="chart-title">Monthly Transaction Count</h3>
-                <p className="chart-subtitle">Number of borrow transactions per month</p>
-              </div>
-              {isLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px' }}>
-                  <CircularProgress size={40} />
-                </Box>
-              ) : borrowTransactionsChartData && borrowTransactionsChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={borrowTransactionsChartData}>
-                    <defs>
-                      <linearGradient id="colorBorrowTransactions" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.2}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="month" 
-                      stroke="#6b7280"
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
-                    />
-                    <YAxis 
-                      stroke="#6b7280"
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
-                      label={{ value: 'Number of Transactions', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                      }}
-                      formatter={(value) => [value, 'Transactions']}
-                      labelFormatter={(label) => `Month: ${label}`}
-                    />
-                    <Bar 
-                      dataKey="count" 
-                      fill="url(#colorBorrowTransactions)" 
-                      radius={[8, 8, 0, 0]}
-                      name="Transactions"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px' }}>
-                  <Typography color="text.secondary">No data available</Typography>
-                </Box>
-              )}
-            </div>
-
-                {/* Totals Cards */}
-            {borrowTransactionsMonthly?.totals && (
-              <div className="borrow-totals-grid">
-                {/* Reward Points Card */}
-                <div className="borrow-total-card">
-                  <div className="total-card-icon" style={{ backgroundColor: '#3b82f615', color: '#3b82f6' }}>
-                    <FaCoins />
-                  </div>
-                  <div className="total-card-content">
-                    <h4 className="total-card-label">Total Reward Points</h4>
-                    <p className="total-card-value">
-                      {borrowTransactionsMonthly.totals.totalRewardPoints?.toLocaleString() || 0}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Ranking Points Card */}
-                <div className="borrow-total-card">
-                  <div className="total-card-icon" style={{ backgroundColor: '#8b5cf615', color: '#8b5cf6' }}>
-                    <FaCrown />
-                  </div>
-                  <div className="total-card-content">
-                    <h4 className="total-card-label">Total Ranking Points</h4>
-                    <p className="total-card-value">
-                      {borrowTransactionsMonthly.totals.totalRankingPoints?.toLocaleString() || 0}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Eco Points Card */}
-                <div className="borrow-total-card">
-                  <div className="total-card-icon" style={{ backgroundColor: '#10b98115', color: '#10b981' }}>
-                    <FaLeaf />
-                  </div>
-                  <div className="total-card-content">
-                    <h4 className="total-card-label">Total Eco Points</h4>
-                    <p className="total-card-value">
-                      {borrowTransactionsMonthly.totals.totalEcoPoints?.toLocaleString('en-US', { maximumFractionDigits: 1 }) || 0}
-                    </p>
-                  </div>
-                </div>
-
-                {/* CO2 Reduced Card */}
-                <div className="borrow-total-card">
-                  <div className="total-card-icon" style={{ backgroundColor: '#f59e0b15', color: '#f59e0b' }}>
-                    <FaRecycle />
-                  </div>
-                  <div className="total-card-content">
-                    <h4 className="total-card-label">Total CO₂ Reduced</h4>
-                    <p className="total-card-value">
-                      {borrowTransactionsMonthly.totals.totalCo2Reduced?.toFixed(2) || 0} kg
-                    </p>
-                  </div>
-                </div>
-
-                {/* Deposit Amount Card */}
-                <div className="borrow-total-card">
-                  <div className="total-card-icon" style={{ backgroundColor: '#12422a15', color: '#12422a' }}>
-                    <FaMoneyBillWave />
-                  </div>
-                  <div className="total-card-content">
-                    <h4 className="total-card-label">Total Deposit Amount</h4>
-                    <p className="total-card-value">
-                      {formatMoney(borrowTransactionsMonthly.totals.totalDepositAmount || 0)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-      {/* Business Monthly Statistics Section */}
-      <div className="business-monthly-section">
-        <div className="business-monthly-header">
-          <div>
-            <h2 className="business-monthly-title">Business Monthly Statistics</h2>
-          </div>
-        </div>
-
-        {/* Year Filter Section */}
-        <div className="business-monthly-filter-section">
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
-            Filter
-          </Typography>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <TextField
-                  label="Year to Filter"
-                  type="number"
-                  value={businessMonthlyYear}
-                  onChange={(e) => setBusinessMonthlyYear(parseInt(e.target.value) || new Date().getFullYear())}
-                  variant="outlined"
-                  size="small"
-                  helperText="Filter by year"
-                  inputProps={{ min: 2000, max: 2100 }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: '10px',
-                      transition: 'all 0.3s ease',
-                      '&:hover fieldset': {
-                        borderColor: '#12422a',
-                        borderWidth: '2px',
-                        boxShadow: '0 2px 8px rgba(18, 66, 42, 0.15)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#12422a',
-                        borderWidth: '2px',
-                        boxShadow: '0 4px 12px rgba(18, 66, 42, 0.25)',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontWeight: 600,
-                      color: '#4b5563',
-                      '&.Mui-focused': {
-                        color: '#12422a',
-                        fontWeight: 700,
-                      },
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#6b7280',
-                      fontSize: '0.75rem',
-                      marginTop: '4px',
-                    },
-                  }}
-                />
-              </FormControl>
-            </Grid>
-          </Grid>
-        </div>
-
-        <div className="business-monthly-content">
-          {/* Chart Card */}
-          <div className="business-monthly-chart-card">
-              <div className="chart-header">
-                <h3 className="chart-title">Monthly Business Registration Count</h3>
-                <p className="chart-subtitle">Number of businesses registered per month</p>
-              </div>
-              {isLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px' }}>
-                  <CircularProgress size={40} />
-                </Box>
-              ) : businessMonthlyChartData && businessMonthlyChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={businessMonthlyChartData}>
-                    <defs>
-                      <linearGradient id="colorBusinessMonthly" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#12422a" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#12422a" stopOpacity={0.2}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="month" 
-                      stroke="#6b7280"
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
-                    />
-                    <YAxis 
-                      stroke="#6b7280"
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
-                      label={{ value: 'Number of Businesses', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                      }}
-                      formatter={(value) => [value, 'Businesses']}
-                      labelFormatter={(label) => `Month: ${label}`}
-                    />
-                    <Bar 
-                      dataKey="count" 
-                      fill="url(#colorBusinessMonthly)" 
-                      radius={[8, 8, 0, 0]}
-                      name="Businesses"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px' }}>
-                  <Typography color="text.secondary">No data available</Typography>
-                </Box>
-              )}
-            </div>
-        </div>
-      </div>
-
-      {/* Wallet Overview Section */}
-      <div className="wallet-overview-section">
-        <div className="wallet-overview-header">
-          <div>
-            <h2 className="wallet-overview-title">
-              <FaWallet style={{ marginRight: '12px', color: '#10b981' }} />
-              Wallet Overview
-            </h2>
-          </div>
-        </div>
-
-        {isLoading && !walletTransactions ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-            <CircularProgress size={50} />
-          </Box>
-        ) : (() => {
-          // Handle different data structures
-          // API response: { status, message, data: { totalTopUp, ... } }
-          // Redux stores: payload.data || payload
-          // So walletTransactions could be either:
-          // 1. { totalTopUp, totalWithdraw, ... } (if payload.data exists)
-          // 2. { status, message, data: {...} } (if payload is stored directly)
-          
-          let walletData = null;
-          
-          if (walletTransactions) {
-            // Check if it has the nested data structure
-            if (walletTransactions.data && typeof walletTransactions.data === 'object' && walletTransactions.data.totalTopUp !== undefined) {
-              walletData = walletTransactions.data;
-            } 
-            // Check if it's the direct data structure
-            else if (walletTransactions.totalTopUp !== undefined) {
-              walletData = walletTransactions;
-            }
-            // Try to find data in other possible locations
-            else if (walletTransactions.data) {
-              walletData = walletTransactions.data;
-            } else {
-              walletData = walletTransactions;
-            }
-          }
-          
-          // Check if walletData exists and has at least one valid property
-          if (!walletData || typeof walletData !== 'object') {
-            return (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', backgroundColor: 'white', borderRadius: '16px', border: '2px dashed #e5e7eb' }}>
-                <Typography color="text.secondary" sx={{ fontSize: '16px' }}>No wallet data available</Typography>
-              </Box>
-            );
-          }
-
-          return (
-            <div className="wallet-overview-grid">
-              <div className="wallet-metric-card wallet-card-primary">
-                <div className="wallet-metric-icon">
-                  <FaMoneyBillWave />
-                </div>
-                <div className="wallet-metric-content">
-                  <h4 className="wallet-metric-label">Total Top Up</h4>
-                  <p className="wallet-metric-value">{formatMoney(walletData.totalTopUp || 0)}</p>
-                  <div className="wallet-metric-trend">
-                    <FaArrowRight style={{ fontSize: '12px' }} />
-                    <span>Income</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="wallet-metric-card wallet-card-warning">
-                <div className="wallet-metric-icon">
-                  <FaExchangeAlt />
-                </div>
-                <div className="wallet-metric-content">
-                  <h4 className="wallet-metric-label">Total Withdraw</h4>
-                  <p className="wallet-metric-value">{formatMoney(walletData.totalWithdraw || 0)}</p>
-                  <div className="wallet-metric-trend">
-                    <FaArrowRight style={{ fontSize: '12px' }} />
-                    <span>Outgoing</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="wallet-metric-card wallet-card-info">
-                <div className="wallet-metric-icon">
-                  <FaCoins />
-                </div>
-                <div className="wallet-metric-content">
-                  <h4 className="wallet-metric-label">Total Deposit</h4>
-                  <p className="wallet-metric-value">{formatMoney(walletData.totalDeposit || 0)}</p>
-                  <div className="wallet-metric-trend">
-                    <FaArrowRight style={{ fontSize: '12px' }} />
-                    <span>Security</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="wallet-metric-card wallet-card-purple">
-                <div className="wallet-metric-icon">
-                  <FaMoneyBillWave />
-                </div>
-                <div className="wallet-metric-content">
-                  <h4 className="wallet-metric-label">Total Refund</h4>
-                  <p className="wallet-metric-value">{formatMoney(walletData.totalRefund || 0)}</p>
-                  <div className="wallet-metric-trend">
-                    <FaArrowRight style={{ fontSize: '12px' }} />
-                    <span>Returned</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="wallet-metric-card wallet-card-pink">
-                <div className="wallet-metric-icon">
-                  <FaWallet />
-                </div>
-                <div className="wallet-metric-content">
-                  <h4 className="wallet-metric-label">Total Subscription Fee</h4>
-                  <p className="wallet-metric-value">{formatMoney(walletData.totalSubscriptionFee || 0)}</p>
-                  <div className="wallet-metric-trend">
-                    <FaArrowRight style={{ fontSize: '12px' }} />
-                    <span>Service</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="wallet-metric-card wallet-card-danger">
-                <div className="wallet-metric-icon">
-                  <FaMoneyBillWave />
-                </div>
-                <div className="wallet-metric-content">
-                  <h4 className="wallet-metric-label">Total Penalty</h4>
-                  <p className="wallet-metric-value">{formatMoney(walletData.totalPenalty || 0)}</p>
-                  <div className="wallet-metric-trend">
-                    <FaArrowRight style={{ fontSize: '12px' }} />
-                    <span>Fine</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="wallet-metric-card wallet-card-dark">
-                <div className="wallet-metric-icon">
-                  <FaMoneyBillWave />
-                </div>
-                <div className="wallet-metric-content">
-                  <h4 className="wallet-metric-label">Total Forfeited</h4>
-                  <p className="wallet-metric-value">{formatMoney(walletData.totalForfeited || 0)}</p>
-                  <div className="wallet-metric-trend">
-                    <FaArrowRight style={{ fontSize: '12px' }} />
-                    <span>Lost</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* Wallet Transactions Monthly Statistics Section */}
-      <div className="wallet-transactions-monthly-section">
-        <div className="wallet-transactions-monthly-header">
-          <div>
-            <h2 className="wallet-transactions-monthly-title">Wallet Transactions Monthly Statistics</h2>
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        <div className="wallet-transactions-filters-section">
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
-            Filters
-          </Typography>
-          <Grid container spacing={2} alignItems="flex-start">
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth>
-                <TextField
-                  label="Year to Filter"
-                  type="number"
-                  value={walletTransactionsFilters.year}
-                  onChange={(e) => setWalletTransactionsFilters({ ...walletTransactionsFilters, year: parseInt(e.target.value) || new Date().getFullYear() })}
-                  variant="outlined"
-                  size="small"
-                  helperText="Filter by year"
-                  inputProps={{ min: 2000, max: 2100 }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: '10px',
-                      transition: 'all 0.3s ease',
-                      '&:hover fieldset': {
-                        borderColor: '#10b981',
-                        borderWidth: '2px',
-                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#10b981',
-                        borderWidth: '2px',
-                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontWeight: 600,
-                      color: '#4b5563',
-                      '&.Mui-focused': {
-                        color: '#10b981',
-                        fontWeight: 700,
-                      },
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#6b7280',
-                      fontSize: '0.75rem',
-                      marginTop: '4px',
-                    },
-                  }}
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel 
-                  id="wallet-transaction-type-filter-label"
-                  sx={{
-                    backgroundColor: 'white',
-                    px: 0.5,
-                  }}
-                >
-                  Transaction Type
-                </InputLabel>
-                <Select
-                  labelId="wallet-transaction-type-filter-label"
-                  value={walletTransactionsFilters.transactionType}
-                  onChange={(e) => setWalletTransactionsFilters({ ...walletTransactionsFilters, transactionType: e.target.value })}
-                  label="Transaction Type"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        zIndex: 1300
-                      }
-                    },
-                    style: {
-                      zIndex: 1300
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981',
-                      borderWidth: '2px',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiSelect-select': {
-                      py: 1.25,
-                      fontWeight: 500,
-                    },
-                  }}
-                >
-                  <MenuItem value="">All Types</MenuItem>
-                  <MenuItem value="top_up">top_up</MenuItem>
-                  <MenuItem value="withdrawal">withdrawal</MenuItem>
-                  <MenuItem value="borrow_deposit">borrow_deposit</MenuItem>
-                  <MenuItem value="return_refund">return_refund</MenuItem>
-                  <MenuItem value="subscription_fee">subscription_fee</MenuItem>
-                  <MenuItem value="penalty">penalty</MenuItem>
-                  <MenuItem value="deposit_forfeited">deposit_forfeited</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel 
-                  id="wallet-direction-filter-label"
-                  sx={{
-                    backgroundColor: 'white',
-                    px: 0.5,
-                  }}
-                >
-                  Direction
-                </InputLabel>
-                <Select
-                  labelId="wallet-direction-filter-label"
-                  value={walletTransactionsFilters.direction}
-                  onChange={(e) => setWalletTransactionsFilters({ ...walletTransactionsFilters, direction: e.target.value })}
-                  label="Direction"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        zIndex: 1300
-                      }
-                    },
-                    style: {
-                      zIndex: 1300
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981',
-                      borderWidth: '2px',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiSelect-select': {
-                      py: 1.25,
-                      fontWeight: 500,
-                    },
-                  }}
-                >
-                  <MenuItem value="">All Directions</MenuItem>
-                  <MenuItem value="in">in</MenuItem>
-                  <MenuItem value="out">out</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel 
-                  id="wallet-status-filter-label"
-                  sx={{
-                    backgroundColor: 'white',
-                    px: 0.5,
-                  }}
-                >
-                  Status
-                </InputLabel>
-                <Select
-                  labelId="wallet-status-filter-label"
-                  value={walletTransactionsFilters.status}
-                  onChange={(e) => setWalletTransactionsFilters({ ...walletTransactionsFilters, status: e.target.value })}
-                  label="Status"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        zIndex: 1300
-                      }
-                    },
-                    style: {
-                      zIndex: 1300
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981',
-                      borderWidth: '2px',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10b981',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiSelect-select': {
-                      py: 1.25,
-                      fontWeight: 500,
-                    },
-                  }}
-                >
-                  <MenuItem value="">All Statuses</MenuItem>
-                  <MenuItem value="processing">processing</MenuItem>
-                  <MenuItem value="completed">completed</MenuItem>
-                  <MenuItem value="failed">failed</MenuItem>
-                  <MenuItem value="expired">expired</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </div>
-
-        <div className="wallet-transactions-monthly-content">
-          {/* Chart Card */}
-          <div className="wallet-transactions-monthly-chart-card">
-            <div className="chart-header">
-              <h3 className="chart-title">Monthly Wallet Transactions Count</h3>
-              <p className="chart-subtitle">Number of wallet transactions per month</p>
-            </div>
-            {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px' }}>
-                <CircularProgress size={40} />
-              </Box>
-            ) : walletTransactionsMonthlyChartData && walletTransactionsMonthlyChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={walletTransactionsMonthlyChartData}>
-                  <defs>
-                    <linearGradient id="colorWalletTransactions" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.2}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="month" 
-                    stroke="#6b7280"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    stroke="#6b7280"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                    label={{ value: 'Number of Transactions', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                    }}
-                    formatter={(value) => [value, 'Transactions']}
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
-                  <Bar 
-                    dataKey="count" 
-                    fill="url(#colorWalletTransactions)" 
-                    radius={[8, 8, 0, 0]}
-                    name="Transactions"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px' }}>
-                <Typography color="text.secondary">No data available</Typography>
-              </Box>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Top Businesses Section */}
-      <div className="top-ranking-section">
-        <div className="top-ranking-header">
-          <div>
-            <h2 className="top-ranking-title">
-              <FaStore style={{ marginRight: '12px', color: '#12422a' }} />
-              Top Businesses
-            </h2>
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        <div className="ranking-filters-section">
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
-            Filters
-          </Typography>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <TextField
-                  label="Top N Businesses"
-                  type="number"
-                  value={businessFilters.top}
-                  onChange={(e) => setBusinessFilters({ ...businessFilters, top: parseInt(e.target.value) || 5 })}
-                  variant="outlined"
-                  size="small"
-                  inputProps={{ min: 1, max: 50 }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: '10px',
-                      transition: 'all 0.3s ease',
-                      '&:hover fieldset': {
-                        borderColor: '#12422a',
-                        borderWidth: '2px',
-                        boxShadow: '0 2px 8px rgba(18, 66, 42, 0.15)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#12422a',
-                        borderWidth: '2px',
-                        boxShadow: '0 4px 12px rgba(18, 66, 42, 0.25)',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontWeight: 600,
-                      color: '#4b5563',
-                      '&.Mui-focused': {
-                        color: '#12422a',
-                        fontWeight: 700,
-                      },
-                    },
-                  }}
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel 
-                  sx={{
-                    backgroundColor: 'white',
-                    px: 0.5,
-                  }}
-                >
-                  Sort By
-                </InputLabel>
-                <Select
-                  value={businessFilters.sortBy}
-                  onChange={(e) => setBusinessFilters({ ...businessFilters, sortBy: e.target.value })}
-                  label="Sort By"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        zIndex: 1300
-                      }
-                    },
-                    style: {
-                      zIndex: 1300
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiSelect-select': {
-                      py: 1.25,
-                      fontWeight: 500,
-                    },
-                  }}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="co2Reduced">CO₂ Reduced</MenuItem>
-                  <MenuItem value="ecoPoints">Eco Points</MenuItem>
-                  <MenuItem value="averageRating">Average Rating</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel 
-                  sx={{
-                    backgroundColor: 'white',
-                    px: 0.5,
-                  }}
-                >
-                  Order
-                </InputLabel>
-                <Select
-                  value={businessFilters.order}
-                  onChange={(e) => setBusinessFilters({ ...businessFilters, order: e.target.value })}
-                  label="Order"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        zIndex: 1300
-                      }
-                    },
-                    style: {
-                      zIndex: 1300
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiSelect-select': {
-                      py: 1.25,
-                      fontWeight: 500,
-                    },
-                  }}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="asc">Ascending</MenuItem>
-                  <MenuItem value="desc">Descending</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </div>
-
-        {/* Ranking Cards Grid */}
-        {isLoading && !topBusinesses ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-            <CircularProgress />
-          </Box>
-        ) : topBusinesses && topBusinesses.length > 0 ? (
-          <div className="ranking-cards-grid">
-            {topBusinesses.map((business, index) => {
-              const rank = index + 1;
-              const isTopThree = rank <= 3;
-              const rankColors = {
-                1: { bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', text: '#000' },
-                2: { bg: 'linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%)', text: '#000' },
-                3: { bg: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)', text: '#fff' }
-              };
-              const rankColor = isTopThree ? rankColors[rank] : { bg: '#ffffff', text: '#6b7280' };
-
-              return (
-                <div 
-                  key={business._id || index} 
-                  className={`ranking-card ${isTopThree ? 'top-rank' : ''}`}
-                  style={isTopThree ? {
-                    border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
-                    background: rankColor.bg
-                  } : {}}
-                >
-                  <div className="ranking-card-rank-badge" style={isTopThree ? { background: rankColor.bg, color: rankColor.text } : {}}>
-                    #{rank}
-                  </div>
-                  
-                  <div className="ranking-card-avatar-container">
-                    <Avatar
-                      src={business.businessLogoUrl}
-                      alt={business.businessName}
-                      sx={{ 
-                        width: 100, 
-                        height: 100, 
-                        border: isTopThree ? `4px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}` : '4px solid #12422a',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }}
-                    />
-                    {isTopThree && (
-                      <div className="ranking-medal">
-                        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="ranking-card-content">
-                    <div className="ranking-card-header-info">
-                      <h3 className="ranking-card-name" style={isTopThree ? { color: rankColor.text } : {}}>
-                        {business.businessName || 'Unknown Business'}
-                      </h3>
-                      <Chip
-                        label={business.status || 'active'}
-                        color={business.status === 'active' ? 'success' : 'default'}
-                        size="small"
-                        sx={{ 
-                          fontWeight: 600,
-                          height: '24px',
-                          fontSize: '11px'
-                        }}
-                      />
-                    </div>
-
-                    <p className="ranking-card-type" style={isTopThree ? { color: rankColor.text, opacity: 0.8 } : {}}>
-                      {business.businessType || 'N/A'}
-                    </p>
-
-                    <div className="ranking-card-rating">
-                      <Rating
-                        value={business.averageRating || 0}
-                        precision={0.1}
-                        readOnly
-                        size="small"
-                        sx={{ 
-                          '& .MuiRating-iconFilled': {
-                            color: '#fbbf24'
-                          }
-                        }}
-                      />
-                      <span className="ranking-rating-text" style={isTopThree ? { color: rankColor.text } : {}}>
-                        {business.averageRating ? business.averageRating.toFixed(1) : '0.0'}
-                        <span style={{ opacity: 0.7, marginLeft: '4px' }}>
-                          ({business.totalReviews || 0} reviews)
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="ranking-card-metrics">
-                      <div className="ranking-metric-item">
-                        <div className="ranking-metric-icon" style={{ backgroundColor: '#10b98115', color: '#10b981' }}>
-                          <FaLeaf />
-                        </div>
-                        <div className="ranking-metric-info">
-                          <span className="ranking-metric-label">Eco Points</span>
-                          <span className="ranking-metric-value">
-                            {business.ecoPoints ? business.ecoPoints.toLocaleString('en-US', { maximumFractionDigits: 1 }) : 0}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ranking-metric-item">
-                        <div className="ranking-metric-icon" style={{ backgroundColor: '#f59e0b15', color: '#f59e0b' }}>
-                          <FaRecycle />
-                        </div>
-                        <div className="ranking-metric-info">
-                          <span className="ranking-metric-label">CO₂ Reduced</span>
-                          <span className="ranking-metric-value">
-                            {business.co2Reduced ? business.co2Reduced.toFixed(2) : 0} kg
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', backgroundColor: 'white', borderRadius: '16px', border: '2px dashed #e5e7eb' }}>
-            <Typography color="text.secondary" sx={{ fontSize: '16px' }}>No businesses available</Typography>
-          </Box>
-        )}
-      </div>
-
-      {/* Top Customers Section */}
-      <div className="top-ranking-section">
-        <div className="top-ranking-header">
-          <div>
-            <h2 className="top-ranking-title">
-              <FaUsers style={{ marginRight: '12px', color: '#12422a' }} />
-              Top Customers
-            </h2>
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        <div className="ranking-filters-section">
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
-            Filters
-          </Typography>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <TextField
-                  label="Top N Customers"
-                  type="number"
-                  value={customerFilters.top}
-                  onChange={(e) => setCustomerFilters({ ...customerFilters, top: parseInt(e.target.value) || 5 })}
-                  variant="outlined"
-                  size="small"
-                  inputProps={{ min: 1, max: 50 }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: '10px',
-                      transition: 'all 0.3s ease',
-                      '&:hover fieldset': {
-                        borderColor: '#12422a',
-                        borderWidth: '2px',
-                        boxShadow: '0 2px 8px rgba(18, 66, 42, 0.15)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#12422a',
-                        borderWidth: '2px',
-                        boxShadow: '0 4px 12px rgba(18, 66, 42, 0.25)',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontWeight: 600,
-                      color: '#4b5563',
-                      '&.Mui-focused': {
-                        color: '#12422a',
-                        fontWeight: 700,
-                      },
-                    },
-                  }}
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel 
-                  sx={{
-                    backgroundColor: 'white',
-                    px: 0.5,
-                  }}
-                >
-                  Sort By
-                </InputLabel>
-                <Select
-                  value={customerFilters.sortBy}
-                  onChange={(e) => setCustomerFilters({ ...customerFilters, sortBy: e.target.value })}
-                  label="Sort By"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        zIndex: 1300
-                      }
-                    },
-                    style: {
-                      zIndex: 1300
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiSelect-select': {
-                      py: 1.25,
-                      fontWeight: 500,
-                    },
-                  }}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="rankingPoints">Ranking Points</MenuItem>
-                  <MenuItem value="ecoPoints">Eco Points</MenuItem>
-                  <MenuItem value="totalTransactions">Total Transactions</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel 
-                  sx={{
-                    backgroundColor: 'white',
-                    px: 0.5,
-                  }}
-                >
-                  Order
-                </InputLabel>
-                <Select
-                  value={customerFilters.order}
-                  onChange={(e) => setCustomerFilters({ ...customerFilters, order: e.target.value })}
-                  label="Order"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        zIndex: 1300
-                      }
-                    },
-                    style: {
-                      zIndex: 1300
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                    },
-                    '& .MuiSelect-select': {
-                      py: 1.25,
-                      fontWeight: 500,
-                    },
-                  }}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="asc">Ascending</MenuItem>
-                  <MenuItem value="desc">Descending</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </div>
-
-        {/* Ranking Cards Grid */}
-        {isLoading && !topCustomers ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-            <CircularProgress />
-          </Box>
-        ) : topCustomers && topCustomers.length > 0 ? (
-          <div className="ranking-cards-grid">
-            {topCustomers.map((customer, index) => {
-              const rank = index + 1;
-              const isTopThree = rank <= 3;
-              const rankColors = {
-                1: { bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', text: '#000' },
-                2: { bg: 'linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%)', text: '#000' },
-                3: { bg: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)', text: '#fff' }
-              };
-              const rankColor = isTopThree ? rankColors[rank] : { bg: '#ffffff', text: '#6b7280' };
-              
-              const customerData = customer.customerId || customer;
-              const avatarUrl = customerData?.userId?.avatar;
-              const displayName = customerData?.fullName || `Customer #${rank}`;
-              const initials = displayName.split(' ').filter(Boolean).map(word => word[0]).join('').slice(0, 2).toUpperCase();
-
-              return (
-                <div 
-                  key={customer._id || index} 
-                  className={`ranking-card ${isTopThree ? 'top-rank' : ''}`}
-                  style={isTopThree ? {
-                    border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
-                    background: rankColor.bg
-                  } : {}}
-                >
-                  <div className="ranking-card-rank-badge" style={isTopThree ? { background: rankColor.bg, color: rankColor.text } : {}}>
-                    #{rank}
-                  </div>
-                  
-                  <div className="ranking-card-avatar-container">
-                    <Avatar
-                      src={avatarUrl}
-                      alt={displayName}
-                      sx={{ 
-                        width: 100, 
-                        height: 100, 
-                        border: isTopThree ? `4px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}` : '4px solid #12422a',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        bgcolor: '#12422a',
-                        fontSize: '32px',
-                        fontWeight: 700
-                      }}
-                    >
-                      {!avatarUrl && initials}
-                    </Avatar>
-                    {isTopThree && (
-                      <div className="ranking-medal">
-                        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="ranking-card-content">
-                    <div className="ranking-card-header-info">
-                      <h3 className="ranking-card-name" style={isTopThree ? { color: rankColor.text } : {}}>
-                        {displayName}
-                      </h3>
-                    </div>
-
-                    {customerData?.phone && (
-                      <p className="ranking-card-type" style={isTopThree ? { color: rankColor.text, opacity: 0.8 } : {}}>
-                        <FaUsers style={{ marginRight: '6px', fontSize: '12px' }} />
-                        {customerData.phone}
-                      </p>
-                    )}
-
-                    <div className="ranking-card-metrics">
-                      <div className="ranking-metric-item">
-                        <div className="ranking-metric-icon" style={{ backgroundColor: '#3b82f615', color: '#3b82f6' }}>
-                          <FaCrown />
-                        </div>
-                        <div className="ranking-metric-info">
-                          <span className="ranking-metric-label">Ranking Points</span>
-                          <span className="ranking-metric-value">
-                            {customer.rankingPoints ? customer.rankingPoints.toLocaleString('en-US') : customer.totalRankingPoints?.toLocaleString('en-US') || 0}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ranking-metric-item">
-                        <div className="ranking-metric-icon" style={{ backgroundColor: '#10b98115', color: '#10b981' }}>
-                          <FaLeaf />
-                        </div>
-                        <div className="ranking-metric-info">
-                          <span className="ranking-metric-label">Eco Points</span>
-                          <span className="ranking-metric-value">
-                            {customer.ecoPoints ? customer.ecoPoints.toLocaleString('en-US', { maximumFractionDigits: 1 }) : customer.totalEcoPoints?.toLocaleString('en-US', { maximumFractionDigits: 1 }) || 0}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', backgroundColor: 'white', borderRadius: '16px', border: '2px dashed #e5e7eb' }}>
-            <Typography color="text.secondary" sx={{ fontSize: '16px' }}>No customers available</Typography>
-          </Box>
-        )}
-      </div>
-
-      {/* Charts Section */}
-      <div className="charts-section">
-        {/* User & Store Growth Chart */}
-        <div className="chart-card">
-          <div className="chart-header">
-            <h2 className="chart-title">Users & Stores Growth</h2>
-            <p className="chart-subtitle">Monthly trend overview</p>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={userGrowthData}>
-              <defs>
-                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorStores" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#12422a" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#12422a" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="month" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                  width: 56,
+                  height: 56,
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #164e31 0%, #0f3d20 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '24px',
+                  mb: 2
                 }}
-              />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="users" 
-                stroke="#3b82f6" 
-                strokeWidth={2}
-                fillOpacity={1} 
-                fill="url(#colorUsers)" 
-                name="Users"
-              />
-              <Area 
-                type="monotone" 
-                dataKey="stores" 
-                stroke="#12422a" 
-                strokeWidth={2}
-                fillOpacity={1} 
-                fill="url(#colorStores)" 
-                name="Stores"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Material Distribution Chart */}
-        <div className="chart-card">
-          <div className="chart-header">
-            <h2 className="chart-title">Material Distribution</h2>
-            <p className="chart-subtitle">By material type</p>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={materialDistributionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}
-              />
-              <Bar dataKey="value" fill="#8884d8" radius={[8, 8, 0, 0]}>
-                {materialDistributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Voucher Status Pie Chart */}
-        <div className="chart-card">
-          <div className="chart-header">
-            <h2 className="chart-title">Voucher Status</h2>
-            <p className="chart-subtitle">Current distribution</p>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={voucherStatusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={90}
-                fill="#8884d8"
-                paddingAngle={5}
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
-                {voucherStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="dashboard-content">
-        {/* Quick Actions */}
-        <div className="quick-actions-section">
-          <h2 className="section-title">Quick Actions</h2>
-          <div className="quick-actions-grid">
-            {quickActions.map((action, index) => (
-              <div 
-                key={index} 
-                className="quick-action-card"
-                onClick={() => navigate(action.path)}
-              >
-                <div className="action-icon" style={{ backgroundColor: `${action.color}15`, color: action.color }}>
-                  {action.icon}
-                </div>
-                <div className="action-content">
-                  <h3 className="action-title">{action.title}</h3>
-                  <p className="action-description">{action.description}</p>
-                </div>
-                <FaArrowRight className="action-arrow" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activities */}
-        <div className="recent-activities-section">
-          <h2 className="section-title">Recent Activities</h2>
-          <div className="activities-list">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-icon" style={{ backgroundColor: `${activity.color}15`, color: activity.color }}>
-                  {activity.icon}
-                </div>
-                <div className="activity-content">
-                  <h4 className="activity-title">{activity.title}</h4>
-                  <p className="activity-description">{activity.description}</p>
-                  <span className="activity-time">{activity.time}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="view-all-btn">
-            View All Activities
-            <FaArrowRight />
-          </button>
+                {item.icon}
+                </Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#1a1a1a', mb: 1, fontSize: '16px' }}>
+                {item.label}
+          </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', color: '#164e31', mt: 'auto' }}>
+                <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500, mr: 1 }}>
+                  View Details
+          </Typography>
+                <FaArrowRight style={{ fontSize: '14px' }} />
+              </Box>
+              </Box>
+          ))}
         </div>
       </div>
     </div>

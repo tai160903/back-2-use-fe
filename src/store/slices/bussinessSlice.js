@@ -389,7 +389,60 @@ export const updateProduct = createAsyncThunk(
   }
 );
 
+// Get business dashboard overview
+export const getBusinessDashboardOverview = createAsyncThunk(
+  "businesses/getBusinessDashboardOverview",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get("/business/dashboard/overview");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
 
+// Get business borrow transactions monthly statistics
+export const getBusinessBorrowTransactionsMonthly = createAsyncThunk(
+  "businesses/getBusinessBorrowTransactionsMonthly",
+  async ({ year, type, status }, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (year) queryParams.append("year", year);
+      if (type) queryParams.append("type", type);
+      if (status) queryParams.append("status", status);
+      const response = await fetcher.get(
+        `/business/dashboard/borrow-transactions/monthly?${queryParams.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get top borrowed items in business dashboard
+export const getBusinessTopBorrowed = createAsyncThunk(
+  "businesses/getBusinessTopBorrowed",
+  async ({ top = 5 } = {}, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (top) queryParams.append("top", top);
+      const response = await fetcher.get(
+        `/business/dashboard/top-borrowed?${queryParams.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
 
 const businessSlice = createSlice({
   name: "businesses",
@@ -431,6 +484,16 @@ const businessSlice = createSlice({
     productLoading: false,
     productError: null,
     currentProduct: null,
+    // Dashboard state
+    dashboardOverview: null,
+    dashboardLoading: false,
+    dashboardError: null,
+    borrowTransactionsMonthly: null,
+    borrowTransactionsMonthlyLoading: false,
+    borrowTransactionsMonthlyError: null,
+    topBorrowed: [],
+    topBorrowedLoading: false,
+    topBorrowedError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -781,6 +844,48 @@ const businessSlice = createSlice({
       .addCase(updateProduct.rejected, (state, { payload }) => {
         state.productLoading = false;
         state.productError = payload;
+      })
+      // Dashboard Overview
+      .addCase(getBusinessDashboardOverview.pending, (state) => {
+        state.dashboardLoading = true;
+        state.dashboardError = null;
+      })
+      .addCase(getBusinessDashboardOverview.fulfilled, (state, { payload }) => {
+        state.dashboardLoading = false;
+        state.dashboardOverview = payload.data || payload;
+        state.dashboardError = null;
+      })
+      .addCase(getBusinessDashboardOverview.rejected, (state, { payload }) => {
+        state.dashboardLoading = false;
+        state.dashboardError = payload;
+      })
+      // Borrow Transactions Monthly
+      .addCase(getBusinessBorrowTransactionsMonthly.pending, (state) => {
+        state.borrowTransactionsMonthlyLoading = true;
+        state.borrowTransactionsMonthlyError = null;
+      })
+      .addCase(getBusinessBorrowTransactionsMonthly.fulfilled, (state, { payload }) => {
+        state.borrowTransactionsMonthlyLoading = false;
+        state.borrowTransactionsMonthly = payload;
+        state.borrowTransactionsMonthlyError = null;
+      })
+      .addCase(getBusinessBorrowTransactionsMonthly.rejected, (state, { payload }) => {
+        state.borrowTransactionsMonthlyLoading = false;
+        state.borrowTransactionsMonthlyError = payload;
+      })
+      // Top Borrowed
+      .addCase(getBusinessTopBorrowed.pending, (state) => {
+        state.topBorrowedLoading = true;
+        state.topBorrowedError = null;
+      })
+      .addCase(getBusinessTopBorrowed.fulfilled, (state, { payload }) => {
+        state.topBorrowedLoading = false;
+        state.topBorrowed = payload?.data || payload || [];
+        state.topBorrowedError = null;
+      })
+      .addCase(getBusinessTopBorrowed.rejected, (state, { payload }) => {
+        state.topBorrowedLoading = false;
+        state.topBorrowedError = payload;
       })
   
   },

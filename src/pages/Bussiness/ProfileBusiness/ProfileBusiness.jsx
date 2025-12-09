@@ -15,11 +15,15 @@ import {
   FaBuilding,
   FaPhone,
   FaEnvelope,
-  FaMapMarkerAlt
+  FaMapMarkerAlt,
+  FaLeaf,
+  FaTrophy,
+  FaChartLine
 } from 'react-icons/fa'
 import './ProfileBusiness.css'
 import { useDispatch, useSelector } from 'react-redux'
 import { getProfileBusiness, updateProfileBusiness } from '../../../store/slices/userSlice'
+import { getBusinessDashboardOverview } from '../../../store/slices/bussinessSlice'
 import toast from 'react-hot-toast'
 import AddressSelector from '../../../components/AddressSelector/AddressSelector'
 import Box from '@mui/material/Box'
@@ -64,14 +68,26 @@ export default function ProfileBusiness() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const dispatch = useDispatch()
   const { businessInfo: apiBusinessPayload } = useSelector((state) => state.user)
+  const { dashboardOverview } = useSelector((state) => state.businesses)
 
-  // Fetch business profile on mount
+  // Fetch business profile and dashboard overview on mount
   useEffect(() => {
     dispatch(getProfileBusiness())
+    dispatch(getBusinessDashboardOverview())
   }, [dispatch])
 
   // Extract data from API payload
   const business = apiBusinessPayload?.data?.business
+  // Merge co2Reduced and ecoPoints from dashboard overview if not in business profile
+  const businessWithCo2 = business ? {
+    ...business,
+    co2Reduced: business.co2Reduced !== undefined 
+      ? business.co2Reduced 
+      : (dashboardOverview?.co2Reduced || 0),
+    ecoPoints: business.ecoPoints !== undefined 
+      ? business.ecoPoints 
+      : (dashboardOverview?.ecoPoints || 0)
+  } : null
   const wallet = apiBusinessPayload?.data?.wallet
   const activeSubscription = apiBusinessPayload?.data?.activeSubscription
   const rawActive = activeSubscription
@@ -83,16 +99,21 @@ export default function ProfileBusiness() {
     const statusOk = s?.status === 'active' || s?.status === 'pending'
     return statusOk && notExpired
   })
+  
+  // Extract eco rank data
+  const ecoRankLabel = apiBusinessPayload?.data?.ecoRankLabel || 'N/A'
+  const nextRank = apiBusinessPayload?.data?.nextRank || {}
+  const progress = apiBusinessPayload?.data?.progress || {}
 
   const getFormValues = () => ({
-    businessName: business?.businessName || '',
-    businessType: business?.businessType || '',
-    taxCode: business?.taxCode || '',
-    email: business?.businessMail || '',
-    businessPhone: business?.businessPhone || '',
-    businessAddress: business?.businessAddress || '',
-    openTime: business?.openTime || '',
-    closeTime: business?.closeTime || ''
+    businessName: businessWithCo2?.businessName || '',
+    businessType: businessWithCo2?.businessType || '',
+    taxCode: businessWithCo2?.taxCode || '',
+    email: businessWithCo2?.businessMail || '',
+    businessPhone: businessWithCo2?.businessPhone || '',
+    businessAddress: businessWithCo2?.businessAddress || '',
+    openTime: businessWithCo2?.openTime || '',
+    closeTime: businessWithCo2?.closeTime || ''
   })
 
   const {
@@ -109,24 +130,24 @@ export default function ProfileBusiness() {
   // Reset form when business data changes
   useEffect(() => {
     reset({
-      businessName: business?.businessName || '',
-      businessType: business?.businessType || '',
-      businessPhone: business?.businessPhone || '',
-      businessAddress: business?.businessAddress || '',
-      openTime: business?.openTime || '',
-      closeTime: business?.closeTime || ''
+      businessName: businessWithCo2?.businessName || '',
+      businessType: businessWithCo2?.businessType || '',
+      businessPhone: businessWithCo2?.businessPhone || '',
+      businessAddress: businessWithCo2?.businessAddress || '',
+      openTime: businessWithCo2?.openTime || '',
+      closeTime: businessWithCo2?.closeTime || ''
     })
-  }, [business, reset])
+  }, [businessWithCo2, reset])
 
   const handleEdit = () => {
     setIsEditing(true)
     reset({
-      businessName: business?.businessName || '',
-      businessType: business?.businessType || '',
-      businessPhone: business?.businessPhone || '',
-      businessAddress: business?.businessAddress || '',
-      openTime: business?.openTime || '',
-      closeTime: business?.closeTime || ''
+      businessName: businessWithCo2?.businessName || '',
+      businessType: businessWithCo2?.businessType || '',
+      businessPhone: businessWithCo2?.businessPhone || '',
+      businessAddress: businessWithCo2?.businessAddress || '',
+      openTime: businessWithCo2?.openTime || '',
+      closeTime: businessWithCo2?.closeTime || ''
     })
   }
 
@@ -157,14 +178,14 @@ export default function ProfileBusiness() {
   const handleCancel = () => {
     setIsEditing(false)
     reset({
-      businessName: business?.businessName || '',
-      businessType: business?.businessType || '',
-      taxCode: business?.taxCode || '',
-      email: business?.businessMail || '',
-      businessPhone: business?.businessPhone || '',
-      businessAddress: business?.businessAddress || '',
-      openTime: business?.openTime || '',
-      closeTime: business?.closeTime || ''
+      businessName: businessWithCo2?.businessName || '',
+      businessType: businessWithCo2?.businessType || '',
+      taxCode: businessWithCo2?.taxCode || '',
+      email: businessWithCo2?.businessMail || '',
+      businessPhone: businessWithCo2?.businessPhone || '',
+      businessAddress: businessWithCo2?.businessAddress || '',
+      openTime: businessWithCo2?.openTime || '',
+      closeTime: businessWithCo2?.closeTime || ''
     })
   }
 
@@ -197,23 +218,23 @@ export default function ProfileBusiness() {
         {/* Header with avatar and name */}
         <div className="profile-header">
           <div className="profile-avatar">
-            {business?.businessLogoUrl ? (
-              <img src={business?.businessLogoUrl} alt="Business Logo" />
+            {businessWithCo2?.businessLogoUrl ? (
+              <img src={businessWithCo2?.businessLogoUrl} alt="Business Logo" />
             ) : (
               <div >
-                <span>{business?.businessName?.charAt(0)}</span>
+                <span>{businessWithCo2?.businessName?.charAt(0)}</span>
               </div>
             )}
           </div>
           <div className="profile-title">
-            <h1 className="business-name">{business?.businessName}</h1>
+            <h1 className="business-name">{businessWithCo2?.businessName}</h1>
             <p className="business-type">
-              {business?.businessType}
-              {typeof business?.co2Reduced === 'number' && (
+              {businessWithCo2?.businessType}
+              {typeof businessWithCo2?.co2Reduced === 'number' && businessWithCo2.co2Reduced > 0 && (
                 <>
                   <br />
                   <span className="business-co2">
-                  CO₂ Emission Reduction: {business.co2Reduced} kg
+                  CO₂ Emission Reduction: {businessWithCo2.co2Reduced.toFixed(2)} kg
                   </span>
                 </>
               )}
@@ -305,7 +326,7 @@ export default function ProfileBusiness() {
                   className="edit-input"
                 />
               ) : (
-                <span>{business?.businessName}</span>
+                <span>{businessWithCo2?.businessName}</span>
               )}
             </div>
             <div className="detail-item">
@@ -320,12 +341,12 @@ export default function ProfileBusiness() {
                   className="edit-input"
                 />
               ) : (
-                <span>{business?.businessType}</span>
+                <span>{businessWithCo2?.businessType}</span>
               )}
             </div>
             <div className="detail-item">
               <label>Tax code:</label>
-                <span>{business?.taxCode}</span>
+                <span>{businessWithCo2?.taxCode}</span>
           
             </div>
             <div className="detail-item">
@@ -342,7 +363,7 @@ export default function ProfileBusiness() {
                   className="edit-input"
                 />
               ) : (
-                <span>{business?.openTime || '-'}</span>
+                <span>{businessWithCo2?.openTime || '-'}</span>
               )}
             </div>
             <div className="detail-item">
@@ -359,10 +380,110 @@ export default function ProfileBusiness() {
                   className="edit-input"
                 />
               ) : (
-                <span>{business?.closeTime || '-'}</span>
+                <span>{businessWithCo2?.closeTime || '-'}</span>
               )}
             </div>
+            <div className="detail-item">
+              <label>CO₂ Reduced:</label>
+              <span style={{ color: '#1b4c2d', fontWeight: '600' }}>
+                {typeof businessWithCo2?.co2Reduced === 'number' 
+                  ? `${businessWithCo2.co2Reduced.toFixed(2)} kg` 
+                  : '0.00 kg'}
+              </span>
+            </div>
+            <div className="detail-item">
+              <label>Eco Point:</label>
+              <span style={{ color: '#1b4c2d', fontWeight: '600' }}>
+                {typeof businessWithCo2?.ecoPoints === 'number' 
+                  ? businessWithCo2.ecoPoints.toLocaleString('vi-VN') 
+                  : '0'}
+              </span>
+            </div>
           </div>
+
+          {/* Eco Rank Section */}
+          {ecoRankLabel && (
+            <div className="detail-section">
+              <h3 className="section-title">
+                <FaTrophy style={{ marginRight: '8px', marginBottom: '8px', color: '#f59e0b' }} />
+                Eco Rank
+              </h3>
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <Typography variant="body1" style={{ fontWeight: 600, color: '#1a1a1a' }}>
+                    Current Rank: <span style={{ color: '#f59e0b', textTransform: 'capitalize' }}>{ecoRankLabel}</span>
+                  </Typography>
+                  {nextRank?.label && (
+                    <Typography variant="body2" style={{ color: '#6b7280' }}>
+                      Next: <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{nextRank.label}</span>
+                    </Typography>
+                  )}
+                </div>
+                
+                {/* Progress Bar */}
+                {progress?.percent !== undefined && (
+                  <Box sx={{ marginBottom: '12px' }}>
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '24px',
+                        backgroundColor: '#e5e7eb',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: `${Math.min(progress.percent || 0, 100)}%`,
+                          height: '100%',
+                          background: 'linear-gradient(90deg, #1b4c2d 0%, #22c55e 100%)',
+                          borderRadius: '12px',
+                          transition: 'width 0.5s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          paddingRight: '8px',
+                        }}
+                      >
+                        {progress.percent > 10 && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: '11px',
+                            }}
+                          >
+                            {progress.percent.toFixed(1)}%
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginTop: '8px',
+                        fontSize: '12px',
+                        color: '#6b7280',
+                      }}
+                    >
+                      <span>
+                        Current: {progress.current?.toFixed(1) || 0} / {progress.nextThreshold || 0} points
+                      </span>
+                      {nextRank?.remainingPoints !== undefined && (
+                        <span style={{ fontWeight: 600, color: '#1b4c2d' }}>
+                          {nextRank.remainingPoints.toFixed(1)} points to {nextRank.label}
+                        </span>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="detail-section">
             <h3 className="section-title">
@@ -375,7 +496,7 @@ export default function ProfileBusiness() {
                 Email:
               </label>
              
-                <span>{business?.businessMail || ''}</span>
+                <span>{businessWithCo2?.businessMail || ''}</span>
             
             </div>
             <div className="detail-item">
@@ -394,7 +515,7 @@ export default function ProfileBusiness() {
                   className="edit-input"
                 />
               ) : (
-                <span>{business?.businessPhone}</span>
+                <span>{businessWithCo2?.businessPhone}</span>
               )}
             </div>
             <div className="detail-item">
@@ -419,7 +540,7 @@ export default function ProfileBusiness() {
                   )}
                 </Box>
                              ) : (
-                 <span style={{ color: "black", fontWeight: "600" }}>{business?.businessAddress}</span>
+                 <span style={{ color: "black", fontWeight: "600" }}>{businessWithCo2?.businessAddress}</span>
                )}
             </div>
           </div>
