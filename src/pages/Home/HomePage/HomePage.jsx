@@ -4,10 +4,6 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import AddIcon from "@mui/icons-material/Add";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
 import { FaCoins, FaLeaf, FaUsers, FaStar, FaRegStar } from "react-icons/fa";
 import { RiTruckLine, RiCustomerService2Line, RiArrowGoBackLine, RiShieldCheckLine } from "react-icons/ri";
 import { useMemo, useEffect, useState } from "react";
@@ -43,23 +39,23 @@ export default function HomePage() {
   const dispatch = useDispatch();
   const { leaderBoard, isLoading } = useSelector((state) => state.leaderBoard);
   const { customerVouchers, isLoading: vouchersLoading } = useSelector((state) => state.vouchers);
-  const { allStores, isLoading: isLoadingStores } = useSelector((state) => state.store);
+  const { allStores, isLoading: isLoadingStores, total } = useSelector((state) => state.store);
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
 
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  // Tính tháng trước (1 tháng trước so với tháng hiện tại)
+  const getPreviousMonth = () => {
+    if (currentMonth === 1) {
+      return { month: 12, year: currentYear - 1 };
+    }
+    return { month: currentMonth - 1, year: currentYear };
+  };
 
-  const monthOptions = useMemo(
-    () => Array.from({ length: 12 }, (unused, index) => index + 1),
-    []
-  );
-  const yearOptions = useMemo(
-    () => Array.from({ length: 5 }, (unused, index) => currentYear - index),
-    [currentYear]
-  );
+  const previousMonthData = getPreviousMonth();
+  const selectedMonth = previousMonthData.month;
+  const selectedYear = previousMonthData.year;
 
   useEffect(() => {
     dispatch(
@@ -77,31 +73,30 @@ export default function HomePage() {
     dispatch(getCustomerVouchers({ page: 1, limit: 2 }));
   }, [dispatch]);
 
-  // Load all businesses for home top stores section
+  // Load all businesses for home top stores section - lấy tất cả để lọc
   useEffect(() => {
-    dispatch(getAllStoreApi());
+    // Lấy tất cả cửa hàng với limit lớn để có đủ dữ liệu lọc
+    dispatch(getAllStoreApi({ page: 1, limit: 1000 }));
   }, [dispatch]);
 
-  // Top 8 stores: highest rating, newest
+  // Top 8 stores: highest averageRating only
   const topStores = Array.isArray(allStores) && allStores.length > 0
     ? (() => {
         const activeStores = allStores.filter(
           (store) => store.isActive && !store.isBlocked
         );
 
+        // Sort by averageRating descending only
         const sorted = [...activeStores].sort((a, b) => {
           const ratingA =
             typeof a.averageRating === "number" ? a.averageRating : 0;
           const ratingB =
             typeof b.averageRating === "number" ? b.averageRating : 0;
-
-          if (ratingB !== ratingA) return ratingB - ratingA;
-
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
+          
+          return ratingB - ratingA;
         });
 
+        // Get top 8 stores with highest averageRating
         return sorted.slice(0, 8);
       })()
     : [];
@@ -500,40 +495,6 @@ export default function HomePage() {
           <p className="leaderboard-sub leaderboard-sub--below">
             Top 10 users for month {selectedMonth} / {selectedYear}
           </p>
-
-          <div className="leaderboard-filters-bar">
-            <FormControl size="small" className="leaderboard-filter-control">
-              <InputLabel id="home-month-select-label">Month</InputLabel>
-              <Select
-                labelId="home-month-select-label"
-                value={selectedMonth}
-                label="Month"
-                onChange={(event) => setSelectedMonth(event.target.value)}
-              >
-                {monthOptions.map((monthValue) => (
-                  <MenuItem key={monthValue} value={monthValue}>
-                    Month {monthValue}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl size="small" className="leaderboard-filter-control">
-              <InputLabel id="home-year-select-label">Year</InputLabel>
-              <Select
-                labelId="home-year-select-label"
-                value={selectedYear}
-                label="Year"
-                onChange={(event) => setSelectedYear(event.target.value)}
-              >
-                {yearOptions.map((yearValue) => (
-                  <MenuItem key={yearValue} value={yearValue}>
-                    {yearValue}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </div>
 
           <Swiper
             className="leaderboard-swiper"
