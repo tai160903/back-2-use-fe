@@ -524,7 +524,7 @@ export default function Settings() {
                   </Grid>
                   <Grid item xs={12} md={2}>
                     <FormControl fullWidth>
-                      <InputLabel>Is Distributed</InputLabel>
+                      <InputLabel>The reward has been released</InputLabel>
                       <Select
                         name="isDistributed"
                         value={policyFilters.isDistributed}
