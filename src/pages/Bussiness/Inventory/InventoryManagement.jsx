@@ -772,38 +772,6 @@ export default function InventoryManagement() {
                     >
                       <SizeIcon fontSize="small" />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(product);
-                      }}
-                      sx={{
-                        color: '#12422a',
-                        '&:hover': {
-                          backgroundColor: 'rgba(18, 66, 42, 0.1)',
-                        },
-                      }}
-                      title="Edit"
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(product);
-                      }}
-                      sx={{
-                        color: '#ef4444',
-                        '&:hover': {
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        },
-                      }}
-                      title="Delete"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
                   </Box>
                 </Box>
               ))}
