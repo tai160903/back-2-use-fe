@@ -5,9 +5,13 @@ import fetcher from "../../apis/fetcher";
 // get all store
 export const getAllStoreApi = createAsyncThunk(
     "store/getAllStoreApi",
-    async(_, {rejectWithValue}) => {
+    async({ page, limit } = {}, {rejectWithValue}) => {
         try {
-            const response = await fetcher.get("/businesses")
+            let url = "/businesses";
+            if (page && limit) {
+                url += `?page=${page}&limit=${limit}`;
+            }
+            const response = await fetcher.get(url)
             console.log("duy", response.data);
             return response.data
         } catch (error) {
