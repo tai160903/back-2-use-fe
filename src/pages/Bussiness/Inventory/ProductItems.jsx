@@ -99,6 +99,7 @@ export default function ProductItems() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [editFormErrors, setEditFormErrors] = useState({});
+  const [isCreating, setIsCreating] = useState(false);
   const formatVnd = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
 
   // Modal UI (đồng bộ với style modal admin)
@@ -370,12 +371,14 @@ export default function ProductItems() {
   };
 
   const handleCloseAddDialog = () => {
+    if (isCreating) return; // Prevent closing while creating
     setOpenAddDialog(false);
     setFormData({
       productSizeId: '',
       amount: 1,
     });
     setFormErrors({});
+    setIsCreating(false);
   };
 
   const validateForm = () => {
@@ -398,10 +401,11 @@ export default function ProductItems() {
 
   const handleSubmitCreateProducts = async (e) => {
     e.preventDefault();
-    if (!validateForm()) {
+    if (!validateForm() || isCreating) {
       return;
     }
 
+    setIsCreating(true);
     try {
       const productData = {
         productGroupId: productGroupId,
@@ -422,6 +426,8 @@ export default function ProductItems() {
         error?.data?.message ||
         'Failed to create products';
       toast.error(errorMessage);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -1334,6 +1340,7 @@ export default function ProductItems() {
                         setFormErrors({ ...formErrors, productSizeId: '' });
                       }
                     }}
+                    disabled={isCreating}
                     sx={{
                       backgroundColor: 'white',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
@@ -1405,6 +1412,7 @@ export default function ProductItems() {
                   variant="outlined"
                   size="small"
                   error={!!formErrors.amount}
+                  disabled={isCreating}
                   helperText={formErrors.amount || `Each item will get a unique QR code automatically generated (max 1000 items)`}
                   inputProps={{
                     min: 1,
@@ -1474,6 +1482,7 @@ export default function ProductItems() {
               onClick={handleCloseAddDialog}
               variant="outlined"
               startIcon={<CloseIcon fontSize="small" />}
+              disabled={isCreating}
               sx={{
                 color: '#666',
                 borderColor: '#ccc',
@@ -1486,6 +1495,10 @@ export default function ProductItems() {
                   borderColor: '#999',
                   backgroundColor: 'rgba(0, 0, 0, 0.04)',
                   borderWidth: 1.5,
+                },
+                '&:disabled': {
+                  borderColor: '#d1d5db',
+                  color: '#9ca3af',
                 }
               }}
               size="small"
@@ -1495,22 +1508,26 @@ export default function ProductItems() {
             <Button
               type="submit"
               variant="contained"
-              startIcon={<AddIcon fontSize="small" />}
-              disabled={productLoading}
+              startIcon={!isCreating && <AddIcon fontSize="small" />}
+              disabled={isCreating}
               sx={{
-                background: 'linear-gradient(135deg, #12422a 0%, #0b2a1b 100%)',
+                background: isCreating 
+                  ? '#d1d5db' 
+                  : 'linear-gradient(135deg, #12422a 0%, #0b2a1b 100%)',
                 px: 2.4,
                 py: 0.9,
                 fontSize: '0.95rem',
                 fontWeight: 700,
-                boxShadow: '0 6px 16px rgba(18, 66, 42, 0.35)',
+                boxShadow: isCreating ? 'none' : '0 6px 16px rgba(18, 66, 42, 0.35)',
                 borderRadius: 2,
                 transition: 'all 0.25s ease',
                 textTransform: 'none',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #0f3d26 0%, #082018 100%)',
-                  boxShadow: '0 8px 18px rgba(18, 66, 42, 0.45)',
-                  transform: 'translateY(-1px)',
+                  background: isCreating 
+                    ? '#d1d5db' 
+                    : 'linear-gradient(135deg, #0f3d26 0%, #082018 100%)',
+                  boxShadow: isCreating ? 'none' : '0 8px 18px rgba(18, 66, 42, 0.45)',
+                  transform: isCreating ? 'none' : 'translateY(-1px)',
                 },
                 '&:disabled': {
                   backgroundColor: '#d1d5db',
@@ -1520,10 +1537,10 @@ export default function ProductItems() {
               }}
               size="small"
             >
-              {productLoading ? (
+              {isCreating ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={16} color="inherit" />
-                  Creating...
+                  <CircularProgress size={16} sx={{ color: '#9ca3af' }} />
+                  <span>Đang tạo...</span>
                 </Box>
               ) : (
                 `Create ${formData.amount || 0} Product(s)`
