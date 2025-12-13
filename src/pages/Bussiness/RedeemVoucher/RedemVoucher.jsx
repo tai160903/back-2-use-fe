@@ -214,22 +214,45 @@ export default function RedemVoucher() {
 
     try {
       // Fix date handling: Convert local date to UTC properly
-      // For start date: ensure it's not in the past when converted to UTC
-      const selectedStartDate = new Date(createForm.startDate);
-      selectedStartDate.setHours(0, 0, 0, 0); // Start of day in local timezone
-      const startDateLocalISO = selectedStartDate.toISOString();
+      // Parse the date string (format: YYYY-MM-DD)
+      const dateParts = createForm.startDate.split('-');
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed
+      const day = parseInt(dateParts[2], 10);
       
-      // Get current UTC time
+      // Create date in local timezone at start of day
+      const selectedStartDate = new Date(year, month, day, 0, 0, 0, 0);
+      
+      // Get today's date in local timezone (set to start of day)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Compare dates (not datetime) - if selected date is before today, it's invalid
+      if (selectedStartDate < today) {
+        toast.error('Ngày bắt đầu không được là ngày quá khứ');
+        return;
+      }
+      
+      // Get current time in UTC
       const nowUTC = new Date();
       
-      // If the converted UTC time is in the past, use current UTC time instead
+      // Convert selected date to UTC start of day
+      const selectedStartUTC = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+      
+      // If the selected date is today, use current UTC time to ensure it's not in the past
+      // If the selected date is in the future, use start of that day in UTC
       let startDateISO;
-      if (new Date(startDateLocalISO) < nowUTC) {
-        // If start date would be in the past in UTC, use current UTC time
+      if (selectedStartDate.getTime() === today.getTime()) {
+        // Selected date is today - use current UTC time to avoid "past" error
         startDateISO = nowUTC.toISOString();
       } else {
-        // Use the start of day in local timezone converted to UTC
-        startDateISO = startDateLocalISO;
+        // Selected date is in the future - use start of that day in UTC
+        // But ensure it's not before current time
+        if (selectedStartUTC < nowUTC) {
+          startDateISO = nowUTC.toISOString();
+        } else {
+          startDateISO = selectedStartUTC.toISOString();
+        }
       }
       
       // For end date, set to end of day in local timezone, then convert to UTC
@@ -313,23 +336,52 @@ export default function RedemVoucher() {
     }
 
     try {
+      // Check if voucher is published - only allow editing unpublished vouchers
+      if (selectedVoucher.isPublished) {
+        toast.error('Chỉ có thể cập nhật voucher ở trạng thái Unpublished (chưa xuất bản)');
+        return;
+      }
+
       // Fix date handling: Convert local date to UTC properly
-      // For start date: ensure it's not in the past when converted to UTC
-      const selectedStartDate = new Date(editForm.startDate);
-      selectedStartDate.setHours(0, 0, 0, 0); // Start of day in local timezone
-      const startDateLocalISO = selectedStartDate.toISOString();
+      // Parse the date string (format: YYYY-MM-DD)
+      const dateParts = editForm.startDate.split('-');
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed
+      const day = parseInt(dateParts[2], 10);
       
-      // Get current UTC time
+      // Create date in local timezone at start of day
+      const selectedStartDate = new Date(year, month, day, 0, 0, 0, 0);
+      
+      // Get today's date in local timezone (set to start of day)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Compare dates (not datetime) - if selected date is before today, it's invalid
+      if (selectedStartDate < today) {
+        toast.error('Ngày bắt đầu không được là ngày quá khứ');
+        return;
+      }
+      
+      // Get current time in UTC
       const nowUTC = new Date();
       
-      // If the converted UTC time is in the past, use current UTC time instead
+      // Convert selected date to UTC start of day
+      const selectedStartUTC = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+      
+      // If the selected date is today, use current UTC time to ensure it's not in the past
+      // If the selected date is in the future, use start of that day in UTC
       let startDateISO;
-      if (new Date(startDateLocalISO) < nowUTC) {
-        // If start date would be in the past in UTC, use current UTC time
+      if (selectedStartDate.getTime() === today.getTime()) {
+        // Selected date is today - use current UTC time to avoid "past" error
         startDateISO = nowUTC.toISOString();
       } else {
-        // Use the start of day in local timezone converted to UTC
-        startDateISO = startDateLocalISO;
+        // Selected date is in the future - use start of that day in UTC
+        // But ensure it's not before current time
+        if (selectedStartUTC < nowUTC) {
+          startDateISO = nowUTC.toISOString();
+        } else {
+          startDateISO = selectedStartUTC.toISOString();
+        }
       }
       
       // For end date, set to end of day in local timezone, then convert to UTC
@@ -1356,6 +1408,45 @@ export default function RedemVoucher() {
           </Box>
         </DialogTitle>
         <DialogContent className="voucher-dialog-content">
+          {/* Notice about editing unpublished vouchers */}
+          {selectedVoucher && (
+            <Box
+              sx={{
+                mb: 2,
+                p: 1.5,
+                backgroundColor: selectedVoucher.isPublished 
+                  ? 'rgba(239, 68, 68, 0.1)' 
+                  : 'rgba(59, 130, 246, 0.1)',
+                borderRadius: 2,
+                border: `1px solid ${selectedVoucher.isPublished 
+                  ? 'rgba(239, 68, 68, 0.3)' 
+                  : 'rgba(59, 130, 246, 0.3)'}`,
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: selectedVoucher.isPublished ? '#dc2626' : '#2563eb',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                {selectedVoucher.isPublished ? (
+                  <>
+                    <span>⚠️</span>
+                    <span>Chỉ có thể cập nhật voucher ở trạng thái Unpublished (chưa xuất bản). Voucher này đang ở trạng thái Published nên không thể chỉnh sửa.</span>
+                  </>
+                ) : (
+                  <>
+                    <span>ℹ️</span>
+                    <span>Bạn chỉ có thể cập nhật voucher ở trạng thái Unpublished (chưa xuất bản).</span>
+                  </>
+                )}
+              </Typography>
+            </Box>
+          )}
           <Grid container spacing={2}>
             {/* Row 1: Voucher Name, Description */}
             <Grid item xs={12} sm={6}>
@@ -1709,7 +1800,7 @@ export default function RedemVoucher() {
           <Button
             onClick={handleEditVoucher}
             variant="contained"
-            disabled={isLoading}
+            disabled={isLoading || (selectedVoucher && selectedVoucher.isPublished)}
             sx={{
               backgroundColor: '#12422a',
               color: 'white',
