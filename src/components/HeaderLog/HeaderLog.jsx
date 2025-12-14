@@ -8,6 +8,9 @@ import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import { getUserRole, getRedirectPath } from "../../utils/authUtils";
 import React, { useEffect, useState, useRef } from "react";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
 import {
   getProfileApi,
   getProfileBusiness,
@@ -21,7 +24,6 @@ import { io } from "socket.io-client";
 import toast from "react-hot-toast";
 import { getBusinessDashboardOverview } from "../../store/slices/bussinessSlice";
 import { FaLeaf, FaCrown, FaCoins } from "react-icons/fa";
-import Box from "@mui/material/Box";
 export default function HeaderLog() {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.auth);
@@ -30,6 +32,7 @@ export default function HeaderLog() {
   const navigate = useNavigate();
   // Sử dụng state để đảm bảo userRole được tính lại khi currentUser thay đổi
   const [userRole, setUserRole] = useState(() => getUserRole());
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   
   useEffect(() => {
     setUserRole(getUserRole());
@@ -41,14 +44,23 @@ export default function HeaderLog() {
       return;
     }
     if (userRole === "business") {
-      dispatch(getProfileBusiness());
-      dispatch(getBusinessDashboardOverview());
+      // Chỉ gọi API nếu chưa có data
+      if (!businessInfo) {
+        dispatch(getProfileBusiness());
+      }
+      if (!dashboardOverview) {
+        dispatch(getBusinessDashboardOverview());
+      }
     } else if (userRole === "staff") {
-      dispatch(getProfileStaff());
+      if (!staffInfo) {
+        dispatch(getProfileStaff());
+      }
     } else {
-      dispatch(getProfileApi());
+      if (!userInfo) {
+        dispatch(getProfileApi());
+      }
     }
-  }, [dispatch, userRole]);
+  }, [dispatch, userRole, businessInfo, staffInfo, userInfo, dashboardOverview]);
 
   const [notifications, setNotifications] = useState([]);
   const socketRef = useRef(null);
@@ -120,11 +132,18 @@ export default function HeaderLog() {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate(PATH.LOGIN);
+    // Navigate và force reload để clear tất cả state
+    navigate(PATH.LOGIN, { replace: true });
+    // Force reload sau một chút để đảm bảo state được clear
+    setTimeout(() => {
+      window.location.reload();
+    }, 50);
   };
 
   const handleSwitchToCustomer = async () => {
     if (userRole !== "business") return;
+
+    setIsSwitchingRole(true);
 
     try {
       const resultAction = await dispatch(
@@ -135,14 +154,16 @@ export default function HeaderLog() {
         // Đảm bảo state được sync với localStorage
         dispatch(syncWithLocalStorage());
         
-        // Sử dụng "customer" trực tiếp vì chúng ta biết chắc chắn role mới là gì
-        // Đợi một chút để đảm bảo Redux state và localStorage đã được cập nhật
+        // Navigate đến trang mới và force reload để đảm bảo tất cả component re-render với role mới
+        const redirectPath = getRedirectPath("customer");
+        navigate(redirectPath, { replace: true });
+        // Force reload sau một chút để đảm bảo state được cập nhật
         setTimeout(() => {
-          const redirectPath = getRedirectPath("customer");
-          navigate(redirectPath, { replace: true });
+          window.location.reload();
         }, 100);
       }
     } catch (error) {
+      setIsSwitchingRole(false);
       toast.error(error?.message || "Có lỗi xảy ra khi chuyển đổi loại tài khoản.");
     }
   };
@@ -426,6 +447,17 @@ export default function HeaderLog() {
           </div>
         </div>
       </div>
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isSwitchingRole}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" sx={{ color: 'white' }}>
+            Switching account...
+          </Typography>
+        </Box>
+      </Backdrop>
     </>
   );
 }

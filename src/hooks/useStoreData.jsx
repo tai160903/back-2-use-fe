@@ -66,8 +66,8 @@ export const useStoreData = () => {
       return;
     }
     
-    // Gọi API với radius rất lớn (100km) để lấy tất cả stores gần đó
-    const radiusInMeters = 100 * 10000; 
+    // Gọi API với radius rất lớn (3000km) để lấy tất cả stores gần đó
+    const radiusInMeters = 3000 * 1000; // 3000km = 3,000,000 mét 
     
     dispatch(getNearbyStores({
       latitude: userLocation[0],

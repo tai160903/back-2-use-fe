@@ -5,6 +5,10 @@ import Button from "@mui/material/Button";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import logoImage from "../../assets/image/Logo.png";
 import useAuth from "../../hooks/useAuth";
 import { logout, switchAccountTypeAPI, syncWithLocalStorage } from "../../store/slices/authSlice";
@@ -28,6 +32,7 @@ export default function Header() {
   const { userInfo } = useSelector((state) => state.user);
   const { businessFormHistory } = useSelector((state) => state.businesses);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const open = Boolean(anchorEl);
   // Sử dụng useMemo để đảm bảo userRole được tính lại khi currentUser thay đổi
   const userRole = React.useMemo(() => {
@@ -145,7 +150,12 @@ export default function Header() {
   const handleLogout = () => {
     dispatch(logout());
     handleMenuClose();
-    navigate("/auth/login");
+    // Navigate và force reload để clear tất cả state
+    navigate("/auth/login", { replace: true });
+    // Force reload sau một chút để đảm bảo state được clear
+    setTimeout(() => {
+      window.location.reload();
+    }, 50);
   };
 
   const handleBusinessRegistrationClick = () => {
@@ -165,6 +175,9 @@ export default function Header() {
 
     if (!targetRole) return;
 
+    setIsSwitchingRole(true);
+    handleMenuClose();
+
     try {
       const resultAction = await dispatch(
         switchAccountTypeAPI({ role: targetRole })
@@ -174,17 +187,17 @@ export default function Header() {
         // Đảm bảo state được sync với localStorage
         dispatch(syncWithLocalStorage());
         
-        // Sử dụng targetRole trực tiếp vì chúng ta biết chắc chắn role mới là gì
-        // Đợi một chút để đảm bảo Redux state và localStorage đã được cập nhật
+        // Navigate đến trang mới và force reload để đảm bảo tất cả component re-render với role mới
+        const redirectPath = getRedirectPath(targetRole);
+        navigate(redirectPath, { replace: true });
+        // Force reload sau một chút để đảm bảo state được cập nhật
         setTimeout(() => {
-          const redirectPath = getRedirectPath(targetRole);
-          navigate(redirectPath, { replace: true });
+          window.location.reload();
         }, 100);
       }
     } catch (error) {
+      setIsSwitchingRole(false);
       toast.error(error?.message || "Có lỗi xảy ra khi chuyển đổi loại tài khoản.");
-    } finally {
-      handleMenuClose();
     }
   };
 
@@ -347,6 +360,17 @@ export default function Header() {
           )}
         </div>
       </div>
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isSwitchingRole}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" sx={{ color: 'white' }}>
+            Switching account...
+          </Typography>
+        </Box>
+      </Backdrop>
     </div>
   );
 }
