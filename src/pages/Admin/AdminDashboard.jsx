@@ -835,9 +835,9 @@ const AdminDashboard = () => {
                   <div className="co2-benefit-item">
                     <div className="benefit-icon benefit-positive">🌳</div>
                     <div className="benefit-content">
-                      <h4 className="benefit-title">Equivalent to Planting Trees</h4>
+                      <h4 className="benefit-title">Co2 Reduction</h4>
                       <p className="benefit-description">
-                        Reducing {(dashboardOverview.co2Reduced || 0).toFixed(2)} kg of CO₂ is equivalent to planting approximately {Math.round((dashboardOverview.co2Reduced || 0) * 0.5)} trees.
+                        Reducing {(dashboardOverview.co2Reduced || 0).toFixed(2)} kg of CO₂. 
                       </p>
                     </div>
                   </div>
