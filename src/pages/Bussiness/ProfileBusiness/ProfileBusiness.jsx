@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -70,24 +70,32 @@ export default function ProfileBusiness() {
   const { businessInfo: apiBusinessPayload } = useSelector((state) => state.user)
   const { dashboardOverview } = useSelector((state) => state.businesses)
 
-  // Fetch business profile and dashboard overview on mount
+  // Fetch business profile and dashboard overview on mount (chỉ khi chưa có data)
   useEffect(() => {
-    dispatch(getProfileBusiness())
-    dispatch(getBusinessDashboardOverview())
-  }, [dispatch])
+    if (!apiBusinessPayload) {
+      dispatch(getProfileBusiness())
+    }
+    if (!dashboardOverview) {
+      dispatch(getBusinessDashboardOverview())
+    }
+  }, [dispatch, apiBusinessPayload, dashboardOverview])
 
   // Extract data from API payload
   const business = apiBusinessPayload?.data?.business
   // Merge co2Reduced and ecoPoints from dashboard overview if not in business profile
-  const businessWithCo2 = business ? {
-    ...business,
-    co2Reduced: business.co2Reduced !== undefined 
-      ? business.co2Reduced 
-      : (dashboardOverview?.co2Reduced || 0),
-    ecoPoints: business.ecoPoints !== undefined 
-      ? business.ecoPoints 
-      : (dashboardOverview?.ecoPoints || 0)
-  } : null
+  // Sử dụng useMemo để tránh tạo object mới mỗi lần render
+  const businessWithCo2 = useMemo(() => {
+    if (!business) return null;
+    return {
+      ...business,
+      co2Reduced: business.co2Reduced !== undefined 
+        ? business.co2Reduced 
+        : (dashboardOverview?.co2Reduced || 0),
+      ecoPoints: business.ecoPoints !== undefined 
+        ? business.ecoPoints 
+        : (dashboardOverview?.ecoPoints || 0)
+    };
+  }, [business, dashboardOverview?.co2Reduced, dashboardOverview?.ecoPoints])
   const wallet = apiBusinessPayload?.data?.wallet
   const activeSubscription = apiBusinessPayload?.data?.activeSubscription
   const rawActive = activeSubscription
@@ -127,17 +135,19 @@ export default function ProfileBusiness() {
     defaultValues: getFormValues()
   })
 
-  // Reset form when business data changes
+  // Reset form when business data changes (chỉ khi không đang edit)
   useEffect(() => {
-    reset({
-      businessName: businessWithCo2?.businessName || '',
-      businessType: businessWithCo2?.businessType || '',
-      businessPhone: businessWithCo2?.businessPhone || '',
-      businessAddress: businessWithCo2?.businessAddress || '',
-      openTime: businessWithCo2?.openTime || '',
-      closeTime: businessWithCo2?.closeTime || ''
-    })
-  }, [businessWithCo2, reset])
+    if (!isEditing && businessWithCo2) {
+      reset({
+        businessName: businessWithCo2.businessName || '',
+        businessType: businessWithCo2.businessType || '',
+        businessPhone: businessWithCo2.businessPhone || '',
+        businessAddress: businessWithCo2.businessAddress || '',
+        openTime: businessWithCo2.openTime || '',
+        closeTime: businessWithCo2.closeTime || ''
+      })
+    }
+  }, [businessWithCo2, isEditing, reset])
 
   const handleEdit = () => {
     setIsEditing(true)

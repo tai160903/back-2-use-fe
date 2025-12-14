@@ -73,7 +73,12 @@ const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
   // LOGOUT
   const handleLogout = () => {
     dispatch(logout());
-    navigate(PATH.LOGIN);
+    // Navigate và force reload để clear tất cả state
+    navigate(PATH.LOGIN, { replace: true });
+    // Force reload sau một chút để đảm bảo state được clear
+    setTimeout(() => {
+      window.location.reload();
+    }, 50);
   };
 
   // Drawer toggle handled inline
