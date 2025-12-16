@@ -484,19 +484,6 @@ export default function ProductSizeManagement() {
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(size)}
-                      sx={{
-                        color: '#ef4444',
-                        '&:hover': {
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        },
-                      }}
-                      title="Delete"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
                   </Box>
                 </Box>
               ))}

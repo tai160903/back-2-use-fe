@@ -794,17 +794,6 @@ export default function ProductItems() {
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleDelete(item);
-                              }}
-                              className="delete-button"
-                              sx={{ padding: '4px' }}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
                           </Box>
                         </TableCell>
                       </TableRow>
@@ -1007,29 +996,6 @@ export default function ProductItems() {
                       }}
                     >
                       Edit
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => {
-                        if (selectedItem) {
-                          handleCloseItemDetails(false);
-                          handleDelete(selectedItem);
-                        }
-                      }}
-                      sx={{
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        px: 2.5,
-                        py: 0.75,
-                        boxShadow: '0 8px 20px rgba(220, 38, 38, 0.15)',
-                        '&:hover': {
-                          boxShadow: '0 10px 24px rgba(220, 38, 38, 0.25)',
-                        },
-                      }}
-                    >
-                      Delete
                     </Button>
                   </Box>
                 </DialogActions>

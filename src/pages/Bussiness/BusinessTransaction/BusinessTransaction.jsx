@@ -768,6 +768,13 @@ export default function BusinessTransaction() {
   const detailCurrentImages = detail.currentConditionImages || {};
   const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
 
+  // Prefer QR from productId for QR display, fallback to transaction-level or serial
+  const detailQrCode =
+    detailProduct.qrCode ||
+    detail.qrCode ||
+    detailProduct.serialNumber ||
+    "";
+
   const toVNDate = (d) =>
     d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
 
@@ -980,54 +987,46 @@ export default function BusinessTransaction() {
                     }}
                   />
                   <Box sx={{ flex: 1 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        mb: 1,
-                      }}
-                    >
-                      <Typography variant="h6">
-                        {detailGroup.name || "Unknown Item"}
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <Chip
-                          size="small"
-                          label={typeLabel}
-                          variant="outlined"
-                          sx={{
-                            borderColor: "#0b5529",
-                            color: "#0b5529",
-                            fontWeight: 500,
-                          }}
-                        />
-                        <Chip
-                          size="small"
-                          label={detail.status}
-                          variant="filled"
-                          sx={{
-                            backgroundColor: "#0b5529",
-                            color: "#ffffff",
-                            fontWeight: 500,
-                          }}
-                        />
+                    <Box sx={{ minWidth: 0 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography variant="h6">
+                          {detailGroup.name || "Unknown Item"}
+                        </Typography>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Chip
+                            size="small"
+                            label={typeLabel}
+                            variant="outlined"
+                            sx={{
+                              borderColor: "#0b5529",
+                              color: "#0b5529",
+                              fontWeight: 500,
+                            }}
+                          />
+                          <Chip
+                            size="small"
+                            label={detail.status}
+                            variant="filled"
+                            sx={{
+                              backgroundColor: "#0b5529",
+                              color: "#ffffff",
+                              fontWeight: 500,
+                            }}
+                          />
+                        </Box>
                       </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Size: {detailSize.sizeName || "N/A"}
+                      </Typography>
+                      
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Size: {detailSize.sizeName || "N/A"}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ wordBreak: "break-all" }}
-                    >
-                      QR / Serial:{" "}
-                      {detail.qrCode ||
-                        detailProduct.qrCode ||
-                        detailProduct.serialNumber ||
-                        "N/A"}
-                    </Typography>
                   </Box>
                 </Box>
 
@@ -1215,6 +1214,43 @@ export default function BusinessTransaction() {
                     </Box>
                   </Box>
                 </Box>
+
+                {/* QR Code at the bottom */}
+                {detailQrCode && (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1.5, fontWeight: 600 }}
+                    >
+                      QR Code
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                          detailQrCode
+                        )}`}
+                        alt={`QR Code for ${detailQrCode}`}
+                        sx={{
+                          width: 180,
+                          height: 180,
+                          objectFit: "contain",
+                          backgroundColor: "#ffffff",
+                          borderRadius: 2,
+                          border: "1px solid #e5e7eb",
+                          p: 1.5,
+                        }}
+                      />
+                    </Box>
+                  </>
+                )}
               </Box>
             )}
           </DialogContent>

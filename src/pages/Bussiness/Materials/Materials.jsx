@@ -45,6 +45,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 import {
   createMaterial,
   getApprovedMaterials,
@@ -54,9 +55,12 @@ import './Materials.css';
 
 export default function Materials() {
   const dispatch = useDispatch();
-  const { myMaterials, approvedMaterials, materialLoading, materialError } = useSelector(
-    (state) => state.businesses
-  );
+  const {
+    myMaterials = [],
+    approvedMaterials = [],
+    materialLoading,
+    materialError,
+  } = useSelector((state) => state.businesses);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
@@ -240,8 +244,21 @@ export default function Materials() {
       handleCloseDialog();
       // Refresh materials list
       dispatch(getMyMaterials());
+      toast.success('Material request created successfully!');
     } catch (error) {
       console.error('Error saving material:', error);
+      // error here is the rejectWithValue payload from createMaterial
+      const apiMessage =
+        (error && error.message) || (typeof error === 'string' ? error : '');
+
+      if (apiMessage && apiMessage.toLowerCase().includes('already exists')) {
+        toast.error(apiMessage);
+      } else {
+        toast.error(
+          apiMessage ||
+            'Material already exists in the system or could not be created.'
+        );
+      }
     }
   };
 
