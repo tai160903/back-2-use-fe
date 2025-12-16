@@ -5,6 +5,7 @@ import {
   updateBusinessVoucher,
   getMyBusinessVouchers,
   getBusinessVoucherCodes,
+  getBussinessVoucherDetail,
 } from '../../../store/slices/voucherSlice';
 import {
   FaGift,
@@ -31,6 +32,11 @@ import {
   Paper,
   Divider,
   InputAdornment,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from '@mui/material';
 import { Close as CloseIcon, Search as SearchIcon } from '@mui/icons-material';
 import { Pagination } from '@mui/material';
@@ -51,22 +57,25 @@ const formatDate = (dateString) => {
 
 export default function RedemVoucher() {
   const dispatch = useDispatch();
-  const {
-    myBusinessVouchers,
-    myBusinessVoucherPagination,
-    isLoading,
-  } = useSelector((state) => state.vouchers);
+  const { myBusinessVouchers, isLoading, currentBusinessVoucher } = useSelector(
+    (state) => state.vouchers
+  );
 
   // State
   const [page, setPage] = useState(1);
-  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'active', 'expired'
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'active', 'inactive', 'expired'
   const [searchQuery, setSearchQuery] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [voucherCodes, setVoucherCodes] = useState([]);
-  const itemsPerPage = 12;
+  const itemsPerPage = 6
+
+  // Data chi tiết voucher (lấy từ API getBussinessVoucherDetail nếu có)
+  const detailVoucher = currentBusinessVoucher?.voucher || selectedVoucher;
+  const detailStats = currentBusinessVoucher?.stats;
+  const detailVoucherCodes = currentBusinessVoucher?.voucherCodes || voucherCodes;
 
   // Form states
   const [createForm, setCreateForm] = useState({
@@ -99,25 +108,15 @@ export default function RedemVoucher() {
     return end < now;
   };
 
-  // Load all vouchers for accurate stats calculation (first load)
+  // Load all vouchers once for filtering and pagination (client-side)
   useEffect(() => {
     dispatch(
       getMyBusinessVouchers({
         page: 1,
-        limit: 1000, // Load all for accurate stats
+        limit: 1000, // Load all for filtering and pagination
       })
     );
   }, [dispatch]);
-
-  // Load paginated vouchers for display when page changes
-  useEffect(() => {
-    dispatch(
-      getMyBusinessVouchers({
-        page,
-        limit: itemsPerPage,
-      })
-    );
-  }, [dispatch, page]);
 
   // Filter vouchers based on status and search
   const filteredVouchers = useMemo(() => {
@@ -125,11 +124,15 @@ export default function RedemVoucher() {
     
     let filtered = [...myBusinessVouchers];
     
-    // Filter by status
+    // Filter by status (using API status field first, then fallback to date check for "expired")
     if (filterStatus === 'active') {
-      filtered = filtered.filter((v) => !isVoucherExpired(v.endDate));
+      filtered = filtered.filter((v) => v.status === 'active');
+    } else if (filterStatus === 'inactive') {
+      filtered = filtered.filter((v) => v.status === 'inactive');
     } else if (filterStatus === 'expired') {
-      filtered = filtered.filter((v) => isVoucherExpired(v.endDate));
+      filtered = filtered.filter(
+        (v) => v.status === 'expired' || isVoucherExpired(v.endDate)
+      );
     }
     
     // Filter by search query
@@ -173,7 +176,9 @@ export default function RedemVoucher() {
     const expired = myBusinessVouchers.filter((v) => isVoucherExpired(v.endDate)).length;
     const published = myBusinessVouchers.filter((v) => v.isPublished).length;
     
-    return { total, active, expired, published };
+      const inactive = myBusinessVouchers.filter((v) => v.status === 'inactive').length;
+      
+      return { total, active, inactive, expired, published };
   }, [myBusinessVouchers]);
 
   // Handle create voucher
@@ -275,21 +280,15 @@ export default function RedemVoucher() {
       ).unwrap();
 
       handleCloseCreateModal();
-      // Refresh list - reload all for stats and current page for display
+      setPage(1); // Reset to first page
+      // Refresh list - reload all for filtering and pagination
       dispatch(
         getMyBusinessVouchers({
           page: 1,
-          limit: 1000, // Reload all for accurate stats
+          limit: 1000, // Reload all for filtering and pagination
         })
       );
-      // Also reload current page
-      dispatch(
-        getMyBusinessVouchers({
-          page,
-          limit: itemsPerPage,
-        })
-      );
-    } catch (error) {
+    } catch {
       // Error handled by thunk
     }
   };
@@ -406,21 +405,15 @@ export default function RedemVoucher() {
       ).unwrap();
 
       handleCloseEditModal();
-      // Refresh list - reload all for stats and current page for display
+      setPage(1); // Reset to first page
+      // Refresh list - reload all for filtering and pagination
       dispatch(
         getMyBusinessVouchers({
           page: 1,
-          limit: 1000, // Reload all for accurate stats
+          limit: 1000, // Reload all for filtering and pagination
         })
       );
-      // Also reload current page
-      dispatch(
-        getMyBusinessVouchers({
-          page,
-          limit: itemsPerPage,
-        })
-      );
-    } catch (error) {
+    } catch {
       // Error handled by thunk
     }
   };
@@ -433,6 +426,16 @@ export default function RedemVoucher() {
     // Load voucher codes
     try {
       const voucherId = voucher._id || voucher.id;
+      // Gọi API lấy chi tiết business voucher + danh sách mã (lưu vào Redux)
+      dispatch(
+        getBussinessVoucherDetail({
+          businessVoucherId: voucherId,
+          status: undefined,
+          page: 1,
+          limit: 100,
+        })
+      );
+
       const result = await dispatch(
         getBusinessVoucherCodes({
           businessVoucherId: voucherId,
@@ -670,6 +673,13 @@ export default function RedemVoucher() {
                 Active ({stats.active})
               </button>
               <button 
+                className={`voucher-filter-tab ${filterStatus === 'inactive' ? 'active' : ''}`}
+                onClick={() => setFilterStatus('inactive')}
+              >
+                <FaTimesCircle />
+                Inactive ({stats.inactive})
+              </button>
+              <button 
                 className={`voucher-filter-tab ${filterStatus === 'expired' ? 'active' : ''}`}
                 onClick={() => setFilterStatus('expired')}
               >
@@ -707,45 +717,54 @@ export default function RedemVoucher() {
                               ? 'Published'
                               : 'Unpublished'}
                           </Typography>
+                          <Typography
+                            variant="caption"
+                            className="voucher-type-subtext"
+                          >
+                            {voucher.voucherType || 'Business'}
+                          </Typography>
                         </div>
                         <div className="voucher-torn-edge"></div>
                       </div>
 
                       {/* Right White Section */}
                       <div className="voucher-card-right">
-                        <div className="voucher-discount-info">
-                          <Typography className="discount-text">
-                            {voucher.discountPercent || 0}% Off
-                          </Typography>
-                          {voucher.rewardPointCost && (
-                            <Typography className="discount-max">
-                              Cost: {voucher.rewardPointCost} points
+                        {/* Header: Name + Base code + Status badges */}
+                        <div className="voucher-header-row">
+                          <div className="voucher-header-main">
+                            <Typography className="voucher-name-text">
+                              {voucher.customName || 'Unnamed voucher'}
                             </Typography>
-                          )}
-                        </div>
-
-                        <div className="voucher-conditions">
-                          <Chip
-                            label={
-                              voucher.isPublished ? 'Published' : 'Unpublished'
-                            }
-                            size="small"
-                            className={`status-chip ${
-                              voucher.isPublished ? 'published' : 'unpublished'
-                            }`}
-                          />
-                        </div>
-
-                        {voucher.endDate && daysRemaining !== null && (
-                          <div className="voucher-expiry">
-                            <Typography className="expiry-text">
-                              {daysRemaining > 0
-                                ? `${daysRemaining} days remaining`
-                                : 'Expired'}
+                            <Typography className="voucher-code-text">
+                              Code: <span>{voucher.baseCode || 'N/A'}</span>
                             </Typography>
                           </div>
-                        )}
+                          <div className="voucher-header-badges">
+                            {/* Business status */}
+                            <Chip
+                              label={
+                                voucher.status
+                                  ? voucher.status.charAt(0).toUpperCase() +
+                                    voucher.status.slice(1)
+                                  : 'Unknown'
+                              }
+                              size="small"
+                              className={`status-chip status-${voucher.status || 'unknown'}`}
+                            />
+                            {/* Publish status */}
+                            <Chip
+                              label={
+                                voucher.isPublished ? 'Published' : 'Unpublished'
+                              }
+                              size="small"
+                              className={`status-chip ${
+                                voucher.isPublished ? 'published' : 'unpublished'
+                              }`}
+                            />
+                          </div>
+                        </div>
 
+                        {/* Description */}
                         <div className="voucher-description">
                           <Typography
                             variant="body2"
@@ -755,6 +774,56 @@ export default function RedemVoucher() {
                           </Typography>
                         </div>
 
+                        {/* Main info grid */}
+                        <div className="voucher-info-grid">
+                          <div className="voucher-info-item-inline">
+                            <span className="voucher-info-label" style={{fontWeight: 'bold'}}>Discount</span>
+                            <span className="voucher-info-value highlight">
+                              {voucher.discountPercent || 0}%
+                            </span>
+                          </div>
+                          <div className="voucher-info-item-inline">
+                            <span className="voucher-info-label" style={{fontWeight: 'bold'}}>Reward points cost:</span>
+                            <span className="voucher-info-value">
+                              {voucher.rewardPointCost ?? 0} 
+                            </span>
+                          </div>
+                          <div className="voucher-info-item-inline">
+                            <span className="voucher-info-label" style={{fontWeight: 'bold'}}>Quantity</span>
+                            <span className="voucher-info-value">
+                              {voucher.redeemedCount ?? 0} / {voucher.maxUsage ?? 0}
+                            </span>
+                          </div>
+                         
+                        </div>
+
+                        {/* Date & remaining */}
+                        <div className="voucher-dates-row">
+                          <div className="voucher-date-item">
+                            <span className="voucher-info-label" style={{fontWeight: 'bold'}}>Start</span>
+                            <span className="voucher-info-value">
+                              {formatDate(voucher.startDate)}
+                            </span>
+                          </div>
+                          <div className="voucher-date-item">
+                            <span className="voucher-info-label" style={{fontWeight: 'bold'}}>End</span>
+                            <span className="voucher-info-value">
+                              {formatDate(voucher.endDate)}
+                            </span>
+                          </div>
+                          {voucher.endDate && daysRemaining !== null && (
+                            <div className="voucher-date-item remaining">
+                              <span className="voucher-info-label" style={{fontWeight: 'bold'}}>Remaining</span>
+                              <span className={`voucher-info-value ${daysRemaining > 0 ? 'remaining-active' : 'remaining-expired'}`}>
+                                {daysRemaining > 0
+                                  ? `${daysRemaining} days`
+                                  : 'Expired'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions */}
                         <div className="voucher-actions">
                           <Button
                             variant="outlined"
@@ -1871,10 +1940,10 @@ export default function RedemVoucher() {
           </Box>
         </DialogTitle>
         <DialogContent className="voucher-dialog-content" sx={{ pt: 3 }}>
-          {selectedVoucher && (
+        {detailVoucher && (
             <Box>
               {/* QR Code Section */}
-              {voucherCodes.length > 0 && (
+            {detailVoucherCodes.length > 0 && (
                 <Box
                   sx={{
                     display: 'flex',
@@ -1896,7 +1965,12 @@ export default function RedemVoucher() {
                     }}
                   >
                     <img
-                      src={generateQRCode(voucherCodes[0])}
+                      src={
+                        detailVoucherCodes[0]?.qrCode ||
+                        generateQRCode(
+                          detailVoucherCodes[0]?.fullCode || detailVoucherCodes[0]
+                        )
+                      }
                       alt="QR Code"
                       style={{
                         width: '250px',
@@ -1910,9 +1984,9 @@ export default function RedemVoucher() {
                     color="text.secondary"
                     sx={{ mt: 2, fontFamily: 'monospace', fontWeight: 600 }}
                   >
-                    {typeof voucherCodes[0] === 'string'
-                      ? voucherCodes[0]
-                      : voucherCodes[0]?.code || 'N/A'}
+                  {detailVoucherCodes[0]?.fullCode ||
+                    detailVoucherCodes[0]?.code ||
+                    'N/A'}
                   </Typography>
                 </Box>
               )}
@@ -1929,7 +2003,7 @@ export default function RedemVoucher() {
                     Voucher Name:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {selectedVoucher.customName || 'N/A'}
+                    {detailVoucher.customName || 'N/A'}
                   </Typography>
                 </Box>
                 <Box className="voucher-info-item">
@@ -1937,7 +2011,7 @@ export default function RedemVoucher() {
                     Description:
                   </Typography>
                   <Typography variant="body1">
-                    {selectedVoucher.customDescription || 'N/A'}
+                    {detailVoucher.customDescription || 'N/A'}
                   </Typography>
                 </Box>
                 <Box className="voucher-info-item">
@@ -1945,7 +2019,7 @@ export default function RedemVoucher() {
                     Discount:
                   </Typography>
                   <Typography variant="body1" fontWeight={600} color="#12422a">
-                    {selectedVoucher.discountPercent || 0}%
+                    {detailVoucher.discountPercent || 0}%
                   </Typography>
                 </Box>
                 <Box className="voucher-info-item">
@@ -1953,7 +2027,31 @@ export default function RedemVoucher() {
                     Reward Point Cost:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {selectedVoucher.rewardPointCost || 0} points
+                    {detailVoucher.rewardPointCost || 0} points
+                  </Typography>
+                </Box>
+                <Box className="voucher-info-item">
+                  <Typography variant="caption" color="text.secondary">
+                    Base Code:
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {detailVoucher.baseCode || 'N/A'}
+                  </Typography>
+                </Box>
+                <Box className="voucher-info-item">
+                  <Typography variant="caption" color="text.secondary">
+                    Voucher Type:
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {detailVoucher.voucherType || 'business'}
+                  </Typography>
+                </Box>
+                <Box className="voucher-info-item">
+                  <Typography variant="caption" color="text.secondary">
+                    Quantity (Redeemed / Max):
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {(detailVoucher.redeemedCount ?? 0)} / {(detailVoucher.maxUsage ?? 0)}
                   </Typography>
                 </Box>
                 <Box className="voucher-info-item">
@@ -1961,7 +2059,7 @@ export default function RedemVoucher() {
                     Start Date:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {formatDate(selectedVoucher.startDate)}
+                    {formatDate(detailVoucher.startDate)}
                   </Typography>
                 </Box>
                 <Box className="voucher-info-item">
@@ -1969,35 +2067,132 @@ export default function RedemVoucher() {
                     End Date:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {formatDate(selectedVoucher.endDate)}
+                    {formatDate(detailVoucher.endDate)}
                   </Typography>
                 </Box>
                 <Box className="voucher-info-item">
                   <Typography variant="caption" color="text.secondary">
-                    Status:
+                    Publish Status:
                   </Typography>
                   <Chip
                     label={
-                      selectedVoucher.isPublished ? 'Published' : 'Unpublished'
+                      detailVoucher.isPublished ? 'Published' : 'Unpublished'
                     }
                     size="small"
                     sx={{
-                      backgroundColor: selectedVoucher.isPublished
+                      backgroundColor: detailVoucher.isPublished
                         ? '#d1fae5'
                         : '#fef3c7',
-                      color: selectedVoucher.isPublished ? '#065f46' : '#92400e',
+                      color: detailVoucher.isPublished ? '#065f46' : '#92400e',
                       fontWeight: 600,
                     }}
                   />
                 </Box>
-                {voucherCodes.length > 0 && (
+                <Box className="voucher-info-item">
+                  <Typography variant="caption" color="text.secondary">
+                    Business Status:
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {detailVoucher.status
+                      ? detailVoucher.status.charAt(0).toUpperCase() +
+                        detailVoucher.status.slice(1)
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                {detailStats && (
+                  <Box className="voucher-info-item">
+                    <Typography variant="caption" color="text.secondary">
+                      Usage Statistics:
+                    </Typography>
+                    <Typography variant="body2">
+                      Total codes: <strong>{detailStats.total}</strong> | Used:{' '}
+                      <strong>{detailStats.used}</strong> | Redeemed:{' '}
+                      <strong>{detailStats.redeemed}</strong> | Expired:{' '}
+                      <strong>{detailStats.expired}</strong>
+                    </Typography>
+                  </Box>
+                )}
+                {detailVoucherCodes.length > 0 && (
                   <Box className="voucher-info-item">
                     <Typography variant="caption" color="text.secondary">
                       Total Codes:
                     </Typography>
                     <Typography variant="body1" fontWeight={600}>
-                      {voucherCodes.length} codes
+                      {detailVoucherCodes.length} codes
                     </Typography>
+                  </Box>
+                )}
+                {detailVoucherCodes.length > 0 && (
+                  <Box className="voucher-info-item">
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+                      Voucher Codes & Customers:
+                    </Typography>
+                    <Box sx={{ maxHeight: 260, overflowY: 'auto' }}>
+                      <Table size="small" stickyHeader>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: 700 }}>Code</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Customer</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Phone</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Used At</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Redeemed At</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {detailVoucherCodes.map((code) => {
+                            const redeemedUser = code.redeemedBy?.userId || code.redeemedBy;
+                            return (
+                              <TableRow key={code._id}>
+                                <TableCell>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+                                  >
+                                    {code.fullCode || code.code || 'N/A'}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={
+                                      code.status
+                                        ? code.status.charAt(0).toUpperCase() +
+                                          code.status.slice(1)
+                                        : 'N/A'
+                                    }
+                                    size="small"
+                                    sx={{ fontSize: 11, fontWeight: 600 }}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" fontWeight={600}>
+                                    {redeemedUser?.fullName || code.redeemedBy?.fullName || 'N/A'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {code.redeemedBy?.address || ''}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {code.redeemedBy?.phone || 'N/A'}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {code.usedAt ? formatDate(code.usedAt) : 'N/A'}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {code.redeemedAt ? formatDate(code.redeemedAt) : 'N/A'}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </Box>
                   </Box>
                 )}
               </Box>

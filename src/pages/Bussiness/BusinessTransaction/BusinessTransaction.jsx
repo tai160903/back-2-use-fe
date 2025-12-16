@@ -119,7 +119,7 @@ function BorrowCard({ item }) {
     productGroup.imageUrl ||
     product.imageUrl ||
     "https://via.placeholder.com/150";
-  const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
+  
   const size = sizeObj.sizeName;
 
   // Ưu tiên fullName, nếu không có thì hiển thị email
@@ -172,9 +172,7 @@ function BorrowCard({ item }) {
                     <div className="borrow-content-count">{size}</div>
                   )}
                 </Typography>
-                <Typography variant="body2" className="borrow-content-qr">
-                  <MdOutlineQrCode2 /> {qr}
-                </Typography>
+               
                 <div className="borrow-content-time">
                   <Typography
                     variant="body2"
@@ -301,7 +299,7 @@ function SuccessCard({ item }) {
     productGroup.imageUrl ||
     product.imageUrl ||
     "https://via.placeholder.com/150";
-  const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
+  
   const size = sizeObj.sizeName;
 
   // Ưu tiên fullName, nếu không có thì hiển thị email
@@ -354,9 +352,7 @@ function SuccessCard({ item }) {
                     <div className="borrow-content-count">{size}</div>
                   )}
                 </Typography>
-                <Typography variant="body2" className="borrow-content-qr">
-                  <MdOutlineQrCode2 /> {qr}
-                </Typography>
+               
                 <div className="borrow-content-time">
                   <Typography
                     variant="body2"
@@ -514,7 +510,7 @@ function FailedCard({ item }) {
     productGroup.imageUrl ||
     product.imageUrl ||
     "https://via.placeholder.com/150";
-  const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
+  
   const size = sizeObj.sizeName;
 
   // Ưu tiên fullName, nếu không có thì hiển thị email
@@ -567,9 +563,7 @@ function FailedCard({ item }) {
                     <div className="borrow-content-count">{size}</div>
                   )}
                 </Typography>
-                <Typography variant="body2" className="borrow-content-qr">
-                  <MdOutlineQrCode2 /> {qr}
-                </Typography>
+               
                 <div className="borrow-content-time">
                   <Typography
                     variant="body2"

@@ -73,6 +73,7 @@ export default function WalletBusiness() {
   // Map transaction type to professional terminology
   const getTransactionTypeLabel = (transactionType) => {
     const typeMap = {
+      'deposit_forfeited': 'Deposit Forfeited',
       'top_up': 'Top up',
       'deposit': 'Top up',
       'withdrawal': 'Withdraw',
@@ -286,7 +287,9 @@ export default function WalletBusiness() {
         paymentUrl: transaction.paymentUrl || null,
         referenceDetail: transaction.referenceDetail,
         relatedUser: transaction.relatedUser || null,
-        relatedUserType: transaction.relatedUserType || null
+        relatedUserType: transaction.relatedUserType || null,
+        balanceType: transaction.balanceType || null,
+        toBalanceType: transaction.toBalanceType || null
       };
     });
   };
@@ -624,6 +627,28 @@ export default function WalletBusiness() {
                               {item.description}
                             </Typography>
                             
+                            {/* Balance Transfer Info - Transfer from Holding to Available */}
+                            {item.balanceType === "holding" && item.toBalanceType === "available" && (
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                <Chip
+                                  icon={<FiArrowDownLeft size={14} />}
+                                  label={`Transferred from Holding Balance → Available Balance`}
+                                  size="small"
+                                  sx={{
+                                    height: "24px",
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                    backgroundColor: "#fff3e0",
+                                    color: "#e65100",
+                                    border: "1px solid #ffb74d",
+                                    "& .MuiChip-icon": {
+                                      color: "#e65100",
+                                    },
+                                  }}
+                                />
+                              </Box>
+                            )}
+                            
                             {/* Payment Method */}
                             {item.paymentMethod && (
                               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -897,6 +922,28 @@ export default function WalletBusiness() {
                                   >
                                     {item.description}
                                   </Typography>
+                                  
+                                  {/* Balance Transfer Info - Chuyển từ Holding sang Available */}
+                                  {item.balanceType === "holding" && item.toBalanceType === "available" && (
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                      <Chip
+                                        icon={<FiArrowDownLeft size={14} />}
+                                        label={`Transferred from Holding Balance → Available Balance`}
+                                        size="small"
+                                        sx={{
+                                          height: "24px",
+                                          fontSize: "11px",
+                                          fontWeight: 600,
+                                          backgroundColor: "#fff3e0",
+                                          color: "#e65100",
+                                          border: "1px solid #ffb74d",
+                                          "& .MuiChip-icon": {
+                                            color: "#e65100",
+                                          },
+                                        }}
+                                      />
+                                    </Box>
+                                  )}
                                   
                                   {/* Related User - Customer Name */}
                                   {item.relatedUser && item.relatedUserType === "customer" && item.relatedUser.fullName && (

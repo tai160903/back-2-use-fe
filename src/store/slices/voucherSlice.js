@@ -181,6 +181,27 @@ export const useBusinessVoucherCode = createAsyncThunk(
   }
 );
 
+
+export const getBussinessVoucherDetail = createAsyncThunk(
+  "vouchers/getBussinessVoucherDetail",
+  async ({ businessVoucherId, status, page = 1, limit = 10 } = {}, { rejectWithValue }) => {
+    try {
+      const query = new URLSearchParams();
+      if (status) query.append("status", status);
+      query.append("page", String(page));
+      query.append("limit", String(limit));
+
+      const response = await fetcher.get(
+        `/business-vouchers/${businessVoucherId}/voucher-codes?${query.toString()}`
+      );
+      return response.data;
+    }
+    catch (error) {
+      return rejectWithValue(error.response ? error.response.data : error.message);
+    }
+  }
+);
+
 // ============ CUSTOMER VOUCHER APIs ============
 // Get public vouchers for customer
 export const getCustomerVouchers = createAsyncThunk(
@@ -588,7 +609,20 @@ const voucherSlice = createSlice({
         // Display error message to user
         const errorMessage = payload?.message || payload?.error || "Failed to redeem voucher. Please try again.";
         toast.error(errorMessage);
-      });
+      })
+      // Get business voucher detail
+      .addCase(getBussinessVoucherDetail.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getBussinessVoucherDetail.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.currentBusinessVoucher = payload.data || payload;
+      })
+      .addCase(getBussinessVoucherDetail.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
   },
 });
 
