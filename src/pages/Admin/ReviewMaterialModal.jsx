@@ -168,9 +168,11 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
     >
       <DialogTitle 
         sx={{ 
-          background: isApprove 
+          background: isApprove
             ? 'linear-gradient(135deg, #164e31 0%, #0f3d20 100%)'
-            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            : isReject
+              ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+              : 'linear-gradient(135deg, #111827 0%, #020617 100%)',
           color: 'white',
           py: 2,
           px: 3,
@@ -195,18 +197,26 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
           >
             {isApprove ? (
               <CheckCircleIcon sx={{ fontSize: 20, color: 'white' }} />
-            ) : (
+            ) : isReject ? (
               <CancelIcon sx={{ fontSize: 20, color: 'white' }} />
+            ) : (
+              <CheckCircleIcon sx={{ fontSize: 20, color: 'white' }} />
             )}
           </Box>
           <Box>
             <Typography variant="h6" component="div" fontWeight={700} sx={{ fontSize: '22px', mb: 0.25 }}>
-              {isApprove ? 'Approve Material Request' : 'Reject Material Request'}
+              {isApprove
+                ? 'Approve Material Request'
+                : isReject
+                  ? 'Reject Material Request'
+                  : 'Review Material Request'}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '14px' }}>
               {isApprove 
                 ? 'Confirm approval of this material request' 
-                : 'Provide a reason for rejecting this material request'}
+                : isReject
+                  ? 'Provide a reason for rejecting this material request'
+                  : 'Review this material request'}
             </Typography>
           </Box>
         </Box>
@@ -257,25 +267,45 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
                 p: 2, 
                 background: isApprove
                   ? 'linear-gradient(135deg, rgba(22, 78, 49, 0.1) 0%, rgba(15, 61, 32, 0.05) 100%)'
-                  : 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%)',
+                  : isReject
+                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%)'
+                    : 'linear-gradient(135deg, rgba(55, 65, 81, 0.1) 0%, rgba(31, 41, 55, 0.05) 100%)',
                 borderRadius: 2,
                 border: isApprove
                   ? '2px solid rgba(22, 78, 49, 0.3)'
-                  : '2px solid rgba(239, 68, 68, 0.3)',
+                  : isReject
+                    ? '2px solid rgba(239, 68, 68, 0.3)'
+                    : '2px solid rgba(55, 65, 81, 0.3)',
                 mb: 2,
               }}
             >
-              <Typography variant="body2" sx={{ color: isApprove ? '#164e31' : '#dc2626', fontWeight: 700, mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isApprove ? '#164e31' : isReject ? '#dc2626' : '#111827',
+                  fontWeight: 700,
+                  mb: 1
+                }}
+              >
                 Material Request Details
               </Typography>
-              <Typography variant="body2" sx={{ color: isApprove ? '#0f3d20' : '#991b1b', mb: 0.5 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: isApprove ? '#0f3d20' : isReject ? '#991b1b' : '#111827', mb: 0.5 }}
+              >
                 <strong>Name:</strong> {materialRequest.requestedMaterialName}
               </Typography>
-              <Typography variant="body2" sx={{ color: isApprove ? '#0f3d20' : '#991b1b', mb: 0.5 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: isApprove ? '#0f3d20' : isReject ? '#991b1b' : '#111827', mb: 0.5 }}
+              >
                 <strong>Description:</strong> {materialRequest.description || 'No description'}
               </Typography>
               {materialRequest.businessId && (
-                <Typography variant="body2" sx={{ color: isApprove ? '#0f3d20' : '#991b1b' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: isApprove ? '#0f3d20' : isReject ? '#991b1b' : '#111827' }}
+                >
                   <strong>Business:</strong> {materialRequest.businessId.businessName || 'N/A'}
                 </Typography>
               )}
@@ -511,9 +541,15 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
           <Button 
             type="submit" 
             variant="contained"
-            startIcon={isApprove ? <CheckCircleIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
+            startIcon={
+              isApprove
+                ? <CheckCircleIcon fontSize="small" />
+                : isReject
+                  ? <CancelIcon fontSize="small" />
+                  : <CheckCircleIcon fontSize="small" />
+            }
             sx={{
-              backgroundColor: isApprove ? '#164e31' : '#ef4444',
+              backgroundColor: isApprove ? '#164e31' : isReject ? '#ef4444' : '#111827',
               px: 3,
               py: 1,
               fontSize: '0.9375rem',
@@ -521,18 +557,26 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
               borderRadius: '12px',
               boxShadow: isApprove 
                 ? '0 4px 12px rgba(22, 78, 49, 0.35)'
-                : '0 4px 12px rgba(239, 68, 68, 0.35)',
+                : isReject
+                  ? '0 4px 12px rgba(239, 68, 68, 0.35)'
+                  : '0 4px 12px rgba(15, 23, 42, 0.35)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: isApprove ? '#0f3d20' : '#dc2626',
+                backgroundColor: isApprove ? '#0f3d20' : isReject ? '#dc2626' : '#020617',
                 boxShadow: isApprove 
                   ? '0 6px 16px rgba(22, 78, 49, 0.45)'
-                  : '0 6px 16px rgba(239, 68, 68, 0.45)',
+                  : isReject
+                    ? '0 6px 16px rgba(239, 68, 68, 0.45)'
+                    : '0 6px 16px rgba(15, 23, 42, 0.45)',
                 transform: 'translateY(-2px)',
               }
             }}
           >
-            {isApprove ? 'Approve Material' : 'Reject Material'}
+            {isApprove
+              ? 'Approve Material'
+              : isReject
+                ? 'Reject Material'
+                : 'Submit Review'}
           </Button>
         </DialogActions>
       </form>
