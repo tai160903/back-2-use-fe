@@ -19,6 +19,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CakeIcon from "@mui/icons-material/Cake";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import CloseIcon from "@mui/icons-material/Close";
+import LocalFloristIcon from "@mui/icons-material/LocalFlorist";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useEffect, useState, useRef, useCallback } from "react";
 import "./Profile.css";
@@ -64,6 +65,7 @@ export default function Profile({ readOnly = false }) {
   const user = userInfo;
 
   const wallet = userInfo?.wallet;
+  const co2Reduced = user?.co2Reduced ?? 0;
   const rewardPoints = user?.rewardPoints ?? 0;
   const rankingPoints = user?.rankingPoints ?? 0;
   const successReturns = user?.returnSuccessCount ?? 0;
@@ -519,13 +521,15 @@ export default function Profile({ readOnly = false }) {
               <div className="profile-wallet">
                 <div className="profile-wallet-title">
                   <Typography style={{ fontSize: "30px", fontWeight: "700" }}>
-                    Wallet Balance
+                    Wallet & Environment
                   </Typography>
                   <Link to="/profile" className="profile-filter">
                     <FilterAltIcon className="profile-info-text-icons" />
                     View all
                   </Link>
                 </div>
+                
+                {/* Wallet Balance Card */}
                 <div className="profile-wallet-content">
                   <div
                     style={{
@@ -571,7 +575,9 @@ export default function Profile({ readOnly = false }) {
                     </Typography>
                   </div>
                 </div>
-                <div className="profile-wallet-content">
+
+                {/* CO2 Reduced Card */}
+                <div className="profile-wallet-co2">
                   <div
                     style={{
                       display: "flex",
@@ -579,10 +585,8 @@ export default function Profile({ readOnly = false }) {
                       alignItems: "center",
                     }}
                   >
-                    <div className="profile-wallet-text-icons">
-                      <AttachMoneyIcon
-                        sx={{ color: "#3169ed", fontSize: "30px" }}
-                      />
+                    <div className="profile-wallet-co2-icons">
+                      <LocalFloristIcon sx={{ color: "white", fontSize: "30px" }} />
                     </div>
                     <div className="profile-wallet-text-des">
                       <Typography
@@ -592,9 +596,9 @@ export default function Profile({ readOnly = false }) {
                           fontSize: "20px",
                         }}
                       >
-                        Holding Balance
+                        CO₂ Reduced
                       </Typography>
-                      <span>Processing transactions</span>
+                      <span>Environmental impact</span>
                     </div>
                   </div>
                   <div
@@ -607,11 +611,14 @@ export default function Profile({ readOnly = false }) {
                     <Typography
                       sx={{
                         fontSize: "25px",
-                        color: "#3169ed",
+                        color: "#10b981",
                         fontWeight: "600",
                       }}
                     >
-                      {(wallet?.holdingBalance || 0).toLocaleString("vi-VN")} VNĐ
+                      {typeof co2Reduced === 'number' 
+                        ? co2Reduced.toFixed(2) 
+                        : co2Reduced}{" "}
+                      kg
                     </Typography>
                   </div>
                 </div>
@@ -619,7 +626,7 @@ export default function Profile({ readOnly = false }) {
               <div className="profile-legitPoint">
                 <div className="profile-legitPoint-title">
                   <Typography style={{ fontSize: "30px", fontWeight: "700" }}>
-                    Legit Points & Ranking
+                    Ranking Points & Ranking
                   </Typography>
                   <Link to="/profile" className="profile-filter">
                     <FilterAltIcon className="profile-info-text-icons" />
@@ -645,29 +652,38 @@ export default function Profile({ readOnly = false }) {
                           fontSize: "30px",
                         }}
                       >
-                        {rewardPoints.toLocaleString("vi-VN")} Points
+                        Reward Points  {rewardPoints.toLocaleString("vi-VN")}
                       </Typography>
-                      <span>Current Legit Points</span>
+                      <span>Current Reward Points</span>
                     </div>
                   </div>
+              
+                </div>
+                <div className="profile-legitPoint-current">
                   <div
                     style={{
                       display: "flex",
-                      flexDirection: "column",
-                      textAlign: "end",
+                      flexDirection: "row",
+                      alignItems: "center",
                     }}
                   >
-                    <Typography
-                      sx={{
-                        fontSize: "30px",
-                        color: "#8f3cd5",
-                        fontWeight: "600",
-                      }}
-                    >
-                      {rankingPoints ? `#${rankingPoints}` : "N/A"}
-                    </Typography>
-                    <span style={{ color: "#6b7280" }}>Global Ranking</span>
+                    <div className="profile-legitPoint-current-icons">
+                      <EmojiEventsIcon sx={{ fontSize: "30px" }} />
+                    </div>
+                    <div className="profile-wallet-text-des">
+                      <Typography
+                        sx={{
+                          color: "black",
+                          fontWeight: "700",
+                          fontSize: "30px",
+                        }}
+                      >
+                        Ranking Points {rankingPoints.toLocaleString("vi-VN")} 
+                      </Typography>
+                      <span>Current Ranking Points</span>
+                    </div>
                   </div>
+      
                 </div>
                 <div className="profile-legitPoint-progress">
                   <div

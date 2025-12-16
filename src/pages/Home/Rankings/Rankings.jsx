@@ -178,7 +178,7 @@ export default function Rankings() {
                           </Typography>
                           <Chip
                             className="pill pill-large"
-                            label={`Legit Point ${leaderBoardEntry.rankingPoints ?? 0}`}
+                            label={`Ranking Points ${leaderBoardEntry.rankingPoints ?? 0}`}
                           />
                         </Box>
 
@@ -231,7 +231,7 @@ export default function Rankings() {
                         <Chip
                           className="pill"
                           size="small"
-                          label={`LP ${leaderBoardEntry.rankingPoints ?? 0}`}
+                          label={`Ranking Points ${leaderBoardEntry.rankingPoints ?? 0}`}
                         />
                       </div>
                     </Box>
