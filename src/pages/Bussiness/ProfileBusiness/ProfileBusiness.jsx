@@ -109,7 +109,7 @@ export default function ProfileBusiness() {
   })
   
   // Extract eco rank data
-  const ecoRankLabel = apiBusinessPayload?.data?.ecoRankLabel || 'N/A'
+  const ecoRankLabel = apiBusinessPayload?.data?.ecoRankLabel || 'No Rank'
   const nextRank = apiBusinessPayload?.data?.nextRank || {}
   const progress = apiBusinessPayload?.data?.progress || {}
 
