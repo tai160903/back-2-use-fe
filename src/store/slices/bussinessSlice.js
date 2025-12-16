@@ -880,7 +880,8 @@ const businessSlice = createSlice({
       })
       .addCase(getBusinessTopBorrowed.fulfilled, (state, { payload }) => {
         state.topBorrowedLoading = false;
-        state.topBorrowed = payload?.data || payload || [];
+        // API returns { data: { top: 3, products: [...] } }
+        state.topBorrowed = payload?.data?.products || payload?.products || [];
         state.topBorrowedError = null;
       })
       .addCase(getBusinessTopBorrowed.rejected, (state, { payload }) => {

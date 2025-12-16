@@ -118,7 +118,8 @@ export default function BussinessDashbord() {
 
   const borrowTransactionsChartData = formatBorrowTransactionsData();
 
-  const topBorrowedList = Array.isArray(topBorrowed?.data) ? topBorrowed.data : Array.isArray(topBorrowed) ? topBorrowed : [];
+  // topBorrowed should be an array of products from Redux store
+  const topBorrowedList = Array.isArray(topBorrowed) ? topBorrowed : [];
 
   // Material sales data
   const materialSalesData = [
@@ -221,6 +222,7 @@ export default function BussinessDashbord() {
 
   const getBorrowedName = (item) => {
     return (
+      item?.group?.name ||
       item?.productName ||
       item?.name ||
       item?.materialName ||
@@ -231,6 +233,7 @@ export default function BussinessDashbord() {
 
   const getBorrowedCategory = (item) => {
     return (
+      item?.group?.name ||
       item?.category ||
       item?.productGroupName ||
       item?.materialType ||
@@ -242,6 +245,7 @@ export default function BussinessDashbord() {
 
   const getBorrowedCount = (item) => {
     const count =
+      item?.reuseCount ??
       item?.totalBorrowed ??
       item?.borrowCount ??
       item?.totalBorrowTransactions ??
@@ -580,7 +584,7 @@ export default function BussinessDashbord() {
               const borrowCount = getBorrowedCount(item);
               const co2Value = getBorrowedCo2(item);
               const ecoPointsValue = getBorrowedEcoPoints(item);
-              const imageUrl = item?.imageUrl || item?.productImage || item?.thumbnail || item?.photo;
+              const imageUrl = item?.group?.imageUrl || item?.imageUrl || item?.productImage || item?.thumbnail || item?.photo;
 
               return (
                 <div 
