@@ -150,8 +150,6 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
       TransitionProps={{
         timeout: 400,
       }}
-      maxWidth="md"
-      fullWidth
       PaperProps={{
         sx: {
           borderRadius: '20px',

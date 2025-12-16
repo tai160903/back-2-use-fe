@@ -125,7 +125,7 @@ function BorrowCard({ item }) {
     productGroup.imageUrl ||
     product.imageUrl ||
     "https://via.placeholder.com/150";
-  const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
+
   const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
 
@@ -176,9 +176,7 @@ function BorrowCard({ item }) {
                     <div className="borrow-content-count">{size}</div>
                   )}
                 </Typography>
-                <Typography variant="body2" className="borrow-content-qr">
-                  <MdOutlineQrCode2 /> {qr}
-                </Typography>
+           
                 <Typography variant="body2" className="borrow-content-material">
                   <FiBox /> Material: {material}
                 </Typography>
@@ -325,7 +323,7 @@ function SuccessCard({ item }) {
     productGroup.imageUrl ||
     product.imageUrl ||
     "https://via.placeholder.com/150";
-  const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
+
   const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
 
@@ -387,9 +385,7 @@ function SuccessCard({ item }) {
                     <div className="borrow-content-count">{size}</div>
                   )}
                 </Typography>
-                <Typography variant="body2" className="borrow-content-qr">
-                  <MdOutlineQrCode2 /> {qr}
-                </Typography>
+           
                 <Typography variant="body2" className="borrow-content-material">
                   <FiBox /> Material: {material}
                 </Typography>
@@ -585,7 +581,7 @@ function FailedCard({ item }) {
     productGroup.imageUrl ||
     product.imageUrl ||
     "https://via.placeholder.com/150";
-  const qr = item.qrCode || product.qrCode || product.serialNumber || "N/A";
+
   const material = materialObj.materialName || "N/A";
   const size = sizeObj.sizeName;
 
@@ -647,9 +643,7 @@ function FailedCard({ item }) {
                     <div className="borrow-content-count">{size}</div>
                   )}
                 </Typography>
-                <Typography variant="body2" className="borrow-content-qr">
-                  <MdOutlineQrCode2 /> {qr}
-                </Typography>
+           
                 <Typography variant="body2" className="borrow-content-material">
                   <FiBox /> Material: {material}
                 </Typography>
@@ -1031,6 +1025,12 @@ export default function TransactionHistory() {
   const detailPreviousImages = detail.previousConditionImages || {};
   const detailCurrentImages = detail.currentConditionImages || {};
   const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
+  // Ưu tiên QR từ productId, sau đó đến transaction-level hoặc serialNumber
+  const detailQrCode =
+    detailProduct.qrCode ||
+    detail.qrCode ||
+    detailProduct.serialNumber ||
+    "";
 
   const toVNDate = (d) =>
     d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
@@ -1473,6 +1473,43 @@ export default function TransactionHistory() {
                     </Box>
                   </Box>
                 </Box>
+
+                {/* QR Code section (giống BusinessTransaction) */}
+                {detailQrCode && (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1.5, fontWeight: 600 }}
+                    >
+                      QR Code
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                          detailQrCode
+                        )}`}
+                        alt={`QR Code for ${detailQrCode}`}
+                        sx={{
+                          width: 180,
+                          height: 180,
+                          objectFit: "contain",
+                          backgroundColor: "#ffffff",
+                          borderRadius: 2,
+                          border: "1px solid #e5e7eb",
+                          p: 1.5,
+                        }}
+                      />
+                    </Box>
+                  </>
+                )}
               </Box>
             )}
           </DialogContent>

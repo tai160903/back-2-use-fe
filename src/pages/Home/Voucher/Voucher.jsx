@@ -41,13 +41,12 @@ export default function Voucher() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [conditionModalOpen, setConditionModalOpen] = useState(false);
-  const [savedVouchers, setSavedVouchers] = useState(new Set());
   const [page, setPage] = useState(1);
   const [exchangingVoucherId, setExchangingVoucherId] = useState(null);
   const [exchangedVoucherIds, setExchangedVoucherIds] = useState(new Set());
   const [openExchangeDialog, setOpenExchangeDialog] = useState(false);
   const [voucherToExchange, setVoucherToExchange] = useState(null);
-  const itemsPerPage = 12;
+  const itemsPerPage = 8;
 
   const role = getUserRole();
   const currentUser = getCurrentUser();
@@ -56,18 +55,25 @@ export default function Voucher() {
   useEffect(() => {
     // Map filter to API status
     let apiStatus = undefined;
+    let limit = itemsPerPage;
+    
     if (statusFilter === 'active') {
       apiStatus = 'active';
+      limit = itemsPerPage;
     } else if (statusFilter === 'inactive') {
-      // For inactive, we'll filter client-side since API might not support it
-      apiStatus = undefined; // Load all and filter client-side
+     
+      apiStatus = undefined; 
+      limit = 1000; 
+    } else {
+ 
+      limit = itemsPerPage; 
     }
     
-    // Load more vouchers to enable carousel scrolling
+    // Load vouchers with pagination
     dispatch(getCustomerVouchers({ 
       status: apiStatus,
-      page: 1, // Load from page 1
-      limit: 50 // Load enough vouchers for carousel
+      page: statusFilter === 'inactive' ? 1 : page, 
+      limit: limit
     }));
 
     // Load user's exchanged vouchers to check which ones have been exchanged
@@ -75,18 +81,17 @@ export default function Voucher() {
       dispatch(getMyCustomerVouchers({
         status: 'redeemed',
         page: 1,
-        limit: 1000, // Load all to check
+        limit: 1000, 
       }));
     }
-  }, [dispatch, statusFilter, page, role, currentUser?.accessToken]);
+  }, [dispatch, statusFilter, page, itemsPerPage, role, currentUser?.accessToken]);
 
-  // Transform API vouchers to display format
   const vouchers = useMemo(() => {
     if (!customerVouchers || customerVouchers.length === 0) {
       return [];
     }
 
-    // Filter out leaderboard vouchers - only show business vouchers
+  
     const businessVouchers = customerVouchers.filter(
       (voucher) => voucher.voucherType !== 'leaderboard'
     );
@@ -115,10 +120,9 @@ export default function Voucher() {
       return {
         id: voucher._id || voucher.id,
         voucherId: voucher._id || voucher.id,
-        type: 'regular', // Only business vouchers, no leaderboard
+        type: 'regular', 
         discount: `${discountPercent}%`,
-        maxDiscount: 0, // Not available in API
-        minSpend: 0, // Not available in API
+
         points: voucher.rewardPointCost || 0,
         usagePercentage: usagePercentage,
         redeemedCount: redeemedCount,
@@ -130,7 +134,7 @@ export default function Voucher() {
         baseCode: voucher.baseCode,
         description: voucher.customDescription,
         businessName: voucher.businessInfo?.businessName,
-        originalVoucher: voucher, // Keep original for reference
+        originalVoucher: voucher,
       };
     });
   }, [customerVouchers]);
@@ -215,7 +219,7 @@ export default function Voucher() {
       // Refresh vouchers list
       await dispatch(getCustomerVouchers({ 
         status: statusFilter === 'all' ? undefined : statusFilter === 'active' ? 'active' : undefined,
-        page,
+        page: page,
         limit: itemsPerPage 
       }));
 
@@ -227,9 +231,8 @@ export default function Voucher() {
           limit: 1000,
         }));
       }
-    } catch (error) {
+    } catch {
       // Error toast is already handled in the slice, no need to call again
-      // Just update saved vouchers state if needed
     } finally {
       setExchangingVoucherId(null);
       setVoucherToExchange(null);
@@ -246,6 +249,11 @@ export default function Voucher() {
     setSelectedVoucher(null);
   };
 
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
+
   // Filter vouchers based on status filter
   const filteredVouchers = useMemo(() => {
     if (statusFilter === 'all') {
@@ -257,6 +265,27 @@ export default function Voucher() {
     }
     return vouchers;
   }, [vouchers, statusFilter]);
+
+  // Paginate filtered vouchers for inactive filter (client-side pagination)
+  const paginatedVouchers = useMemo(() => {
+    if (statusFilter === 'inactive') {
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return filteredVouchers.slice(startIndex, endIndex);
+    }
+    // For 'all' and 'active', vouchers are already paginated by API
+    return filteredVouchers;
+  }, [filteredVouchers, page, itemsPerPage, statusFilter]);
+
+  // Calculate total pages based on filter type
+  const totalPages = useMemo(() => {
+    if (statusFilter === 'inactive') {
+      // Client-side pagination: calculate based on filtered vouchers
+      return Math.ceil(filteredVouchers.length / itemsPerPage);
+    }
+    // Server-side pagination: use API pagination info
+    return customerVoucherPagination?.totalPages || 1;
+  }, [filteredVouchers.length, itemsPerPage, statusFilter, customerVoucherPagination]);
 
   return (
     <div className="voucher-page-shopee">
@@ -322,7 +351,7 @@ export default function Voucher() {
           ) : filteredVouchers.length > 0 ? (
             <>
               <div className="voucher-grid-custom">
-                {filteredVouchers.map((voucher) => {
+                {paginatedVouchers.map((voucher) => {
                   // Check if this voucher template has been exchanged by the current user
                   const templateId = voucher.voucherId.toString();
                   const isExchanged = exchangedVoucherIds.has(templateId);
@@ -522,10 +551,10 @@ export default function Voucher() {
               </div>
               
               {/* Pagination */}
-              {customerVoucherPagination.totalPages > 1 && (
+              {totalPages > 1 && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
                   <Pagination
-                    count={customerVoucherPagination.totalPages}
+                    count={totalPages}
                     page={page}
                     onChange={(e, value) => setPage(value)}
                     color="primary"

@@ -460,19 +460,9 @@
   border: 1px solid #e5e7eb;
 }
 
-.ranking-filters-section {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
 
-.ranking-filters-section:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  border-color: #12422a;
-}
+
+
 
 .ranking-cards-grid {
   display: grid;

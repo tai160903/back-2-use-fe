@@ -514,50 +514,27 @@ export default function BussinessDashbord() {
         <div className="chart-header">
           <div>
             <h3 className="chart-title">Top Borrowed</h3>
-            <p className="chart-subtitle">Các mặt hàng được mượn nhiều nhất</p>
+            <p className="chart-subtitle">The most borrowed items</p>
           </div>
           <FaShoppingBag className="chart-icon" />
         </div>
 
         <div className="ranking-filters-section">
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
-            Bộ lọc
+            Filters
           </Typography>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4} md={3}>
+            <Grid item size={3}>
               <TextField
-                label="Top N"
+                label="Top products"
                 type="number"
                 value={topBorrowedLimit}
                 onChange={(e) => setTopBorrowedLimit(e.target.value)}
                 variant="outlined"
-                size="small"
+                size="medium"
+                fullWidth
                 inputProps={{ min: 1, max: 50 }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    borderRadius: '10px',
-                    transition: 'all 0.3s ease',
-                    '&:hover fieldset': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                      boxShadow: '0 2px 8px rgba(18, 66, 42, 0.15)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#12422a',
-                      borderWidth: '2px',
-                      boxShadow: '0 4px 12px rgba(18, 66, 42, 0.25)',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontWeight: 600,
-                    color: '#4b5563',
-                    '&.Mui-focused': {
-                      color: '#12422a',
-                      fontWeight: 700,
-                    },
-                  },
-                }}
+          
               />
             </Grid>
           </Grid>
