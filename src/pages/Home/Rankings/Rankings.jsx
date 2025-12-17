@@ -199,7 +199,7 @@ export default function Rankings() {
               <Box className="rankings-list">
                 <Box className="list-header">
                   <div className="cell cell-name">Name</div>
-                  <div className="cell cell-right">Legit Point</div>
+                  <div className="cell cell-right">Ranking Points</div>
                 </Box>
                 {leaderBoardData.map((leaderBoardEntry, index) => {
                   const displayName =
