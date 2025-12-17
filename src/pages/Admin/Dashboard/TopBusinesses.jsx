@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   getTopBusinessesApi
 } from '../../../store/slices/adminSlice';
-import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Rating, Avatar, Chip } from '@mui/material';
+import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Rating, Avatar, Chip, FormHelperText } from '@mui/material';
 import { FaStore, FaLeaf, FaRecycle } from 'react-icons/fa';
 import '../AdminDashboard.css';
 
@@ -58,12 +58,13 @@ const TopBusinesses = () => {
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth>
                 <TextField
-                  label="Top N Businesses"
+                  label="Number of Businesses"
                   type="number"
                   value={businessFilters.top}
                   onChange={(e) => setBusinessFilters({ ...businessFilters, top: parseInt(e.target.value) || 5 })}
                   variant="outlined"
                   size="small"
+                  helperText="How many businesses to show"
                   inputProps={{ min: 1, max: 50 }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -140,6 +141,9 @@ const TopBusinesses = () => {
                   <MenuItem value="ecoPoints">Eco Points</MenuItem>
                   <MenuItem value="averageRating">Average Rating</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Sort businesses by metric
+                </FormHelperText>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -188,6 +192,9 @@ const TopBusinesses = () => {
                   <MenuItem value="asc">Ascending</MenuItem>
                   <MenuItem value="desc">Descending</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Ascending or descending order
+                </FormHelperText>
               </FormControl>
             </Grid>
           </Grid>

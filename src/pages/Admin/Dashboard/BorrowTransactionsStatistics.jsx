@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   getBorrowTransactionsMonthlyApi
 } from '../../../store/slices/adminSlice';
-import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid } from '@mui/material';
+import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, FormHelperText } from '@mui/material';
 import {
   BarChart,
   Bar,
@@ -114,13 +114,13 @@ const BorrowTransactionsStatistics = () => {
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth>
                 <TextField
-                  label="Year to Filter"
+                  label="Year"
                   type="number"
                   value={borrowFilters.year}
                   onChange={(e) => setBorrowFilters({ ...borrowFilters, year: parseInt(e.target.value) || new Date().getFullYear() })}
                   variant="outlined"
                   size="small"
-                  helperText="Filter by year"
+                  helperText="Select year to filter"
                   inputProps={{ min: 2000, max: 2100 }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -164,13 +164,13 @@ const BorrowTransactionsStatistics = () => {
                     px: 0.5,
                   }}
                 >
-                  Filter by Transaction Type
+                  Type
                 </InputLabel>
                 <Select
                   labelId="borrow-type-filter-label"
                   value={borrowFilters.type}
                   onChange={(e) => setBorrowFilters({ ...borrowFilters, type: e.target.value })}
-                  label="Filter by Transaction Type"
+                  label="Type"
                   MenuProps={{
                     PaperProps: {
                       style: {
@@ -200,10 +200,13 @@ const BorrowTransactionsStatistics = () => {
                   }}
                 >
                   <MenuItem value="">All Types</MenuItem>
-                  <MenuItem value="borrow">borrow</MenuItem>
-                  <MenuItem value="return_success">return_success</MenuItem>
-                  <MenuItem value="return_failed">return_failed</MenuItem>
+                  <MenuItem value="borrow">Borrow</MenuItem>
+                  <MenuItem value="return_success">Return Success</MenuItem>
+                  <MenuItem value="return_failed">Return Failed</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Filter by transaction type
+                </FormHelperText>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -215,13 +218,13 @@ const BorrowTransactionsStatistics = () => {
                     px: 0.5,
                   }}
                 >
-                  Filter by Transaction Status
+                  Status
                 </InputLabel>
                 <Select
                   labelId="borrow-status-filter-label"
                   value={borrowFilters.status}
                   onChange={(e) => setBorrowFilters({ ...borrowFilters, status: e.target.value })}
-                  label="Filter by Transaction Status"
+                  label="Status"
                   MenuProps={{
                     PaperProps: {
                       style: {
@@ -251,14 +254,17 @@ const BorrowTransactionsStatistics = () => {
                   }}
                 >
                   <MenuItem value="">All Statuses</MenuItem>
-                  <MenuItem value="pending_pickup">pending_pickup</MenuItem>
-                  <MenuItem value="borrowing">borrowing</MenuItem>
-                  <MenuItem value="returned">returned</MenuItem>
-                  <MenuItem value="return_late">return_late</MenuItem>
-                  <MenuItem value="rejected">rejected</MenuItem>
-                  <MenuItem value="cancelled">cancelled</MenuItem>
-                  <MenuItem value="lost">lost</MenuItem>
+                  <MenuItem value="pending_pickup">Pending Pickup</MenuItem>
+                  <MenuItem value="borrowing">Borrowing</MenuItem>
+                  <MenuItem value="returned">Returned</MenuItem>
+                  <MenuItem value="return_late">Return Late</MenuItem>
+                  <MenuItem value="rejected">Rejected</MenuItem>
+                  <MenuItem value="cancelled">Cancelled</MenuItem>
+                  <MenuItem value="lost">Lost</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Filter by transaction status
+                </FormHelperText>
               </FormControl>
             </Grid>
           </Grid>

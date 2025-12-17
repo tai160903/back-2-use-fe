@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   getTopCustomersApi
 } from '../../../store/slices/adminSlice';
-import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Avatar } from '@mui/material';
+import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Avatar, FormHelperText } from '@mui/material';
 import { FaUsers, FaCrown, FaLeaf } from 'react-icons/fa';
 import '../AdminDashboard.css';
 
@@ -58,12 +58,13 @@ const TopCustomers = () => {
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth>
                 <TextField
-                  label="Top N Customers"
+                  label="Number of Customers"
                   type="number"
                   value={customerFilters.top}
                   onChange={(e) => setCustomerFilters({ ...customerFilters, top: parseInt(e.target.value) || 5 })}
                   variant="outlined"
                   size="small"
+                  helperText="How many customers to show"
                   inputProps={{ min: 1, max: 50 }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -140,6 +141,9 @@ const TopCustomers = () => {
                   <MenuItem value="ecoPoints">Eco Points</MenuItem>
                   <MenuItem value="totalTransactions">Total Transactions</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Sort customers by metric
+                </FormHelperText>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -188,6 +192,9 @@ const TopCustomers = () => {
                   <MenuItem value="asc">Ascending</MenuItem>
                   <MenuItem value="desc">Descending</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Ascending or descending order
+                </FormHelperText>
               </FormControl>
             </Grid>
           </Grid>
