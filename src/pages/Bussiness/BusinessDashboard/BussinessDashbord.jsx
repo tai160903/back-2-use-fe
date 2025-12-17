@@ -118,7 +118,7 @@ export default function BussinessDashbord() {
 
   const borrowTransactionsChartData = formatBorrowTransactionsData();
 
-  // topBorrowed should be an array of productGroups from Redux store
+  // topBorrowed should be an array of products from Redux store
   const topBorrowedList = Array.isArray(topBorrowed) ? topBorrowed : [];
 
   // Material sales data
@@ -221,35 +221,18 @@ export default function BussinessDashbord() {
   };
 
   const getBorrowedName = (item) => {
-    // For productGroups
     return (
-      item?.name ||
-      item?.group?.name ||
+      item?.productGroups?.name ||
       item?.productName ||
+      item?.name ||
       item?.materialName ||
       item?.productGroupName ||
       'Unknown item'
     );
   };
 
-  const getBorrowedCategory = (item) => {
-    // For productGroups - can use description or material name
-    return (
-      item?.materialId?.materialName ||
-      item?.material?.materialName ||
-      item?.category ||
-      item?.productGroupName ||
-      item?.materialType ||
-      item?.type ||
-      item?.label ||
-      'N/A'
-    );
-  };
-
   const getBorrowedCount = (item) => {
-    // For productGroups - use totalReuseCount
     const count =
-      item?.totalReuseCount ??
       item?.reuseCount ??
       item?.totalBorrowed ??
       item?.borrowCount ??
@@ -261,13 +244,11 @@ export default function BussinessDashbord() {
   };
 
   const getBorrowedCo2 = (item) => {
-    // For productGroups - might need to calculate or get from API
     const co2 = item?.totalCo2Reduced ?? item?.co2Reduced ?? item?.co2 ?? 0;
     return typeof co2 === 'number' ? co2 : Number(co2) || 0;
   };
 
   const getBorrowedEcoPoints = (item) => {
-    // For productGroups - might need to calculate or get from API
     const points = item?.totalEcoPoints ?? item?.ecoPoints ?? item?.points ?? 0;
     return typeof points === 'number' ? points : Number(points) || 0;
   };
@@ -521,7 +502,7 @@ export default function BussinessDashbord() {
         <div className="chart-header">
           <div>
             <h3 className="chart-title">Top Borrowed</h3>
-            <p className="chart-subtitle">The most borrowed product groups</p>
+            <p className="chart-subtitle">The most borrowed items</p>
           </div>
           <FaShoppingBag className="chart-icon" />
         </div>
@@ -533,7 +514,7 @@ export default function BussinessDashbord() {
           <Grid container spacing={2} alignItems="center">
             <Grid item size={3}>
               <TextField
-                label="Top product groups"
+                label="Top products"
                 type="number"
                 value={topBorrowedLimit}
                 onChange={(e) => setTopBorrowedLimit(e.target.value)}
@@ -564,12 +545,10 @@ export default function BussinessDashbord() {
               const rankColor = isTopThree ? rankColors[rank] : { bg: '#ffffff', text: '#6b7280' };
 
               const name = getBorrowedName(item);
-              const category = getBorrowedCategory(item);
-              const borrowCount = getBorrowedCount(item);
-              const co2Value = getBorrowedCo2(item);
-              const ecoPointsValue = getBorrowedEcoPoints(item);
-              // For productGroups - imageUrl is directly on the item
-              const imageUrl = item?.imageUrl || item?.group?.imageUrl || item?.productImage || item?.thumbnail || item?.photo;
+              // For productGroups - use totalReuseCount and totalProducts
+              const totalReuseCount = item?.totalReuseCount ?? 0;
+              const totalProducts = item?.totalProducts ?? 0;
+              const imageUrl = item?.group?.imageUrl || item?.imageUrl || item?.productImage || item?.thumbnail || item?.photo;
 
               return (
                 <div 
@@ -612,49 +591,28 @@ export default function BussinessDashbord() {
                       <h3 className="ranking-card-name" style={isTopThree ? { color: rankColor.text } : {}}>
                         {name}
                       </h3>
-                      <Chip
-                        label={category}
-                        color="success"
-                        size="small"
-                        sx={{ 
-                          fontWeight: 600,
-                          height: '24px',
-                          fontSize: '11px'
-                        }}
-                      />
                     </div>
 
                     <div className="ranking-card-metrics">
-                      <div className="ranking-metric-item">
-                        <div className="ranking-metric-icon" style={{ backgroundColor: '#12422a15', color: '#12422a' }}>
-                          <FaShoppingBag />
-                        </div>
-                        <div className="ranking-metric-info">
-                          <span className="ranking-metric-label">Borrow Count</span>
-                          <span className="ranking-metric-value">
-                            {formatNumber(borrowCount)}
-                          </span>
-                        </div>
-                      </div>
                       <div className="ranking-metric-item">
                         <div className="ranking-metric-icon" style={{ backgroundColor: '#f59e0b15', color: '#f59e0b' }}>
                           <FaRecycle />
                         </div>
                         <div className="ranking-metric-info">
-                          <span className="ranking-metric-label">CO₂ Reduced</span>
+                          <span className="ranking-metric-label">Total Reuse Count</span>
                           <span className="ranking-metric-value">
-                            {co2Value.toFixed(2)} kg
+                            {formatNumber(totalReuseCount)}
                           </span>
                         </div>
                       </div>
                       <div className="ranking-metric-item">
                         <div className="ranking-metric-icon" style={{ backgroundColor: '#10b98115', color: '#10b981' }}>
-                          <FaLeaf />
+                          <BiPackage />
                         </div>
                         <div className="ranking-metric-info">
-                          <span className="ranking-metric-label">Eco Points</span>
+                          <span className="ranking-metric-label">Total Products</span>
                           <span className="ranking-metric-value">
-                            {formatNumber(ecoPointsValue)}
+                            {formatNumber(totalProducts)}
                           </span>
                         </div>
                       </div>
