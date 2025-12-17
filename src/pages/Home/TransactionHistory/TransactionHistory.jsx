@@ -756,7 +756,7 @@ function FailedCard({ item }) {
 
                 <div className="borrow-legitPoint">
                   <Typography>
-                    Legit Points:{" "}
+                   Ranking Points:{" "}
                     <span
                       style={{
                         color: legitPoints < 0 ? "#df4d56" : "#8200de",
