@@ -28,6 +28,8 @@ export const getTransactionHistoryApi = createAsyncThunk(
                     params: {
                         status: data.status || undefined,
                         productName: data.productName || undefined,
+                        fromDate: data.fromDate || undefined,
+                        toDate: data.toDate || undefined,
                         page: data.page || undefined,
                         limit: data.limit || undefined,
                         borrowTransactionType:
@@ -55,6 +57,8 @@ export const getTransactionHistoryBusinessApi = createAsyncThunk(
                     params: {
                         status: data.status || undefined,
                         productName: data.productName || undefined,
+                        fromDate: data.fromDate || undefined,
+                        toDate: data.toDate || undefined,
                         page: data.page || undefined,
                         limit: data.limit || undefined,
                         borrowTransactionType:

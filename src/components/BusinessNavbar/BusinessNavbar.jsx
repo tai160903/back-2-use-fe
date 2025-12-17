@@ -13,7 +13,7 @@ import {
   IoPersonOutline,
   IoStorefrontOutline,
 } from "react-icons/io5";
-import { MdOutlineAccountBalanceWallet, MdRedeem, MdPayment, MdShoppingCart, MdSubscriptions } from "react-icons/md";
+import { MdOutlineAccountBalanceWallet, MdRedeem, MdPayment, MdShoppingCart, MdSubscriptions, MdOutlineEco } from "react-icons/md";
 import { CiStar } from "react-icons/ci";
 import { GoHistory } from "react-icons/go";
 import { TiMessages } from "react-icons/ti";
@@ -46,6 +46,7 @@ const businessSidebarItems = [
   { id: "inventory", label: "Inventory Management", path: PATH.BUSINESS_INVENTORY },
   { id: "materials", label: "Materials", path: PATH.BUSINESS_MATERIALS },
   { id: "transaction", label: "Transaction", path: PATH.BUSINESS_TRANSACTION },
+  { id: "co2-report", label: "CO2 Report", path: PATH.BUSINESS_CO2_REPORT },
   { id: "subscriptions", label: "Subscriptions", path: PATH.BUSINESS_SUBSCRIPTIONS },
   { id: "reedem-rewards", label: "Reedem Rewards", path: PATH.BUSINESS_REEDEM_REWARDS },
   {
@@ -90,6 +91,7 @@ const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
       inventory: <LuStore className="navbar-icon" />,
       materials: <FiPackage className="navbar-icon" />,
       transaction: <MdPayment className="navbar-icon" />,
+      "co2-report": <MdOutlineEco className="navbar-icon" />,
       "online-borrow-orders": <MdShoppingCart className="navbar-icon" />,
       subscriptions: <MdSubscriptions className="navbar-icon" />,
       "reedem-rewards": <AiOutlineGift className="navbar-icon" />,

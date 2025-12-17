@@ -966,7 +966,7 @@ export default function RedemVoucher() {
         <DialogContent className="voucher-dialog-content">
           <Grid container spacing={2}>
             {/* Row 1: Voucher Name, Description, Base Code */}
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1014,7 +1014,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1059,7 +1059,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1109,7 +1109,7 @@ export default function RedemVoucher() {
             </Grid>
 
             {/* Row 2: Max Usage, Discount Percent, Reward Point Cost */}
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1150,7 +1150,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1201,7 +1201,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1247,7 +1247,7 @@ export default function RedemVoucher() {
             </Grid>
 
             {/* Row 3: Start Date, End Date, Publish */}
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1291,7 +1291,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1335,7 +1335,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1505,12 +1505,12 @@ export default function RedemVoucher() {
                 {selectedVoucher.isPublished ? (
                   <>
                     <span>⚠️</span>
-                    <span>Chỉ có thể cập nhật voucher ở trạng thái Unpublished (chưa xuất bản). Voucher này đang ở trạng thái Published nên không thể chỉnh sửa.</span>
+                    <span>Can only update voucher in Unpublished (unpublished) state. This voucher is in Published (published) state so cannot be edited.</span>
                   </>
                 ) : (
                   <>
                     <span>ℹ️</span>
-                    <span>Bạn chỉ có thể cập nhật voucher ở trạng thái Unpublished (chưa xuất bản).</span>
+                    <span>You can only update voucher in Unpublished (unpublished) state.</span>
                   </>
                 )}
               </Typography>
@@ -1518,7 +1518,7 @@ export default function RedemVoucher() {
           )}
           <Grid container spacing={2}>
             {/* Row 1: Voucher Name, Description */}
-            <Grid item xs={12} sm={6}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1566,7 +1566,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1613,7 +1613,7 @@ export default function RedemVoucher() {
             </Grid>
 
             {/* Row 2: Discount Percent, Reward Point Cost */}
-            <Grid item xs={12} sm={6}>
+            <Grid item size={4}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1664,7 +1664,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item size={3}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1710,7 +1710,7 @@ export default function RedemVoucher() {
             </Grid>
 
             {/* Row 3: Start Date, End Date, Publish */}
-            <Grid item xs={12} sm={4}>
+            <Grid item size={3}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1754,7 +1754,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={3}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"
@@ -1798,7 +1798,7 @@ export default function RedemVoucher() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item size={3}>
               <Box sx={{ mb: 0.5 }}>
                 <Typography
                   variant="body2"

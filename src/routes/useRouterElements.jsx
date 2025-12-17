@@ -61,6 +61,7 @@ import InventoryManagement from "../pages/Bussiness/Inventory/InventoryManagemen
 import ProductItems from "../pages/Bussiness/Inventory/ProductItems";
 import ProductSizeManagement from "../pages/Bussiness/Inventory/ProductSizeManagement";
 import StaffManagement from "../pages/Bussiness/StaffManagement/StaffManagement";
+import BusinessCo2Report from "../pages/Bussiness/Co2Report/BusinessCo2Report";
 import EcoReward from "../pages/Admin/EcoReward/EcoReward";
 import LeaderBoard from "../pages/Admin/LeaderBoard/LeaderBoard";
 import StaffLayout from "../layouts/StaffLayout/StaffLayout";
@@ -294,6 +295,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
               <BusinessTransaction />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_CO2_REPORT,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <BusinessCo2Report />
             </ProtectedRoute>
           ),
         },

@@ -501,7 +501,7 @@ export default function Settings() {
                   Filters
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={2}>
+                  <Grid item size={2}>
                     <TextField
                       fullWidth
                       label="Month"
@@ -512,7 +512,7 @@ export default function Settings() {
                       inputProps={{ min: 1, max: 12 }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid item size={2}>
                     <TextField
                       fullWidth
                       label="Year"
@@ -522,7 +522,7 @@ export default function Settings() {
                       onChange={handleFilterChange}
                     />
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid item size={2}>
                     <FormControl fullWidth>
                       <InputLabel>The reward has been released</InputLabel>
                       <Select
@@ -537,7 +537,7 @@ export default function Settings() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid item size={2}>
                     <TextField
                       fullWidth
                       label="Rank From"
@@ -548,7 +548,7 @@ export default function Settings() {
                       inputProps={{ min: 1 }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid item size={2}>
                     <TextField
                       fullWidth
                       label="Rank To"
@@ -559,7 +559,7 @@ export default function Settings() {
                       inputProps={{ min: 1 }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid item size={2}>
                     <Stack direction="row" spacing={1}>
                       <Button variant="contained" onClick={handleApplyFilters} size="small">
                         Apply
@@ -860,7 +860,7 @@ export default function Settings() {
 
         <DialogContent sx={{ pt: 4, pb: 3, px: 4, mt: 3 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid item size={12}>
               <FormControl fullWidth required sx={{ mt: 1 }}>
                 <InputLabel id="policy-voucher-label">Voucher</InputLabel>
                 <Select
@@ -883,7 +883,7 @@ export default function Settings() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
+            <Grid item size={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Month"
@@ -898,7 +898,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
+            <Grid item size={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Year"
@@ -911,7 +911,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
+            <Grid item size={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Rank From"
@@ -925,7 +925,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item xs={12} md={6} sx={{ mt: 2 }}>
+            <Grid item size={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Rank To"
@@ -939,7 +939,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item size={12}>
               <TextField
                 fullWidth
                 label="Note"

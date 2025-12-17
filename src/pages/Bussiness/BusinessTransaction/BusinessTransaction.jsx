@@ -273,13 +273,15 @@ function BorrowCard({ item }) {
                   {deposit.toLocaleString("vi-VN")} VNĐ
                 </span>
               </Typography>
-              <Button
-                className="borrow-content-btn"
-                onClick={item.onViewDetails}
-              >
-                <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
-                Details
-              </Button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <Button
+                  className="borrow-content-btn"
+                  onClick={item.onViewDetails}
+                >
+                  <MdOutlineRemoveRedEye style={{ fontSize: "20px" }} /> View
+                  Details
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -480,9 +482,7 @@ function SuccessCard({ item }) {
                 </Typography>
               </div>
               <div style={{ display: "flex", gap: "10px" }}>
-                <Button className="borrow-content-btn">
-                  <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
-                </Button>
+              
                 <Button
                   className="borrow-content-btn"
                   onClick={item.onViewDetails}
@@ -665,6 +665,17 @@ function FailedCard({ item }) {
                 </span>
               </Typography>
 
+              {item.co2Changed !== undefined && item.co2Changed !== null && (
+                <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
+                  CO2 Point:{" "}
+                  <span style={{ color: "#1b4c2d", fontWeight: "bold" }}>
+                    {typeof item.co2Changed === "number"
+                      ? item.co2Changed.toFixed(3)
+                      : item.co2Changed}
+                  </span>
+                </Typography>
+              )}
+
               <div className="borrow-receivePoint">
                 <Typography>
                   Receive Money: {}
@@ -680,9 +691,7 @@ function FailedCard({ item }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
-                <Button className="borrow-content-btn">
-                  <MdOutlineFeedback style={{ fontSize: "20px" }} /> Feedback
-                </Button>
+              
                 <Button
                   className="borrow-content-btn"
                   onClick={item.onViewDetails}
@@ -707,6 +716,8 @@ export default function BusinessTransaction() {
 
   const [status, setStatus] = useState("");
   const [searchText, setSearchText] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [value, setValue] = useState(0);
   const [openDetail, setOpenDetail] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -741,11 +752,13 @@ export default function BusinessTransaction() {
         status: status || undefined,
         productName: searchText || undefined,
         borrowTransactionType,
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined,
         page: currentPage,
         limit,
       })
     );
-  }, [dispatch, status, searchText, value, currentPage, limit]);
+  }, [dispatch, status, searchText, value, currentPage, limit, fromDate, toDate]);
 
   const handlePageChange = (event, page) => {
     setCurrentPage(page);
@@ -846,6 +859,26 @@ export default function BusinessTransaction() {
               <MenuItem value="canceled">canceled</MenuItem>
             </Select>
           </FormControl>
+
+          {/* Date range filters */}
+          <TextField
+            label="From date"
+            type="date"
+            size="small"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            style={{ minWidth: 180, height: "40px" }}
+          />
+          <TextField
+            label="To date"
+            type="date"
+            size="small"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            style={{ minWidth: 180, height: "40px" }}
+          />
         </div>
 
         {/* Tabs */}
