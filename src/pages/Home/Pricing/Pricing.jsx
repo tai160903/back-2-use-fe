@@ -280,22 +280,8 @@ const Pricing = () => {
                         {formatLimit(subscription.limits?.productItemLimit)}
                       </span>
                     </Box>
-                    <Box className="pricing-limit-badge">
-                      <span className="pricing-limit-label">Export</span>
-                      <span className="pricing-limit-value pricing-limit-pill">
-                        {subscription.limits?.exportLevel
-                          ? subscription.limits.exportLevel.toUpperCase()
-                          : 'NONE'}
-                      </span>
-                    </Box>
-                    <Box className="pricing-limit-badge">
-                      <span className="pricing-limit-label">Eco Bonus</span>
-                      <span className="pricing-limit-value">
-                        {subscription.limits?.ecoBonusPercent != null
-                          ? `${subscription.limits.ecoBonusPercent}%`
-                          : '0%'}
-                      </span>
-                    </Box>
+                
+               
                   </Box>
                   <List className="pricing-features-list">
                     {/* Hiển thị features lấy từ DB (subscription.data.description) */}
