@@ -44,45 +44,6 @@ const QuickActions = () => {
     },
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'user',
-      title: 'New user registered',
-      description: 'user@example.com joined the platform',
-      time: '5 minutes ago',
-      icon: <FaUsers />,
-      color: '#3b82f6'
-    },
-    {
-      id: 2,
-      type: 'store',
-      title: 'Store approved',
-      description: 'Green Recycling Center was approved',
-      time: '15 minutes ago',
-      icon: <FaStore />,
-      color: '#12422a'
-    },
-    {
-      id: 3,
-      type: 'material',
-      title: 'Material submitted',
-      description: 'New plastic material pending review',
-      time: '1 hour ago',
-      icon: <FaRecycle />,
-      color: '#f59e0b'
-    },
-    {
-      id: 4,
-      type: 'voucher',
-      title: 'Voucher created',
-      description: 'Summer Sale 2025 voucher activated',
-      time: '2 hours ago',
-      icon: <FaGift />,
-      color: '#8b5cf6'
-    }
-  ];
-
   return (
     <div className="admin-dashboard">
       {/* Header */}
@@ -91,8 +52,8 @@ const QuickActions = () => {
           <div className="header-left">
             <FaGift className="header-icon" style={{ fontSize: '48px', color: '#164e31' }} />
             <div>
-              <h1 className="dashboard-title">Quick Actions & Recent Activities</h1>
-              <p className="dashboard-subtitle">Quick navigation and activity feed</p>
+              <h1 className="dashboard-title">Quick Actions</h1>
+              <p className="dashboard-subtitle">Quick navigation to admin functions</p>
             </div>
           </div>
         </div>
@@ -120,29 +81,6 @@ const QuickActions = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Recent Activities */}
-        <div className="recent-activities-section">
-          <h2 className="section-title">Recent Activities</h2>
-          <div className="activities-list">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-icon" style={{ backgroundColor: `${activity.color}15`, color: activity.color }}>
-                  {activity.icon}
-                </div>
-                <div className="activity-content">
-                  <h4 className="activity-title">{activity.title}</h4>
-                  <p className="activity-description">{activity.description}</p>
-                  <span className="activity-time">{activity.time}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="view-all-btn">
-            View All Activities
-            <FaArrowRight />
-          </button>
         </div>
       </div>
     </div>

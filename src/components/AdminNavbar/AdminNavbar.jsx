@@ -50,7 +50,6 @@ const dashboardSubItems = [
   { id: "wallet-transactions-monthly", label: "Wallet Transactions Monthly", path: PATH.ADMIN_DASHBOARD_WALLET_TRANSACTIONS_MONTHLY, icon: <FaWallet /> },
   { id: "top-businesses", label: "Top Businesses", path: PATH.ADMIN_DASHBOARD_TOP_BUSINESSES, icon: <FaStore /> },
   { id: "top-customers", label: "Top Customers", path: PATH.ADMIN_DASHBOARD_TOP_CUSTOMERS, icon: <FaUsers /> },
-  { id: "charts", label: "Charts & Analytics", path: PATH.ADMIN_DASHBOARD_CHARTS, icon: <FaChartLine /> },
   { id: "quick-actions", label: "Quick Actions", path: PATH.ADMIN_DASHBOARD_QUICK_ACTIONS, icon: <FaClipboardList /> },
 ];
 
