@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   getWalletTransactionsByMonthApi
 } from '../../../store/slices/adminSlice';
-import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid } from '@mui/material';
+import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, FormHelperText } from '@mui/material';
 import {
   BarChart,
   Bar,
@@ -108,13 +108,13 @@ const WalletTransactionsMonthly = () => {
             <Grid item xs={12} sm={3}>
               <FormControl fullWidth>
                 <TextField
-                  label="Year to Filter"
+                  label="Year"
                   type="number"
                   value={walletTransactionsFilters.year}
                   onChange={(e) => setWalletTransactionsFilters({ ...walletTransactionsFilters, year: parseInt(e.target.value) || new Date().getFullYear() })}
                   variant="outlined"
                   size="small"
-                  helperText="Filter by year"
+                  helperText="Select year to filter"
                   inputProps={{ min: 2000, max: 2100 }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -158,13 +158,13 @@ const WalletTransactionsMonthly = () => {
                     px: 0.5,
                   }}
                 >
-                  Transaction Type
+                  Type
                 </InputLabel>
                 <Select
                   labelId="wallet-transaction-type-filter-label"
                   value={walletTransactionsFilters.transactionType}
                   onChange={(e) => setWalletTransactionsFilters({ ...walletTransactionsFilters, transactionType: e.target.value })}
-                  label="Transaction Type"
+                  label="Type"
                   MenuProps={{
                     PaperProps: {
                       style: {
@@ -194,14 +194,17 @@ const WalletTransactionsMonthly = () => {
                   }}
                 >
                   <MenuItem value="">All Types</MenuItem>
-                  <MenuItem value="top_up">top_up</MenuItem>
-                  <MenuItem value="withdrawal">withdrawal</MenuItem>
-                  <MenuItem value="borrow_deposit">borrow_deposit</MenuItem>
-                  <MenuItem value="return_refund">return_refund</MenuItem>
-                  <MenuItem value="subscription_fee">subscription_fee</MenuItem>
-                  <MenuItem value="penalty">penalty</MenuItem>
-                  <MenuItem value="deposit_forfeited">deposit_forfeited</MenuItem>
+                  <MenuItem value="top_up">Top Up</MenuItem>
+                  <MenuItem value="withdrawal">Withdrawal</MenuItem>
+                  <MenuItem value="borrow_deposit">Borrow Deposit</MenuItem>
+                  <MenuItem value="return_refund">Return Refund</MenuItem>
+                  <MenuItem value="subscription_fee">Subscription Fee</MenuItem>
+                  <MenuItem value="penalty">Penalty</MenuItem>
+                  <MenuItem value="deposit_forfeited">Deposit Forfeited</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Filter by transaction type
+                </FormHelperText>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={3}>
@@ -249,9 +252,12 @@ const WalletTransactionsMonthly = () => {
                   }}
                 >
                   <MenuItem value="">All Directions</MenuItem>
-                  <MenuItem value="in">in</MenuItem>
-                  <MenuItem value="out">out</MenuItem>
+                  <MenuItem value="in">In</MenuItem>
+                  <MenuItem value="out">Out</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Filter by money flow direction
+                </FormHelperText>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={3}>
@@ -299,11 +305,14 @@ const WalletTransactionsMonthly = () => {
                   }}
                 >
                   <MenuItem value="">All Statuses</MenuItem>
-                  <MenuItem value="processing">processing</MenuItem>
-                  <MenuItem value="completed">completed</MenuItem>
-                  <MenuItem value="failed">failed</MenuItem>
-                  <MenuItem value="expired">expired</MenuItem>
+                  <MenuItem value="processing">Processing</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="failed">Failed</MenuItem>
+                  <MenuItem value="expired">Expired</MenuItem>
                 </Select>
+                <FormHelperText sx={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>
+                  Filter by transaction status
+                </FormHelperText>
               </FormControl>
             </Grid>
           </Grid>

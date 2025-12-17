@@ -37,6 +37,7 @@ import {
   DialogActions,
   CircularProgress,
   Alert,
+  FormHelperText,
 } from "@mui/material";
 import {
   AdminPanelSettings,
@@ -500,8 +501,13 @@ export default function Settings() {
                 <Typography variant="h6" gutterBottom fontWeight={600}>
                   Filters
                 </Typography>
+<<<<<<< Updated upstream
                 <Grid container spacing={2}>
                   <Grid item size={2}>
+=======
+                <Grid container spacing={2} alignItems="flex-start" sx={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
+                  <Grid item xs="auto" sx={{ minWidth: 140 }}>
+>>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Month"
@@ -510,9 +516,15 @@ export default function Settings() {
                       value={policyFilters.month}
                       onChange={handleFilterChange}
                       inputProps={{ min: 1, max: 12 }}
+                      helperText="Month (1-12)"
+                      size="small"
                     />
                   </Grid>
+<<<<<<< Updated upstream
                   <Grid item size={2}>
+=======
+                  <Grid item xs="auto" sx={{ minWidth: 140 }}>
+>>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Year"
@@ -520,24 +532,37 @@ export default function Settings() {
                       name="year"
                       value={policyFilters.year}
                       onChange={handleFilterChange}
+                      helperText="Filter year"
+                      size="small"
                     />
                   </Grid>
+<<<<<<< Updated upstream
                   <Grid item size={2}>
                     <FormControl fullWidth>
                       <InputLabel>The reward has been released</InputLabel>
+=======
+                  <Grid item xs="auto" sx={{ minWidth: 160 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Distributed</InputLabel>
+>>>>>>> Stashed changes
                       <Select
                         name="isDistributed"
                         value={policyFilters.isDistributed}
                         onChange={handleFilterChange}
-                        label="Is Distributed"
+                        label="Distributed"
                       >
                         <MenuItem value="">All</MenuItem>
-                        <MenuItem value="true">True</MenuItem>
-                        <MenuItem value="false">False</MenuItem>
+                        <MenuItem value="true">Yes</MenuItem>
+                        <MenuItem value="false">No</MenuItem>
                       </Select>
+                      <FormHelperText>Distribution status</FormHelperText>
                     </FormControl>
                   </Grid>
+<<<<<<< Updated upstream
                   <Grid item size={2}>
+=======
+                  <Grid item xs="auto" sx={{ minWidth: 140 }}>
+>>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Rank From"
@@ -546,9 +571,15 @@ export default function Settings() {
                       value={policyFilters.rankFrom}
                       onChange={handleFilterChange}
                       inputProps={{ min: 1 }}
+                      helperText="Start rank"
+                      size="small"
                     />
                   </Grid>
+<<<<<<< Updated upstream
                   <Grid item size={2}>
+=======
+                  <Grid item xs="auto" sx={{ minWidth: 140 }}>
+>>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Rank To"
@@ -557,9 +588,15 @@ export default function Settings() {
                       value={policyFilters.rankTo}
                       onChange={handleFilterChange}
                       inputProps={{ min: 1 }}
+                      helperText="End rank"
+                      size="small"
                     />
                   </Grid>
+<<<<<<< Updated upstream
                   <Grid item size={2}>
+=======
+                  <Grid item xs="auto" sx={{ minWidth: 160, display: 'flex', alignItems: 'center', pt: 1 }}>
+>>>>>>> Stashed changes
                     <Stack direction="row" spacing={1}>
                       <Button variant="contained" onClick={handleApplyFilters} size="small">
                         Apply
@@ -880,6 +917,7 @@ export default function Settings() {
                     <MenuItem disabled>No vouchers available</MenuItem>
                   )}
                 </Select>
+                <FormHelperText>Select a voucher to reward leaderboard winners</FormHelperText>
               </FormControl>
             </Grid>
 
@@ -907,6 +945,7 @@ export default function Settings() {
                 value={policyFormData.year}
                 onChange={handlePolicyFormChange}
                 required
+                helperText="Select year for this policy"
                 variant="outlined"
               />
             </Grid>
@@ -921,6 +960,7 @@ export default function Settings() {
                 onChange={handlePolicyFormChange}
                 required
                 inputProps={{ min: 1 }}
+                helperText="Starting rank position (e.g., 1 for 1st place)"
                 variant="outlined"
               />
             </Grid>
@@ -935,6 +975,7 @@ export default function Settings() {
                 onChange={handlePolicyFormChange}
                 required
                 inputProps={{ min: 1 }}
+                helperText="Ending rank position (e.g., 3 for top 3)"
                 variant="outlined"
               />
             </Grid>
@@ -948,7 +989,8 @@ export default function Settings() {
                 onChange={handlePolicyFormChange}
                 multiline
                 rows={3}
-                placeholder="Reward for top 3 leaderboard users"
+                placeholder="E.g., Reward for top 3 leaderboard users"
+                helperText="Optional: Add a description or note for this policy"
                 variant="outlined"
               />
             </Grid>
