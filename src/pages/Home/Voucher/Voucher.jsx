@@ -116,6 +116,20 @@ export default function Voucher() {
         }
       }
 
+      // Format start date
+      const startDate = voucher.startDate;
+      let startText = 'N/A';
+      if (startDate) {
+        const date = new Date(startDate);
+        if (!isNaN(date.getTime())) {
+          startText = date.toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+        }
+      }
+
       // Template vouchers don't have claimedAt - will check against user's exchanged vouchers
       return {
         id: voucher._id || voucher.id,
@@ -130,6 +144,7 @@ export default function Voucher() {
         status: voucher.status || 'active',
         category: voucher.businessInfo?.businessName || 'Partner Store',
         expiry: expiryText,
+        startDate: startText,
         customName: voucher.customName,
         baseCode: voucher.baseCode,
         description: voucher.customDescription,
@@ -402,6 +417,16 @@ export default function Voucher() {
                           {voucher.customName}
                         </Typography>
                       )}
+                      
+                      {/* Date Range */}
+                      <Box sx={{ mt: 1.5, mb: 1, display: 'flex', gap: 5 }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '11px', mb: 0.5 }}>
+                          Start Date: <span style={{ fontWeight: 600, color: '#16a34a' }}>{voucher.startDate}</span>
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '11px' }}>
+                          End Date: <span style={{ fontWeight: 600, color: '#dc2626' }}>{voucher.expiry}</span>
+                        </Typography>
+                      </Box>
                       
                       {/* Points */}
                       <div className="voucher-points-section">
