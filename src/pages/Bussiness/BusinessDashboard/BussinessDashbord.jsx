@@ -118,7 +118,7 @@ export default function BussinessDashbord() {
 
   const borrowTransactionsChartData = formatBorrowTransactionsData();
 
-  // topBorrowed should be an array of products from Redux store
+  // topBorrowed should be an array of productGroups from Redux store
   const topBorrowedList = Array.isArray(topBorrowed) ? topBorrowed : [];
 
   // Material sales data
@@ -221,10 +221,11 @@ export default function BussinessDashbord() {
   };
 
   const getBorrowedName = (item) => {
+    // For productGroups
     return (
+      item?.name ||
       item?.group?.name ||
       item?.productName ||
-      item?.name ||
       item?.materialName ||
       item?.productGroupName ||
       'Unknown item'
@@ -232,8 +233,10 @@ export default function BussinessDashbord() {
   };
 
   const getBorrowedCategory = (item) => {
+    // For productGroups - can use description or material name
     return (
-      item?.group?.name ||
+      item?.materialId?.materialName ||
+      item?.material?.materialName ||
       item?.category ||
       item?.productGroupName ||
       item?.materialType ||
@@ -244,7 +247,9 @@ export default function BussinessDashbord() {
   };
 
   const getBorrowedCount = (item) => {
+    // For productGroups - use totalReuseCount
     const count =
+      item?.totalReuseCount ??
       item?.reuseCount ??
       item?.totalBorrowed ??
       item?.borrowCount ??
@@ -256,11 +261,13 @@ export default function BussinessDashbord() {
   };
 
   const getBorrowedCo2 = (item) => {
+    // For productGroups - might need to calculate or get from API
     const co2 = item?.totalCo2Reduced ?? item?.co2Reduced ?? item?.co2 ?? 0;
     return typeof co2 === 'number' ? co2 : Number(co2) || 0;
   };
 
   const getBorrowedEcoPoints = (item) => {
+    // For productGroups - might need to calculate or get from API
     const points = item?.totalEcoPoints ?? item?.ecoPoints ?? item?.points ?? 0;
     return typeof points === 'number' ? points : Number(points) || 0;
   };
@@ -514,7 +521,7 @@ export default function BussinessDashbord() {
         <div className="chart-header">
           <div>
             <h3 className="chart-title">Top Borrowed</h3>
-            <p className="chart-subtitle">The most borrowed items</p>
+            <p className="chart-subtitle">The most borrowed product groups</p>
           </div>
           <FaShoppingBag className="chart-icon" />
         </div>
@@ -526,7 +533,7 @@ export default function BussinessDashbord() {
           <Grid container spacing={2} alignItems="center">
             <Grid item size={3}>
               <TextField
-                label="Top products"
+                label="Top product groups"
                 type="number"
                 value={topBorrowedLimit}
                 onChange={(e) => setTopBorrowedLimit(e.target.value)}
@@ -561,7 +568,8 @@ export default function BussinessDashbord() {
               const borrowCount = getBorrowedCount(item);
               const co2Value = getBorrowedCo2(item);
               const ecoPointsValue = getBorrowedEcoPoints(item);
-              const imageUrl = item?.group?.imageUrl || item?.imageUrl || item?.productImage || item?.thumbnail || item?.photo;
+              // For productGroups - imageUrl is directly on the item
+              const imageUrl = item?.imageUrl || item?.group?.imageUrl || item?.productImage || item?.thumbnail || item?.photo;
 
               return (
                 <div 
