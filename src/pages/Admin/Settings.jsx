@@ -501,13 +501,8 @@ export default function Settings() {
                 <Typography variant="h6" gutterBottom fontWeight={600}>
                   Filters
                 </Typography>
-<<<<<<< Updated upstream
-                <Grid container spacing={2}>
-                  <Grid item size={2}>
-=======
                 <Grid container spacing={2} alignItems="flex-start" sx={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
                   <Grid item xs="auto" sx={{ minWidth: 140 }}>
->>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Month"
@@ -520,11 +515,7 @@ export default function Settings() {
                       size="small"
                     />
                   </Grid>
-<<<<<<< Updated upstream
-                  <Grid item size={2}>
-=======
                   <Grid item xs="auto" sx={{ minWidth: 140 }}>
->>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Year"
@@ -536,15 +527,9 @@ export default function Settings() {
                       size="small"
                     />
                   </Grid>
-<<<<<<< Updated upstream
-                  <Grid item size={2}>
-                    <FormControl fullWidth>
-                      <InputLabel>The reward has been released</InputLabel>
-=======
                   <Grid item xs="auto" sx={{ minWidth: 160 }}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Distributed</InputLabel>
->>>>>>> Stashed changes
                       <Select
                         name="isDistributed"
                         value={policyFilters.isDistributed}
@@ -558,11 +543,7 @@ export default function Settings() {
                       <FormHelperText>Distribution status</FormHelperText>
                     </FormControl>
                   </Grid>
-<<<<<<< Updated upstream
-                  <Grid item size={2}>
-=======
                   <Grid item xs="auto" sx={{ minWidth: 140 }}>
->>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Rank From"
@@ -575,11 +556,7 @@ export default function Settings() {
                       size="small"
                     />
                   </Grid>
-<<<<<<< Updated upstream
-                  <Grid item size={2}>
-=======
                   <Grid item xs="auto" sx={{ minWidth: 140 }}>
->>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Rank To"
@@ -592,11 +569,7 @@ export default function Settings() {
                       size="small"
                     />
                   </Grid>
-<<<<<<< Updated upstream
-                  <Grid item size={2}>
-=======
                   <Grid item xs="auto" sx={{ minWidth: 160, display: 'flex', alignItems: 'center', pt: 1 }}>
->>>>>>> Stashed changes
                     <Stack direction="row" spacing={1}>
                       <Button variant="contained" onClick={handleApplyFilters} size="small">
                         Apply
