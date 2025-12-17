@@ -146,15 +146,14 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       TransitionProps={{
         timeout: 400,
       }}
-      maxWidth="md"
-      fullWidth
+      
       PaperProps={{
         sx: {
           borderRadius: '20px',
           boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
           overflow: 'hidden',
-          maxWidth: '700px',
-          maxHeight: '90vh',
+          maxWidth: '650px',
+          maxHeight: '85vh',
           display: 'flex',
           flexDirection: 'column',
         }
@@ -164,8 +163,8 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
         sx={{ 
           background: 'linear-gradient(135deg, #164e31 0%, #0f3d20 100%)',
           color: 'white',
-          py: 2,
-          px: 3,
+          py: 1.5,
+          px: 2.5,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -173,12 +172,12 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
           flexShrink: 0,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <Box
             sx={{
-              width: 40,
-              height: 40,
-              borderRadius: '10px',
+              width: 36,
+              height: 36,
+              borderRadius: '8px',
               background: 'rgba(255, 255, 255, 0.2)',
               display: 'flex',
               alignItems: 'center',
@@ -186,13 +185,13 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
               backdropFilter: 'blur(10px)',
             }}
           >
-            <EcoIcon sx={{ fontSize: 20, color: 'white' }} />
+            <EcoIcon sx={{ fontSize: 18, color: 'white' }} />
           </Box>
           <Box>
-            <Typography variant="h6" component="div" fontWeight={700} sx={{ fontSize: '22px', mb: 0.25 }}>
+            <Typography variant="h6" component="div" fontWeight={700} sx={{ fontSize: '19px', mb: 0.25 }}>
               {editMode ? 'Edit Material' : 'Create New Material'}
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '14px' }}>
+            <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '13px' }}>
               {editMode ? 'Update recyclable material details' : 'Add a new recyclable material to the platform'}
             </Typography>
           </Box>
@@ -217,8 +216,8 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <DialogContent 
           sx={{ 
-            pt: 2, 
-            pb: 1, 
+            pt: 1.5, 
+            pb: 0.5, 
             px: 2.5,
             overflowY: 'auto',
             flex: 1,
@@ -237,7 +236,7 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
             },
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <TextField
               name="materialName"
               label="Material Name *"
@@ -435,10 +434,10 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
               fullWidth
               required
               multiline
-              rows={2}
+              rows={1}
               variant="outlined"
               size="small"
-              size="small"
+              
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
@@ -464,8 +463,8 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
         <DialogActions 
           sx={{ 
             px: 2.5, 
-            py: 1.5, 
-            gap: 2, 
+            py: 1.25, 
+            gap: 1.5, 
             borderTop: '1px solid',
             borderColor: 'divider',
             backgroundColor: '#fafafa',
@@ -477,12 +476,12 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
             onClick={handleClose}
             variant="outlined"
             sx={{
-              borderRadius: '12px',
+              borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 600,
-              fontSize: '16px',
-              px: 3,
-              py: 1.5,
+              fontSize: '15px',
+              px: 2.5,
+              py: 1.25,
               borderWidth: '1px',
               color: '#374151',
               borderColor: '#d1d5db',
@@ -498,12 +497,12 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
             type="submit" 
             variant="contained"
             sx={{
-              borderRadius: '12px',
+              borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 600,
-              fontSize: '16px',
-              px: 4,
-              py: 1.5,
+              fontSize: '15px',
+              px: 3,
+              py: 1.25,
               backgroundColor: '#164e31',
               '&:hover': {
                 backgroundColor: '#0f3d20',

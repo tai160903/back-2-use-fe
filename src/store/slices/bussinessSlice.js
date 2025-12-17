@@ -379,7 +379,15 @@ export const updateProduct = createAsyncThunk(
   "businesses/updateProduct",
   async ({ id, productData }, { rejectWithValue }) => {
     try {
-      const response = await fetcher.patch(`/products/${id}`, productData);
+      // Check if productData is FormData (for image upload)
+      const isFormData = productData instanceof FormData;
+      const config = isFormData ? {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      } : {};
+      
+      const response = await fetcher.patch(`/products/${id}`, productData, config);
       return response.data;
     } catch (error) {
       return rejectWithValue(
