@@ -295,6 +295,7 @@ function SuccessCard({ item }) {
   const productGroup = product.productGroupId || {};
   const sizeObj = product.productSizeId || {};
   const customer = item.customerId || {};
+  const ecoPointChanged = item.ecoPointChanged ?? null;
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -324,7 +325,22 @@ function SuccessCard({ item }) {
   if (rawType === "return_success") typeLabel = "Return Success";
   if (rawType === "return_failed") typeLabel = "Return Failed";
 
-  const fee = item.totalChargeFee || item.fee || 0;
+  // Ưu tiên lấy late fee từ walletTransaction.amount (theo response API)
+  const walletLateFee =
+    item.walletTransaction && item.walletTransaction.amount != null
+      ? item.walletTransaction.amount
+      : null;
+
+  // Fallback sang các field khác nếu không có trong walletTransaction
+  const fee =
+    walletLateFee != null
+      ? walletLateFee
+      : item.amount != null
+      ? item.amount
+      : item.fee || 0;
+
+  // Số tiền business thực nhận: Deposit - Late fee (không âm)
+  const receiveMoney = Math.max((deposit || 0) - (fee || 0), 0);
 
   return (
     <Box className="borrow-card-success" p={2} mb={2} borderRadius="10px">
@@ -468,8 +484,17 @@ function SuccessCard({ item }) {
                   <span style={{ color: "#1b4c2d", fontWeight: "bold" }}>
                     {typeof item.co2Changed === 'number' 
                       ? item.co2Changed.toFixed(3) 
-                      : item.co2Changed}
+                      : item.co2Changed} kg
                   </span>
+                </Typography>
+              )}
+
+              {ecoPointChanged !== null && (
+                <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
+                  Eco Points:{" "}
+                  <span style={{ fontWeight: 600 }}>
+                    {ecoPointChanged > 0 ? `+${ecoPointChanged}` : ecoPointChanged} points
+                  </span>  
                 </Typography>
               )}
 
@@ -477,7 +502,7 @@ function SuccessCard({ item }) {
                 <Typography>
                   Receive Money: {}
                   <span style={{ color: "#c64b4f", fontWeight: "bold" }}>
-                    {deposit.toLocaleString("vi-VN")} VNĐ
+                    {receiveMoney.toLocaleString("vi-VN")} VNĐ
                   </span>
                 </Typography>
               </div>
@@ -504,6 +529,7 @@ function FailedCard({ item }) {
   const productGroup = product.productGroupId || {};
   const sizeObj = product.productSizeId || {};
   const customer = item.customerId || {};
+  const ecoPointChanged = item.ecoPointChanged ?? null;
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -671,8 +697,17 @@ function FailedCard({ item }) {
                   <span style={{ color: "#1b4c2d", fontWeight: "bold" }}>
                     {typeof item.co2Changed === "number"
                       ? item.co2Changed.toFixed(3)
-                      : item.co2Changed}
+                      : item.co2Changed} kg
                   </span>
+                </Typography>
+              )}
+
+              {ecoPointChanged !== null && (
+                <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
+                  Eco Points:{" "}
+                  <span style={{ fontWeight: 600 }}>
+                    {ecoPointChanged > 0 ? `+${ecoPointChanged}` : ecoPointChanged} points
+                  </span>  
                 </Typography>
               )}
 
@@ -774,6 +809,7 @@ export default function BusinessTransaction() {
   const detailPreviousImages = detail.previousConditionImages || {};
   const detailCurrentImages = detail.currentConditionImages || {};
   const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
+  const detailEcoPointChanged = detail.ecoPointChanged ?? null;
 
   // Prefer QR from productId for QR display, fallback to transaction-level or serial
   const detailQrCode =
@@ -1111,6 +1147,16 @@ export default function BusinessTransaction() {
                           {typeof detail.co2Changed === 'number' 
                             ? detail.co2Changed.toFixed(3) 
                             : detail.co2Changed}
+                        </span>
+                      </Typography>
+                    )}
+                    {detailEcoPointChanged !== null && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        Eco Points:{" "}
+                        <span style={{ fontWeight: 600 }}>
+                          {detailEcoPointChanged > 0
+                            ? `+${detailEcoPointChanged}`
+                            : detailEcoPointChanged}
                         </span>
                       </Typography>
                     )}

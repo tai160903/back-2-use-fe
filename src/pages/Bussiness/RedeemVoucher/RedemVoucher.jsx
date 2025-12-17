@@ -168,17 +168,16 @@ export default function RedemVoucher() {
   // Calculate statistics
   const stats = useMemo(() => {
     if (!myBusinessVouchers) {
-      return { total: 0, active: 0, expired: 0, published: 0 };
+      return { total: 0, active: 0, inactive: 0, expired: 0, published: 0 };
     }
     
     const total = myBusinessVouchers.length;
-    const active = myBusinessVouchers.filter((v) => !isVoucherExpired(v.endDate)).length;
-    const expired = myBusinessVouchers.filter((v) => isVoucherExpired(v.endDate)).length;
+    const active = myBusinessVouchers.filter((v) => v.status === 'active').length;
+    const inactive = myBusinessVouchers.filter((v) => v.status === 'inactive').length;
+    const expired = myBusinessVouchers.filter((v) => v.status === 'expired' || isVoucherExpired(v.endDate)).length;
     const published = myBusinessVouchers.filter((v) => v.isPublished).length;
     
-      const inactive = myBusinessVouchers.filter((v) => v.status === 'inactive').length;
-      
-      return { total, active, inactive, expired, published };
+    return { total, active, inactive, expired, published };
   }, [myBusinessVouchers]);
 
   // Handle create voucher

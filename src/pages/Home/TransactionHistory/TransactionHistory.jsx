@@ -505,14 +505,14 @@ function SuccessCard({ item }) {
                   </Typography>
                 </div>
 
-                <div className="borrow-ecoPoint">
+                {/* <div className="borrow-ecoPoint">
                   <Typography>
                     Eco Points:{" "}
                     <span style={{ fontWeight: 600 }}>
                       {ecoPointChanged > 0 ? `+${ecoPointChanged}` : ecoPointChanged}
                     </span>
                   </Typography>
-                </div>
+                </div> */}
 
                 <div className="borrow-conditionPoint">
                   <Typography>
@@ -777,14 +777,14 @@ function FailedCard({ item }) {
                     </span>
                   </Typography>
                 </div>
-                <div className="borrow-ecoPoint">
+                {/* <div className="borrow-ecoPoint">
                   <Typography>
                     Eco Points:{" "}
                     <span style={{ fontWeight: 600 }}>
                       {ecoPointChanged > 0 ? `+${ecoPointChanged}` : ecoPointChanged}
                     </span>
                   </Typography>
-                </div>
+                </div> */}
                 <div className="borrow-conditionPoint">
                   <Typography>
                     Condition Points:{" "}
