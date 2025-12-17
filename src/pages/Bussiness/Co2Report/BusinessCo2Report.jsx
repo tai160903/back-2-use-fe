@@ -22,6 +22,7 @@ import { FiUser, FiShoppingBag } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { getTransactionHistoryBusinessApi } from "../../../store/slices/borrowSlice";
 import { exportCo2Report } from "../../../store/slices/bussinessSlice";
+import fetcher from "../../../apis/fetcher";
 
 const typeOptions = [
   { label: "All transaction types", value: "" },
@@ -107,8 +108,11 @@ export default function BusinessCo2Report() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalCo2Summary, setTotalCo2Summary] = useState({ total: 0, byType: {} });
+  const [isLoadingTotal, setIsLoadingTotal] = useState(false);
   const limit = 10;
 
+  // Fetch paginated data for display
   useEffect(() => {
     dispatch(
       getTransactionHistoryBusinessApi({
@@ -123,20 +127,50 @@ export default function BusinessCo2Report() {
     );
   }, [dispatch, status, searchText, transactionType, fromDate, toDate, currentPage]);
 
-  const items = useMemo(() => (Array.isArray(borrow) ? borrow : []), [borrow]);
+  // Fetch all data (without pagination) to calculate total CO₂
+  useEffect(() => {
+    const fetchTotalCo2 = async () => {
+      setIsLoadingTotal(true);
+      try {
+        const response = await fetcher.get("/borrow-transactions/business", {
+          params: {
+            status: status || undefined,
+            productName: searchText || undefined,
+            borrowTransactionType: transactionType || undefined,
+            fromDate: fromDate || undefined,
+            toDate: toDate || undefined,
+            page: 1,
+            limit: 10000, // Large limit to get all data
+          },
+        });
+        
+        const allItems = Array.isArray(response.data?.data) 
+          ? response.data.data 
+          : (response.data?.data?.items || []);
+        
+        const summary = allItems.reduce(
+          (acc, item) => {
+            const val = Number(item.co2Changed) || 0;
+            const t = item.borrowTransactionType || "unknown";
+            acc.total += val;
+            acc.byType[t] = (acc.byType[t] || 0) + val;
+            return acc;
+          },
+          { total: 0, byType: {} }
+        );
+        setTotalCo2Summary(summary);
+      } catch (error) {
+        console.error("Failed to fetch total CO₂:", error);
+        setTotalCo2Summary({ total: 0, byType: {} });
+      } finally {
+        setIsLoadingTotal(false);
+      }
+    };
 
-  const summary = useMemo(() => {
-    return items.reduce(
-      (acc, item) => {
-        const val = Number(item.co2Changed) || 0;
-        const t = item.borrowTransactionType || "unknown";
-        acc.total += val;
-        acc.byType[t] = (acc.byType[t] || 0) + val;
-        return acc;
-      },
-      { total: 0, byType: {} }
-    );
-  }, [items]);
+    fetchTotalCo2();
+  }, [status, searchText, transactionType, fromDate, toDate]);
+
+  const items = useMemo(() => (Array.isArray(borrow) ? borrow : []), [borrow]);
 
   const handlePageChange = (_, page) => setCurrentPage(page);
   const handleExport = async () => {
@@ -293,10 +327,10 @@ export default function BusinessCo2Report() {
               Total CO₂ (filtered)
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
-              {summary.total.toFixed(3)} kg
+              {isLoadingTotal ? "..." : totalCo2Summary.total.toFixed(3)} kg
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.85 }}>
-              Aggregated across current filters.
+              Aggregated across all pages with current filters.
             </Typography>
           </Paper>
           <Paper
@@ -312,19 +346,24 @@ export default function BusinessCo2Report() {
               CO₂ by transaction type
             </Typography>
             <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1 }}>
-              {Object.entries(summary.byType).map(([k, v]) => (
-                <Chip
-                  key={k}
-                  label={`${typeLabel(k)}: ${v.toFixed(3)} kg`}
-                  sx={{
-                    borderColor: v >= 0 ? "#0b5529" : "#c62828",
-                    color: v >= 0 ? "#0b5529" : "#c62828",
-                    background: v >= 0 ? "#e8f3ec" : "#fdecea",
-                  }}
-                  variant="outlined"
-                />
-              ))}
-              {Object.keys(summary.byType).length === 0 && (
+              {isLoadingTotal ? (
+                <Typography variant="body2" color="text.secondary">
+                  Loading...
+                </Typography>
+              ) : Object.keys(totalCo2Summary.byType).length > 0 ? (
+                Object.entries(totalCo2Summary.byType).map(([k, v]) => (
+                  <Chip
+                    key={k}
+                    label={`${typeLabel(k)}: ${v.toFixed(3)} kg`}
+                    sx={{
+                      borderColor: v >= 0 ? "#0b5529" : "#c62828",
+                      color: v >= 0 ? "#0b5529" : "#c62828",
+                      background: v >= 0 ? "#e8f3ec" : "#fdecea",
+                    }}
+                    variant="outlined"
+                  />
+                ))
+              ) : (
                 <Typography variant="body2" color="text.secondary">
                   No data yet.
                 </Typography>
