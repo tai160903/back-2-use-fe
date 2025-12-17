@@ -300,22 +300,8 @@ export default function Subscription() {
                             {formatLimit(subscriptionPackage.limits?.productItemLimit)}
                           </span>
                         </div>
-                        <div className='package-limit-badge'>
-                          <span className='package-limit-label'>Export</span>
-                          <span className='package-limit-value package-limit-pill'>
-                            {subscriptionPackage.limits?.exportLevel
-                              ? subscriptionPackage.limits.exportLevel.toUpperCase()
-                              : 'NONE'}
-                          </span>
-                        </div>
-                        <div className='package-limit-badge'>
-                          <span className='package-limit-label'>Eco Bonus</span>
-                          <span className='package-limit-value'>
-                            {subscriptionPackage.limits?.ecoBonusPercent != null
-                              ? `${subscriptionPackage.limits.ecoBonusPercent}%`
-                              : '0%'}
-                          </span>
-                        </div>
+                   
+                
                       </div>
 
                       {featuresList.length > 0 && (

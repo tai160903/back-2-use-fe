@@ -275,22 +275,8 @@ const formatLimitValue = (value) => {
                       {formatLimitValue(item.limits?.productItemLimit)}
                     </span>
                   </div>
-                  <div className="limit-badge">
-                    <span className="limit-badge-label">Export</span>
-                    <span className="limit-badge-value limit-badge-pill">
-                      {item.limits?.exportLevel
-                        ? item.limits.exportLevel.toUpperCase()
-                        : "NONE"}
-                    </span>
-                  </div>
-                  <div className="limit-badge">
-                    <span className="limit-badge-label">Eco Bonus</span>
-                    <span className="limit-badge-value">
-                      {item.limits?.ecoBonusPercent != null
-                        ? `${item.limits.ecoBonusPercent}%`
-                        : "0%"}
-                    </span>
-                  </div>
+             
+              
                 </div>
                 <div className="subscriptions-detail-item">
                   <span className="subscriptions-detail-label">
