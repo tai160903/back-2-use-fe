@@ -40,6 +40,7 @@ export const PATH = {
     BUSINESS_INVENTORY_SIZES:"/business/inventory/:productGroupId/sizes",
     BUSINESS_MATERIALS:"/business/materials",
     BUSINESS_TRANSACTION:"/business/transaction",
+    BUSINESS_CO2_REPORT:"/business/co2-report",
     BUSINESS_SUBSCRIPTIONS:"/business/subscriptions",
     BUSINESS_REEDEM_REWARDS:"/business/reedem-rewards",
     BUSINESS_WALLET:"/business/wallet",

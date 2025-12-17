@@ -488,7 +488,7 @@ function SuccessCard({ item }) {
 
                 <div className="borrow-legitPoint">
                   <Typography>
-                    Legit Points:{" "}
+                    Ranking Points:{" "}
                     <span style={{ color: "#8200de", fontWeight: "600" }}>
                       {legitPoints > 0 ? `+${legitPoints}` : legitPoints} points
                     </span>
@@ -844,6 +844,8 @@ export default function TransactionHistory() {
   // trạng thái filter
   const [status, setStatus] = useState("");
   const [searchText, setSearchText] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [value, setValue] = useState(0); // tab hiện tại
   const [openDetail, setOpenDetail] = useState(false);
   const [openCancel, setOpenCancel] = useState(false);
@@ -872,11 +874,13 @@ export default function TransactionHistory() {
         status: status || undefined,
         productName: searchText || undefined,
         borrowTransactionType,
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined,
         page: currentPage,
         limit,
       })
     );
-  }, [dispatch, status, searchText, value, currentPage, limit]);
+  }, [dispatch, status, searchText, value, currentPage, limit, fromDate, toDate]);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -1105,6 +1109,26 @@ export default function TransactionHistory() {
               <MenuItem value="canceled">canceled</MenuItem>
             </Select>
           </FormControl>
+
+          {/* Date range filters */}
+          <TextField
+            label="From date"
+            type="date"
+            size="small"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            style={{ minWidth: 180, height: "40px" }}
+          />
+          <TextField
+            label="To date"
+            type="date"
+            size="small"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            style={{ minWidth: 180, height: "40px" }}
+          />
         </div>
 
         {/* Tabs */}

@@ -46,15 +46,6 @@ const subscriptionSchema = yup.object({
     .required("Product item limit is required")
     .min(-1, "Product item limit cannot be less than -1")
     .integer("Product item limit must be an integer"),
-  exportLevel: yup
-    .string()
-    .required("Export level is required"),
-  ecoBonusPercent: yup
-    .number()
-    .required("Eco bonus percent is required")
-    .min(0, "Eco bonus percent cannot be negative")
-    .max(100, "Eco bonus percent cannot exceed 100")
-    .integer("Eco bonus percent must be an integer"),
   isActive: yup.boolean(),
   isTrial: yup.boolean()
 });
@@ -77,8 +68,6 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
       durationInDays: "",
       productGroupLimit: "",
       productItemLimit: "",
-      exportLevel: "",
-      ecoBonusPercent: "",
       isActive: true,
       isTrial: false
     }
@@ -96,8 +85,6 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
         durationInDays: selectedItem.durationInDays || "",
         productGroupLimit: limits.productGroupLimit ?? "",
         productItemLimit: limits.productItemLimit ?? "",
-        exportLevel: limits.exportLevel || "",
-        ecoBonusPercent: limits.ecoBonusPercent ?? "",
         isActive: selectedItem.isActive !== undefined ? selectedItem.isActive : true,
         isTrial: selectedItem.isTrial !== undefined ? selectedItem.isTrial : false
       });
@@ -110,8 +97,6 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
         durationInDays: "",
         productGroupLimit: "",
         productItemLimit: "",
-        exportLevel: "",
-        ecoBonusPercent: "",
         isActive: true,
         isTrial: false
       });
@@ -132,8 +117,9 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
       limits: {
         productGroupLimit: isUnlimitedGroup ? -1 : Number(data.productGroupLimit),
         productItemLimit: isUnlimitedItem ? -1 : Number(data.productItemLimit),
-        exportLevel: data.exportLevel,
-        ecoBonusPercent: Number(data.ecoBonusPercent),
+        // Giữ nguyên export/eco cũ khi chỉnh sửa, tạo mới để trống
+        exportLevel: selectedItem?.limits?.exportLevel ?? undefined,
+        ecoBonusPercent: selectedItem?.limits?.ecoBonusPercent ?? undefined,
       },
     };
 
@@ -657,85 +643,6 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                               NO LIMIT
                             </Button>
                           </Box>
-                        )}
-                      />
-                    </Grid>
-
-                    <Grid item size={6}>
-                      <Controller
-                        name="ecoBonusPercent"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Eco Bonus Percent (%) *"
-                            type="number"
-                            required
-                            placeholder="e.g., 10"
-                            variant="outlined"
-                            fullWidth
-                            error={!!errors.ecoBonusPercent}
-                            helperText={errors.ecoBonusPercent?.message}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value === "" ? "" : parseInt(value) || "");
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                              },
-                              '& .MuiInputLabel-root': {
-                                fontSize: '16px',
-                                fontWeight: 600,
-                                color: '#374151',
-                              },
-                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#174d31',
-                                borderWidth: '2px',
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: '#174d31',
-                              }
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-
-                    <Grid item size={6}>
-                      <Controller
-                        name="exportLevel"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Export Level *"
-                            required
-                            placeholder="none | basic | advanced"
-                            variant="outlined"
-                            fullWidth
-                            error={!!errors.exportLevel}
-                            helperText={errors.exportLevel?.message}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                              },
-                              '& .MuiInputLabel-root': {
-                                fontSize: '16px',
-                                fontWeight: 600,
-                                color: '#374151',
-                              },
-                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#174d31',
-                                borderWidth: '2px',
-                              },
-                              '& .MuiInputLabel-root.Mui-focused': {
-                                color: '#174d31',
-                              }
-                            }}
-                          />
                         )}
                       />
                     </Grid>
