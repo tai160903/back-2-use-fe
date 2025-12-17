@@ -771,7 +771,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* CO2 Environmental Impact Section */}
-          <div className="co2-impact-section">
+          {/* <div className="co2-impact-section">
             <div className="co2-section-header">
               <div className="co2-header-icon">
                 <FaLeaf />
@@ -787,7 +787,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className="co2-content-grid">
-              {/* Left: CO2 Impact Information */}
+        
               <div className="co2-info-card">
                 <div className="co2-info-header">
                   <FaLeaf className="co2-info-icon" />
@@ -824,7 +824,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Right: Benefits of CO2 Reduction */}
+       
               <div className="co2-benefits-card">
                 <div className="co2-benefits-header">
                   <FaLeaf className="co2-benefits-icon" />
@@ -861,7 +861,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       ) : (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
