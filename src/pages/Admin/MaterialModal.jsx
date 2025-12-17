@@ -146,7 +146,6 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       TransitionProps={{
         timeout: 400,
       }}
-      
       PaperProps={{
         sx: {
           borderRadius: '20px',
