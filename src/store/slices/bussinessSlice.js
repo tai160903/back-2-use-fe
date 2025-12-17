@@ -909,8 +909,8 @@ const businessSlice = createSlice({
       })
       .addCase(getBusinessTopBorrowed.fulfilled, (state, { payload }) => {
         state.topBorrowedLoading = false;
-        // API returns { data: { top: 3, products: [...] } }
-        state.topBorrowed = payload?.data?.products || payload?.products || [];
+        // API returns { data: { top: 3, productGroups: [...] } }
+        state.topBorrowed = payload?.data?.productGroups || payload?.productGroups || [];
         state.topBorrowedError = null;
       })
       .addCase(getBusinessTopBorrowed.rejected, (state, { payload }) => {
