@@ -444,6 +444,24 @@ export const getBusinessTopBorrowed = createAsyncThunk(
   }
 );
 
+// export co2 report
+export const exportCo2Report = createAsyncThunk(
+  "businesses/exportCo2Report",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        "/business/dashboard/borrow-transactions/export",
+        { responseType: "blob" }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 const businessSlice = createSlice({
   name: "businesses",
   initialState: {
@@ -494,6 +512,9 @@ const businessSlice = createSlice({
     topBorrowed: [],
     topBorrowedLoading: false,
     topBorrowedError: null,
+    exportCo2Report: null,
+    exportCo2ReportLoading: false,
+    exportCo2ReportError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -888,7 +909,20 @@ const businessSlice = createSlice({
         state.topBorrowedLoading = false;
         state.topBorrowedError = payload;
       })
-  
+      // Export CO2 Report
+      .addCase(exportCo2Report.pending, (state) => {
+        state.exportCo2ReportLoading = true;
+        state.exportCo2ReportError = null;
+      })
+      .addCase(exportCo2Report.fulfilled, (state, { payload }) => {
+        state.exportCo2ReportLoading = false;
+        state.exportCo2Report = payload;
+        state.exportCo2ReportError = null;
+      })
+      .addCase(exportCo2Report.rejected, (state, { payload }) => {
+        state.exportCo2ReportLoading = false;
+        state.exportCo2ReportError = payload;
+      })
   },
 });
 

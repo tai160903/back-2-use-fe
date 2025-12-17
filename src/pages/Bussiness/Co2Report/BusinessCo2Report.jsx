@@ -21,6 +21,7 @@ import { FaArrowUpLong } from "react-icons/fa6";
 import { FiUser, FiShoppingBag } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { getTransactionHistoryBusinessApi } from "../../../store/slices/borrowSlice";
+import { exportCo2Report } from "../../../store/slices/bussinessSlice";
 
 const typeOptions = [
   { label: "All transaction types", value: "" },
@@ -98,6 +99,7 @@ const renderStatusPill = (status) => {
 export default function BusinessCo2Report() {
   const dispatch = useDispatch();
   const { borrow, isLoading, totalPages } = useSelector((state) => state.borrow);
+  const { exportCo2ReportLoading } = useSelector((state) => state.businesses || {});
 
   const [searchText, setSearchText] = useState("");
   const [status, setStatus] = useState("");
@@ -121,7 +123,7 @@ export default function BusinessCo2Report() {
     );
   }, [dispatch, status, searchText, transactionType, fromDate, toDate, currentPage]);
 
-  const items = Array.isArray(borrow) ? borrow : [];
+  const items = useMemo(() => (Array.isArray(borrow) ? borrow : []), [borrow]);
 
   const summary = useMemo(() => {
     return items.reduce(
@@ -137,48 +139,21 @@ export default function BusinessCo2Report() {
   }, [items]);
 
   const handlePageChange = (_, page) => setCurrentPage(page);
-  const handleExport = () => {
-    if (!items.length) return;
-    const headers = [
-      "No",
-      "Type",
-      "Status",
-      "CO2 (kg)",
-      "Eco Point",
-      "Customer",
-      "Phone",
-      "Product",
-      "Serial/QR",
-      "Borrowed at",
-      "Returned/Due",
-    ];
-    const rows = items.map((item, idx) => {
-      const customer = item.customerId || {};
-      const product = item.productId || {};
-      const group = product.productGroupId || {};
-      return [
-        (currentPage - 1) * limit + idx + 1,
-        typeLabel(item.borrowTransactionType),
-        item.status,
-        Number(item.co2Changed || 0).toFixed(3),
-        Number(item.ecoPointChanged || 0).toFixed(2),
-        customer.fullName || customer.userId?.email || "N/A",
-        customer.phone || "N/A",
-        group.name || "Unknown",
-        product.serialNumber || product.qrCode || "N/A",
-        formatDate(item.borrowDate || item.createdAt),
-        formatDate(item.returnDate || item.dueDate),
-      ];
-    });
-
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "business-co2-report.csv";
-    link.click();
-    URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    try {
+      const data = await dispatch(exportCo2Report()).unwrap();
+      if (!data) return;
+      const blob =
+        data instanceof Blob ? data : new Blob([data], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "business-co2-report.csv";
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export CO2 report failed", error);
+    }
   };
 
   return (
@@ -296,9 +271,9 @@ export default function BusinessCo2Report() {
               backgroundColor: "#0b5529",
               "&:hover": { backgroundColor: "#094421" },
             }}
-            disabled={!items.length}
+            disabled={exportCo2ReportLoading}
           >
-            Export CSV
+            {exportCo2ReportLoading ? "Exporting..." : "Export CSV"}
           </Button>
         </Stack>
 

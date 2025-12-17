@@ -93,8 +93,6 @@ export default function Settings() {
     rankTo: '',
   });
   
-  // Reward Setting States
-
   // Normalize system settings list from API
   const systemSettingsList = Array.isArray(systemSettingsFromApi)
     ? systemSettingsFromApi
@@ -273,11 +271,8 @@ export default function Settings() {
       dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
       dispatch(getLeaderboardVouchersApi({ page: 1, limit: 100 }));
     } else if (activeTab === 1) {
-      // dispatch(getRewardSettingsApi());
-      // Gọi thêm API hệ thống khi ở tab Reward Setting
-   
+      dispatch(getSystemSettingsApi());
     } else if (activeTab === 5) {
-      // Gọi API hệ thống khi vào tab "Hệ thống"
       dispatch(getSystemSettingsApi());
     }
   }, [dispatch, activeTab]);
@@ -296,11 +291,8 @@ export default function Settings() {
       dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
       dispatch(getLeaderboardVouchersApi({ page: 1, limit: 100 }));
     } else if (newValue === 1) {
-      // dispatch(getRewardSettingsApi());
-      // Gọi thêm API hệ thống khi chuyển sang tab Reward Setting
       dispatch(getSystemSettingsApi());
     } else if (newValue === 5) {
-      // Gọi API hệ thống khi chuyển sang tab "Hệ thống"
       dispatch(getSystemSettingsApi());
     }
   };
@@ -402,8 +394,6 @@ export default function Settings() {
     });
     dispatch(getLeaderboardPoliciesApi({ page: 1, limit: 100 }));
   };
-
-  // Reward Setting Handlers (hiện tại chưa dùng - giữ placeholder nếu cần sau này)
 
   return (
     <div className="admin-dashboard">
@@ -569,7 +559,7 @@ export default function Settings() {
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs="auto" sx={{ minWidth: 160, display: 'flex', alignItems: 'center', pt: 1 }}>
+                  <Grid item xs="auto" sx={{ minWidth: 160, display: 'flex', alignItems: 'center' }}>
                     <Stack direction="row" spacing={1}>
                       <Button variant="contained" onClick={handleApplyFilters} size="small">
                         Apply
@@ -669,7 +659,7 @@ export default function Settings() {
               </TableContainer>
             </TabPanel>
 
-              {/* Reward Setting Tab */}
+            {/* Reward Setting Tab */}
             <TabPanel value={activeTab} index={1}>
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight={700} sx={{ color: "#2c3e50" }}>
@@ -724,7 +714,8 @@ export default function Settings() {
                     systemSettingsList.map((setting, index) => (
                       <Grid
                         item
-                        size={{ xs: 12, md: 12 }} 
+                        xs={12}
+                        md={12}
                         key={setting._id || setting.id || setting.key || index}
                         sx={{ display: "flex" }}
                       >
@@ -747,7 +738,6 @@ export default function Settings() {
                             <Typography
                               variant="subtitle2"
                               fontWeight={700}
-                          
                             >
                               {setting.category || "System Policy"}
                             </Typography>
@@ -870,7 +860,7 @@ export default function Settings() {
 
         <DialogContent sx={{ pt: 4, pb: 3, px: 4, mt: 3 }}>
           <Grid container spacing={3}>
-            <Grid item size={12}>
+            <Grid item xs={12}>
               <FormControl fullWidth required sx={{ mt: 1 }}>
                 <InputLabel id="policy-voucher-label">Voucher</InputLabel>
                 <Select
@@ -894,7 +884,7 @@ export default function Settings() {
               </FormControl>
             </Grid>
 
-            <Grid item size={3} sx={{ mt: 2 }}>
+            <Grid item xs={12} sm={6} md={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Month"
@@ -909,7 +899,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item size={3} sx={{ mt: 2 }}>
+            <Grid item xs={12} sm={6} md={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Year"
@@ -923,7 +913,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item size={3} sx={{ mt: 2 }}>
+            <Grid item xs={12} sm={6} md={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Rank From"
@@ -938,7 +928,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item size={3} sx={{ mt: 2 }}>
+            <Grid item xs={12} sm={6} md={3} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Rank To"
@@ -953,7 +943,7 @@ export default function Settings() {
               />
             </Grid>
 
-            <Grid item size={12}>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Note"
@@ -1065,7 +1055,6 @@ export default function Settings() {
 
               <Grid item xs={12}>
                 <Divider sx={{ my: 1 }} />
-             
               </Grid>
 
               {systemSettingValueFields.map((field, index) => (
@@ -1091,7 +1080,7 @@ export default function Settings() {
                         fullWidth
                         label="Value"
                         type="number"
-                      {...systemSettingRegister(`valuePairs.${index}.value`)}
+                        {...systemSettingRegister(`valuePairs.${index}.value`)}
                         error={
                           !!systemSettingErrors.valuePairs?.[index]?.value
                         }
