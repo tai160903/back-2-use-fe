@@ -42,6 +42,8 @@ import {
   QrCode as QrCodeIcon,
   Close as CloseIcon,
   Description as DescriptionIcon,
+  CloudUpload as CloudUploadIcon,
+  Image as ImageIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -97,6 +99,8 @@ export default function ProductItems() {
     lastConditionNote: '',
     lastConditionImage: '',
   });
+  const [conditionImage, setConditionImage] = useState(null);
+  const [conditionImagePreview, setConditionImagePreview] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [editFormErrors, setEditFormErrors] = useState({});
   const [isCreating, setIsCreating] = useState(false);
@@ -266,12 +270,15 @@ export default function ProductItems() {
 
   const handleEdit = (item) => {
     setEditingItem(item);
+    const existingImageUrl = item.product?.lastConditionImage || '';
     setEditFormData({
       status: item.status || 'available',
       condition: item.product?.condition || 'good',
       lastConditionNote: item.product?.lastConditionNote || '',
-      lastConditionImage: item.product?.lastConditionImage || '',
+      lastConditionImage: existingImageUrl,
     });
+    setConditionImage(null);
+    setConditionImagePreview(existingImageUrl);
     setEditFormErrors({});
     setOpenEditDialog(true);
   };
@@ -285,7 +292,22 @@ export default function ProductItems() {
       lastConditionNote: '',
       lastConditionImage: '',
     });
+    setConditionImage(null);
+    setConditionImagePreview(null);
     setEditFormErrors({});
+  };
+
+  const handleConditionImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setConditionImage(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setConditionImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const validateEditForm = () => {
@@ -313,12 +335,24 @@ export default function ProductItems() {
         return;
       }
 
-      const updateData = {
-        status: editFormData.status,
-        condition: editFormData.condition,
-        ...(editFormData.lastConditionNote && { lastConditionNote: editFormData.lastConditionNote }),
-        ...(editFormData.lastConditionImage && { lastConditionImage: editFormData.lastConditionImage }),
-      };
+      // Use FormData if there's an uploaded image
+      let updateData;
+      if (conditionImage) {
+        updateData = new FormData();
+        updateData.append('status', editFormData.status);
+        updateData.append('condition', editFormData.condition);
+        if (editFormData.lastConditionNote) {
+          updateData.append('lastConditionNote', editFormData.lastConditionNote);
+        }
+        updateData.append('lastConditionImage', conditionImage);
+      } else {
+        updateData = {
+          status: editFormData.status,
+          condition: editFormData.condition,
+          ...(editFormData.lastConditionNote && { lastConditionNote: editFormData.lastConditionNote }),
+          ...(editFormData.lastConditionImage && { lastConditionImage: editFormData.lastConditionImage }),
+        };
+      }
 
       await dispatch(updateProduct({ id: productId, productData: updateData })).unwrap();
       toast.success('Product updated successfully');
@@ -714,6 +748,7 @@ export default function ProductItems() {
                       <TableCell className="table-header-cell">Material</TableCell>
                       <TableCell className="table-header-cell">Created</TableCell>
                       <TableCell className="table-header-cell">Uses</TableCell>
+                      <TableCell className="table-header-cell">Condition</TableCell>
                       <TableCell className="table-header-cell">Guarantee fee</TableCell>
                       <TableCell className="table-header-cell">CO₂ Reduced</TableCell>
                       <TableCell className="table-header-cell">Status</TableCell>
@@ -765,6 +800,26 @@ export default function ProductItems() {
                           <Typography variant="body2">{item.uses || '0'}</Typography>
                         </TableCell>
                         <TableCell>
+                          <Chip
+                            label={item.product?.condition || item.condition || 'Good'}
+                            size="small"
+                            sx={{
+                              backgroundColor: 
+                                (item.product?.condition || item.condition) === 'good' ? '#dcfce7' :
+                                (item.product?.condition || item.condition) === 'fair' ? '#fef9c3' :
+                                (item.product?.condition || item.condition) === 'poor' ? '#fed7aa' :
+                                '#fecaca',
+                              color: 
+                                (item.product?.condition || item.condition) === 'good' ? '#166534' :
+                                (item.product?.condition || item.condition) === 'fair' ? '#854d0e' :
+                                (item.product?.condition || item.condition) === 'poor' ? '#9a3412' :
+                                '#991b1b',
+                              fontWeight: 600,
+                              textTransform: 'capitalize',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
                           <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
                             {formatVnd(item.guaranteeFee)} VND
                           </Typography>
@@ -806,8 +861,8 @@ export default function ProductItems() {
               <Dialog
                 open={itemDetailDialogOpen}
                 onClose={() => handleCloseItemDetails()}
-          maxWidth="sm"
-          fullWidth
+                maxWidth="md"
+                fullWidth
                 TransitionProps={{
                   timeout: 400,
                 }}
@@ -942,6 +997,195 @@ export default function ProductItems() {
                           </Box>
                         ))}
                       </Box>
+
+                      {/* Product Images Section */}
+                      {(selectedItem.product?.lastConditionImages?.topImage || 
+                        selectedItem.product?.lastConditionImages?.bottomImage || 
+                        selectedItem.product?.lastConditionImages?.frontImage || 
+                        selectedItem.product?.lastConditionImages?.backImage || 
+                        selectedItem.product?.lastConditionImages?.leftImage || 
+                        selectedItem.product?.lastConditionImages?.rightImage) && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              fontWeight: 700, 
+                              color: '#12422a',
+                              mb: 1.5,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1
+                            }}
+                          >
+                            <ImageIcon sx={{ fontSize: 18 }} />
+                            Product Images
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                              gap: 1.5,
+                            }}
+                          >
+                            {[
+                              { label: 'Top View', image: selectedItem.product?.lastConditionImages?.topImage },
+                              { label: 'Bottom View', image: selectedItem.product?.lastConditionImages?.bottomImage },
+                              { label: 'Front View', image: selectedItem.product?.lastConditionImages?.frontImage },
+                              { label: 'Back View', image: selectedItem.product?.lastConditionImages?.backImage },
+                              { label: 'Left View', image: selectedItem.product?.lastConditionImages?.leftImage },
+                              { label: 'Right View', image: selectedItem.product?.lastConditionImages?.rightImage },
+                            ].filter(item => item.image).map((item, idx) => (
+                              <Paper
+                                key={idx}
+                                elevation={0}
+                                sx={{
+                                  borderRadius: 2,
+                                  border: '1px solid #e5e7eb',
+                                  overflow: 'hidden',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                    transform: 'translateY(-2px)',
+                                  }
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    position: 'relative',
+                                    paddingTop: '75%', // 4:3 aspect ratio
+                                    backgroundColor: '#f9fafb',
+                                  }}
+                                >
+                                  <Box
+                                    component="img"
+                                    src={item.image}
+                                    alt={item.label}
+                                    sx={{
+                                      position: 'absolute',
+                                      top: 0,
+                                      left: 0,
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                    }}
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                </Box>
+                                <Box sx={{ p: 1, backgroundColor: '#f8faf9', borderTop: '1px solid #e5e7eb' }}>
+                                  <Typography 
+                                    variant="caption" 
+                                    sx={{ 
+                                      fontWeight: 600, 
+                                      color: '#6b7280',
+                                      textAlign: 'center',
+                                      display: 'block'
+                                    }}
+                                  >
+                                    {item.label}
+                                  </Typography>
+                                </Box>
+                              </Paper>
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
+
+                      {/* Condition Information Section */}
+                      {(selectedItem.product?.condition || selectedItem.product?.lastConditionNote || selectedItem.product?.lastConditionImage) && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              fontWeight: 700, 
+                              color: '#12422a',
+                              mb: 1.5,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1
+                            }}
+                          >
+                            <DescriptionIcon sx={{ fontSize: 18 }} />
+                            Condition Information
+                          </Typography>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              border: '1px solid #e5e7eb',
+                              backgroundColor: '#f8faf9',
+                            }}
+                          >
+                            {selectedItem.product?.condition && (
+                              <Box sx={{ mb: 1.5 }}>
+                                <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                                  Condition
+                                </Typography>
+                                <Chip
+                                  label={selectedItem.product.condition}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: 
+                                      selectedItem.product.condition === 'good' ? '#dcfce7' :
+                                      selectedItem.product.condition === 'fair' ? '#fef9c3' :
+                                      selectedItem.product.condition === 'poor' ? '#fed7aa' :
+                                      '#fecaca',
+                                    color: 
+                                      selectedItem.product.condition === 'good' ? '#166534' :
+                                      selectedItem.product.condition === 'fair' ? '#854d0e' :
+                                      selectedItem.product.condition === 'poor' ? '#9a3412' :
+                                      '#991b1b',
+                                    fontWeight: 600,
+                                    textTransform: 'capitalize',
+                                  }}
+                                />
+                              </Box>
+                            )}
+                            
+                            {selectedItem.product?.lastConditionNote && (
+                              <Box sx={{ mb: selectedItem.product?.lastConditionImage ? 1.5 : 0 }}>
+                                <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                                  Condition Note
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#374151', lineHeight: 1.6 }}>
+                                  {selectedItem.product.lastConditionNote}
+                                </Typography>
+                              </Box>
+                            )}
+
+                            {selectedItem.product?.lastConditionImage && (
+                              <Box>
+                                <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 600, display: 'block', mb: 0.75 }}>
+                                  Condition Image
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    borderRadius: 1.5,
+                                    overflow: 'hidden',
+                                    border: '1px solid #e5e7eb',
+                                  }}
+                                >
+                                  <Box
+                                    component="img"
+                                    src={selectedItem.product.lastConditionImage}
+                                    alt="Product condition"
+                                    sx={{
+                                      width: '100%',
+                                      maxHeight: '250px',
+                                      objectFit: 'cover',
+                                    }}
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                </Box>
+                              </Box>
+                            )}
+                          </Paper>
+                        </Box>
+                      )}
                     </Box>
                   ) : (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -1755,33 +1999,52 @@ export default function ProductItems() {
                         gap: 0.75
                       }}
                     >
-                      Condition Image URL
+                      <ImageIcon sx={{ fontSize: 16 }} />
+                      Condition Image
                     </Typography>
                   </Box>
-                  <TextField
-                    fullWidth
-                    placeholder="https://cloudinary.com/image.jpg"
-                    value={editFormData.lastConditionImage}
-                    onChange={(e) => {
-                      setEditFormData({ ...editFormData, lastConditionImage: e.target.value });
-                    }}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#4CAF50',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#4CAF50',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
+                  <input
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="condition-image-upload"
+                    type="file"
+                    onChange={handleConditionImageChange}
                   />
+                  <label htmlFor="condition-image-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<CloudUploadIcon />}
+                      fullWidth
+                      sx={{
+                        backgroundColor: 'white',
+                        borderColor: '#4CAF50',
+                        color: '#2E7D32',
+                        '&:hover': {
+                          borderColor: '#388E3C',
+                          backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                        },
+                      }}
+                    >
+                      {conditionImage ? conditionImage.name : (editFormData.lastConditionImage ? 'Change Image' : 'Choose Image')}
+                    </Button>
+                  </label>
+                  {conditionImagePreview && (
+                    <Box sx={{ mt: 2, textAlign: 'center' }}>
+                      <img 
+                        src={conditionImagePreview} 
+                        alt="Condition Preview" 
+                        style={{ 
+                          maxWidth: '100%', 
+                          maxHeight: '200px', 
+                          borderRadius: '8px',
+                          border: '2px solid rgba(76, 175, 80, 0.3)'
+                        }} 
+                      />
+                    </Box>
+                  )}
                   <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: '#666' }}>
-                    Optional: URL to an image showing the product's current condition
+                    Optional: Upload an image showing the product's current condition
                   </Typography>
                 </Grid>
               </Grid>
