@@ -22,7 +22,6 @@ import { FaGift, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 import { BiDetail } from 'react-icons/bi';
 import { Close as CloseIcon, LocalFlorist as EcoIcon, CardGiftcard as GiftIcon } from '@mui/icons-material';
 import './Rewards.css';
-import toast from 'react-hot-toast';
 
 export default function Rewards() {
   const dispatch = useDispatch();
@@ -131,6 +130,7 @@ export default function Rewards() {
         startDate: voucher.voucher?.startDate || voucher.voucherInfo?.startDate || voucher.startDate || '',
         endDate: voucher.voucher?.endDate || voucher.voucherInfo?.endDate || voucher.endDate || expiryDate,
         rewardPointCost: voucher.voucher?.rewardPointCost || voucher.voucherInfo?.rewardPointCost || voucher.rewardPointCost || 0,
+        voucherType: voucher.voucherType || '',
       };
     });
   }, [myCustomerVouchers]);
@@ -318,6 +318,7 @@ export default function Rewards() {
               const customName = voucher.originalVoucher?.voucher?.customName || 
                                 voucher.originalVoucher?.customName || 
                                 voucher.originalVoucher?.voucherInfo?.customName || '';
+              const voucherType = voucher.voucherType || voucher.originalVoucher?.voucherType || '';
               
               return (
                 <div 
@@ -339,6 +340,23 @@ export default function Rewards() {
                   {/* Card Content */}
                   <div className="voucher-card-body">
                     <div className="voucher-main-info">
+                      {/* Voucher Type Badge */}
+                      {voucherType && (
+                        <Box sx={{ mb: 1 }}>
+                          <Chip
+                            label={voucherType === 'business' ? 'Business' : voucherType === 'leaderboard' ? 'Leaderboard' : voucherType}
+                            size="small"
+                            sx={{
+                              backgroundColor: voucherType === 'business' ? '#dbeafe' : '#fef3c7',
+                              color: voucherType === 'business' ? '#1e40af' : '#92400e',
+                              fontWeight: 600,
+                              fontSize: '10px',
+                              height: '20px',
+                              textTransform: 'capitalize'
+                            }}
+                          />
+                        </Box>
+                      )}
                       <Typography variant="h3" className="voucher-discount-text">
                         {voucher.discountValue || `${voucher.discount}%`}
                       </Typography>
@@ -741,8 +759,53 @@ export default function Rewards() {
                             />
                           </Box>
                         </Grid>
-                        {selectedVoucher.redeemedAt && (
+                        {(selectedVoucher.voucherType || selectedVoucher.originalVoucher?.voucherType) && (
                           <Grid item xs={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              borderRadius: 2, 
+                              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
+                                Voucher Type
+                              </Typography>
+                              <Chip
+                                label={(selectedVoucher.voucherType || selectedVoucher.originalVoucher?.voucherType) === 'business' ? 'Business' : 
+                                       (selectedVoucher.voucherType || selectedVoucher.originalVoucher?.voucherType) === 'leaderboard' ? 'Leaderboard' : 
+                                       (selectedVoucher.voucherType || selectedVoucher.originalVoucher?.voucherType)}
+                                size="medium"
+                                sx={{
+                                  backgroundColor: (selectedVoucher.voucherType || selectedVoucher.originalVoucher?.voucherType) === 'business' ? '#dbeafe' : '#fef3c7',
+                                  color: (selectedVoucher.voucherType || selectedVoucher.originalVoucher?.voucherType) === 'business' ? '#1e40af' : '#92400e',
+                                  fontWeight: 600,
+                                  fontSize: '0.875rem',
+                                  height: '28px',
+                                  textTransform: 'capitalize'
+                                }}
+                              />
+                            </Box>
+                          </Grid>
+                        )}
+                        {!selectedVoucher.voucherType && !selectedVoucher.originalVoucher?.voucherType && selectedVoucher.redeemedAt && (
+                          <Grid item xs={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              borderRadius: 2, 
+                              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
+                                Saved At
+                              </Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
+                                {formatDate(selectedVoucher.redeemedAt)}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        )}
+                        {selectedVoucher.redeemedAt && (selectedVoucher.voucherType || selectedVoucher.originalVoucher?.voucherType) && (
+                          <Grid item xs={12}>
                             <Box sx={{ 
                               p: 2, 
                               borderRadius: 2, 
