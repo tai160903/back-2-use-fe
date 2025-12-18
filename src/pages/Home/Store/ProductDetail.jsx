@@ -9,6 +9,7 @@ import "./ProductDetail.css";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import PaidRoundedIcon from "@mui/icons-material/PaidRounded";
 import AutorenewRoundedIcon from "@mui/icons-material/AutorenewRounded";
+import LocalFloristIcon from "@mui/icons-material/LocalFlorist";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -329,6 +330,7 @@ export default function ProductDetail() {
             const sizeName = item?.productSizeId?.sizeName || "—";
             const basePrice = (item?.productSizeId?.basePrice || 0).toLocaleString();
             const deposit = (item?.productSizeId?.depositValue || 0).toLocaleString();
+            const co2Reduced = item?.co2Reduced || item?.totalCo2Reduced || 0;
             return (
               <div key={item._id} className="pd-line-card">
                 <div className="pd-line-left">
@@ -361,6 +363,15 @@ export default function ProductDetail() {
                     <div className="pd-line-meta-item">
                       <span className="pd-meta-label">Deposit</span>
                       <span className="pd-meta-value">{deposit}đ</span>
+                    </div>
+                    <div className="pd-line-meta-item">
+                      <span className="pd-meta-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <LocalFloristIcon fontSize="small" style={{ fontSize: 14 }} />
+                        CO₂ Reduced
+                      </span>
+                      <span className="pd-meta-value" style={{ color: '#10b981', fontWeight: 600 }}>
+                        {Number(co2Reduced).toFixed(2)} kg
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -511,6 +522,7 @@ export default function ProductDetail() {
             const displayProduct = selectedProductDetail || selectedItem;
             if (!displayProduct) return null;
 
+            const co2Reduced = displayProduct?.co2Reduced || displayProduct?.totalCo2Reduced || 0;
             return (
               <div className="pd-detail">
                 <div className="pd-detail-header">
@@ -535,6 +547,15 @@ export default function ProductDetail() {
                   <div>
                     <span className="pd-meta-label">Reuse count</span>
                     <div className="pd-detail-value">{displayProduct.reuseCount}</div>
+                  </div>
+                  <div>
+                    <span className="pd-meta-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <LocalFloristIcon fontSize="small" style={{ fontSize: 14 }} />
+                      CO₂ Reduced
+                    </span>
+                    <div className="pd-detail-value" style={{ color: '#10b981', fontWeight: 600 }}>
+                      {Number(co2Reduced).toFixed(2)} kg
+                    </div>
                   </div>
                 </div>
 
@@ -681,4 +702,3 @@ export default function ProductDetail() {
     </div>
   );
 }
-
