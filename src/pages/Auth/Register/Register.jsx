@@ -5,11 +5,7 @@ import imageGoogle from "../../../assets/image/search.png";
 import React, { useState } from "react";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
-import {
-  Visibility,
-  VisibilityOff,
-  Email,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff, Email } from "@mui/icons-material";
 import TextField from "@mui/material/TextField";
 import Link from "@mui/material/Link";
 import Button from "@mui/material/Button";
@@ -26,9 +22,7 @@ import useAuth from "../../../hooks/useAuth";
 const schema = yup
   .object({
     username: yup.string().required("Username is required"),
-    email: yup
-      .string()
-      .required("Email is required"),
+    email: yup.string().required("Email is required"),
     password: yup.string().required("Password is required"),
     confirmPassword: yup
       .string()
@@ -67,7 +61,7 @@ export default function Register() {
       await dispatch(registerApi(data)).unwrap();
       setIsEmailSent(true);
     } catch (error) {
-      toast.error(error.message );
+      toast.error(error.message);
     }
   };
 
@@ -75,7 +69,7 @@ export default function Register() {
     try {
       await dispatch(
         activeAccountAPI({
-          email: watch("email"), 
+          email: watch("email"),
           otp,
         })
       ).unwrap();
@@ -90,7 +84,9 @@ export default function Register() {
     try {
       // Chuyển hướng đến backend endpoint /auth/google-redirect
       // Backend sẽ xử lý OAuth với Google và redirect về frontend
-      window.location.href = "http://localhost:8000/auth/google-redirect";
+      window.location.href = `${
+        import.meta.env.VITE_API_URL
+      }/auth/google-redirect`;
     } catch {
       toast.error("Đăng ký bằng Google thất bại, vui lòng thử lại.");
     }
@@ -117,7 +113,8 @@ export default function Register() {
                       variant="standard"
                       sx={{ marginTop: "20px" }}
                       {...register("username", {
-                        setValueAs: (v) => (typeof v === "string" ? v.replace(/\s+/g, "") : v),
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.replace(/\s+/g, "") : v,
                       })}
                       error={!!errors.username}
                       helperText={errors.username?.message}
@@ -128,7 +125,10 @@ export default function Register() {
                       variant="standard"
                       sx={{ marginTop: "20px" }}
                       {...register("email", {
-                        setValueAs: (v) => (typeof v === "string" ? v.replace(/\s+/g, "").toLowerCase() : v),
+                        setValueAs: (v) =>
+                          typeof v === "string"
+                            ? v.replace(/\s+/g, "").toLowerCase()
+                            : v,
                       })}
                       error={!!errors.email}
                       helperText={errors.email?.message}
@@ -141,7 +141,8 @@ export default function Register() {
                       sx={{ marginTop: "20px" }}
                       type={showPassword ? "text" : "password"}
                       {...register("password", {
-                        setValueAs: (v) => (typeof v === "string" ? v.trim() : v),
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       error={!!errors.password}
                       helperText={errors.password?.message}
@@ -164,7 +165,8 @@ export default function Register() {
                       sx={{ marginTop: "20px" }}
                       type={showConfirmPassword ? "text" : "password"}
                       {...register("confirmPassword", {
-                        setValueAs: (v) => (typeof v === "string" ? v.trim() : v),
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       error={!!errors.confirmPassword}
                       helperText={errors.confirmPassword?.message}
@@ -206,7 +208,7 @@ export default function Register() {
                     </Typography>
                   </div>
                   <div className="auth-social">
-                    <Button 
+                    <Button
                       className="auth-social-button google"
                       onClick={handleGoogleRegister}
                       disabled={isLoading}
@@ -218,7 +220,6 @@ export default function Register() {
                       />
                       Sign up with Google
                     </Button>
-      
                   </div>
                 </>
               ) : (
@@ -254,8 +255,7 @@ export default function Register() {
                       variant="standard"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      sx={{ marginBottom: 3, display:"flex" }}
-                      
+                      sx={{ marginBottom: 3, display: "flex" }}
                     />
                     <Button
                       variant="contained"
