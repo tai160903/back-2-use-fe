@@ -771,7 +771,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* CO2 Environmental Impact Section */}
-          {/* <div className="co2-impact-section">
+          <div className="co2-impact-section">
             <div className="co2-section-header">
               <div className="co2-header-icon">
                 <FaLeaf />
@@ -840,15 +840,7 @@ const AdminDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="co2-benefit-item">
-                    <div className="benefit-icon benefit-positive">🚗</div>
-                    <div className="benefit-content">
-                      <h4 className="benefit-title">Reduced Vehicle Emissions</h4>
-                      <p className="benefit-description">
-                        This reduction equals removing about {Math.round((dashboardOverview.co2Reduced || 0) / 4.6)} km of car emissions from the atmosphere.
-                      </p>
-                    </div>
-                  </div>
+                
                   <div className="co2-benefit-item">
                     <div className="benefit-icon benefit-positive">💚</div>
                     <div className="benefit-content">
@@ -861,7 +853,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-          </div> */}
+          </div>
         </div>
       ) : (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
