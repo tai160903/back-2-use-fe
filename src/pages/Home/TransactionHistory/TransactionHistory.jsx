@@ -1029,7 +1029,6 @@ export default function TransactionHistory() {
   const detailPreviousImages = detail.previousConditionImages || {};
   const detailCurrentImages = detail.currentConditionImages || {};
   const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
-  // Ưu tiên QR từ productId, sau đó đến transaction-level hoặc serialNumber
   const detailQrCode =
     detailProduct.qrCode ||
     detail.qrCode ||
@@ -1517,10 +1516,8 @@ export default function TransactionHistory() {
                     >
                       <Box
                         component="img"
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                          detailQrCode
-                        )}`}
-                        alt={`QR Code for ${detailQrCode}`}
+                        src={detailQrCode}
+                        alt={`QR Code for ${detailProduct.qrCode || "product"}`}
                         sx={{
                           width: 180,
                           height: 180,
