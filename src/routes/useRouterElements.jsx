@@ -27,6 +27,7 @@ import Profile from "../pages/Home/Profile/Profile";
 // import StorePage from "../pages/Home/Store/StorePage";
 import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
 import WalletCustomer from "../pages/Home/WalletCustomer/WalletCustomer";
+import CustomerCo2Report from "../pages/Home/Co2Report/CustomerCo2Report";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ForgotPassword from "../pages/Auth/ForgotPassword/ForgotPassword";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
@@ -238,6 +239,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["customer"]}>
               <BusinessRegistrationStatus />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.CUSTOMER_CO2_REPORT,
+          element: (
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <CustomerCo2Report />
             </ProtectedRoute>
           ),
         },

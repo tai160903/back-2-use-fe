@@ -28,6 +28,7 @@ export const PATH = {
     RANKINGS: "/rankings",
     REWARDS:"/voucherwallet",
     BUSINESS_REGISTRATION_STATUS: "/business-registration-status",
+    CUSTOMER_CO2_REPORT:"/co2-report",
 
     // PAYMENT
     PAYMENTSUCESS:"/payment-success",

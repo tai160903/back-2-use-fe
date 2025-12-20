@@ -10,11 +10,12 @@ import Button from "@mui/material/Button";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { resetPasswordAPI } from "../../../store/slices/authSlice";
+import { resetPasswordAPI, resendOtpAPI, forgotPasswordAPI } from "../../../store/slices/authSlice";
 import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
 import useAuth from "../../../hooks/useAuth";
-import { useSearchParams } from "react-router-dom"; 
+import { useSearchParams } from "react-router-dom";
+import Link from "@mui/material/Link"; 
 
 const schema = yup
   .object({
@@ -77,6 +78,34 @@ export default function ResetPassword() {
       const errorMessage = error?.message || error?.data?.message || "Failed to reset password. Please try again.";
       toast.error(errorMessage);
       console.error("Reset password error:", error);
+    }
+  };
+
+  // Handle resend OTP
+  const handleResendOtp = async () => {
+    try {
+      if (!email) {
+        toast.error("Email not found. Please go back to forgot password page.");
+        return;
+      }
+      
+      // Try resendOtpAPI first, if not available use forgotPasswordAPI
+      try {
+        await dispatch(resendOtpAPI({ email })).unwrap();
+        toast.success("OTP has been resent successfully! Please check your email.");
+      } catch {
+        // If resendOtpAPI doesn't work, try forgotPasswordAPI
+        const response = await dispatch(forgotPasswordAPI({ email })).unwrap();
+        if (response.token) {
+          // Update new token in URL
+          navigate(`/auth/reset-password?token=${response.token}&email=${email}`, { replace: true });
+          toast.success("OTP has been resent successfully! Please check your email.");
+        }
+      }
+    } catch (error) {
+      const errorMessage = error?.message || error?.data?.message || "Failed to resend OTP. Please try again.";
+      toast.error(errorMessage);
+      console.error("Resend OTP error:", error);
     }
   };
 
@@ -168,6 +197,32 @@ export default function ResetPassword() {
                   {isLoading ? "Processing..." : "Reset password"}
                 </Button>
               </form>
+              <div style={{ marginTop: "16px", textAlign: "center" }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleResendOtp}
+                  disabled={isLoading || !email}
+                  sx={{ 
+                    mt: 1,
+                    textTransform: "none",
+                    color: "#3a704e",
+                    borderColor: "#3a704e",
+                    "&:hover": {
+                      borderColor: "#3a704e",
+                      backgroundColor: "rgba(58, 112, 78, 0.04)"
+                    }
+                  }}
+                >
+                  {isLoading ? "Sending..." : "Resend OTP"}
+                </Button>
+              </div>
+              <div className="auth-footer">
+                <Typography className="auth-bottom-text">
+                  <Link href="/auth/login" className="auth-bottom-link">
+                    Back to Login
+                  </Link>
+                </Typography>
+              </div>
             </div>
           </Grid>
           <Grid item size={{ xs: 6, md: 6 }} className="auth-right">
