@@ -18,18 +18,20 @@ import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
+import Box from "@mui/material/Box";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { PATH } from "../../../routes/path";
 import { isAuthenticated } from "../../../utils/authUtils";
-import { getDetailsProductById, getProductById } from "../../../store/slices/storeSilce";
+import { getDetailsProductById, getProductById, getStoreById } from "../../../store/slices/storeSilce";
 import { borrowProductOnlineApi } from "../../../store/slices/borrowSlice";
 
 export default function ProductDetail() {
   const navigate = useNavigate();
   const { productId } = useParams();
   const dispatch = useDispatch();
-  const { detailsProduct, isLoadingDetailsProduct, error } = useSelector((state) => state.store);
+  const { detailsProduct, isLoadingDetailsProduct, error, storeDetail } = useSelector((state) => state.store);
   const [sizeFilter, setSizeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("all"); // all | available | non-available
   const [conditionFilter, setConditionFilter] = useState("all"); // all | good | damaged | expired | lost
@@ -41,6 +43,7 @@ export default function ProductDetail() {
   const [borrowDialogOpen, setBorrowDialogOpen] = useState(false);
   const [borrowPayload, setBorrowPayload] = useState(null);
   const [borrowDays, setBorrowDays] = useState(1);
+  const [borrowItemCo2, setBorrowItemCo2] = useState(0);
   const { isLoading: isBorrowLoading } = useSelector((state) => state.borrow || { isLoading: false });
 
   useEffect(() => {
@@ -68,6 +71,23 @@ export default function ProductDetail() {
       setSizeFilter("All");
     }
   }, [dispatch, productId, navigate, statusFilter, conditionFilter]);
+
+  // Lấy thông tin business/store khi có detailsProduct
+  useEffect(() => {
+    if (detailsProduct) {
+      // Lấy businessId từ nhiều nguồn có thể
+      const businessId = 
+        detailsProduct.business?._id ||
+        detailsProduct.businessId ||
+        (detailsProduct.products && detailsProduct.products[0]?.productGroupId?.businessId?._id) ||
+        (detailsProduct.products && detailsProduct.products[0]?.productGroupId?.businessId) ||
+        (detailsProduct.products && detailsProduct.products[0]?.businessId);
+
+      if (businessId) {
+        dispatch(getStoreById(businessId));
+      }
+    }
+  }, [dispatch, detailsProduct]);
 
   useEffect(() => {
     setClientPage(1);
@@ -127,6 +147,10 @@ export default function ProductDetail() {
   const group = allItems[0]?.productGroupId || null;
   const groupImage = group?.imageUrl || "";
   const groupName = group?.name || "coffee cup";
+  
+  // Lấy thông tin business/store - ưu tiên từ detailsProduct.business, fallback sang storeDetail
+  const business = detailsProduct?.business || storeDetail?.business || storeDetail || null;
+  const storeName = business?.businessName || "";
 
   // Giá/đặt cọc lấy theo size đang lọc (nếu có), fallback item đầu tiên
   const sampleItemForMeta =
@@ -147,6 +171,7 @@ export default function ProductDetail() {
       null;
 
     const depositValue = item?.productSizeId?.depositValue || 0;
+    const co2Reduced = item?.co2Reduced || item?.totalCo2Reduced || item?.productSizeId?.co2Reduced || item?.productSizeId?.co2EmissionPerKg || 0;
 
     if (!businessId) {
       toast.error("Store information for this product was not found");
@@ -156,12 +181,13 @@ export default function ProductDetail() {
     const basePayload = {
       productId: item._id,
       businessId,
-      durationInDays: 30,
+      durationInDays: 10,
       depositValue,
     };
 
     setBorrowPayload(basePayload);
-    setBorrowDays(30);
+    setBorrowDays(10);
+    setBorrowItemCo2(co2Reduced);
     setBorrowDialogOpen(true);
   };
 
@@ -237,6 +263,7 @@ export default function ProductDetail() {
           <div className="pd-badge">
             <CategoryRoundedIcon fontSize="small" />
             <span>{groupName}</span>
+            {storeName && <span> • {storeName}</span>}
           </div>
           <Typography variant="h2" className="pd-title">{groupName}</Typography>
           <Typography className="pd-desc">
@@ -455,7 +482,7 @@ export default function ProductDetail() {
                   value={borrowDays}
                   onChange={(e) => setBorrowDays(e.target.value)}
                   inputProps={{ min: 1 }}
-                  helperText="Enter the number of days you want to borrow (>= 1 day)"
+                  helperText="Enter the number of days you want to borrow (>= 1 day & <= 10 days)"
                 />
               </div>
 
@@ -464,6 +491,34 @@ export default function ProductDetail() {
                   Borrow type: <strong>online</strong>
                 </Typography>
               </div>
+
+              {/* Note về CO₂ Reduced */}
+              {borrowItemCo2 > 0 && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    backgroundColor: '#f0fdf4',
+                    border: '2px solid #10b981',
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
+                  }}
+                >
+                  <InfoOutlinedIcon sx={{ color: '#10b981', fontSize: 20, mt: 0.25, flexShrink: 0 }} />
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#065f46', mb: 0.5 }}>
+                        🌱 Environmental Benefit
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#047857', lineHeight: 1.6 }}>
+                        When you successfully return this product, you will help reduce <strong>{Number(borrowItemCo2).toFixed(2)} kg CO₂</strong> emissions into the environment. 
+                        This is an important contribution to protecting our planet!
+                      </Typography>
+                    </Box>
+                </Box>
+              )}
             </div>
           )}
         </DialogContent>
@@ -558,6 +613,34 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 </div>
+
+                {/* Note về CO₂ Reduced */}
+                {co2Reduced > 0 && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      p: 2,
+                      backgroundColor: '#f0fdf4',
+                      border: '2px solid #10b981',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 1.5,
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
+                    }}
+                  >
+                    <InfoOutlinedIcon sx={{ color: '#10b981', fontSize: 20, mt: 0.25, flexShrink: 0 }} />
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#065f46', mb: 0.5 }}>
+                        🌱 Environmental Benefit
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#047857', lineHeight: 1.6 }}>
+                        When you successfully return this product, you will help reduce <strong>{Number(co2Reduced).toFixed(2)} kg CO₂</strong> emissions into the environment. 
+                        This is an important contribution to protecting our planet!
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
 
                 <div className="pd-modal-qr">
                   <Typography className="pd-section" style={{ marginTop: 0 }}>
@@ -681,7 +764,11 @@ export default function ProductDetail() {
                     <Button
                       variant="contained"
                       size="small"
-                      onClick={() => handleOpenBorrowDialog(selectedItem)}
+                      onClick={() => {
+                        // Ưu tiên dùng selectedProductDetail nếu có, fallback sang selectedItem
+                        const itemToUse = selectedProductDetail || selectedItem;
+                        handleOpenBorrowDialog(itemToUse);
+                      }}
                       sx={{
                         backgroundColor: "#12422a",
                         "&:hover": { backgroundColor: "#0c351c" },
