@@ -236,11 +236,24 @@ export default function ProductItems() {
     currentItems = currentItems.filter((item) => item.nonAvailableStatus === nonAvailableSubFilter);
   }
 
+  // Get unique sizes from actual products (not from productSizes definition)
+  // This ensures we only show sizes that actually have products
+  const availableSizes = React.useMemo(() => {
+    if (!productItems || productItems.length === 0) return [];
+    // Get unique size names from actual product items
+    const sizeNames = productItems
+      .map((item) => item.size)
+      .filter((size) => size && size.trim() !== '' && size !== 'Unknown') // Filter out empty or unknown sizes
+      .filter((size, index, self) => self.indexOf(size) === index) // Get unique sizes
+      .sort(); // Sort alphabetically
+    return sizeNames;
+  }, [productItems]);
+
   // Filter by search query, date, and size
   const filteredItems = currentItems.filter((item) => {
     const matchesSearch = item.qrCode.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDate = dateFilter === 'all' || true; // TODO: Implement date filtering
-    const matchesSize = sizeFilter === 'all' || item.size.includes(sizeFilter);
+    const matchesSize = sizeFilter === 'all' || item.size === sizeFilter;
     return matchesSearch && matchesDate && matchesSize;
   });
 
@@ -605,9 +618,11 @@ export default function ProductItems() {
               label="Size"
             >
               <MenuItem value="all">All Sizes</MenuItem>
-              <MenuItem value="Small">Small</MenuItem>
-              <MenuItem value="Medium">Medium</MenuItem>
-              <MenuItem value="Large">Large</MenuItem>
+              {availableSizes.map((sizeName) => (
+                <MenuItem key={sizeName} value={sizeName}>
+                  {sizeName}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </Box>

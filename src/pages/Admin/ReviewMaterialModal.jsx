@@ -10,12 +10,14 @@ import {
   Typography,
   IconButton,
   InputAdornment,
+  Grid,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
+import MaterialReferenceTable from '../../components/MaterialReferenceTable/MaterialReferenceTable';
 import './MaterialModal.css';
 
 const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit }) => {
@@ -156,11 +158,14 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
           boxShadow: isApprove 
             ? '0 25px 50px rgba(22, 78, 49, 0.25)' 
             : '0 25px 50px rgba(239, 68, 68, 0.25)',
-          overflow: 'hidden',
-          maxWidth: '700px',
+          maxWidth: '1400px',
+          width: { xs: '95vw', sm: '90vw', md: '85vw' },
           maxHeight: '90vh',
+          height: 'auto',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'visible',
+          margin: '20px',
         }
       }}
     >
@@ -235,31 +240,50 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
         </IconButton>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <DialogContent 
           sx={{ 
             pt: 2, 
             pb: 1, 
             px: 2.5,
-            overflowY: 'auto',
+            overflow: 'hidden',
             flex: 1,
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: '#f1f1f1',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: '#164e31',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: '#0f3d20',
-            },
+            display: 'flex',
+            flexDirection: 'column',
+            height: 'calc(90vh - 180px)',
+            maxHeight: '600px',
+            minHeight: '500px',
           }}
         >
-          {/* Material Request Info */}
-          {materialRequest && (
+          <Box sx={{ display: 'flex', height: '100%', gap: 2, overflow: 'hidden' }}>
+            {/* Form Section */}
+            <Box sx={{ 
+              flex: '0 0 35%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              pr: 1,
+            }}>
+              <Box sx={{ 
+                overflowY: 'auto',
+                flex: 1,
+                minHeight: 0,
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: '#f1f1f1',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#164e31',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: '#0f3d20',
+                },
+              }}>
+                {/* Material Request Info */}
+                {materialRequest && (
             <Box 
               sx={{ 
                 p: 2, 
@@ -500,19 +524,39 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
                 />
               </>
             )}
+                </Box>
+              </Box>
+            </Box>
+            
+            {/* Reference Table Section */}
+            <Box sx={{ 
+              flex: '0 0 65%',
+              display: 'flex',
+              flexDirection: 'column',
+              borderLeft: '1px solid #e2e8f0',
+              pl: 2,
+              overflow: 'hidden',
+              height: '100%',
+              minHeight: 0,
+            }}>
+              <MaterialReferenceTable />
+            </Box>
           </Box>
         </DialogContent>
 
         <DialogActions 
           sx={{ 
-            px: 2.5, 
-            py: 1.5, 
+            px: { xs: 2, sm: 2.5 }, 
+            py: 2, 
             gap: 2,
             borderTop: '1px solid',
             borderColor: 'divider',
             backgroundColor: '#fafafa',
             justifyContent: 'flex-end',
             flexShrink: 0,
+            minHeight: '70px',
+            overflow: 'visible',
+            flexWrap: 'wrap',
           }}
         >
           <Button 
@@ -525,6 +569,7 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
               fontSize: '16px',
               px: 3,
               py: 1.5,
+              minHeight: '44px',
               borderWidth: '1px',
               color: '#374151',
               borderColor: '#d1d5db',
@@ -549,7 +594,8 @@ const ReviewMaterialModal = ({ isOpen, onClose, materialRequest, mode, onSubmit 
             sx={{
               backgroundColor: isApprove ? '#164e31' : isReject ? '#ef4444' : '#111827',
               px: 3,
-              py: 1,
+              py: 1.5,
+              minHeight: '44px',
               fontSize: '0.9375rem',
               fontWeight: 600,
               borderRadius: '12px',

@@ -484,6 +484,50 @@ export const getWalletTransactionsByMonthApi = createAsyncThunk(
   }
 );
 
+// Get Business Transactions API
+export const getBusinessTransactionsApi = createAsyncThunk(
+  "admin/getBusinessTransactionsApi",
+  async ({ businessId, page = 1, limit = 10, status, borrowTransactionType, fromDate, toDate }, { rejectWithValue }) => {
+    try {
+      let url = `/borrow-transactions/business/${businessId}/all?page=${page}&limit=${limit}`;
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      if (borrowTransactionType) params.append('borrowTransactionType', borrowTransactionType);
+      if (fromDate) params.append('fromDate', fromDate);
+      if (toDate) params.append('toDate', toDate);
+      if (params.toString()) url += `&${params.toString()}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+// Get Customer Transactions API
+export const getCustomerTransactionsApi = createAsyncThunk(
+  "admin/getCustomerTransactionsApi",
+  async ({ customerId, page = 1, limit = 10, status, borrowTransactionType, fromDate, toDate }, { rejectWithValue }) => {
+    try {
+      let url = `/borrow-transactions/customer/${customerId}/all?page=${page}&limit=${limit}`;
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      if (borrowTransactionType) params.append('borrowTransactionType', borrowTransactionType);
+      if (fromDate) params.append('fromDate', fromDate);
+      if (toDate) params.append('toDate', toDate);
+      if (params.toString()) url += `&${params.toString()}`;
+      const response = await fetcher.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // System Settings APIs
 export const getSystemSettingsApi = createAsyncThunk(
   "admin/getSystemSettingsApi",
@@ -601,6 +645,16 @@ const adminSlice = createSlice({
     customerMonthly: null,
     walletTransactions: null,
     walletTransactionsByMonth: null,
+    businessTransactions: [],
+    customerTransactions: [],
+    transactionHistoryLoading: false,
+    transactionHistoryPagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      currentPage: 1,
+      totalPages: 0,
+    },
   },
   reducers: {
     clearError: (state) => {
@@ -1405,6 +1459,50 @@ const adminSlice = createSlice({
       .addCase(getWalletTransactionsByMonthApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+      })
+      
+      // Get Business Transactions
+      .addCase(getBusinessTransactionsApi.pending, (state) => {
+        state.transactionHistoryLoading = true;
+        state.error = null;
+      })
+      .addCase(getBusinessTransactionsApi.fulfilled, (state, { payload }) => {
+        state.transactionHistoryLoading = false;
+        state.error = null;
+        state.businessTransactions = payload.data?.items || [];
+        state.transactionHistoryPagination = {
+          ...state.transactionHistoryPagination,
+          total: payload.data?.total || 0,
+          currentPage: payload.data?.page || 1,
+          totalPages: Math.ceil((payload.data?.total || 0) / (payload.data?.limit || 10)),
+        };
+      })
+      .addCase(getBusinessTransactionsApi.rejected, (state, { payload }) => {
+        state.transactionHistoryLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch business transactions");
+      })
+      
+      // Get Customer Transactions
+      .addCase(getCustomerTransactionsApi.pending, (state) => {
+        state.transactionHistoryLoading = true;
+        state.error = null;
+      })
+      .addCase(getCustomerTransactionsApi.fulfilled, (state, { payload }) => {
+        state.transactionHistoryLoading = false;
+        state.error = null;
+        state.customerTransactions = payload.data?.items || [];
+        state.transactionHistoryPagination = {
+          ...state.transactionHistoryPagination,
+          total: payload.data?.total || 0,
+          currentPage: payload.data?.page || 1,
+          totalPages: Math.ceil((payload.data?.total || 0) / (payload.data?.limit || 10)),
+        };
+      })
+      .addCase(getCustomerTransactionsApi.rejected, (state, { payload }) => {
+        state.transactionHistoryLoading = false;
+        state.error = payload;
+        toast.error(payload?.message || "Failed to fetch customer transactions");
       })
   
   },
