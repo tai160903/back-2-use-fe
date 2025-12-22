@@ -144,6 +144,32 @@ export const getDetailsBorrowTransactionBusinessApi = createAsyncThunk(
     }
 );
 
+// get transaction detail for business CO2 report
+export const getBusinessTransactionDetailApi = createAsyncThunk(
+    "borrow/getBusinessTransactionDetailApi",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.get(`/borrow-transactions/business/${id}`);
+            return response.data?.data || null;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+// get transaction detail for customer CO2 report
+export const getCustomerTransactionDetailApi = createAsyncThunk(
+    "borrow/getCustomerTransactionDetailApi",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.get(`/borrow-transactions/customer/${id}`);
+            return response.data?.data || null;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 
 // cancel borrow transaction for customer
 export const cancelBorrowTransactionCustomerApi = createAsyncThunk(
@@ -392,6 +418,32 @@ const borrowSlice = createSlice({
         })
         .addCase(extendBorrowProductApi.rejected, (state, {payload}) => {
             state.isLoading = false
+            state.error = payload
+        })
+        .addCase(getBusinessTransactionDetailApi.pending, (state) => {
+            state.isDetailLoading = true
+            state.error = null
+        })
+        .addCase(getBusinessTransactionDetailApi.fulfilled, (state, {payload}) => {
+            state.isDetailLoading = false
+            state.error = null
+            state.borrowDetail = payload
+        })
+        .addCase(getBusinessTransactionDetailApi.rejected, (state, {payload}) => {
+            state.isDetailLoading = false
+            state.error = payload
+        })
+        .addCase(getCustomerTransactionDetailApi.pending, (state) => {
+            state.isDetailLoading = true
+            state.error = null
+        })
+        .addCase(getCustomerTransactionDetailApi.fulfilled, (state, {payload}) => {
+            state.isDetailLoading = false
+            state.error = null
+            state.borrowDetail = payload
+        })
+        .addCase(getCustomerTransactionDetailApi.rejected, (state, {payload}) => {
+            state.isDetailLoading = false
             state.error = payload
         })
     }

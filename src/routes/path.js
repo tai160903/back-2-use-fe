@@ -29,6 +29,7 @@ export const PATH = {
     REWARDS:"/voucherwallet",
     BUSINESS_REGISTRATION_STATUS: "/business-registration-status",
     CUSTOMER_CO2_REPORT:"/co2-report",
+    CUSTOMER_TRANSACTION_DETAIL:"/co2-report/transaction/:id",
 
     // PAYMENT
     PAYMENTSUCESS:"/payment-success",
@@ -42,6 +43,7 @@ export const PATH = {
     BUSINESS_MATERIALS:"/business/materials",
     BUSINESS_TRANSACTION:"/business/transaction",
     BUSINESS_CO2_REPORT:"/business/co2-report",
+    BUSINESS_TRANSACTION_DETAIL:"/business/co2-report/transaction/:id",
     BUSINESS_SUBSCRIPTIONS:"/business/subscriptions",
     BUSINESS_REEDEM_REWARDS:"/business/reedem-rewards",
     BUSINESS_WALLET:"/business/wallet",
