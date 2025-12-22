@@ -361,7 +361,7 @@ const Analytics = () => {
                         }}
                         title="Edit"
                       >
-                        <CiEdit size={18} />
+                        {/* <CiEdit size={18} /> */}
                       </button>
                       <button 
                         className="action-btn-list view-btn-list" 

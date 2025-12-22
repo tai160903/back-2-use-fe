@@ -268,7 +268,7 @@ function BorrowCard({ item }) {
             </div>
             <div className="borrow-content-right">
               <Typography>
-                Deposit:{" "}
+                Customer Deposit:{" "}
                 <span style={{ color: "#36c775", fontWeight: "bold" }}>
                   {deposit.toLocaleString("vi-VN")} VNĐ
                 </span>
@@ -339,8 +339,11 @@ function SuccessCard({ item }) {
       ? item.amount
       : item.fee || 0;
 
-  // Số tiền business thực nhận: Deposit - Late fee (không âm)
-  const receiveMoney = Math.max((deposit || 0) - (fee || 0), 0);
+  // Tiền hoàn lại cho khách: Customer Deposit - Late fee (không âm)
+  const refundedMoney = Math.max((deposit || 0) - (fee || 0), 0);
+
+  // Tiền business thực nhận: Customer Deposit - Refunded Money
+  const businessReceiveMoney = Math.max((deposit || 0) - refundedMoney, 0);
 
   return (
     <Box className="borrow-card-success" p={2} mb={2} borderRadius="10px">
@@ -457,7 +460,7 @@ function SuccessCard({ item }) {
                     </Typography>
                     {fee > 0 && (
                       <Typography>
-                        Late fee: {fee.toLocaleString("vi-VN")} VNĐ
+             
                       </Typography>
                     )}
                   </div>
@@ -466,19 +469,35 @@ function SuccessCard({ item }) {
             </div>
             <div className="borrow-content-right-success">
               <Typography sx={{ marginLeft: "10px" }}>
-                Deposit:{" "}
+                Customer Deposit:{" "}
                 <span style={{ color: "#36c775", fontWeight: "bold" }}>
                   {deposit.toLocaleString("vi-VN")} VNĐ
                 </span>
               </Typography>
-              <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
-                Late fee:{" "}
-                <span style={{ color: "#36c775", fontWeight: "bold" }}>
-                  {fee.toLocaleString("vi-VN")} VNĐ
-                </span>
-              </Typography>
 
-              {item.co2Changed !== undefined && item.co2Changed !== null && (
+
+              {/* Chỉ hiển thị các dòng tiền cho trạng thái return_success */}
+              {item.borrowTransactionType === "return_success" && (
+                <>
+                  <div className="borrow-receivePoint">
+                    <Typography>
+                      Business Receive Money
+                      {status === "return_late" ? " (Late fee)" : ""}
+                      :{" "}
+                      <span style={{ color: "#c64b4f", fontWeight: "bold" }}>
+                        {businessReceiveMoney.toLocaleString("vi-VN")} VNĐ
+                      </span>
+                    </Typography>
+                  </div>
+                  <div className="borrow-receivePoint">
+                    <Typography>
+                      Customer Refund Money:{" "}
+                      <span style={{ color: "#36c775", fontWeight: "bold" }}>
+                        {refundedMoney.toLocaleString("vi-VN")} VNĐ
+                      </span>
+                    </Typography>
+                  </div>
+                  {item.co2Changed !== undefined && item.co2Changed !== null && (
                 <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
                   CO2 Point:{" "}
                   <span style={{ color: "#1b4c2d", fontWeight: "bold" }}>
@@ -497,15 +516,8 @@ function SuccessCard({ item }) {
                   </span>  
                 </Typography>
               )}
-
-              <div className="borrow-receivePoint">
-                <Typography>
-                  Receive Money: {}
-                  <span style={{ color: "#c64b4f", fontWeight: "bold" }}>
-                    {receiveMoney.toLocaleString("vi-VN")} VNĐ
-                  </span>
-                </Typography>
-              </div>
+                </>
+              )}
               <div style={{ display: "flex", gap: "10px" }}>
               
                 <Button
@@ -685,12 +697,31 @@ function FailedCard({ item }) {
             </div>
             <div className="borrow-content-right-success">
               <Typography sx={{ marginLeft: "10px" }}>
-                Deposit:{" "}
+               Customer Deposit:{" "}
                 <span style={{ color: "#36c775", fontWeight: "bold" }}>
                   {deposit.toLocaleString("vi-VN")} VNĐ
                 </span>
               </Typography>
 
+          
+
+              <div className="borrow-receivePoint">
+                <Typography>
+                  Business Receive Money: {}
+                  <span style={{ color: "#c64b4f", fontWeight: "bold" }}>
+                    {deposit.toLocaleString("vi-VN")} VNĐ
+                  </span>
+                </Typography>
+              </div>
+
+              <div className="borrow-receivePoint">
+                <Typography>
+                  Customer Refund Money: {}
+                  <span style={{ color: "#36c775", fontWeight: "bold" }}>
+                    {Math.max(deposit - deposit, 0).toLocaleString("vi-VN")} VNĐ
+                  </span>
+                </Typography>
+              </div>
               {item.co2Changed !== undefined && item.co2Changed !== null && (
                 <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
                   CO2 Point:{" "}
@@ -710,15 +741,6 @@ function FailedCard({ item }) {
                   </span>  
                 </Typography>
               )}
-
-              <div className="borrow-receivePoint">
-                <Typography>
-                  Receive Money: {}
-                  <span style={{ color: "#c64b4f", fontWeight: "bold" }}>
-                    {deposit.toLocaleString("vi-VN")} VNĐ
-                  </span>
-                </Typography>
-              </div>
 
               {/* No legit points display for failed transactions here */}
               <div className="borrow-failedPoint">
@@ -1127,7 +1149,7 @@ export default function BusinessTransaction() {
                       </Typography>
                     )}
                     <Typography variant="body2" sx={{ mt: 1 }}>
-                      Deposit:{" "}
+                      Customer Deposit:{" "}
                       <span
                         style={{ color: "#cc3500", fontWeight: "bold" }}
                       >

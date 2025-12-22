@@ -349,6 +349,9 @@ function SuccessCard({ item }) {
   const refundedAmount =
     typeof walletTransaction.amount === "number" ? walletTransaction.amount : 0;
 
+  // Late fee thực tế = Deposit - Refunded amount (số tiền bị trừ do phạt)
+  const lateFee = Math.max((deposit || 0) - (refundedAmount || 0), 0);
+
   const rawType = item.borrowTransactionType;
   let typeLabel = rawType;
   if (rawType === "borrow") typeLabel = "Borrow";
@@ -476,6 +479,24 @@ function SuccessCard({ item }) {
                 </span>
               </Typography>
 
+              {status === "return_late" && lateFee > 0 && (
+                <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
+                  Late fee:{" "}
+                  <span style={{ color: "#dc2626", fontWeight: "bold" }}>
+                    {lateFee.toLocaleString("vi-VN")} VND
+                  </span>
+                </Typography>
+              )}
+                 <div className="borrow-receivePoint">
+                <Typography>
+                  Refunded amount:
+                  <span style={{ color: "#36c775", fontWeight: "bold" }}>
+                    {" "}
+                    {Number(refundedAmount || 0).toLocaleString("vi-VN")} VND
+                  </span>
+                </Typography>
+              </div>
+
               <div className="borrow-points-grid">
                 <div className="borrow-rewardPoint">
                   <Typography>
@@ -524,15 +545,7 @@ function SuccessCard({ item }) {
                 </div>
               </div>
 
-              <div className="borrow-receivePoint">
-                <Typography>
-                  Refunded amount:
-                  <span style={{ color: "#36c775", fontWeight: "bold" }}>
-                    {" "}
-                    {Number(refundedAmount || 0).toLocaleString("vi-VN")} VND
-                  </span>
-                </Typography>
-              </div>
+           
 
               <div style={{ display: "flex", gap: "10px" }}>
                 {item.canFeedback && (
@@ -1307,17 +1320,6 @@ export default function TransactionHistory() {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Size: {detailSize.sizeName || "N/A"}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ wordBreak: "break-all" }}
-                    >
-                      QR / Serial:{" "}
-                      {detail.qrCode ||
-                        detailProduct.qrCode ||
-                        detailProduct.serialNumber ||
-                        "N/A"}
                     </Typography>
                   </Box>
                 </Box>

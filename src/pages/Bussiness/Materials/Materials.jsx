@@ -435,7 +435,7 @@ export default function Materials() {
                           }
                         }}
                       >
-                        <EditIcon fontSize="small" />
+                        {/* <EditIcon fontSize="small" /> */}
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete">
@@ -453,7 +453,7 @@ export default function Materials() {
                           }
                         }}
                       >
-                        <DeleteIcon fontSize="small" />
+                       
                       </IconButton>
                     </Tooltip>
                   </Box>
@@ -557,7 +557,7 @@ export default function Materials() {
                             }
                           }}
                         >
-                          <EditIcon fontSize="small" />
+                          {/* <EditIcon fontSize="small" /> */}
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
@@ -575,7 +575,7 @@ export default function Materials() {
                             }
                           }}
                         >
-                          <DeleteIcon fontSize="small" />
+                          {/* <DeleteIcon fontSize="small" /> */}
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -1704,139 +1704,6 @@ export default function Materials() {
             }}
           >
             Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog 
-        open={openDeleteDialog} 
-        onClose={handleCloseDeleteDialog} 
-        maxWidth="sm" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 8px 32px rgba(211, 47, 47, 0.15)'
-          }
-        }}
-      >
-        <DialogTitle 
-          sx={{ 
-            background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
-            color: 'white',
-            py: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <DeleteIcon sx={{ fontSize: 32 }} />
-            <Box>
-              <Typography variant="h5" component="div" fontWeight="bold">
-                Delete Material
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
-                This action cannot be undone
-              </Typography>
-            </Box>
-          </Box>
-          <IconButton 
-            onClick={handleCloseDeleteDialog}
-            sx={{ 
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.2)'
-              }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 4, pb: 3 }}>
-          {selectedMaterial && (
-            <Box>
-              <Alert 
-                severity="warning" 
-                sx={{ 
-                  mb: 3,
-                  borderRadius: 2,
-                  '& .MuiAlert-message': {
-                    width: '100%'
-                  }
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                  ⚠️ Warning
-                </Typography>
-                <Typography variant="body2">
-                  This action is permanent and cannot be undone. The material will be completely removed from your inventory.
-                </Typography>
-              </Alert>
-
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                  p: 3, 
-                  backgroundColor: 'rgba(244, 67, 54, 0.05)',
-                  borderRadius: 2,
-                  border: '1px solid rgba(244, 67, 54, 0.2)'
-                }}
-              >
-                <Typography variant="body1" gutterBottom sx={{ fontWeight: 600, color: '#d32f2f' }}>
-                  Are you sure you want to delete this material?
-                </Typography>
-                
-                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CategoryIcon sx={{ color: '#f44336', fontSize: 20 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Material Name:
-                  </Typography>
-                </Box>
-                <Typography variant="h6" sx={{ mt: 1, color: '#1B5E20', fontWeight: 'bold' }}>
-                  {selectedMaterial.materialName}
-                </Typography>
-              </Paper>
-            </Box>
-          )}
-        </DialogContent>
-
-        <Divider />
-
-        <DialogActions sx={{ px: 3, py: 2.5, gap: 1.5 }}>
-          <Button 
-            onClick={handleCloseDeleteDialog}
-            variant="outlined"
-            sx={{
-              color: '#666',
-              borderColor: '#ddd',
-              px: 3,
-              py: 1,
-              '&:hover': {
-                borderColor: '#999',
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-              }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleConfirmDelete} 
-            variant="contained" 
-            color="error"
-            startIcon={<DeleteIcon />}
-            sx={{
-              px: 3,
-              py: 1,
-              boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3)',
-              '&:hover': {
-                boxShadow: '0 6px 16px rgba(244, 67, 54, 0.4)',
-              }
-            }}
-          >
-            Delete Material
           </Button>
         </DialogActions>
       </Dialog>

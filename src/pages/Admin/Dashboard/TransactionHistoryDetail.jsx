@@ -235,7 +235,7 @@ const TransactionHistoryDetail = ({ type = 'business' }) => {
       {!transactionHistoryLoading && transactions.length > 0 && (
         <Box sx={{ px: 0, py: 4, mb: 2 }}>
           <Grid container spacing={3} sx={{ px: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item size={3}>
                 <Card 
                   sx={{ 
                     bgcolor: '#f0f9ff', 
@@ -292,7 +292,7 @@ const TransactionHistoryDetail = ({ type = 'business' }) => {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item size={3}>
                 <Card 
                   sx={{ 
                     bgcolor: '#f0fdf4', 
@@ -349,7 +349,7 @@ const TransactionHistoryDetail = ({ type = 'business' }) => {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item size={3}>
                 <Card 
                   sx={{ 
                     bgcolor: '#fffbeb', 
@@ -406,7 +406,7 @@ const TransactionHistoryDetail = ({ type = 'business' }) => {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item size={3}>
                 <Card 
                   sx={{ 
                     bgcolor: '#fef2f2', 
