@@ -29,6 +29,7 @@ import Profile from "../pages/Home/Profile/Profile";
 import TransactionHistory from "../pages/Home/TransactionHistory/TransactionHistory";
 import WalletCustomer from "../pages/Home/WalletCustomer/WalletCustomer";
 import CustomerCo2Report from "../pages/Home/Co2Report/CustomerCo2Report";
+import BorrowTransactionDetail from "../pages/Bussiness/Co2Report/BorrowTransactionDetail";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ForgotPassword from "../pages/Auth/ForgotPassword/ForgotPassword";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
@@ -251,6 +252,14 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATH.CUSTOMER_TRANSACTION_DETAIL,
+          element: (
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <BorrowTransactionDetail type="customer" />
+            </ProtectedRoute>
+          ),
+        },
       ],
     },
 
@@ -313,6 +322,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["business"]}>
               <BusinessCo2Report />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.BUSINESS_TRANSACTION_DETAIL,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <BorrowTransactionDetail type="business" />
             </ProtectedRoute>
           ),
         },

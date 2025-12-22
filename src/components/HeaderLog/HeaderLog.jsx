@@ -22,13 +22,13 @@ import { HiSwitchHorizontal } from "react-icons/hi";
 import Notification from "../Notification/Notification";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
-import { getBusinessDashboardOverview } from "../../store/slices/bussinessSlice";
+import { getBusinessDashboardOverview, getHistoryBusinessForm } from "../../store/slices/bussinessSlice";
 import { FaLeaf, FaCrown, FaCoins } from "react-icons/fa";
 export default function HeaderLog() {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.auth);
   const { userInfo, businessInfo, staffInfo } = useSelector((state) => state.user);
-  const { dashboardOverview } = useSelector((state) => state.businesses);
+  const { dashboardOverview, businessFormHistory } = useSelector((state) => state.businesses);
   const navigate = useNavigate();
   // Sử dụng state để đảm bảo userRole được tính lại khi currentUser thay đổi
   const [userRole, setUserRole] = useState(() => getUserRole());
@@ -59,8 +59,12 @@ export default function HeaderLog() {
       if (!userInfo) {
         dispatch(getProfileApi());
       }
+      // Load business registration history to check if customer has approved business
+      if (userRole === "customer" && currentUser) {
+        dispatch(getHistoryBusinessForm({ limit: 10, page: 1 }));
+      }
     }
-  }, [dispatch, userRole, businessInfo, staffInfo, userInfo, dashboardOverview]);
+  }, [dispatch, userRole, businessInfo, staffInfo, userInfo, dashboardOverview, currentUser]);
 
   const [notifications, setNotifications] = useState([]);
   const socketRef = useRef(null);
@@ -140,6 +144,17 @@ export default function HeaderLog() {
     }, 50);
   };
 
+  // Check if customer has approved business registration
+  const hasApprovedBusiness = React.useMemo(() => {
+    if (!businessFormHistory || !Array.isArray(businessFormHistory)) {
+      return false;
+    }
+    // Check if there's any business registration with status "approved"
+    return businessFormHistory.some(
+      (form) => form?.status?.toLowerCase() === "approved"
+    );
+  }, [businessFormHistory]);
+
   const handleSwitchToCustomer = async () => {
     if (userRole !== "business") return;
 
@@ -154,8 +169,35 @@ export default function HeaderLog() {
         // Đảm bảo state được sync với localStorage
         dispatch(syncWithLocalStorage());
         
+        // Navigate đến trang profile của customer
+        navigate(PATH.PROFILE, { replace: true });
+        // Force reload sau một chút để đảm bảo state được cập nhật
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    } catch (error) {
+      setIsSwitchingRole(false);
+      toast.error(error?.message || "Có lỗi xảy ra khi chuyển đổi loại tài khoản.");
+    }
+  };
+
+  const handleSwitchToBusiness = async () => {
+    if (userRole !== "customer") return;
+
+    setIsSwitchingRole(true);
+
+    try {
+      const resultAction = await dispatch(
+        switchAccountTypeAPI({ role: "business" })
+      );
+
+      if (switchAccountTypeAPI.fulfilled.match(resultAction)) {
+        // Đảm bảo state được sync với localStorage
+        dispatch(syncWithLocalStorage());
+        
         // Navigate đến trang mới và force reload để đảm bảo tất cả component re-render với role mới
-        const redirectPath = getRedirectPath("customer");
+        const redirectPath = getRedirectPath("business");
         navigate(redirectPath, { replace: true });
         // Force reload sau một chút để đảm bảo state được cập nhật
         setTimeout(() => {
@@ -423,6 +465,17 @@ export default function HeaderLog() {
                 <HiSwitchHorizontal className="header-log-switch-icon" />
                 <span className="header-log-switch-text">
                   Switch to Customer
+                </span>
+              </div>
+            )}
+            {userRole === "customer" && hasApprovedBusiness && (
+              <div
+                className="header-log-switch"
+                onClick={handleSwitchToBusiness}
+              >
+                <HiSwitchHorizontal className="header-log-switch-icon" />
+                <span className="header-log-switch-text">
+                  Switch to Business
                 </span>
               </div>
             )}

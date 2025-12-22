@@ -20,8 +20,10 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { FiUser, FiShoppingBag } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { getTransactionHistoryBusinessApi } from "../../../store/slices/borrowSlice";
 import { exportCo2Report } from "../../../store/slices/bussinessSlice";
+import { PATH } from "../../../routes/path";
 import fetcher from "../../../apis/fetcher";
 
 const typeOptions = [
@@ -111,6 +113,7 @@ export default function BusinessCo2Report() {
   const [totalCo2Summary, setTotalCo2Summary] = useState({ total: 0, byType: {} });
   const [isLoadingTotal, setIsLoadingTotal] = useState(false);
   const limit = 10;
+  const navigate = useNavigate();
 
   // Fetch paginated data for display
   useEffect(() => {
@@ -433,6 +436,7 @@ export default function BusinessCo2Report() {
               return (
                 <Box
                   key={item._id || idx}
+                  onClick={() => navigate(PATH.BUSINESS_TRANSACTION_DETAIL.replace(':id', item._id))}
                   sx={{
                     background: isEven ? "#ffffff" : "#f9fbfa",
                     borderRadius: 2,
@@ -446,9 +450,12 @@ export default function BusinessCo2Report() {
                     },
                     gap: 2,
                     alignItems: "center",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
                     "&:hover": {
                       background: "#eef5f1",
                       boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
+                      transform: "translateY(-2px)",
                     },
                   }}
                 >
