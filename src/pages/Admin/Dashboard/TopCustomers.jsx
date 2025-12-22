@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   getTopCustomersApi
 } from '../../../store/slices/adminSlice';
 import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Avatar, FormHelperText } from '@mui/material';
 import { FaUsers, FaCrown, FaLeaf } from 'react-icons/fa';
+import { PATH } from '../../../routes/path';
 import '../AdminDashboard.css';
 
 const TopCustomers = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   
   // Filter states for top customers
   const [customerFilters, setCustomerFilters] = useState({
@@ -222,14 +225,29 @@ const TopCustomers = () => {
               const displayName = customerData?.fullName || `Customer #${rank}`;
               const initials = displayName.split(' ').filter(Boolean).map(word => word[0]).join('').slice(0, 2).toUpperCase();
 
+              const customerId = customer.customerId?._id || customer._id;
+              
               return (
                 <div 
                   key={customer._id || index} 
                   className={`ranking-card ${isTopThree ? 'top-rank' : ''}`}
-                  style={isTopThree ? {
-                    border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
-                    background: rankColor.bg
-                  } : {}}
+                  style={{
+                    ...(isTopThree ? {
+                      border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
+                      background: rankColor.bg
+                    } : {}),
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onClick={() => customerId && navigate(PATH.ADMIN_DASHBOARD_CUSTOMER_TRANSACTIONS.replace(':customerId', customerId))}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '';
+                  }}
                 >
                   <div className="ranking-card-rank-badge" style={isTopThree ? { background: rankColor.bg, color: rankColor.text } : {}}>
                     #{rank}

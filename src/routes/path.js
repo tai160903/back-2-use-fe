@@ -78,4 +78,6 @@ export const PATH = {
     ADMIN_DASHBOARD_TOP_CUSTOMERS: "/admin/dashboard/top-customers",
     ADMIN_DASHBOARD_CHARTS: "/admin/dashboard/charts",
     ADMIN_DASHBOARD_QUICK_ACTIONS: "/admin/dashboard/quick-actions",
+    ADMIN_DASHBOARD_BUSINESS_TRANSACTIONS: "/admin/dashboard/business-transactions/:businessId",
+    ADMIN_DASHBOARD_CUSTOMER_TRANSACTIONS: "/admin/dashboard/customer-transactions/:customerId",
 }

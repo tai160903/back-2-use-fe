@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   getTopBusinessesApi
 } from '../../../store/slices/adminSlice';
 import { Box, CircularProgress, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Rating, Avatar, Chip, FormHelperText } from '@mui/material';
 import { FaStore, FaLeaf, FaRecycle } from 'react-icons/fa';
+import { PATH } from '../../../routes/path';
 import '../AdminDashboard.css';
 
 const TopBusinesses = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   
   // Filter states for top businesses
   const [businessFilters, setBusinessFilters] = useState({
@@ -221,10 +224,23 @@ const TopBusinesses = () => {
                 <div 
                   key={business._id || index} 
                   className={`ranking-card ${isTopThree ? 'top-rank' : ''}`}
-                  style={isTopThree ? {
-                    border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
-                    background: rankColor.bg
-                  } : {}}
+                  style={{
+                    ...(isTopThree ? {
+                      border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
+                      background: rankColor.bg
+                    } : {}),
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onClick={() => navigate(PATH.ADMIN_DASHBOARD_BUSINESS_TRANSACTIONS.replace(':businessId', business._id))}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '';
+                  }}
                 >
                   <div className="ranking-card-rank-badge" style={isTopThree ? { background: rankColor.bg, color: rankColor.text } : {}}>
                     #{rank}

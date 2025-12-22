@@ -8,6 +8,7 @@ import TopBusinesses from "../pages/Admin/Dashboard/TopBusinesses";
 import TopCustomers from "../pages/Admin/Dashboard/TopCustomers";
 import ChartsAnalytics from "../pages/Admin/Dashboard/ChartsAnalytics";
 import QuickActions from "../pages/Admin/Dashboard/QuickActions";
+import TransactionHistoryDetail from "../pages/Admin/Dashboard/TransactionHistoryDetail";
 import Subscriptions from "../pages/Admin/Subscriptions/Subscriptions";
 import Analytics from "../pages/Admin/Analytics";
 import Store from "../pages/Admin/Store";
@@ -567,6 +568,22 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>
               <QuickActions />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_BUSINESS_TRANSACTIONS,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TransactionHistoryDetail type="business" />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.ADMIN_DASHBOARD_CUSTOMER_TRANSACTIONS,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TransactionHistoryDetail type="customer" />
             </ProtectedRoute>
           ),
         },

@@ -158,6 +158,10 @@ export default function ProductSizeManagement() {
       description: '',
     });
     setFormErrors({});
+    // Reload product sizes when modal is closed to refresh data
+    if (productGroupId) {
+      dispatch(getProductSizes({ productGroupId, page: 1, limit: 1000 }));
+    }
   };
 
   const handleEdit = (size) => {
@@ -223,6 +227,9 @@ export default function ProductSizeManagement() {
           })
         ).unwrap();
         toast.success('Product size updated successfully');
+        // Reload product sizes only on success
+        dispatch(getProductSizes({ productGroupId, page: 1, limit: 1000 }));
+        handleCloseDialog();
       } else {
         // Create new size
         await dispatch(
@@ -232,17 +239,19 @@ export default function ProductSizeManagement() {
           })
         ).unwrap();
         toast.success('Product size created successfully');
+        // Reload product sizes only on success
+        dispatch(getProductSizes({ productGroupId, page: 1, limit: 1000 }));
+        handleCloseDialog();
       }
-
-      // Reload product sizes
-      dispatch(getProductSizes({ productGroupId, page: 1, limit: 1000 }));
-      handleCloseDialog();
     } catch (error) {
+      // On error, only show toast, don't reload and don't close modal
       const errorMessage =
         error?.message ||
         error?.data?.message ||
+        error?.error ||
         'Failed to save product size';
       toast.error(errorMessage);
+      // Don't close dialog or reload on error - keep current data visible
     }
   };
 
