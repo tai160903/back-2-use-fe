@@ -389,7 +389,7 @@ const Material = () => {
             <div className="material-list-header-cell" style={{ flex: '1' }}>Reuse Limit</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Deposit %</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Status</div>
-            <div className="material-list-header-cell" style={{ flex: '1', textAlign: 'center' }}>Actions</div>
+      
           </div>
           <div className="material-list">
             {(() => {
@@ -425,20 +425,7 @@ const Material = () => {
                       {material.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
-                  <div className="material-list-cell" style={{ flex: '1', textAlign: 'center', justifyContent: 'center' }}>
-                    <div className="material-list-actions">
-                      <button 
-                        className="action-btn-list edit-btn-list" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditMaterial(material);
-                        }}
-                        title="Edit"
-                      >
-                        <CiEdit size={18} />
-                      </button>
-                    </div>
-                  </div>
+           
                 </div>
               ));
             })()}
