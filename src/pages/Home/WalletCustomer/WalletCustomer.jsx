@@ -73,6 +73,8 @@ export default function WalletCustomer() {
   const [depositRefundTotalPages, setDepositRefundTotalPages] = useState(0);
   const [penaltyTotalPages, setPenaltyTotalPages] = useState(0);
 
+
+
   const getStatusColor = (status) => {
     if (!status) return "default";
     const normalized = String(status).toLowerCase();
