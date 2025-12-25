@@ -216,6 +216,7 @@ export default function ProductItems() {
         material: getMaterialName(),
         createdAt: product.createdAt || product.created_at,
         uses: product.useCount || product.uses || 0,
+        reuseCount: product.reuseCount ?? product.useCount ?? product.uses ?? 0,
         guaranteeFee: product.depositValue ?? sizeDeposit ?? product.deposit ?? 0,
         co2Reduced: product.co2Reduced ?? product.totalCo2Reduced ?? sizeCo2 ?? 0,
         status: product.status || 'available',
@@ -812,7 +813,7 @@ export default function ProductItems() {
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2">{item.uses || '0'}</Typography>
+                          <Typography variant="body2">{item.reuseCount || '0'}</Typography>
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -965,7 +966,7 @@ export default function ProductItems() {
                           { label: 'Size', value: selectedItem.size || 'N/A' },
                           { label: 'Material', value: selectedItem.material || getMaterialName() || 'N/A' },
                           { label: 'Created Date', value: formatDate(selectedItem.createdAt) },
-                          { label: 'Uses', value: selectedItem.uses ?? '/' },
+                          { label: 'Uses', value: selectedItem.reuseCount ?? selectedItem.uses ?? 0 },
                           { label: 'Guarantee fee', value: `${formatVnd(selectedItem.guaranteeFee)} VND`, highlight: '#16a34a' },
                           { label: 'CO₂ Reduced', value: `${Number(selectedItem.co2Reduced || 0).toFixed(2)} kg`, highlight: '#111827' },
                           {
