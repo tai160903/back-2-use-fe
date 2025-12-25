@@ -325,7 +325,7 @@ export default function CustomerCo2Report() {
                 Object.entries(totalCo2Summary.byType).map(([k, v]) => (
                   <Chip
                     key={k}
-                    label={`${typeLabel(k)}: ${v.toFixed(3)} kg`}
+                    label={`${typeLabel(k)}: ${v.toFixed(2)} kg`}
                     sx={{
                       borderColor: v >= 0 ? "#0b5529" : "#c62828",
                       color: v >= 0 ? "#0b5529" : "#c62828",
@@ -448,7 +448,7 @@ export default function CustomerCo2Report() {
 
                   <Box>
                     <Typography sx={{ color: co2Color, fontWeight: 700 }}>
-                      {co2Val.toFixed(3)} kg
+                      {co2Val.toFixed(2)} kg
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Eco: {(Number(item.ecoPointChanged) || 0).toFixed(2)}
