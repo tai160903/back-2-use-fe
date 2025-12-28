@@ -46,6 +46,11 @@ const subscriptionSchema = yup.object({
     .required("Product item limit is required")
     .min(-1, "Product item limit cannot be less than -1")
     .integer("Product item limit must be an integer"),
+  rewardPointsLimit: yup
+    .number()
+    .required("Reward points limit is required")
+    .min(0, "Reward points limit cannot be negative")
+    .integer("Reward points limit must be an integer"),
   isActive: yup.boolean(),
   isTrial: yup.boolean()
 });
@@ -68,6 +73,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
       durationInDays: "",
       productGroupLimit: "",
       productItemLimit: "",
+      rewardPointsLimit: "",
       isActive: true,
       isTrial: false
     }
@@ -85,6 +91,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
         durationInDays: selectedItem.durationInDays || "",
         productGroupLimit: limits.productGroupLimit ?? "",
         productItemLimit: limits.productItemLimit ?? "",
+        rewardPointsLimit: limits.rewardPointsLimit ?? "",
         isActive: selectedItem.isActive !== undefined ? selectedItem.isActive : true,
         isTrial: selectedItem.isTrial !== undefined ? selectedItem.isTrial : false
       });
@@ -97,6 +104,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
         durationInDays: "",
         productGroupLimit: "",
         productItemLimit: "",
+        rewardPointsLimit: "",
         isActive: true,
         isTrial: false
       });
@@ -117,6 +125,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
       limits: {
         productGroupLimit: isUnlimitedGroup ? -1 : Number(data.productGroupLimit),
         productItemLimit: isUnlimitedItem ? -1 : Number(data.productItemLimit),
+        rewardPointsLimit: Number(data.rewardPointsLimit),
         // Giữ nguyên export/eco cũ khi chỉnh sửa, tạo mới để trống
         exportLevel: selectedItem?.limits?.exportLevel ?? undefined,
         ecoBonusPercent: selectedItem?.limits?.ecoBonusPercent ?? undefined,
@@ -243,7 +252,7 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
               <MdPayment />
             </div>
             <div>
-              <h2 className="modal-title">
+              <h2 className="modal-titles">
                 {mode === "create" ? "Create New Subscription Plan" : 
                  mode === "edit" ? "Edit Subscription Plan" : 
                  "Subscription Plan Details"}
@@ -330,6 +339,13 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                             <Typography className="info-card-label">Products / Group</Typography>
                             <Typography className="info-card-value">
                               {formatLimitValue(limits.productItemLimit)}
+                            </Typography>
+                          </Box>
+
+                          <Box className="info-card">
+                            <Typography className="info-card-label">Reward Points</Typography>
+                            <Typography className="info-card-value">
+                              {formatLimitValue(limits.rewardPointsLimit)}
                             </Typography>
                           </Box>
 
@@ -643,6 +659,48 @@ export default function ModalSubscriptions({ open, onClose, selectedItem, mode =
                               NO LIMIT
                             </Button>
                           </Box>
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid item size={6}>
+                      <Controller
+                        name="rewardPointsLimit"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Reward Points Limit *"
+                            type="number"
+                            required
+                            placeholder="e.g., 100"
+                            variant="outlined"
+                            fullWidth
+                            error={!!errors.rewardPointsLimit}
+                            helperText={errors.rewardPointsLimit?.message}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? "" : parseInt(value) || "");
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '16px',
+                              },
+                              '& .MuiInputLabel-root': {
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                color: '#374151',
+                              },
+                              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#174d31',
+                                borderWidth: '2px',
+                              },
+                              '& .MuiInputLabel-root.Mui-focused': {
+                                color: '#174d31',
+                              }
+                            }}
+                          />
                         )}
                       />
                     </Grid>
