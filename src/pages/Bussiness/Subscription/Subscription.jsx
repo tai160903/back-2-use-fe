@@ -6,17 +6,26 @@ import { IoMdCard } from "react-icons/io";
 import { FaCalendarAlt, FaCreditCard, FaReceipt } from "react-icons/fa";
 import Button from '@mui/material/Button';
 import { BsStars } from "react-icons/bs";
+import { MdStars } from "react-icons/md";
 import { useSelector, useDispatch } from 'react-redux';
 import { getALLSubscriptions, buySubscription, buyFreeTrial, getBusinessSubscriptionHistory } from '../../../store/slices/subscriptionSlice';
+import { getRewardPointPackageStatusApi, buyRewardPointPackageApi, getRewardPointsApiHistory } from '../../../store/slices/rewardPointPackageSlice';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { useUserInfo } from '../../../hooks/useUserInfo';
 import SubscriptionConfirmModal from '../../../components/SubscriptionConfirmModal/SubscriptionConfirmModal';
+import RewardPointConfirmModal from '../../../components/RewardPointConfirmModal/RewardPointConfirmModal';
 import toast from 'react-hot-toast';
 
 export default function Subscription() {
   const dispatch = useDispatch();
   const { subscription, isLoading, subscriptionHistory } = useSelector((state) => state.subscription);
+  const { rewardPointPackageStatus, rewardPointPackageHistory, isLoading: isLoadingRewardPoints } = useSelector((state) => state.rewardPointPackage);
+  
+  // Extract packages from response - handle both array and object with data property
+  const rewardPointPackages = Array.isArray(rewardPointPackageStatus?.data) 
+    ? rewardPointPackageStatus.data 
+    : (Array.isArray(rewardPointPackageStatus) ? rewardPointPackageStatus : []);
   const { balance, businessInfo, refetch } = useUserInfo();
 
   // Chuẩn hóa dữ liệu subscription từ API
@@ -32,20 +41,32 @@ export default function Subscription() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [rewardPointsHistoryPage, setRewardPointsHistoryPage] = useState(1);
+  const rewardPointsHistoryItemsPerPage = 5;
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [autoRenew, setAutoRenew] = useState(false);
+  
+  // Reward Point Modal state
+  const [rewardPointModalOpen, setRewardPointModalOpen] = useState(false);
+  const [selectedRewardPackage, setSelectedRewardPackage] = useState(null);
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
+    dispatch(getRewardPointPackageStatusApi());
   }, [dispatch]);
 
   // Fetch billing history (paginated)
   useEffect(() => {
     dispatch(getBusinessSubscriptionHistory({ page: currentPage, limit: itemsPerPage }));
   }, [dispatch, currentPage, itemsPerPage]);
+
+  // Fetch reward points purchase history (paginated)
+  useEffect(() => {
+    dispatch(getRewardPointsApiHistory({ page: rewardPointsHistoryPage, limit: rewardPointsHistoryItemsPerPage }));
+  }, [dispatch, rewardPointsHistoryPage, rewardPointsHistoryItemsPerPage]);
 
   // Helper: chuẩn hóa message lỗi từ BE
   const getErrorMessage = (err) => {
@@ -102,8 +123,23 @@ export default function Subscription() {
   }));
   const totalPages = subscriptionHistory?.totalPages || 0;
 
+  // Format reward points purchase history data
+  const rewardPointsHistoryData = (rewardPointPackageHistory?.data || []).map((record) => ({
+    id: record._id,
+    packageName: record.packageName || 'N/A',
+    points: record.points || 0,
+    amount: record.amount || 0,
+    status: record.status || 'unknown',
+    date: formatDateTimeVietnam(record.createdAt),
+  }));
+  const rewardPointsHistoryTotalPages = rewardPointPackageHistory?.totalPages || 0;
+
   const handlePageChange = (event, page) => {
     setCurrentPage(page);
+  };
+
+  const handleRewardPointsHistoryPageChange = (event, page) => {
+    setRewardPointsHistoryPage(page);
   };
 
   // Handle select subscription
@@ -167,6 +203,41 @@ export default function Subscription() {
       toast.error(getErrorMessage(err));
     }
     handleModalClose();
+  };
+
+  // Handle reward point package purchase
+  const handleRewardPointModalClose = () => {
+    setRewardPointModalOpen(false);
+    setSelectedRewardPackage(null);
+  };
+
+  const handleConfirmRewardPointPurchase = async () => {
+    if (!selectedRewardPackage) return;
+
+    const hasEnoughBalance = balance >= selectedRewardPackage.price;
+    if (!hasEnoughBalance) {
+      toast.error('Insufficient balance. Please deposit money into your wallet.');
+      handleRewardPointModalClose();
+      return;
+    }
+
+    try {
+      if (!selectedRewardPackage._id) {
+        toast.error('Invalid package ID');
+        return;
+      }
+      await dispatch(buyRewardPointPackageApi({ packageId: selectedRewardPackage._id })).unwrap();
+      toast.success('Reward points purchased successfully!');
+      
+      // Refresh data
+      dispatch(getRewardPointPackageStatusApi());
+      dispatch(getRewardPointsApiHistory({ page: rewardPointsHistoryPage, limit: rewardPointsHistoryItemsPerPage }));
+      refetch();
+      
+      handleRewardPointModalClose();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
   };
 
   // Lấy gói hiện tại để đánh dấu và hiển thị ngày bắt đầu/kết thúc
@@ -337,6 +408,83 @@ export default function Subscription() {
           </div>
         </div>
 
+        {/* Reward Point Packages Section */}
+        <div className='subscriptionBusiness-reward-points'>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+            <div style={{ minWidth: 260 }}>
+              <Typography className='subscriptionBusiness-available-title'>
+                <MdStars style={{ marginRight: "10px", color: "#f59e0b" }} />  Reward Point Packages
+              </Typography>
+              <Typography className='subscriptionBusiness-available-des'>
+                Purchase reward points to unlock exclusive features and benefits
+              </Typography>
+            </div>
+          </div>
+
+          <div className='reward-points-packages-grid'>
+            {isLoadingRewardPoints ? (
+              <Typography>Loading reward points...</Typography>
+            ) : rewardPointPackages && rewardPointPackages.length > 0 ? (
+              rewardPointPackages
+                .filter((pkg) => pkg.isActive && !pkg.isDeleted)
+                .map((pkg) => {
+                  return (
+                    <div key={pkg._id} className='reward-point-package-card'>
+                      <div className='reward-point-package-header'>
+                        <div className='reward-point-package-icon'>
+                          <MdStars className='stars-icon' />
+                        </div>
+                        <div className='reward-point-package-badge'>
+                          {pkg.points.toLocaleString()} Points
+                        </div>
+                      </div>
+
+                      <div className='reward-point-package-content'>
+                        <Typography className='reward-point-package-name'>
+                          {pkg.name}
+                        </Typography>
+                        <Typography className='reward-point-package-description'>
+                          {pkg.description}
+                        </Typography>
+                        
+                        <div className='reward-point-package-details'>
+                          <div className='reward-point-detail-item'>
+                            <span className='reward-point-detail-label'>Points</span>
+                            <span className='reward-point-detail-value points-value'>
+                              {pkg.points.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className='reward-point-detail-item'>
+                            <span className='reward-point-detail-label'>Price</span>
+                            <span className='reward-point-detail-value price-value'>
+                              {formatPrice(pkg.price)}
+                            </span>
+                          </div>
+                         
+                        </div>
+                      </div>
+
+                      <div className='reward-point-package-footer'>
+                        <Button
+                          className='btn-reward-points'
+                          onClick={() => {
+                            setSelectedRewardPackage(pkg);
+                            setRewardPointModalOpen(true);
+                          }}
+                          disabled={isLoadingRewardPoints}
+                        >
+                          Purchase Points
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+            ) : (
+              <Typography>No reward point packages available</Typography>
+            )}
+          </div>
+        </div>
+
         <div className='subscriptionBusiness-billing'>
           <div className='billing-header'>
             <FaCalendarAlt className='billing-header-icon' />
@@ -413,6 +561,87 @@ export default function Subscription() {
           </div>
         </div>
 
+        {/* Reward Points Purchase History Section */}
+        <div className='subscriptionBusiness-billing'>
+          <div className='billing-header'>
+            <MdStars className='billing-header-icon' style={{ color: "#f59e0b" }} />
+            <Typography className='billing-header-title'>
+              Reward Points Purchase History
+            </Typography>
+          </div>
+
+          <div className='billing-list'>
+            {isLoadingRewardPoints ? (
+              <Typography>Loading reward points history...</Typography>
+            ) : rewardPointsHistoryData.length > 0 ? (
+              rewardPointsHistoryData.map((record) => (
+                <div key={record.id} className='billing-card'>
+                  <div className='billing-card-left'>
+                    <div className='billing-icon'>
+                      <MdStars style={{ color: "#f59e0b", fontSize: '24px' }} />
+                    </div>
+                  </div>
+
+                  <div className='billing-card-middle'>
+                    <Typography className='billing-package-name'>
+                      {record.packageName}
+                    </Typography>
+                    <Typography className='billing-date' style={{ fontSize: '14px', color: '#666', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FaReceipt style={{ fontSize: '16px' }} />
+                      Purchased: {record.date}
+                    </Typography>
+                    <Typography style={{ fontSize: '14px', color: '#666', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                      <BsStars style={{ fontSize: '16px', color: "#f59e0b" }} />
+                      Points: {record.points.toLocaleString('vi-VN')}
+                    </Typography>
+                  </div>
+
+                  <div className='billing-card-right'>
+                    <div className='billing-status'>
+                      <Typography
+                        className='billing-status-text'
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          color: record.status === 'completed' ? '#28a745' :
+                            record.status === 'pending' ? '#ff9800' : '#dc3545'
+                        }}
+                      >
+                        {record.status === 'completed' && <FaCircleCheck style={{ fontSize: '18px' }} />}
+                        {record.status === 'pending' && <FaClock style={{ fontSize: '18px' }} />}
+                        {record.status !== 'completed' && record.status !== 'pending' && <FaCircleXmark style={{ fontSize: '18px' }} />}
+                        {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                      </Typography>
+                    </div>
+                    <Typography className='billing-amount'>
+                      {formatPrice(record.amount)}
+                    </Typography>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <Typography style={{ textAlign: 'center', padding: '20px' }}>No reward points purchase history found.</Typography>
+            )}
+          </div>
+
+          {rewardPointsHistoryTotalPages > 1 && (
+            <div className='billing-pagination'>
+              <Stack spacing={2} alignItems="center">
+                <Pagination
+                  count={rewardPointsHistoryTotalPages}
+                  page={rewardPointsHistoryPage}
+                  onChange={handleRewardPointsHistoryPageChange}
+                  color="primary"
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                />
+              </Stack>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Subscription Confirm Modal */}
@@ -425,6 +654,16 @@ export default function Subscription() {
         isLoading={isLoading}
         autoRenew={autoRenew}
         onToggleAutoRenew={() => setAutoRenew((prev) => !prev)}
+      />
+
+      {/* Reward Point Confirm Modal */}
+      <RewardPointConfirmModal
+        open={rewardPointModalOpen}
+        onClose={handleRewardPointModalClose}
+        package={selectedRewardPackage}
+        userBalance={balance}
+        onConfirm={handleConfirmRewardPointPurchase}
+        isLoading={isLoadingRewardPoints}
       />
     </>
   )

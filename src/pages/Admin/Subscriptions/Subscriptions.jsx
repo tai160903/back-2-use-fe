@@ -9,6 +9,7 @@ import {
   MdModeEdit,
   MdDelete,
   MdAdd,
+  MdStars,
 } from "react-icons/md";
 
 import { IoIosSearch } from "react-icons/io";
@@ -16,6 +17,7 @@ import {
   BiLayer 
 } from "react-icons/bi";
 import ModalSubscriptions from "../../../components/ModalSubscriptions/ModalSubscriptions";
+import ModalRewardPointPackage from "../../../components/ModalRewardPointPackage/ModalRewardPointPackage";
 import DeleteConfirmModal from "../../../components/DeleteConfirmModal/DeleteConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
 import { 
@@ -23,6 +25,7 @@ import {
   getALLSubscriptions, 
   getSubscriptionById
 } from "../../../store/slices/subscriptionSlice";
+import { getAllRewardPointPackagesApi, deleteRewardPointPackageApi } from "../../../store/slices/rewardPointPackageSlice";
 import toast from "react-hot-toast";
 import { Button } from "@mui/material";
 import Pagination from "@mui/material/Pagination";
@@ -36,10 +39,16 @@ export default function Subscriptions() {
   const [modalMode, setModalMode] = useState("view");
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [openDeleteRewardModal, setOpenDeleteRewardModal] = useState(false);
+  const [rewardPackageToDelete, setRewardPackageToDelete] = useState(null);
+  const [openRewardPointModal, setOpenRewardPointModal] = useState(false);
+  const [selectedRewardPackage, setSelectedRewardPackage] = useState(null);
+  const [rewardPointModalMode, setRewardPointModalMode] = useState("create");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const dispatch = useDispatch();
   const { subscription } = useSelector(state => state.subscription);
+  const { packages: rewardPointPackages, isLoading: isLoadingPackages } = useSelector(state => state.rewardPointPackage);
 
   // Hỗ trợ cả hai dạng response:
   // { statusCode, message, data: [...] } hoặc { statusCode, message, data: { subscriptions: [...] } }
@@ -49,6 +58,7 @@ export default function Subscriptions() {
 
   useEffect(() => {
     dispatch(getALLSubscriptions());
+    dispatch(getAllRewardPointPackagesApi({ page: 1, limit: 100 }));
   }, [dispatch]);
 
   // get subscription by id
@@ -103,6 +113,32 @@ export default function Subscriptions() {
   const handleCloseDeleteModal = () => {
     setOpenDeleteModal(false);
     setItemToDelete(null);
+  };
+
+  // Delete reward point package
+  const handleDeleteRewardPackageClick = (pkg) => {
+    setRewardPackageToDelete(pkg);
+    setOpenDeleteRewardModal(true);
+  };
+
+  const handleConfirmDeleteRewardPackage = async () => {
+    if (rewardPackageToDelete) {
+      try {
+        await dispatch(deleteRewardPointPackageApi({ id: rewardPackageToDelete._id })).unwrap();
+        toast.success("Reward point package deleted successfully!");
+        // Refresh packages list
+        dispatch(getAllRewardPointPackagesApi({ page: 1, limit: 100 }));
+      } catch (error) {
+        toast.error(error?.message || error?.data?.message || "An error occurred while deleting the reward point package");
+      }
+      setOpenDeleteRewardModal(false);
+      setRewardPackageToDelete(null);
+    }
+  };
+
+  const handleCloseDeleteRewardModal = () => {
+    setOpenDeleteRewardModal(false);
+    setRewardPackageToDelete(null);
   };
 
   const handleClosePopup = () => {
@@ -173,6 +209,17 @@ const formatLimitValue = (value) => {
           </div>
         </div>
         <div className="header-actions">
+          <button 
+            className="create-btn reward-point-btn" 
+            onClick={() => {
+              setSelectedRewardPackage(null);
+              setRewardPointModalMode("create");
+              setOpenRewardPointModal(true);
+            }}
+          >
+            <MdStars size={20} />
+            Create Reward Point Package
+          </button>
           <button className="create-btn" onClick={handleCreateClick}>
             <MdAdd size={20} />
             Create Subscription
@@ -184,6 +231,84 @@ const formatLimitValue = (value) => {
 
 
   
+
+      {/* Reward Point Packages Section */}
+      <div className="reward-point-packages-section">
+        <div className="section-header-wrapper">
+          <div className="section-title-wrapper">
+            <MdStars className="section-title-icon" />
+            <h2 className="section-title">Reward Point Packages</h2>
+            <span className="section-badge">{rewardPointPackages?.length || 0} packages</span>
+          </div>
+        </div>
+        
+        {isLoadingPackages ? (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading packages...</p>
+          </div>
+        ) : rewardPointPackages?.length === 0 ? (
+          <div className="empty-packages">
+            <MdStars size={48} className="empty-icon" />
+            <p className="empty-text">No reward point packages available</p>
+            <p className="empty-subtext">Create your first package to get started</p>
+          </div>
+        ) : (
+          <div className="reward-packages-grid">
+            {rewardPointPackages.map((pkg) => (
+              <div key={pkg._id} className="reward-package-card">
+                <div className="reward-package-header">
+                  <div className="reward-package-icon-wrapper">
+                    <MdStars className="reward-package-icon" />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div className={`reward-package-status ${pkg.isActive ? 'active' : 'inactive'}`}>
+                      {pkg.isActive ? 'Active' : 'Inactive'}
+                    </div>
+                    <Button 
+                      className="action-btn-icon edit-btn"
+                      onClick={() => {
+                        setSelectedRewardPackage(pkg);
+                        setRewardPointModalMode("edit");
+                        setOpenRewardPointModal(true);
+                      }}
+                      title="Edit"
+                      sx={{ minWidth: '40px', width: '40px', height: '40px' }}
+                    >
+                      <MdModeEdit size={20} />
+                    </Button>
+                    <Button 
+                      className="action-btn-icon delete-btn"
+                      onClick={() => handleDeleteRewardPackageClick(pkg)}
+                      title="Delete"
+                      sx={{ minWidth: '40px', width: '40px', height: '40px' }}
+                    >
+                      <MdDelete size={20} />
+                    </Button>
+                  </div>
+                </div>
+                <div className="reward-package-content">
+                  <h3 className="reward-package-name">{pkg.name}</h3>
+                  <p className="reward-package-description">{pkg.description}</p>
+                  <div className="reward-package-details">
+                    <div className="reward-package-detail-item">
+                      <span className="detail-label">Points</span>
+                      <span className="detail-value points-value">{pkg.points.toLocaleString()}</span>
+                    </div>
+                    <div className="reward-package-detail-item">
+                      <span className="detail-label">Price</span>
+                      <span className="detail-value price-value">{pkg.price.toLocaleString()} VND</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div className="section-divider"></div>
 
       {/* Search Section */}
       <div className="subscriptions-filters">
@@ -275,8 +400,14 @@ const formatLimitValue = (value) => {
                       {formatLimitValue(item.limits?.productItemLimit)}
                     </span>
                   </div>
-             
-              
+                  <div className="limit-badge">
+                    <span className="limit-badge-label">Reward Points</span>
+                    <span className="limit-badge-value">
+                      {item.limits?.rewardPointsLimit != null 
+                        ? item.limits.rewardPointsLimit.toLocaleString() 
+                        : 'N/A'}
+                    </span>
+                  </div>
                 </div>
                 <div className="subscriptions-detail-item">
                   <span className="subscriptions-detail-label">
@@ -359,6 +490,27 @@ const formatLimitValue = (value) => {
         onConfirm={handleConfirmDelete}
         itemName={itemToDelete?.name}
         itemType="subscription plan"
+      />
+
+      <DeleteConfirmModal
+        open={openDeleteRewardModal}
+        onClose={handleCloseDeleteRewardModal}
+        onConfirm={handleConfirmDeleteRewardPackage}
+        itemName={rewardPackageToDelete?.name}
+        itemType="reward point package"
+      />
+
+      <ModalRewardPointPackage
+        open={openRewardPointModal}
+        onClose={() => {
+          setOpenRewardPointModal(false);
+          setSelectedRewardPackage(null);
+          setRewardPointModalMode("create");
+          // Refresh packages list after creating/updating
+          dispatch(getAllRewardPointPackagesApi({ page: 1, limit: 100 }));
+        }}
+        selectedItem={selectedRewardPackage}
+        mode={rewardPointModalMode}
       />
 
     </div>

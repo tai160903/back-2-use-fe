@@ -311,6 +311,8 @@ export default function HeaderLog() {
     const co2Reduced = business?.co2Reduced !== undefined 
       ? business.co2Reduced 
       : (dashboardOverview?.co2Reduced || 0);
+    
+    const rewardPoints = businessInfo?.data?.rewardPoints || {};
 
     const commonCardStyle = {
       display: 'flex',
@@ -383,6 +385,20 @@ export default function HeaderLog() {
                 {currentSubscriptions.length > 0
                   ? currentSubscriptions[0]?.subscriptionId?.name || 'Active'
                   : 'No subscription'}
+              </Typography>
+            </Box>
+          </Box>
+          {/* Reward Points Card */}
+          <Box sx={commonCardStyle}>
+            <FaCoins style={{ fontSize: '18px', color: 'white' }} />
+            <Box>
+              <Typography sx={commonTitleStyle}>
+                Reward Points
+              </Typography>
+              <Typography sx={commonValueStyle}>
+                {typeof rewardPoints?.current === 'number' 
+                  ? `${rewardPoints.current.toLocaleString('en-US')} / ${(rewardPoints.max || 0).toLocaleString('en-US')}` 
+                  : '0 / 0'}
               </Typography>
             </Box>
           </Box>

@@ -19,6 +19,7 @@ import ModalWallet from "../../../components/ModalWallet/ModalWallet";
 import ModalTransactionDetail from "../../../components/ModalTransactionDetail/ModalTransactionDetail";
 import { useDispatch, useSelector } from "react-redux";
 import { getTransactionHistoryApi, getTransactionHistoryBusinessApiDetail } from "../../../store/slices/walletSlice";
+import { getRewardPointsApiHistory } from "../../../store/slices/rewardPointPackageSlice";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 
@@ -33,6 +34,9 @@ export default function WalletBusiness() {
 
     isLoading: transactionLoading 
   } = useSelector((state) => state.wallet);
+  
+  // Redux state for reward points history
+  const { rewardPointPackageHistory, isLoading: isLoadingRewardPoints } = useSelector((state) => state.rewardPointPackage);
 
   // hook
   const {
@@ -85,6 +89,7 @@ export default function WalletBusiness() {
       'penalty': 'Penalty',
       'refund': 'Refund',
       'subscription_fee': 'Subscription',
+      'reward_points_purchase': 'Reward Points Purchase',
     };
     return typeMap[String(transactionType).toLowerCase()] || transactionType;
   };
@@ -160,6 +165,8 @@ export default function WalletBusiness() {
           walletType: "business",
         })
       );
+      // Fetch reward points purchase history
+      dispatch(getRewardPointsApiHistory({ page: 1, limit: 100 }));
     }
   }, [dispatch, walletId, currentPage, limit, tabValue, depositWithdrawFilter]);
 
@@ -227,12 +234,26 @@ export default function WalletBusiness() {
     setCurrentPage(newPage);
   };
 
-  const handleOpenTxnDetail = async (id) => {
+  const handleOpenTxnDetail = async (id, transactionType) => {
     try {
       setDetailLoading(true);
-      const res = await dispatch(getTransactionHistoryBusinessApiDetail({ id })).unwrap();
-      setSelectedTxn(res?.data);
-      setOpenTxnDetail(true);
+      
+      // For reward points purchase, find the transaction from reward points history
+      if (transactionType === 'reward_points_purchase') {
+        const rewardPointsList = Array.isArray(rewardPointPackageHistory?.data) 
+          ? rewardPointPackageHistory.data 
+          : [];
+        const rewardPointRecord = rewardPointsList.find(r => r._id === id || r.transactionId === id);
+        if (rewardPointRecord) {
+          setSelectedTxn(rewardPointRecord);
+          setOpenTxnDetail(true);
+        }
+      } else {
+        // For regular wallet transactions, fetch detail from API
+        const res = await dispatch(getTransactionHistoryBusinessApiDetail({ id })).unwrap();
+        setSelectedTxn(res?.data);
+        setOpenTxnDetail(true);
+      }
     } catch {
       // ignore
     } finally {
@@ -294,8 +315,63 @@ export default function WalletBusiness() {
     });
   };
 
-  // Get real transaction data
-  const realTransactionData = transactionHistory ? formatTransactionData(transactionHistory) : [];
+  // Format reward points purchase history to transaction format
+  const formatRewardPointsData = () => {
+    const rewardPointsList = Array.isArray(rewardPointPackageHistory?.data) 
+      ? rewardPointPackageHistory.data 
+      : [];
+    
+    return rewardPointsList.map(record => {
+      const date = new Date(record.createdAt);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const formattedDate = `${day}/${month}/${year}`;
+      const formattedTime = `${hours}:${minutes}`;
+      
+      return {
+        id: record._id || record.transactionId,
+        date: formattedDate,
+        time: formattedTime,
+        dateTime: `${formattedDate} ${formattedTime}`,
+        transactionTypeLabel: `Reward Points Purchase: ${record.packageName}`,
+        description: `Reward Points Package: ${record.packageName} (${record.points.toLocaleString('vi-VN')} points)`,
+        amount: record.amount || 0,
+        amountFormatted: `-${(record.amount || 0).toLocaleString('en-US').replace(/,/g, ".")} VND`,
+        status: record.status || 'completed',
+        direction: 'out',
+        transactionType: 'reward_points_purchase',
+        paymentMethod: null,
+        paymentUrl: null,
+        referenceDetail: {
+          rewardPointsInfo: {
+            packageName: record.packageName,
+            points: record.points,
+            packageId: record.packageId
+          }
+        },
+        relatedUser: null,
+        relatedUserType: null,
+        balanceType: null,
+        toBalanceType: null
+      };
+    });
+  };
+
+  // Get real transaction data and merge with reward points history
+  const realTransactionData = (() => {
+    const walletTransactions = transactionHistory ? formatTransactionData(transactionHistory) : [];
+    const rewardPointsTransactions = formatRewardPointsData();
+    
+    // Merge and sort by date (newest first)
+    return [...walletTransactions, ...rewardPointsTransactions].sort((a, b) => {
+      const dateA = new Date(a.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.dateTime.split(' ')[1]);
+      const dateB = new Date(b.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + b.dateTime.split(' ')[1]);
+      return dateB - dateA;
+    });
+  })();
   
   // Filter by transaction type for Tab 1 (FE filtering for borrow_deposit and return_refund)
   const filterByBorrowReturnType = (data) => {
@@ -361,7 +437,9 @@ export default function WalletBusiness() {
     }
     
     if (depositWithdrawFilter === "subscription_fee") {
-      return data.filter((item) => item.transactionType === "subscription_fee");
+      return data.filter((item) => 
+        item.transactionType === "subscription_fee" || item.transactionType === "reward_points_purchase"
+      );
     }
     
     return data;
@@ -531,7 +609,7 @@ export default function WalletBusiness() {
                       />
                     </Box>
                   </Box>
-                  {transactionLoading ? (
+                  {(transactionLoading || isLoadingRewardPoints) ? (
                     <div style={{ textAlign: "center", padding: "20px" }}>
                       <Typography>Loading history...</Typography>
                     </div>
@@ -574,7 +652,7 @@ export default function WalletBusiness() {
                             borderColor: "#007c00",
                           },
                         }}
-                        onClick={() => handleOpenTxnDetail(item.id)}
+                        onClick={() => handleOpenTxnDetail(item.id, item.transactionType)}
                         role="button"
                         style={{ cursor: "pointer" }}
                       >
@@ -822,7 +900,7 @@ export default function WalletBusiness() {
                       />
                     </Box>
                   </Box>
-                  {transactionLoading ? (
+                  {(transactionLoading || isLoadingRewardPoints) ? (
                     <div style={{ textAlign: "center", padding: "20px" }}>
                       <Typography>Loading history...</Typography>
                     </div>
@@ -870,7 +948,7 @@ export default function WalletBusiness() {
                                   borderColor: "#007c00",
                                 },
                               }}
-                              onClick={() => handleOpenTxnDetail(item.id)}
+                              onClick={() => handleOpenTxnDetail(item.id, item.transactionType)}
                               role="button"
                               style={{ cursor: "pointer" }}
                             >

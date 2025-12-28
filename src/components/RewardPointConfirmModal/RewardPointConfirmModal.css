@@ -1,0 +1,221 @@
+.reward-point-confirm-modal .MuiDialog-paper {
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-title {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 24px !important;
+  text-align: center;
+}
+
+.modal-title .stars-icon {
+  font-size: 32px;
+  color: white;
+}
+
+.modal-title-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-title-text h6 {
+  color: white !important;
+  margin: 0 !important;
+}
+
+.modal-title-text .MuiTypography-body2 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.modal-content-reward-point-confirm {
+  padding: 24px !important;
+}
+
+.modal-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reward-point-info {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 1px solid #fde68a;
+}
+
+.package-label {
+  display: block;
+  color: #6b7280 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px !important;
+}
+
+.package-name {
+  color: #1a1a1a !important;
+  font-weight: 700 !important;
+  margin-bottom: 8px !important;
+}
+
+.package-description {
+  color: #6b7280 !important;
+  margin-bottom: 16px !important;
+}
+
+.reward-point-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #fde68a;
+}
+
+.detail-label {
+  color: #6b7280 !important;
+  font-weight: 600 !important;
+}
+
+.detail-value {
+  font-weight: 700 !important;
+}
+
+.detail-value.points-highlight {
+  color: #f59e0b !important;
+}
+
+.detail-value.price-highlight {
+  color: #12422a !important;
+}
+
+.balance-info {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.balance-row:last-child {
+  margin-bottom: 0;
+}
+
+.wallet-icon {
+  color: #12422a;
+  font-size: 18px;
+}
+
+.balance-label {
+  color: #6b7280 !important;
+  font-weight: 600 !important;
+}
+
+.balance-value {
+  color: #12422a !important;
+  font-weight: 700 !important;
+}
+
+.balance-value.remaining {
+  color: #28a745 !important;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #d4edda;
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid #c3e6cb;
+}
+
+.success-icon {
+  color: #28a745;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.success-message .MuiTypography-body2 {
+  color: #155724 !important;
+  margin: 0 !important;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #f8d7da;
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid #f5c6cb;
+}
+
+.error-icon {
+  color: #dc3545;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.error-message .MuiTypography-body2 {
+  color: #721c24 !important;
+  margin: 0 !important;
+}
+
+.modal-actions {
+  padding: 16px 24px !important;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-button {
+  color: #6b7280 !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 10px 24px !important;
+}
+
+.cancel-button:hover {
+  background: #e5e7eb !important;
+}
+
+.confirm-button {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 10px 24px !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+}
+
+.confirm-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4) !important;
+}
+
+.confirm-button:disabled {
+  background: #e9ecef !important;
+  color: #6c757d !important;
+  box-shadow: none !important;
+}
+

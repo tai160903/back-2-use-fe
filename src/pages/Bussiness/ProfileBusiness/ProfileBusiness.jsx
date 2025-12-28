@@ -112,6 +112,7 @@ export default function ProfileBusiness() {
   const ecoRankLabel = apiBusinessPayload?.data?.ecoRankLabel || 'No Rank'
   const nextRank = apiBusinessPayload?.data?.nextRank || {}
   const progress = apiBusinessPayload?.data?.progress || {}
+  const rewardPoints = apiBusinessPayload?.data?.rewardPoints || {}
 
   const getFormValues = () => ({
     businessName: businessWithCo2?.businessName || '',
@@ -408,6 +409,69 @@ export default function ProfileBusiness() {
                   ? businessWithCo2.ecoPoints.toLocaleString('vi-VN') 
                   : '0'}
               </span>
+            </div>
+            <div className="detail-item">
+              <label>Reward Points:</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                <span style={{ color: '#1b4c2d', fontWeight: '600' }}>
+                  {typeof rewardPoints?.current === 'number' 
+                    ? `${rewardPoints.current.toLocaleString('vi-VN')} / ${(rewardPoints.max || 0).toLocaleString('vi-VN')}` 
+                    : '0 / 0'}
+                </span>
+                {rewardPoints?.max && rewardPoints.max > 0 && (
+                  <Box sx={{ marginTop: '8px' }}>
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '20px',
+                        backgroundColor: '#e5e7eb',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: `${Math.min((rewardPoints.current / rewardPoints.max) * 100 || 0, 100)}%`,
+                          height: '100%',
+                          background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)',
+                          borderRadius: '10px',
+                          transition: 'width 0.5s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          paddingRight: '8px',
+                        }}
+                      >
+                        {(rewardPoints.current / rewardPoints.max) * 100 > 10 && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: '10px',
+                            }}
+                          >
+                            {((rewardPoints.current / rewardPoints.max) * 100).toFixed(1)}%
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'block',
+                        marginTop: '4px',
+                        fontSize: '12px',
+                        color: '#6b7280',
+                      }}
+                    >
+                      Used: {rewardPoints.used?.toLocaleString('vi-VN') || 0} points
+                    </Typography>
+                  </Box>
+                )}
+              </div>
             </div>
           </div>
 
