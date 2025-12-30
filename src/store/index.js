@@ -15,6 +15,7 @@ import leaderBoardSlice from "./slices/leaderBoardSlice";
 import staffSlice from "./slices/staffSlice";
 import feedbackSlice from "./slices/feedbackSlice";
 import rewardPointPackageSlice from "./slices/rewardPointPackageSlice";
+import returnSlice from "./slices/returnSlice";
 export const store = configureStore({
   reducer: {
     auth: authSlice,
@@ -33,6 +34,7 @@ export const store = configureStore({
     staff: staffSlice,
     feedback: feedbackSlice,
     rewardPointPackage: rewardPointPackageSlice,
+    return: returnSlice,
   },
 });
 

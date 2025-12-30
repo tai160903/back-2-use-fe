@@ -71,6 +71,7 @@ import StaffLayout from "../layouts/StaffLayout/StaffLayout";
 import StaffDashboard from "../pages/Staff/StaffDashboard/StaffDashboard";
 import StaffProfile from "../pages/Staff/StaffProfile/StaffProfile";
 import StaffVoucher from "../pages/Staff/StaffVoucher/StaffVoucher";
+import StaffReturn from "../pages/Staff/StaffReturn/StaffReturn";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -422,6 +423,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["staff"]}>
               <StaffVoucher />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.STAFF_RETURN,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <StaffReturn />
             </ProtectedRoute>
           ),
         },

@@ -4,6 +4,7 @@ import { IoHomeOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { IoGiftOutline } from "react-icons/io5";
 import { GoHistory } from "react-icons/go";
+import { FaBoxOpen } from "react-icons/fa";
 
 const staffSidebarItems = [
   {
@@ -34,6 +35,12 @@ const staffSidebarItems = [
     label: "Apply Voucher",
     icon: <IoGiftOutline className="navbar-icon" />,
     path: PATH.STAFF_VOUCHER,
+  },
+  {
+    id: "staff-return",
+    label: "Trả Hàng",
+    icon: <FaBoxOpen className="navbar-icon" />,
+    path: PATH.STAFF_RETURN,
   },
   {
     id: "logout",
