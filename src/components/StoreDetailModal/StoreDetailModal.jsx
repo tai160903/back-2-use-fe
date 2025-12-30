@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getBusinessSingleUseProductsApi } from '../../store/slices/singleUseProductTypeSlice';
+import Loading from '../Loading/Loading';
+import { LocalOffer } from '@mui/icons-material';
 import './StoreDetailModal.css';
 
 const StoreDetailModal = ({ isOpen, onClose, store, onUnblock }) => {
+  const dispatch = useDispatch();
+  const { businessSingleUseProducts, businessSingleUseProductsPagination, isLoading: singleUseLoading } = useSelector(
+    (state) => state.singleUseProductType
+  );
+  const [singleUsePage, setSingleUsePage] = useState(1);
+
+  useEffect(() => {
+    if (isOpen && store?._id) {
+      dispatch(getBusinessSingleUseProductsApi({ businessId: store._id, page: singleUsePage, limit: 10 }));
+    }
+  }, [isOpen, store?._id, singleUsePage, dispatch]);
 
   const handleClose = () => {
+    setSingleUsePage(1);
     onClose();
   };
 
@@ -173,6 +189,94 @@ const StoreDetailModal = ({ isOpen, onClose, store, onUnblock }) => {
               </div>
             </div>
           )}
+
+          {/* Single-Use Products Section */}
+          <div className="single-use-products-section">
+            <h4 className="section-title">
+              <LocalOffer sx={{ fontSize: 18, marginRight: 1, color: '#f57c00' }} />
+              Single-Use Products ({businessSingleUseProductsPagination.total || 0})
+            </h4>
+            
+            {singleUseLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+                <Loading />
+              </div>
+            ) : businessSingleUseProducts.length === 0 ? (
+              <div className="empty-products-message">
+                <p>No single-use products found for this store.</p>
+              </div>
+            ) : (
+              <>
+                <div className="products-table">
+                  <div className="products-table-header">
+                    <div className="products-table-cell header-cell">Product Name</div>
+                    <div className="products-table-cell header-cell">Type & Size</div>
+                    <div className="products-table-cell header-cell">Material</div>
+                    <div className="products-table-cell header-cell">Weight</div>
+                    <div className="products-table-cell header-cell">Status</div>
+                  </div>
+                  {businessSingleUseProducts.map((product) => (
+                    <div key={product._id} className="products-table-row">
+                      <div className="products-table-cell">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {product.image || product.imageUrl ? (
+                            <img 
+                              src={product.image || product.imageUrl} 
+                              alt={product.name}
+                              style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div style={{ width: '32px', height: '32px', borderRadius: '4px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <LocalOffer sx={{ fontSize: 16, color: '#999' }} />
+                            </div>
+                          )}
+                          <span style={{ fontWeight: 500 }}>{product.name}</span>
+                        </div>
+                      </div>
+                      <div className="products-table-cell">
+                        {product.productTypeId?.name || 'N/A'} - {product.productSizeId?.sizeName || 'N/A'}
+                      </div>
+                      <div className="products-table-cell">
+                        {product.materialId?.materialName || 'N/A'}
+                      </div>
+                      <div className="products-table-cell">
+                        {product.weight ? `${product.weight} g` : '-'}
+                      </div>
+                      <div className="products-table-cell">
+                        <span className={`status-chip ${product.isActive ? 'active' : 'inactive'}`}>
+                          {product.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {businessSingleUseProductsPagination.totalPages > 1 && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+                    <div className="pagination-controls">
+                      <button
+                        onClick={() => setSingleUsePage(prev => Math.max(1, prev - 1))}
+                        disabled={singleUsePage === 1}
+                        className="pagination-btn"
+                      >
+                        Previous
+                      </button>
+                      <span className="pagination-info">
+                        Page {singleUsePage} of {businessSingleUseProductsPagination.totalPages}
+                      </span>
+                      <button
+                        onClick={() => setSingleUsePage(prev => Math.min(businessSingleUseProductsPagination.totalPages, prev + 1))}
+                        disabled={singleUsePage === businessSingleUseProductsPagination.totalPages}
+                        className="pagination-btn"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         <div className="modal-footer">

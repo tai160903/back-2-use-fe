@@ -70,6 +70,8 @@ export const PATH = {
     ADMIN_STORE: "/admin/store",
     ADMIN_MATERIAL: "/admin/material",
     ADMIN_MATERIAL_DETAIL: "/admin/material/:id",
+    ADMIN_SINGLE_USE_PRODUCT_TYPE: "/admin/single-use-product-type",
+    ADMIN_SINGLE_USE_PRODUCT_SIZE: "/admin/single-use-product-size/:productTypeId",
     ADMIN_ECO_REWARD: "/admin/eco-reward",
     ADMIN_LEADERBOARD: "/admin/leaderboard",
     // Admin Dashboard Sub Pages

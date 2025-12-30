@@ -24,6 +24,11 @@ import {
   Paper,
   CircularProgress,
   Pagination,
+  Tabs,
+  Tab,
+  Chip,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -40,6 +45,8 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   TrendingUp as TrendingUpIcon,
+  Recycling as RecycleIcon,
+  LocalOffer as SingleUseIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -48,6 +55,13 @@ import {
   getMyProductGroups,
 } from '../../../store/slices/bussinessSlice';
 import { getBusinessProductsByGroup } from '../../../store/slices/storeSilce';
+import {
+  getBusinessSingleUseProductTypesApi,
+  getBusinessSingleUseProductSizesApi,
+  getMySingleUseProductsApi,
+  createBusinessSingleUseProductApi,
+  updateBusinessSingleUseProductApi,
+} from '../../../store/slices/singleUseProductTypeSlice';
 import { PATH } from '../../../routes/path';
 import toast from 'react-hot-toast';
 import './InventoryManagement.css';
@@ -62,14 +76,26 @@ export default function InventoryManagement() {
     productGroupError
   } = useSelector((state) => state.businesses);
 
+  const {
+    businessProductTypes = [],
+    businessProductSizes = [],
+    mySingleUseProducts = [],
+    mySingleUseProductsPagination,
+    isLoading: singleUseLoading,
+  } = useSelector((state) => state.singleUseProductType);
+
+  const [activeTab, setActiveTab] = useState(0); // 0: Reusable, 1: Single-Use
   const [searchQuery, setSearchQuery] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [openSingleUseDialog, setOpenSingleUseDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [singleUseCurrentPage, setSingleUseCurrentPage] = useState(1);
+  const [isActiveFilter, setIsActiveFilter] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
     typeName: '',
@@ -77,12 +103,31 @@ export default function InventoryManagement() {
     materialId: '',
     image: null,
   });
+  const [singleUseFormData, setSingleUseFormData] = useState({
+    name: '',
+    description: '',
+    productTypeId: '',
+    productSizeId: '',
+    materialId: '',
+    weight: '',
+    image: null,
+    isActive: true,
+  });
 
   // Load approved materials and product groups on component mount
   useEffect(() => {
     dispatch(getApprovedMaterials());
     dispatch(getMyProductGroups());
+    dispatch(getBusinessSingleUseProductTypesApi());
+    dispatch(getMySingleUseProductsApi({ page: 1, limit: 100 }));
   }, [dispatch]);
+
+  // Load product sizes when product type changes
+  useEffect(() => {
+    if (singleUseFormData.productTypeId) {
+      dispatch(getBusinessSingleUseProductSizesApi(singleUseFormData.productTypeId));
+    }
+  }, [singleUseFormData.productTypeId, dispatch]);
 
   // State to store products by product group ID
   const [productsByGroup, setProductsByGroup] = useState({});
@@ -328,7 +373,26 @@ export default function InventoryManagement() {
   // Reset to page 1 when search query changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+    setSingleUseCurrentPage(1);
+  }, [searchQuery, activeTab]);
+
+  // Filter single-use products
+  const filteredSingleUseProducts = mySingleUseProducts.filter((product) => {
+    const matchesSearch = !searchQuery.trim() || 
+      product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesActive = !isActiveFilter || 
+      (isActiveFilter === 'active' && product.isActive === true) ||
+      (isActiveFilter === 'inactive' && product.isActive === false);
+    return matchesSearch && matchesActive;
+  });
+
+  // Pagination for single-use products
+  const singleUseItemsPerPage = 9;
+  const singleUseTotalPages = Math.ceil(filteredSingleUseProducts.length / singleUseItemsPerPage);
+  const singleUseStartIndex = (singleUseCurrentPage - 1) * singleUseItemsPerPage;
+  const singleUseEndIndex = singleUseStartIndex + singleUseItemsPerPage;
+  const currentSingleUseProducts = filteredSingleUseProducts.slice(singleUseStartIndex, singleUseEndIndex);
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -341,6 +405,133 @@ export default function InventoryManagement() {
   const totalAvailable = productTypes.reduce((sum, p) => sum + p.available, 0);
   const totalNonAvailable = productTypes.reduce((sum, p) => sum + p.nonAvailable, 0);
   const totalItems = totalAvailable + totalNonAvailable;
+
+  // Single-use product statistics
+  const totalSingleUseProducts = mySingleUseProducts.length;
+  const activeSingleUseProducts = mySingleUseProducts.filter(p => p.isActive === true).length;
+  const inactiveSingleUseProducts = mySingleUseProducts.filter(p => p.isActive === false).length;
+
+  // Handlers for single-use products
+  const handleOpenSingleUseDialog = () => {
+    setEditMode(false);
+    setSelectedProduct(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setIsCreating(false);
+    setSingleUseFormData({
+      name: '',
+      description: '',
+      productTypeId: '',
+      productSizeId: '',
+      materialId: '',
+      weight: '',
+      image: null,
+      isActive: true,
+    });
+    setOpenSingleUseDialog(true);
+  };
+
+  const handleCloseSingleUseDialog = () => {
+    setOpenSingleUseDialog(false);
+    setEditMode(false);
+    setSelectedProduct(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setIsCreating(false);
+    setSingleUseFormData({
+      name: '',
+      description: '',
+      productTypeId: '',
+      productSizeId: '',
+      materialId: '',
+      weight: '',
+      image: null,
+      isActive: true,
+    });
+  };
+
+  const handleSingleUseImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      setSingleUseFormData({ ...singleUseFormData, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditSingleUse = (product) => {
+    setEditMode(true);
+    setSelectedProduct(product);
+    setSelectedImage(null);
+    setImagePreview(product.image || product.imageUrl || null);
+    setSingleUseFormData({
+      name: product.name || '',
+      description: product.description || '',
+      productTypeId: product.productTypeId?._id || product.productTypeId || '',
+      productSizeId: product.productSizeId?._id || product.productSizeId || '',
+      materialId: product.materialId?._id || product.materialId || '',
+      weight: product.weight || '',
+      image: null,
+      isActive: product.isActive !== undefined ? product.isActive : true,
+    });
+    // Load sizes for the selected product type
+    if (product.productTypeId?._id || product.productTypeId) {
+      dispatch(getBusinessSingleUseProductSizesApi(product.productTypeId?._id || product.productTypeId));
+    }
+    setOpenSingleUseDialog(true);
+  };
+
+  const handleSubmitSingleUse = async (e) => {
+    e.preventDefault();
+    if (!singleUseFormData.name || !singleUseFormData.productTypeId || !singleUseFormData.productSizeId || !singleUseFormData.materialId || !singleUseFormData.weight) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (isCreating) {
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      if (editMode && selectedProduct) {
+        await dispatch(
+          updateBusinessSingleUseProductApi({
+            productId: selectedProduct._id,
+            productData: {
+              name: singleUseFormData.name,
+              description: singleUseFormData.description,
+              weight: Number(singleUseFormData.weight),
+              isActive: singleUseFormData.isActive,
+              image: selectedImage,
+            },
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          createBusinessSingleUseProductApi({
+            name: singleUseFormData.name,
+            description: singleUseFormData.description,
+            productTypeId: singleUseFormData.productTypeId,
+            productSizeId: singleUseFormData.productSizeId,
+            materialId: singleUseFormData.materialId,
+            weight: Number(singleUseFormData.weight),
+            image: selectedImage,
+          })
+        ).unwrap();
+      }
+      handleCloseSingleUseDialog();
+      dispatch(getMySingleUseProductsApi({ page: singleUseCurrentPage, limit: 100 }));
+    } catch (error) {
+      // Error handled by thunk
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <Box className="inventory-management" sx={{ p: 3, fontFamily: 'inherit', backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
@@ -376,14 +567,14 @@ export default function InventoryManagement() {
                 Inventory Management
               </Typography>
               <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                Manage your store's reusable packaging inventory
+                Manage your store's reusable and single-use packaging inventory
               </Typography>
             </Box>
           </Box>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={handleOpenDialog}
+            onClick={activeTab === 0 ? handleOpenDialog : handleOpenSingleUseDialog}
             sx={{
               backgroundColor: '#12422a',
               color: '#ffffff',
@@ -400,118 +591,263 @@ export default function InventoryManagement() {
               transition: 'all 0.3s ease',
             }}
           >
-            Add Product Type
+            {activeTab === 0 ? 'Add Reusable Product Type' : 'Add Single-Use Product'}
           </Button>
         </Box>
 
-        {/* Statistics Cards */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mb: 3 }}>
-          <Paper 
-            elevation={0}
-            sx={{ 
-              p: 2.5, 
-              borderRadius: 2, 
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                transform: 'translateY(-2px)',
-              }
+        {/* Tabs */}
+        <Box sx={{ mb: 3 }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              borderBottom: 1,
+              borderColor: 'divider',
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.9375rem',
+                minHeight: 48,
+              },
+              '& .Mui-selected': {
+                color: '#12422a',
+              },
             }}
+            indicatorColor="primary"
+            textColor="primary"
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
-                Total Product Types
-              </Typography>
-              <CategoryIcon sx={{ fontSize: 20, color: '#12422a' }} />
-            </Box>
-            <Typography variant="h4" sx={{ color: '#1a1a1a', fontWeight: 700 }}>
-              {totalProductTypes}
-            </Typography>
-          </Paper>
-
-          <Paper 
-            elevation={0}
-            sx={{ 
-              p: 2.5, 
-              borderRadius: 2, 
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                transform: 'translateY(-2px)',
+            <Tab
+              icon={<RecycleIcon />}
+              iconPosition="start"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span>Reusable Products</span>
+                  <Chip
+                    label={totalProductTypes}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.75rem',
+                      backgroundColor: '#e8f5e9',
+                      color: '#2e7d32',
+                      fontWeight: 600,
+                    }}
+                  />
+                </Box>
               }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
-                Total Items
-              </Typography>
-              <TrendingUpIcon sx={{ fontSize: 20, color: '#12422a' }} />
-            </Box>
-            <Typography variant="h4" sx={{ color: '#1a1a1a', fontWeight: 700 }}>
-              {totalItems}
-            </Typography>
-          </Paper>
-
-          <Paper 
-            elevation={0}
-            sx={{ 
-              p: 2.5, 
-              borderRadius: 2, 
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                transform: 'translateY(-2px)',
+            />
+            <Tab
+              icon={<SingleUseIcon />}
+              iconPosition="start"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span>Single-Use Products</span>
+                  <Chip
+                    label={totalSingleUseProducts}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.75rem',
+                      backgroundColor: '#fff3e0',
+                      color: '#f57c00',
+                      fontWeight: 600,
+                    }}
+                  />
+                </Box>
               }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
-                Available
-              </Typography>
-              <CheckCircleIcon sx={{ fontSize: 20, color: '#16a34a' }} />
-            </Box>
-            <Typography variant="h4" sx={{ color: '#16a34a', fontWeight: 700 }}>
-              {totalAvailable}
-            </Typography>
-          </Paper>
-
-          <Paper 
-            elevation={0}
-            sx={{ 
-              p: 2.5, 
-              borderRadius: 2, 
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                transform: 'translateY(-2px)',
-              }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
-                Non-Available
-              </Typography>
-              <CancelIcon sx={{ fontSize: 20, color: '#ef4444' }} />
-            </Box>
-            <Typography variant="h4" sx={{ color: '#ef4444', fontWeight: 700 }}>
-              {totalNonAvailable}
-            </Typography>
-          </Paper>
+            />
+          </Tabs>
         </Box>
 
-        {/* Search Bar */}
-        <Box sx={{ mb: 3 }}>
+        {/* Statistics Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 3 }}>
+          {activeTab === 0 ? (
+            <>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2.5, 
+                  borderRadius: 2, 
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    Reusable Product Types
+                  </Typography>
+                  <RecycleIcon sx={{ fontSize: 20, color: '#2e7d32' }} />
+                </Box>
+                <Typography variant="h4" sx={{ color: '#2e7d32', fontWeight: 700 }}>
+                  {totalProductTypes}
+                </Typography>
+              </Paper>
+
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2.5, 
+                  borderRadius: 2, 
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    Total Items
+                  </Typography>
+                  <TrendingUpIcon sx={{ fontSize: 20, color: '#12422a' }} />
+                </Box>
+                <Typography variant="h4" sx={{ color: '#1a1a1a', fontWeight: 700 }}>
+                  {totalItems}
+                </Typography>
+              </Paper>
+
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2.5, 
+                  borderRadius: 2, 
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    Available
+                  </Typography>
+                  <CheckCircleIcon sx={{ fontSize: 20, color: '#16a34a' }} />
+                </Box>
+                <Typography variant="h4" sx={{ color: '#16a34a', fontWeight: 700 }}>
+                  {totalAvailable}
+                </Typography>
+              </Paper>
+
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2.5, 
+                  borderRadius: 2, 
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    Non-Available
+                  </Typography>
+                  <CancelIcon sx={{ fontSize: 20, color: '#ef4444' }} />
+                </Box>
+                <Typography variant="h4" sx={{ color: '#ef4444', fontWeight: 700 }}>
+                  {totalNonAvailable}
+                </Typography>
+              </Paper>
+            </>
+          ) : (
+            <>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2.5, 
+                  borderRadius: 2, 
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    Total Single-Use Products
+                  </Typography>
+                  <SingleUseIcon sx={{ fontSize: 20, color: '#f57c00' }} />
+                </Box>
+                <Typography variant="h4" sx={{ color: '#f57c00', fontWeight: 700 }}>
+                  {totalSingleUseProducts}
+                </Typography>
+              </Paper>
+
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2.5, 
+                  borderRadius: 2, 
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    Active
+                  </Typography>
+                  <CheckCircleIcon sx={{ fontSize: 20, color: '#16a34a' }} />
+                </Box>
+                <Typography variant="h4" sx={{ color: '#16a34a', fontWeight: 700 }}>
+                  {activeSingleUseProducts}
+                </Typography>
+              </Paper>
+
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2.5, 
+                  borderRadius: 2, 
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    Inactive
+                  </Typography>
+                  <CancelIcon sx={{ fontSize: 20, color: '#ef4444' }} />
+                </Box>
+                <Typography variant="h4" sx={{ color: '#ef4444', fontWeight: 700 }}>
+                  {inactiveSingleUseProducts}
+                </Typography>
+              </Paper>
+            </>
+          )}
+        </Box>
+
+        {/* Search Bar and Filter */}
+        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
           <TextField
             fullWidth
-            placeholder="Search by type name..."
+            placeholder={activeTab === 0 ? "Search by product type name..." : "Search by product name..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             sx={{
@@ -536,46 +872,65 @@ export default function InventoryManagement() {
               ),
             }}
           />
+          {activeTab === 1 && (
+            <FormControl sx={{ minWidth: 150 }}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={isActiveFilter}
+                label="Status"
+                onChange={(e) => setIsActiveFilter(e.target.value)}
+                sx={{
+                  backgroundColor: 'white',
+                  borderRadius: 2,
+                }}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="active">Active</MenuItem>
+                <MenuItem value="inactive">Inactive</MenuItem>
+              </Select>
+            </FormControl>
+          )}
         </Box>
       </Box>
 
       {/* Product Types Grid */}
-      {productGroupLoading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <Typography>Loading...</Typography>
-        </Box>
-      ) : productGroupError ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px" sx={{ px: 2 }}>
-          <Alert 
-            severity="error" 
-            sx={{ 
-              maxWidth: '600px',
-              width: '100%',
-              '& .MuiAlert-message': {
-                width: '100%'
-              }
-            }}
-          >
-            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-              Error loading product groups
+      {activeTab === 0 ? (
+        productGroupLoading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+            <CircularProgress sx={{ color: '#12422a' }} />
+          </Box>
+        ) : productGroupError ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px" sx={{ px: 2 }}>
+            <Alert 
+              severity="error" 
+              sx={{ 
+                maxWidth: '600px',
+                width: '100%',
+                '& .MuiAlert-message': {
+                  width: '100%'
+                }
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                Error loading product groups
+              </Typography>
+              <Typography variant="body2">
+                {typeof productGroupError === 'string' 
+                  ? productGroupError 
+                  : productGroupError?.message 
+                  || productGroupError?.error 
+                  || productGroupError?.data?.message
+                  || 'Unknown error'}
+              </Typography>
+            </Alert>
+          </Box>
+        ) : filteredProducts.length === 0 ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+            <Typography color="textSecondary">
+              No reusable product types found. Click "+ Add Reusable Product Type" to create one.
             </Typography>
-            <Typography variant="body2">
-              {typeof productGroupError === 'string' 
-                ? productGroupError 
-                : productGroupError?.message 
-                || productGroupError?.error 
-                || productGroupError?.data?.message
-                || 'Unknown error'}
-            </Typography>
-          </Alert>
-        </Box>
-      ) : filteredProducts.length === 0 ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <Typography color="textSecondary">
-            No product groups found. Click "+ Add Product Type" to create one.
-          </Typography>
-        </Box>
-      ) : (
+          </Box>
+        ) : (
         <>
           {/* Table Header */}
           <Paper 
@@ -777,11 +1132,8 @@ export default function InventoryManagement() {
               ))}
             </Box>
           </Paper>
-        </>
-      )}
-
-      {/* Pagination */}
-      {!productGroupLoading && filteredProducts.length > 0 && totalPages > 1 && (
+          {/* Pagination for Reusable Products */}
+          {!productGroupLoading && filteredProducts.length > 0 && totalPages > 1 && (
             <Box 
               sx={{ 
                 display: 'flex', 
@@ -812,6 +1164,259 @@ export default function InventoryManagement() {
               />
             </Box>
           )}
+        </>
+        )
+      ) : null}
+
+      {/* Single-Use Products List */}
+      {activeTab === 1 && (
+        singleUseLoading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+            <CircularProgress sx={{ color: '#12422a' }} />
+          </Box>
+        ) : filteredSingleUseProducts.length === 0 ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+            <Typography color="textSecondary">
+              No single-use products found. Click "+ Add Single-Use Product" to create one.
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <Paper 
+              elevation={0}
+              sx={{
+                borderRadius: 2,
+                border: '1px solid #e5e7eb',
+                mb: 2,
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 120px',
+                  gap: 2,
+                  p: 2.5,
+                  backgroundColor: '#fff3e0',
+                  borderBottom: '1px solid #e5e7eb',
+                }}
+              >
+                <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem' }}>
+                  Product Name
+                </Typography>
+                <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem' }}>
+                  Type & Size
+                </Typography>
+                <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem' }}>
+                  Material
+                </Typography>
+                <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem' }}>
+                  Weight (gram)
+                </Typography>
+                <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem' }}>
+                  Status
+                </Typography>
+                <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem', textAlign: 'center' }}>
+                  Actions
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                {currentSingleUseProducts.map((product, index) => (
+                  <Box
+                    key={product._id}
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 120px',
+                      gap: 2,
+                      p: 2.5,
+                      borderBottom: index < currentSingleUseProducts.length - 1 ? '1px solid #f3f4f6' : 'none',
+                      transition: 'all 0.2s ease',
+                      backgroundColor: '#ffffff',
+                      '&:hover': {
+                        backgroundColor: '#fff3e0',
+                      },
+                    }}
+                  >
+                    {/* Product Name Column */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                      {product.image || product.imageUrl ? (
+                        <Box
+                          component="img"
+                          src={product.image || product.imageUrl}
+                          alt={product.name}
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 1,
+                            objectFit: 'cover',
+                            flexShrink: 0,
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 1,
+                            backgroundColor: '#fff3e0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <SingleUseIcon sx={{ fontSize: 20, color: '#f57c00' }} />
+                        </Box>
+                      )}
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: '0.9375rem',
+                            color: '#1a1a1a',
+                            mb: 0.25,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {product.name}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '0.8125rem',
+                            color: '#6b7280',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {product.description || 'No description'}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Type & Size Column */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {product.productTypeId?.name || 'N/A'} - {product.productSizeId?.sizeName || 'N/A'}
+                      </Typography>
+                    </Box>
+
+                    {/* Material Column */}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {product.materialId?.materialName || 'N/A'}
+                      </Typography>
+                    </Box>
+
+                    {/* Weight Column */}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {product.weight || '-'} g
+                      </Typography>
+                    </Box>
+
+                    {/* Status Column */}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Chip
+                        label={product.isActive ? 'Active' : 'Inactive'}
+                        size="small"
+                        sx={{
+                          backgroundColor: product.isActive ? '#e8f5e9' : '#ffebee',
+                          color: product.isActive ? '#2e7d32' : '#c62828',
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          border: `1px solid ${product.isActive ? '#2e7d32' : '#c62828'}`,
+                        }}
+                      />
+                    </Box>
+
+                    {/* Actions Column */}
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        gap: 0.5,
+                      }}
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditSingleUse(product)}
+                        sx={{
+                          color: '#12422a',
+                          '&:hover': {
+                            backgroundColor: 'rgba(18, 66, 42, 0.1)',
+                          },
+                        }}
+                        title="Edit"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
+
+            {/* Pagination for Single-Use Products */}
+            {singleUseTotalPages > 1 && (
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                  mt: 4,
+                  mb: 2
+                }}
+              >
+                <Pagination
+                  count={singleUseTotalPages}
+                  page={singleUseCurrentPage}
+                  onChange={(e, value) => {
+                    setSingleUseCurrentPage(value);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  color="primary"
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                    },
+                    '& .Mui-selected': {
+                      backgroundColor: '#f57c00 !important',
+                      color: '#ffffff !important',
+                    },
+                  }}
+                />
+              </Box>
+            )}
+          </>
+        )
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog 
@@ -1282,6 +1887,536 @@ export default function InventoryManagement() {
             Delete Type
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Single-Use Product Create/Edit Dialog */}
+      <Dialog 
+        open={openSingleUseDialog} 
+        onClose={isCreating ? undefined : handleCloseSingleUseDialog}
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 12px 40px rgba(245, 124, 0, 0.2)',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)',
+            color: 'white',
+            py: 2,
+            px: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <SingleUseIcon sx={{ fontSize: 28 }} />
+            <Box>
+              <Typography variant="h6" component="div" fontWeight={700} sx={{ fontFamily: 'inherit' }}>
+                {editMode ? 'Edit Single-Use Product' : 'Create Single-Use Product'}
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.25, display: 'block', fontFamily: 'inherit' }}>
+                {editMode
+                  ? 'Update your single-use product details'
+                  : 'Create a new single-use product from available types and sizes'}
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={handleCloseSingleUseDialog}
+            size="small"
+            sx={{ 
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+              }
+            }}
+            disabled={isCreating}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <form onSubmit={handleSubmitSingleUse}>
+          <DialogContent sx={{ pt: 2.25, pb: 2, px: 2.25 }}>
+            <Grid container spacing={2}>
+              {/* Product Name */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#f57c00',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <CategoryIcon sx={{ fontSize: 16 }} />
+                    Product Name <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., Plastic Cup 12oz"
+                  name="name"
+                  value={singleUseFormData.name}
+                  onChange={(e) => setSingleUseFormData({ ...singleUseFormData, name: e.target.value })}
+                  required
+                  variant="outlined"
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CategoryIcon sx={{ color: '#f57c00' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#f57c00',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f57c00',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Product Type */}
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#f57c00',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <CategoryIcon sx={{ fontSize: 16 }} />
+                    Product Type <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <FormControl fullWidth variant="outlined" size="small" required>
+                  <Select
+                    value={singleUseFormData.productTypeId}
+                    onChange={(e) => {
+                      const selectedTypeId = e.target.value;
+                      setSingleUseFormData({ 
+                        ...singleUseFormData, 
+                        productTypeId: selectedTypeId,
+                        productSizeId: '', // Reset size when type changes
+                      });
+                      // Load sizes for the selected product type
+                      if (selectedTypeId) {
+                        dispatch(getBusinessSingleUseProductSizesApi(selectedTypeId));
+                      }
+                    }}
+                    sx={{
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#f57c00',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f57c00',
+                        borderWidth: 2,
+                      },
+                    }}
+                  >
+                    {businessProductTypes.filter(type => type.isActive === true).map((type) => (
+                      <MenuItem key={type._id} value={type._id}>
+                        {type.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Product Size */}
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#f57c00',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <SizeIcon sx={{ fontSize: 16 }} />
+                    Product Size <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <FormControl 
+                  fullWidth 
+                  variant="outlined" 
+                  size="small" 
+                  required
+                  disabled={!singleUseFormData.productTypeId}
+                >
+                  <Select
+                    value={singleUseFormData.productSizeId}
+                    onChange={(e) => setSingleUseFormData({ ...singleUseFormData, productSizeId: e.target.value })}
+                    sx={{
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#f57c00',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f57c00',
+                        borderWidth: 2,
+                      },
+                    }}
+                  >
+                    {(() => {
+                      if (!singleUseFormData.productTypeId) {
+                        return (
+                          <MenuItem disabled>Please select a product type first</MenuItem>
+                        );
+                      }
+
+                      // Filter sizes for the selected product type
+                      const filteredSizes = businessProductSizes.filter(size => {
+                        // Check if size is active (allow undefined as true for backward compatibility)
+                        if (size.isActive === false) return false;
+                        
+                        // Handle productTypeId as both string and object
+                        const sizeProductTypeId = typeof size.productTypeId === 'object' && size.productTypeId !== null
+                          ? (size.productTypeId._id || size.productTypeId.id)
+                          : size.productTypeId;
+                        
+                        return sizeProductTypeId === singleUseFormData.productTypeId;
+                      });
+
+                      if (filteredSizes.length === 0) {
+                        return (
+                          <MenuItem disabled>
+                            {singleUseLoading ? 'Loading sizes...' : 'No sizes available for this product type'}
+                          </MenuItem>
+                        );
+                      }
+
+                      return filteredSizes.map((size) => (
+                        <MenuItem key={size._id || size.id} value={size._id || size.id}>
+                          {size.sizeName} ({size.minWeight} - {size.maxWeight} g)
+                        </MenuItem>
+                      ));
+                    })()}
+                  </Select>
+                  {!singleUseFormData.productTypeId && (
+                    <FormHelperText>Please select a product type first</FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+
+              {/* Material */}
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#f57c00',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <InventoryIcon sx={{ fontSize: 16 }} />
+                    Material <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <FormControl fullWidth variant="outlined" size="small" required>
+                  <Select
+                    value={singleUseFormData.materialId}
+                    onChange={(e) => setSingleUseFormData({ ...singleUseFormData, materialId: e.target.value })}
+                    sx={{
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#f57c00',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f57c00',
+                        borderWidth: 2,
+                      },
+                    }}
+                  >
+                    {approvedMaterials.map((material) => (
+                      <MenuItem key={material.id || material._id} value={material.id || material._id}>
+                        {material.materialName || material.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Weight */}
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#f57c00',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <TrendingUpIcon sx={{ fontSize: 16 }} />
+                    Weight (kg) <span style={{ color: '#f44336' }}>*</span>
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., 12000"
+                  name="weight"
+                  type="number"
+                  value={singleUseFormData.weight}
+                  onChange={(e) => setSingleUseFormData({ ...singleUseFormData, weight: e.target.value })}
+                  required
+                  variant="outlined"
+                  size="small"
+                  inputProps={{ min: 0, step: 0.1 }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#f57c00',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f57c00',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Description */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#f57c00',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <DescriptionIcon sx={{ fontSize: 16 }} />
+                    Description
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="Brief description of this product"
+                  name="description"
+                  value={singleUseFormData.description}
+                  onChange={(e) => setSingleUseFormData({ ...singleUseFormData, description: e.target.value })}
+                  multiline
+                  minRows={2}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2 }}>
+                        <DescriptionIcon sx={{ color: '#f57c00', fontSize: 18 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      '&:hover fieldset': {
+                        borderColor: '#f57c00',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#f57c00',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Image Upload */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#f57c00',
+                      fontWeight: 600,
+                      mb: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75
+                    }}
+                  >
+                    <ImageIcon sx={{ fontSize: 16 }} />
+                    Product Image
+                  </Typography>
+                </Box>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="single-use-image-upload"
+                  type="file"
+                  onChange={handleSingleUseImageChange}
+                />
+                <label htmlFor="single-use-image-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<CloudUploadIcon />}
+                    fullWidth
+                    sx={{
+                      backgroundColor: 'white',
+                      borderColor: '#f57c00',
+                      color: '#f57c00',
+                      '&:hover': {
+                        borderColor: '#e65100',
+                        backgroundColor: 'rgba(245, 124, 0, 0.05)',
+                      },
+                    }}
+                  >
+                    {selectedImage ? selectedImage.name : 'Choose File (No file chosen)'}
+                  </Button>
+                </label>
+                {imagePreview && (
+                  <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '200px', 
+                        borderRadius: '8px',
+                        border: '2px solid rgba(245, 124, 0, 0.3)'
+                      }} 
+                    />
+                  </Box>
+                )}
+              </Grid>
+
+              {/* Active Status (only for edit mode) */}
+              {editMode && (
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={singleUseFormData.isActive}
+                        onChange={(e) => setSingleUseFormData({ ...singleUseFormData, isActive: e.target.checked })}
+                        color="warning"
+                      />
+                    }
+                    label="Active Product"
+                    sx={{
+                      '& .MuiFormControlLabel-label': {
+                        color: '#374151',
+                        fontWeight: 500,
+                      },
+                    }}
+                  />
+                </Grid>
+              )}
+            </Grid>
+          </DialogContent>
+
+          <Divider />
+
+          <DialogActions
+            sx={{
+              px: 2,
+              py: 1.5,
+              gap: 2,
+              backgroundColor: 'rgba(245, 124, 0, 0.02)',
+            }}
+          >
+            <Button
+              onClick={handleCloseSingleUseDialog}
+              variant="outlined"
+              sx={{
+                color: '#666',
+                borderColor: '#ccc',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                borderWidth: 1.5,
+                fontWeight: 500,
+                '&:hover': {
+                  borderColor: '#999',
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  borderWidth: 1.5,
+                },
+              }}
+              size="small"
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={!isCreating && (editMode ? <EditIcon fontSize="small" /> : <AddIcon fontSize="small" />)}
+              disabled={
+                !singleUseFormData.name || 
+                !singleUseFormData.productTypeId || 
+                !singleUseFormData.productSizeId || 
+                !singleUseFormData.materialId || 
+                !singleUseFormData.weight || 
+                isCreating
+              }
+              sx={{
+                backgroundColor: '#f57c00',
+                px: 2,
+                py: 0.75,
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(245, 124, 0, 0.35)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: '#e65100',
+                  boxShadow: '0 6px 16px rgba(245, 124, 0, 0.45)',
+                  transform: 'translateY(-2px)',
+                },
+              }}
+              size="small"
+            >
+              {isCreating ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={16} color="inherit" />
+                  {editMode ? 'Updating...' : 'Creating...'}
+                </Box>
+              ) : (
+                editMode ? 'Update Product' : 'Create Product'
+              )}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );
