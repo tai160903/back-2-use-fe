@@ -48,6 +48,8 @@ import Rankings from "../pages/Home/Rankings/Rankings";
 import ProductDetail from "../pages/Home/Store/ProductDetail";
 import Users from "../pages/Admin/UserManage/Users";
 import Material from "../pages/Admin/Material";
+import SingleUseProductType from "../pages/Admin/SingleUseProductType/SingleUseProductType";
+import SingleUseProductSize from "../pages/Admin/SingleUseProductSize/SingleUseProductSize";
 import AdminMaterialDetail from "../pages/Admin/AdminMaterialDetail";
 import Voucher from "../pages/Home/Voucher/Voucher";
 import Materials from "../pages/Bussiness/Materials/Materials";
@@ -561,6 +563,24 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminMaterialDetail />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: PATH.ADMIN_SINGLE_USE_PRODUCT_TYPE,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <SingleUseProductType />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: PATH.ADMIN_SINGLE_USE_PRODUCT_SIZE,
+          element: (
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <SingleUseProductSize />
             </ProtectedRoute>
           ),
         },

@@ -27,6 +27,7 @@ import {
   deleteFeedbackApi,
   updateFeedbackApi,
 } from "../../../store/slices/feedbackSlice";
+import { getBusinessSingleUseProductsApi } from "../../../store/slices/singleUseProductTypeSlice";
 import { getUserRole } from "../../../utils/authUtils";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import cupImg from "../../../assets/image/cup6.png";
@@ -66,6 +67,11 @@ export default function StoreDetail() {
     myCustomerVouchers,
     isLoading: isLoadingVouchers,
   } = useSelector((state) => state.vouchers);
+  const {
+    businessSingleUseProducts,
+    businessSingleUseProductsPagination,
+    isLoading: isLoadingSingleUse,
+  } = useSelector((state) => state.singleUseProductType);
   
   const [businessVouchers, setBusinessVouchers] = useState([]);
   const [exchangingVoucherId, setExchangingVoucherId] = useState(null);
@@ -82,6 +88,8 @@ export default function StoreDetail() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   const [catalogProducts, setCatalogProducts] = useState([]);
+  const [singleUseProducts, setSingleUseProducts] = useState([]);
+  const [singleUsePage, setSingleUsePage] = useState(1);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingFeedback, setDeletingFeedback] = useState(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -108,6 +116,39 @@ export default function StoreDetail() {
       dispatch(getStoreById(storeId));
     }
   }, [dispatch, storeId]);
+
+  // Load single-use products khi storeId có
+  useEffect(() => {
+    if (storeId) {
+      dispatch(getBusinessSingleUseProductsApi({ businessId: storeId, page: singleUsePage, limit: 100 }));
+    }
+  }, [dispatch, storeId, singleUsePage]);
+
+  // Map single-use products từ API sang format hiển thị
+  useEffect(() => {
+    if (businessSingleUseProducts && businessSingleUseProducts.length > 0) {
+      const mappedSingleUseProducts = businessSingleUseProducts
+        .filter(product => product.isActive !== false) // Chỉ hiển thị active products
+        .map((product) => {
+          const materialName = product.materialId?.materialName || "Unknown";
+          return {
+            id: product._id,
+            name: product.name,
+            image: product.image || product.imageUrl || cup3,
+            type: "single-use",
+            material: convertToSlug(materialName),
+            materialLabel: materialName,
+            productType: product.productTypeId?.name || "N/A",
+            productSize: product.productSizeId?.sizeName || "N/A",
+            weight: product.weight,
+            isSingleUse: true,
+          };
+        });
+      setSingleUseProducts(mappedSingleUseProducts);
+    } else {
+      setSingleUseProducts([]);
+    }
+  }, [businessSingleUseProducts]);
 
   // Map productGroups từ API sang catalog hiển thị
   useEffect(() => {
@@ -459,6 +500,7 @@ export default function StoreDetail() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setSingleUsePage(1);
   }, [materialFilter, selectedProductType]);
 
   // Loading state
@@ -491,8 +533,12 @@ export default function StoreDetail() {
     );
   }
 
-  // Sử dụng materials trực tiếp làm catalog (đã có đầy đủ thông tin)
-  const catalog = catalogProducts;
+  // Combine reusable và single-use products
+  const allProducts = [
+    ...catalogProducts.map(p => ({ ...p, isSingleUse: false })),
+    ...singleUseProducts.map(p => ({ ...p, isSingleUse: true }))
+  ];
+  const catalog = allProducts;
 
   // Xác định products types từ catalog
   const productTypes = [];
@@ -616,7 +662,7 @@ export default function StoreDetail() {
       {/* Category section header */}
       <div className="storeDetail-categories-header">
         <Typography variant="h4" className="storeDetail-categories-title">
-          Reusable Products
+          Products
         </Typography>
       </div>
 
@@ -699,28 +745,65 @@ export default function StoreDetail() {
               <div className="product-info">
                 <Typography className="product-name">{product.name}</Typography>
                 <div className="product-meta">
-                  <span className="product-tag">
-                    {product.type === "cup" ? "Cup/Bottle" : product.type === "container" ? "Food Container" : "Other"}
+                  {/* Product Type Tag */}
+                  <span className={`product-tag ${product.isSingleUse ? 'single-use-tag' : 'reusable-tag'}`}>
+                    {product.isSingleUse ? 'Single-Use' : 'Reusable'}
                   </span>
                   <span className="product-dot">•</span>
+                  {/* Type/Category Tag */}
+                  {product.isSingleUse ? (
+                    <span className="product-tag">
+                      {product.productType} - {product.productSize}
+                    </span>
+                  ) : (
+                    <span className="product-tag">
+                      {product.type === "cup" ? "Cup/Bottle" : product.type === "container" ? "Food Container" : "Other"}
+                    </span>
+                  )}
+                  <span className="product-dot">•</span>
+                  {/* Material Tag */}
                   <span className="product-tag">
                     {materialLabelMap[product.material] || product.material}
                   </span>
                 </div>
                 <div className="product-stats">
-                  <span className="available">
-                    Deposit: {product.depositPercent ?? 0}%
-                  </span>
-                  <span className="separator">|</span>
-                  <span className="unavailable">
-                    Reuse limit: {product.reuseLimit ?? 0}
-                  </span>
+                  {product.isSingleUse ? (
+                    <>
+                      <span className="available">
+                        Weight: {product.weight ? `${product.weight} g` : 'N/A'}
+                      </span>
+                      {product.productType && (
+                        <>
+                          <span className="separator">|</span>
+                          <span className="unavailable">
+                            Type: {product.productType}
+                          </span>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span className="available">
+                        Deposit: {product.depositPercent ?? 0}%
+                      </span>
+                      <span className="separator">|</span>
+                      <span className="unavailable">
+                        Reuse limit: {product.reuseLimit ?? 0}
+                      </span>
+                    </>
+                  )}
                 </div>
                 <div className="product-bottom">
                   <span className="product-price">
                     {product.rentalPrice ? `${product.rentalPrice.toLocaleString()}vnd/day` : "Contact for price"}
                   </span>
-                  <button className="product-btn" onClick={() => navigate(`/product/${business._id}/${product.id}`)}>View details</button>
+                  {product.isSingleUse ? (
+                    <button className="product-btn" disabled style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                      View details
+                    </button>
+                  ) : (
+                    <button className="product-btn" onClick={() => navigate(`/product/${business._id}/${product.id}`)}>View details</button>
+                  )}
                 </div>
               </div>
             </div>

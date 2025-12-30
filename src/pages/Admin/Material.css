@@ -65,9 +65,8 @@
 
 /* Statistics Cards */
 .material-stats {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
   width: 100%;
@@ -157,6 +156,84 @@
 .stat-card-0 .stat-icon {
   color: #374151 !important;
   background-color: #f3f4f6 !important;
+}
+
+/* Single-Use Materials - icon màu cam */
+.stat-card-1 .stat-icon {
+  color: #f57c00 !important;
+  background-color: #fff3e0 !important;
+}
+
+.stat-card-1 .stat-icon,
+.stat-card-1 .stat-icon svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-card-1 .stat-icon svg {
+  color: #f57c00 !important;
+  fill: #f57c00 !important;
+  stroke: #f57c00 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Reusable Materials - icon màu xanh lá */
+.stat-card-2 .stat-icon {
+  color: #2e7d32 !important;
+  background-color: #e8f5e9 !important;
+}
+
+.stat-card-2 .stat-icon,
+.stat-card-2 .stat-icon svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-card-2 .stat-icon svg {
+  color: #2e7d32 !important;
+  fill: #2e7d32 !important;
+  stroke: #2e7d32 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
+}
+
+/* Waiting Approve - icon màu cam đậm */
+.stat-card-3 .stat-icon {
+  color: #f97316 !important;
+  background-color: #fed7aa !important;
+}
+
+.stat-card-3 .stat-icon,
+.stat-card-3 .stat-icon svg {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+}
+
+.stat-card-3 .stat-icon svg {
+  color: #f97316 !important;
+  fill: #f97316 !important;
+  stroke: #f97316 !important;
+  stroke-width: 2.5 !important;
+  filter: none !important;
+  transform: translateZ(0) !important;
+  shape-rendering: geometricPrecision !important;
 }
 
 .stat-card-0 .stat-icon,

@@ -70,17 +70,18 @@ export default function Materials() {
   const [editMode, setEditMode] = useState(false);
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
   const [searchQuery, setSearchQuery] = useState('');
+  const [singleUseFilter, setSingleUseFilter] = useState('all'); // 'all', 'single', 'reusable'
   const [myMaterialsPage, setMyMaterialsPage] = useState(1);
   const [activePage, setActivePage] = useState(1);
   const [rejectedPage, setRejectedPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Reset pagination when search changes
+  // Reset pagination when search or filter changes
   useEffect(() => {
     setMyMaterialsPage(1);
     setActivePage(1);
     setRejectedPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, singleUseFilter]);
   const [formData, setFormData] = useState({
     materialName: '',
     description: '',
@@ -97,11 +98,27 @@ export default function Materials() {
     return normalize(m.materialName || m.requestedMaterialName).includes(q) || normalize(m.description).includes(q);
   };
 
+  const matchesSingleUseFilter = (m) => {
+    if (singleUseFilter === 'all') return true;
+    if (singleUseFilter === 'single') return m.isSingleUse === true;
+    if (singleUseFilter === 'reusable') return m.isSingleUse !== true;
+    return true;
+  };
+
   const filtered = {
-    my: myMaterials.filter(matchesSearch),
-    approved: approvedMaterials.filter(matchesSearch),
-    pending: pendingMaterials.filter(matchesSearch),
-    rejected: rejectedMaterials.filter(matchesSearch),
+    my: myMaterials.filter(matchesSearch).filter(matchesSingleUseFilter),
+    approved: approvedMaterials.filter(matchesSearch).filter(matchesSingleUseFilter),
+    pending: pendingMaterials.filter(matchesSearch).filter(matchesSingleUseFilter),
+    rejected: rejectedMaterials.filter(matchesSearch).filter(matchesSingleUseFilter),
+  };
+
+  // Get counts for stat cards
+  const getSingleUseCount = () => {
+    return approvedMaterials.filter(m => m.isSingleUse === true).length;
+  };
+
+  const getReusableCount = () => {
+    return approvedMaterials.filter(m => m.isSingleUse !== true).length;
   };
 
   // Pagination helpers
@@ -308,6 +325,7 @@ export default function Materials() {
 
   const renderMaterialsTable = (materials, showActions = false, useIsActive = false) => {
     const hasReuse = Array.isArray(materials) && materials.some(m => m?.maximumReuse || m?.reuseLimit);
+    const hasSingleUse = Array.isArray(materials) && materials.some(m => m?.isSingleUse !== undefined);
     return (
     <TableContainer 
       component={Paper} 
@@ -326,6 +344,11 @@ export default function Materials() {
             <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
               Material Name
             </TableCell>
+            {hasSingleUse && (
+              <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+                Type
+              </TableCell>
+            )}
             {hasReuse && (
               <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
                 Maximum Reuse
@@ -377,6 +400,21 @@ export default function Materials() {
                   </Typography>
                 </Box>
               </TableCell>
+              {hasSingleUse && (
+                <TableCell sx={{ py: 1.75 }}>
+                  <Chip
+                    label={material.isSingleUse ? 'Single-Use' : 'Reusable'}
+                    size="small"
+                    sx={{
+                      backgroundColor: material.isSingleUse ? '#fff3e0' : '#e8f5e9',
+                      color: material.isSingleUse ? '#f57c00' : '#2e7d32',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      border: `1px solid ${material.isSingleUse ? '#f57c00' : '#2e7d32'}`,
+                    }}
+                  />
+                </TableCell>
+              )}
               {hasReuse && (
                 <TableCell sx={{ py: 1.75 }}>
                   <Typography variant="body2" sx={{ fontFamily: 'inherit', color: '#6b7280' }}>
@@ -521,7 +559,21 @@ export default function Materials() {
                       >
                         {material.materialName || material.requestedMaterialName}
                       </Typography>
-                      <Box sx={{ mt: 1 }}>
+                      <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {material.isSingleUse !== undefined && (
+                          <Chip
+                            label={material.isSingleUse ? 'Single-Use' : 'Reusable'}
+                            size="small"
+                            sx={{
+                              backgroundColor: material.isSingleUse ? '#fff3e0' : '#e8f5e9',
+                              color: material.isSingleUse ? '#f57c00' : '#2e7d32',
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
+                              height: '24px',
+                              border: `1px solid ${material.isSingleUse ? '#f57c00' : '#2e7d32'}`,
+                            }}
+                          />
+                        )}
                         {useIsActive ? getStatusChip(material?.isActive ? 'active' : 'unactive') : getStatusChip(material.status || 'pending')}
                       </Box>
                     </Box>
@@ -715,57 +767,99 @@ export default function Materials() {
         </Box>
 
         {/* Statistics Cards */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 3 }}>
           <Paper 
             elevation={0}
+            onClick={() => {
+              setSingleUseFilter('all');
+              setActivePage(1);
+            }}
             sx={{ 
               p: 2.5, 
               borderRadius: 2, 
               backgroundColor: 'white',
               border: '1px solid #e5e7eb',
               transition: 'all 0.3s ease',
+              cursor: 'pointer',
               '&:hover': {
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
                 transform: 'translateY(-2px)',
+                borderColor: '#12422a',
               }
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
-                My Active Materials 
+                All Active Materials 
               </Typography>
               <CategoryIcon sx={{ fontSize: 20, color: '#9ca3af' }} />
             </Box>
             <Typography variant="h4" sx={{ color: '#1a1a1a', fontWeight: 700 }}>
-              {myMaterials.length}
+              {approvedMaterials.length}
             </Typography>
           </Paper>
 
           <Paper 
             elevation={0}
+            onClick={() => {
+              setSingleUseFilter('single');
+              setActivePage(1);
+            }}
             sx={{ 
               p: 2.5, 
               borderRadius: 2, 
               backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
+              border: singleUseFilter === 'single' ? '2px solid #f57c00' : '1px solid #e5e7eb',
               transition: 'all 0.3s ease',
+              cursor: 'pointer',
               '&:hover': {
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
                 transform: 'translateY(-2px)',
+                borderColor: '#f57c00',
               }
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
-                Active Materials
+                Single-Use Materials
               </Typography>
-              <ApprovedIcon sx={{ fontSize: 20, color: '#16a34a' }} />
+              <EcoIcon sx={{ fontSize: 20, color: '#f57c00' }} />
             </Box>
-            <Typography variant="h4" sx={{ color: '#16a34a', fontWeight: 700 }}>
-              {approvedMaterials.length}
+            <Typography variant="h4" sx={{ color: '#f57c00', fontWeight: 700 }}>
+              {getSingleUseCount()}
             </Typography>
           </Paper>
 
+          <Paper 
+            elevation={0}
+            onClick={() => {
+              setSingleUseFilter('reusable');
+              setActivePage(1);
+            }}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 2, 
+              backgroundColor: 'white',
+              border: singleUseFilter === 'reusable' ? '2px solid #2e7d32' : '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                transform: 'translateY(-2px)',
+                borderColor: '#2e7d32',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                Reusable Materials
+              </Typography>
+              <EcoIcon sx={{ fontSize: 20, color: '#2e7d32' }} />
+            </Box>
+            <Typography variant="h4" sx={{ color: '#2e7d32', fontWeight: 700 }}>
+              {getReusableCount()}
+            </Typography>
+          </Paper>
 
           <Paper 
             elevation={0}
@@ -793,8 +887,8 @@ export default function Materials() {
           </Paper>
         </Box>
 
-        {/* Search and View Toggle */}
-        <Box className="materials-toolbar" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        {/* Search, Filter and View Toggle */}
+        <Box className="materials-toolbar" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 2 }}>
           <TextField
             size="small"
             placeholder="Search materials by name or description..."
@@ -803,6 +897,7 @@ export default function Materials() {
             className="search-input"
             sx={{
               minWidth: 320,
+              flex: 1,
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'white',
                 borderRadius: 2,
@@ -823,41 +918,117 @@ export default function Materials() {
               ),
             }}
           />
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, backgroundColor: 'white', borderRadius: 2, p: 0.5, border: '1px solid #e5e7eb' }}>
-            <Tooltip title="List View">
-              <IconButton
-                className={`view-toggle ${viewMode === 'table' ? 'active' : ''}`}
-                onClick={() => setViewMode('table')}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, backgroundColor: 'white', borderRadius: 2, p: 0.5, border: '1px solid #e5e7eb' }}>
+              <Button
                 size="small"
+                variant={singleUseFilter === 'all' ? 'contained' : 'outlined'}
+                onClick={() => {
+                  setSingleUseFilter('all');
+                  setActivePage(1);
+                }}
                 sx={{
-                  borderRadius: 1.5,
-                  color: viewMode === 'table' ? '#12422a' : '#6b7280',
-                  backgroundColor: viewMode === 'table' ? '#f0f9f4' : 'transparent',
+                  minWidth: 'auto',
+                  px: 2,
+                  py: 0.75,
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  backgroundColor: singleUseFilter === 'all' ? '#12422a' : 'transparent',
+                  color: singleUseFilter === 'all' ? 'white' : '#6b7280',
+                  borderColor: '#e5e7eb',
                   '&:hover': {
-                    backgroundColor: viewMode === 'table' ? '#e0f2e9' : '#f9fafb',
+                    backgroundColor: singleUseFilter === 'all' ? '#0d2e1c' : '#f9fafb',
+                    borderColor: '#12422a',
                   },
                 }}
               >
-                <ViewListIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Card View">
-              <IconButton
-                className={`view-toggle ${viewMode === 'cards' ? 'active' : ''}`}
-                onClick={() => setViewMode('cards')}
+                All
+              </Button>
+              <Button
                 size="small"
+                variant={singleUseFilter === 'single' ? 'contained' : 'outlined'}
+                onClick={() => {
+                  setSingleUseFilter('single');
+                  setActivePage(1);
+                }}
                 sx={{
-                  borderRadius: 1.5,
-                  color: viewMode === 'cards' ? '#12422a' : '#6b7280',
-                  backgroundColor: viewMode === 'cards' ? '#f0f9f4' : 'transparent',
+                  minWidth: 'auto',
+                  px: 2,
+                  py: 0.75,
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  backgroundColor: singleUseFilter === 'single' ? '#f57c00' : 'transparent',
+                  color: singleUseFilter === 'single' ? 'white' : '#6b7280',
+                  borderColor: '#e5e7eb',
                   '&:hover': {
-                    backgroundColor: viewMode === 'cards' ? '#e0f2e9' : '#f9fafb',
+                    backgroundColor: singleUseFilter === 'single' ? '#e65100' : '#f9fafb',
+                    borderColor: '#f57c00',
                   },
                 }}
               >
-                <ViewModuleIcon />
-              </IconButton>
-            </Tooltip>
+                Single-Use
+              </Button>
+              <Button
+                size="small"
+                variant={singleUseFilter === 'reusable' ? 'contained' : 'outlined'}
+                onClick={() => {
+                  setSingleUseFilter('reusable');
+                  setActivePage(1);
+                }}
+                sx={{
+                  minWidth: 'auto',
+                  px: 2,
+                  py: 0.75,
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  backgroundColor: singleUseFilter === 'reusable' ? '#2e7d32' : 'transparent',
+                  color: singleUseFilter === 'reusable' ? 'white' : '#6b7280',
+                  borderColor: '#e5e7eb',
+                  '&:hover': {
+                    backgroundColor: singleUseFilter === 'reusable' ? '#1b5e20' : '#f9fafb',
+                    borderColor: '#2e7d32',
+                  },
+                }}
+              >
+                Reusable
+              </Button>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, backgroundColor: 'white', borderRadius: 2, p: 0.5, border: '1px solid #e5e7eb' }}>
+              <Tooltip title="List View">
+                <IconButton
+                  className={`view-toggle ${viewMode === 'table' ? 'active' : ''}`}
+                  onClick={() => setViewMode('table')}
+                  size="small"
+                  sx={{
+                    borderRadius: 1.5,
+                    color: viewMode === 'table' ? '#12422a' : '#6b7280',
+                    backgroundColor: viewMode === 'table' ? '#f0f9f4' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: viewMode === 'table' ? '#e0f2e9' : '#f9fafb',
+                    },
+                  }}
+                >
+                  <ViewListIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Card View">
+                <IconButton
+                  className={`view-toggle ${viewMode === 'cards' ? 'active' : ''}`}
+                  onClick={() => setViewMode('cards')}
+                  size="small"
+                  sx={{
+                    borderRadius: 1.5,
+                    color: viewMode === 'cards' ? '#12422a' : '#6b7280',
+                    backgroundColor: viewMode === 'cards' ? '#f0f9f4' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: viewMode === 'cards' ? '#e0f2e9' : '#f9fafb',
+                    },
+                  }}
+                >
+                  <ViewModuleIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
         </Box>
       </Box>

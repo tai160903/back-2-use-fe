@@ -11,6 +11,9 @@ import {
   IconButton,
   InputAdornment,
   Grid,
+  FormControlLabel,
+  Switch,
+  FormHelperText,
 } from '@mui/material';
 import {
   Recycling as EcoIcon,
@@ -23,10 +26,9 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
   const [formData, setFormData] = useState({
     materialName: '',
     reuseLimit: '',
-    depositPercent: '',
     description: '',
-    plasticEquivalentMultiplier: '',
-    co2EmissionPerKg: ''
+    co2EmissionPerKg: '',
+    isSingleUse: false
   });
 
   const [errors, setErrors] = useState({});
@@ -36,29 +38,27 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       setFormData({
         materialName: material.materialName || '',
         reuseLimit: material.reuseLimit ?? material.maximumReuse ?? '',
-        depositPercent: material.depositPercent ?? '',
         description: material.description || '',
-        plasticEquivalentMultiplier: material.plasticEquivalentMultiplier ?? '',
-        co2EmissionPerKg: material.co2EmissionPerKg ?? ''
+        co2EmissionPerKg: material.co2EmissionPerKg ?? '',
+        isSingleUse: material.isSingleUse ?? false
       });
     } else {
       setFormData({
         materialName: '',
         reuseLimit: '',
-        depositPercent: '',
         description: '',
-        plasticEquivalentMultiplier: '',
-        co2EmissionPerKg: ''
+        co2EmissionPerKg: '',
+        isSingleUse: false
       });
     }
     setErrors({});
   }, [material, isOpen]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
     
     // Clear error when user starts typing
@@ -77,26 +77,16 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
       newErrors.materialName = 'Material name is required';
     }
 
-    if (!formData.reuseLimit) {
+    if (!formData.reuseLimit && !formData.isSingleUse) {
       newErrors.reuseLimit = 'Reuse limit is required';
-    } else if (isNaN(formData.reuseLimit) || parseInt(formData.reuseLimit) <= 0) {
-      newErrors.reuseLimit = 'Reuse limit must be a positive number';
-    }
-
-    if (formData.depositPercent === '' || formData.depositPercent === null) {
-      newErrors.depositPercent = 'Deposit percent is required';
-    } else if (isNaN(formData.depositPercent) || parseInt(formData.depositPercent) < 0 || parseInt(formData.depositPercent) > 100) {
-      newErrors.depositPercent = 'Deposit percent must be between 0 and 100';
+    } else if (!formData.isSingleUse && (isNaN(formData.reuseLimit) || parseInt(formData.reuseLimit) <= 1)) {
+      newErrors.reuseLimit = 'Reusable materials must have reuse limit greater than 1';
+    } else if (formData.isSingleUse && formData.reuseLimit && parseInt(formData.reuseLimit) !== 1) {
+      newErrors.reuseLimit = 'Single-use materials must have reuse limit of 1';
     }
 
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
-    }
-
-    if (formData.plasticEquivalentMultiplier === '' || formData.plasticEquivalentMultiplier === null) {
-      newErrors.plasticEquivalentMultiplier = 'Plastic equivalent multiplier is required';
-    } else if (isNaN(formData.plasticEquivalentMultiplier) || parseFloat(formData.plasticEquivalentMultiplier) < 0) {
-      newErrors.plasticEquivalentMultiplier = 'Plastic equivalent multiplier must be a positive number';
     }
 
     if (formData.co2EmissionPerKg === '' || formData.co2EmissionPerKg === null) {
@@ -113,14 +103,15 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit({
+      const submitData = {
         materialName: formData.materialName.trim(),
-        reuseLimit: parseInt(formData.reuseLimit),
-        depositPercent: parseInt(formData.depositPercent),
+        reuseLimit: formData.isSingleUse ? 1 : parseInt(formData.reuseLimit),
         description: formData.description.trim(),
-        plasticEquivalentMultiplier: parseFloat(formData.plasticEquivalentMultiplier),
-        co2EmissionPerKg: parseFloat(formData.co2EmissionPerKg)
-      });
+        co2EmissionPerKg: parseFloat(formData.co2EmissionPerKg),
+        isSingleUse: formData.isSingleUse
+      };
+      
+      onSubmit(submitData);
     }
   };
 
@@ -128,10 +119,9 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
     setFormData({
       materialName: '',
       reuseLimit: '',
-      depositPercent: '',
       description: '',
-      plasticEquivalentMultiplier: '',
-      co2EmissionPerKg: ''
+      co2EmissionPerKg: '',
+      isSingleUse: false
     });
     setErrors({});
     onClose();
@@ -260,6 +250,45 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
                 },
               }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.isSingleUse}
+                  onChange={handleInputChange}
+                  name="isSingleUse"
+                  color="primary"
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#164e31',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#164e31',
+                    },
+                  }}
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#374151', fontSize: '14px' }}>
+                    Single-Use Material
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '12px', display: 'block' }}>
+                    {formData.isSingleUse 
+                      ? 'This material is for single-use products (reuse limit will be set to 1)'
+                      : 'This material is reusable (reuse limit can be set to any value > 1)'}
+                  </Typography>
+                </Box>
+              }
+              sx={{ 
+                alignItems: 'flex-start',
+                marginLeft: 0,
+                marginBottom: 0.5,
+                '& .MuiFormControlLabel-label': {
+                  marginLeft: 1.5,
+                }
+              }}
+            />
+
             <TextField
               name="materialName"
               label="Material Name *"
@@ -295,16 +324,19 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
             <TextField
               name="reuseLimit"
               label="Reuse Limit *"
-              placeholder="100"
+              placeholder={formData.isSingleUse ? "1" : "100"}
               type="number"
-              value={formData.reuseLimit}
+              value={formData.isSingleUse ? 1 : formData.reuseLimit}
               onChange={handleInputChange}
               error={!!errors.reuseLimit}
-              helperText={errors.reuseLimit || 'Max times a material can be reused'}
+              helperText={errors.reuseLimit || (formData.isSingleUse 
+                ? 'Single-use materials have a reuse limit of 1'
+                : 'Max times a material can be reused')}
               fullWidth
               required
               variant="outlined"
               inputProps={{ min: 1 }}
+              disabled={formData.isSingleUse}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -314,74 +346,6 @@ const MaterialModal = ({ isOpen, onClose, material, onSubmit }) => {
                   </InputAdornment>
                 ),
               }}
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                },
-                '& .MuiInputLabel-root': {
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#374151',
-                },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#164e31',
-                  borderWidth: '2px',
-                },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#164e31',
-                }
-              }}
-            />
-
-            <TextField
-              name="depositPercent"
-              label="Deposit Percent (%) *"
-              placeholder="20"
-              type="number"
-              value={formData.depositPercent}
-              onChange={handleInputChange}
-              error={!!errors.depositPercent}
-              helperText={errors.depositPercent || 'Deposit percentage (0-100)'}
-              fullWidth
-              required
-              variant="outlined"
-              inputProps={{ min: 0, max: 100 }}
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                },
-                '& .MuiInputLabel-root': {
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#374151',
-                },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#164e31',
-                  borderWidth: '2px',
-                },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#164e31',
-                }
-              }}
-            />
-
-            <TextField
-              name="plasticEquivalentMultiplier"
-              label="Plastic Equivalent Multiplier *"
-              placeholder="1"
-              type="number"
-              value={formData.plasticEquivalentMultiplier}
-              onChange={handleInputChange}
-              error={!!errors.plasticEquivalentMultiplier}
-              helperText={errors.plasticEquivalentMultiplier || 'Multiplier for plastic equivalent calculation'}
-              fullWidth
-              required
-              variant="outlined"
-              inputProps={{ min: 0, step: 0.1 }}
               size="small"
               sx={{
                 '& .MuiOutlinedInput-root': {

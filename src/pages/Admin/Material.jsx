@@ -42,6 +42,7 @@ const Material = () => {
   const [filter, setFilter] = useState("active");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [singleUseFilter, setSingleUseFilter] = useState("all"); // "all", "single", "reusable"
 
   useEffect(() => {
     // Load materials on component mount
@@ -147,6 +148,13 @@ const Material = () => {
       });
     }
     
+    // Filter by single use
+    if (singleUseFilter === "single") {
+      filtered = filtered.filter((item) => item.isSingleUse === true);
+    } else if (singleUseFilter === "reusable") {
+      filtered = filtered.filter((item) => item.isSingleUse !== true);
+    }
+    
     // Filter by search term
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
@@ -166,6 +174,28 @@ const Material = () => {
       return item.isActive === true || 
              item.status === 'approved' || 
              item.status === 'active';
+    }).length;
+  };
+
+  // Get single-use materials count
+  const getSingleUseMaterialsCount = () => {
+    const safeMaterials = Array.isArray(materials) ? materials : [];
+    return safeMaterials.filter((item) => {
+      const isActive = item.isActive === true || 
+                       item.status === 'approved' || 
+                       item.status === 'active';
+      return isActive && item.isSingleUse === true;
+    }).length;
+  };
+
+  // Get reusable materials count
+  const getReusableMaterialsCount = () => {
+    const safeMaterials = Array.isArray(materials) ? materials : [];
+    return safeMaterials.filter((item) => {
+      const isActive = item.isActive === true || 
+                       item.status === 'approved' || 
+                       item.status === 'active';
+      return isActive && item.isSingleUse !== true;
     }).length;
   };
 
@@ -248,17 +278,72 @@ const Material = () => {
 
       {/* Statistics Cards */}
       <div className="material-stats">
-        <div className="stat-card stat-card-0">
+        <div 
+          className="stat-card stat-card-0"
+          onClick={() => {
+            setFilter("active");
+            setSingleUseFilter("all");
+            setCurrentPage(1);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-content">
             <div className="stat-info">
               <h3 className="stat-title">Total Active Materials</h3>
-              <span className="stat-number">{materials.length}</span>
+              <span className="stat-number">{getActiveMaterialsCount()}</span>
             </div>
             <PiClipboardTextBold className="stat-icon" size={56} />
           </div>
         </div>
 
-        <div className="stat-card stat-card-1">
+        <div 
+          className="stat-card stat-card-1"
+          onClick={() => {
+            setFilter("active");
+            setSingleUseFilter("single");
+            setCurrentPage(1);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className="stat-content">
+            <div className="stat-info">
+              <h3 className="stat-title">Single-Use Materials</h3>
+              <span className="stat-number" style={{ color: '#f57c00' }}>
+                {getSingleUseMaterialsCount()}
+              </span>
+            </div>
+            <FaRecycle className="stat-icon" size={56} style={{ color: '#f57c00', backgroundColor: '#fff3e0' }} />
+          </div>
+        </div>
+
+        <div 
+          className="stat-card stat-card-2"
+          onClick={() => {
+            setFilter("active");
+            setSingleUseFilter("reusable");
+            setCurrentPage(1);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className="stat-content">
+            <div className="stat-info">
+              <h3 className="stat-title">Reusable Materials</h3>
+              <span className="stat-number" style={{ color: '#2e7d32' }}>
+                {getReusableMaterialsCount()}
+              </span>
+            </div>
+            <FaRecycle className="stat-icon" size={56} style={{ color: '#2e7d32', backgroundColor: '#e8f5e9' }} />
+          </div>
+        </div>
+
+        <div 
+          className="stat-card stat-card-3"
+          onClick={() => {
+            setFilter("pending");
+            setCurrentPage(1);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-content">
             <div className="stat-info">
               <h3 className="stat-title">Waiting Approve</h3>
@@ -289,11 +374,44 @@ const Material = () => {
         
         <div className="filter-tabs">
           <button 
-            className={`filter-tab ${filter === "active" ? "active" : ""}`}
-            onClick={() => handleFilterChange(null, "active")}
+            className={`filter-tab ${filter === "active" && singleUseFilter === "all" ? "active" : ""}`}
+            onClick={() => {
+              handleFilterChange(null, "active");
+              setSingleUseFilter("all");
+            }}
           >
             <PiClipboardTextBold />
-            Active ({getActiveMaterialsCount()})
+            All Active ({getActiveMaterialsCount()})
+          </button>
+          <button 
+            className={`filter-tab ${filter === "active" && singleUseFilter === "single" ? "active" : ""}`}
+            onClick={() => {
+              setFilter("active");
+              setSingleUseFilter("single");
+              setCurrentPage(1);
+            }}
+            style={{ 
+              backgroundColor: filter === "active" && singleUseFilter === "single" ? '#f57c00' : 'white',
+              color: filter === "active" && singleUseFilter === "single" ? 'white' : '#6b7280',
+              borderColor: filter === "active" && singleUseFilter === "single" ? '#f57c00' : '#e5e7eb'
+            }}
+          >
+            Single-Use ({getSingleUseMaterialsCount()})
+          </button>
+          <button 
+            className={`filter-tab ${filter === "active" && singleUseFilter === "reusable" ? "active" : ""}`}
+            onClick={() => {
+              setFilter("active");
+              setSingleUseFilter("reusable");
+              setCurrentPage(1);
+            }}
+            style={{ 
+              backgroundColor: filter === "active" && singleUseFilter === "reusable" ? '#2e7d32' : 'white',
+              color: filter === "active" && singleUseFilter === "reusable" ? 'white' : '#6b7280',
+              borderColor: filter === "active" && singleUseFilter === "reusable" ? '#2e7d32' : '#e5e7eb'
+            }}
+          >
+            Reusable ({getReusableMaterialsCount()})
           </button>
           <button 
             className={`filter-tab ${filter === "pending" ? "active" : ""}`}
@@ -386,10 +504,11 @@ const Material = () => {
         <div className="material-list-container">
           <div className="material-list-header">
             <div className="material-list-header-cell" style={{ flex: '2' }}>Material Name</div>
+            <div className="material-list-header-cell" style={{ flex: '1' }}>Type</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Reuse Limit</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Deposit %</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Status</div>
-      
+            <div className="material-list-header-cell" style={{ flex: '1', textAlign: 'center' }}>Actions</div>
           </div>
           <div className="material-list">
             {(() => {
@@ -411,6 +530,19 @@ const Material = () => {
                     </div>
                   </div>
                   <div className="material-list-cell" style={{ flex: '1' }}>
+                    <span className={`material-status-badge ${material.isSingleUse ? 'status-pending' : 'status-active'}`} style={{
+                      backgroundColor: material.isSingleUse ? '#fff3e0' : '#e8f5e9',
+                      color: material.isSingleUse ? '#f57c00' : '#2e7d32',
+                      border: `1px solid ${material.isSingleUse ? '#f57c00' : '#2e7d32'}`,
+                      fontWeight: 600,
+                      fontSize: '12px',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                    }}>
+                      {material.isSingleUse ? 'Single-Use' : 'Reusable'}
+                    </span>
+                  </div>
+                  <div className="material-list-cell" style={{ flex: '1' }}>
                     <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#374151' }}>
                       {material.reuseLimit || material.maximumReuse || 'N/A'} times
                     </span>
@@ -425,7 +557,29 @@ const Material = () => {
                       {material.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
-           
+                  <div className="material-list-cell" style={{ flex: '1', textAlign: 'center', justifyContent: 'center' }}>
+                    <button
+                      className="action-btn-list"
+                      onClick={() => handleEditMaterial(material)}
+                      title="Edit"
+                      style={{
+                        backgroundColor: '#164e31',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 16px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <CiEdit size={16} />
+                      Edit
+                    </button>
+                  </div>
                 </div>
               ));
             })()}

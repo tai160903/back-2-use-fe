@@ -20,13 +20,14 @@ export const createMaterialApi = createAsyncThunk(
 // Get All Materials API
 export const getAllMaterialsApi = createAsyncThunk(
   "admin/getAllMaterialsApi",
-  async ({ page = 1, limit = 10, status, materialName }, { rejectWithValue }) => {
+  async ({ page = 1, limit = 10, status, materialName, isSingleUse }, { rejectWithValue }) => {
     try {
       let url = `/admin/materials?page=${page}&limit=${limit}`;
       
       // Append filters
       if (status && status !== 'all') url += `&status=${status}`;
       if (materialName && materialName.trim()) url += `&materialName=${encodeURIComponent(materialName.trim())}`;
+      if (isSingleUse !== undefined && isSingleUse !== null) url += `&isSingleUse=${isSingleUse}`;
       
       const response = await fetcher.get(url);
       return response.data;

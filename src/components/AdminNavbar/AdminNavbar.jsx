@@ -21,7 +21,7 @@ import { TiMessages } from "react-icons/ti";
 import { AiOutlineMenuFold, AiOutlineMenuUnfold } from "react-icons/ai";
 import { CiLogout } from "react-icons/ci";
 import { MdExpandMore, MdChevronRight } from "react-icons/md";
-import { FaExchangeAlt, FaWallet, FaStore, FaUsers, FaChartLine, FaClipboardList } from "react-icons/fa";
+import { FaExchangeAlt, FaWallet, FaStore, FaUsers, FaChartLine, FaClipboardList, FaTag } from "react-icons/fa";
 import {
   People,
   Store,
@@ -63,6 +63,7 @@ const adminSidebarItems = [
   { id: "leaderboard", label: "Leader Board", path: PATH.ADMIN_LEADERBOARD },
   { id: "stores", label: "Stores", path: PATH.ADMIN_STORE },
   { id: "material", label: "Material", path: PATH.ADMIN_MATERIAL },
+  { id: "single-use-product-type", label: "Single-Use Product Type", path: PATH.ADMIN_SINGLE_USE_PRODUCT_TYPE },
   { id: "settings", label: "Settings", path: PATH.ADMIN_SETTINGS },
   { id: "logout", label: "Logout", path: null },
 ];
@@ -107,6 +108,7 @@ const AdminNavbar = ({ onDrawerToggle }) => {
       leaderboard: <TrendingUp color="#10b981" className="navbar-icon" />,
       stores: <LuStore color="#7b1fa2" className="navbar-icon" />,
       material: <AiOutlinePlusCircle color="#2e7d32" className="navbar-icon" />,
+      "single-use-product-type": <FaTag color="#f57c00" className="navbar-icon" />,
       settings: <Settings color="#6a1b9a" className="navbar-icon" />,
       logout: <CiLogout color="#fb4225" className="navbar-icon" />,
     };
@@ -166,7 +168,7 @@ const AdminNavbar = ({ onDrawerToggle }) => {
                   handleLogout();
                 } else if (item.id === "admin-dashboard" && item.hasSubItems) {
                   handleDashboardNavigate();
-                } else {
+                } else if (item.path) {
                   navigate(item.path);
                 }
               }}
