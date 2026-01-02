@@ -44,6 +44,13 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import LinearProgress from "@mui/material/LinearProgress";
 import { LocalFlorist as EcoIcon, CardGiftcard as GiftIcon } from "@mui/icons-material";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 
 export default function StoreDetail() {
   const navigate = useNavigate();
@@ -69,13 +76,11 @@ export default function StoreDetail() {
   } = useSelector((state) => state.vouchers);
   const {
     businessSingleUseProducts,
-    businessSingleUseProductsPagination,
     isLoading: isLoadingSingleUse,
   } = useSelector((state) => state.singleUseProductType);
   
   const [businessVouchers, setBusinessVouchers] = useState([]);
   const [exchangingVoucherId, setExchangingVoucherId] = useState(null);
-  const [savedVouchers, setSavedVouchers] = useState(new Set());
   const [currentVoucherIndex, setCurrentVoucherIndex] = useState(0);
   const vouchersPerPage = 5; // Show 5 vouchers at a time
   const vouchersToScroll = 2; // Scroll 2 vouchers each time
@@ -90,6 +95,7 @@ export default function StoreDetail() {
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [singleUseProducts, setSingleUseProducts] = useState([]);
   const [singleUsePage, setSingleUsePage] = useState(1);
+  const [showAllSingleUse, setShowAllSingleUse] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingFeedback, setDeletingFeedback] = useState(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -109,28 +115,33 @@ export default function StoreDetail() {
     if (/(container|box|tray)/.test(lower)) return "container";
     return "other";
   };
+  const formatCo2 = (value) => {
+    if (value === undefined || value === null || Number.isNaN(Number(value))) return "N/A";
+    return `${Number(value).toFixed(3)} kg CO2`;
+  };
 
-  // Load store detail khi component mount hoặc id thay đổi
+  // Load store detail when component mounts or id changes
   useEffect(() => {
     if (storeId) {
       dispatch(getStoreById(storeId));
     }
   }, [dispatch, storeId]);
 
-  // Load single-use products khi storeId có
+  // Load single-use products when storeId is available
   useEffect(() => {
     if (storeId) {
       dispatch(getBusinessSingleUseProductsApi({ businessId: storeId, page: singleUsePage, limit: 100 }));
     }
   }, [dispatch, storeId, singleUsePage]);
 
-  // Map single-use products từ API sang format hiển thị
+  // Map single-use products from API to display format
   useEffect(() => {
     if (businessSingleUseProducts && businessSingleUseProducts.length > 0) {
       const mappedSingleUseProducts = businessSingleUseProducts
-        .filter(product => product.isActive !== false) // Chỉ hiển thị active products
+        .filter(product => product.isActive !== false) // Only show active products
         .map((product) => {
           const materialName = product.materialId?.materialName || "Unknown";
+          const sizeName = product.productSizeId?.sizeName || "N/A";
           return {
             id: product._id,
             name: product.name,
@@ -138,10 +149,15 @@ export default function StoreDetail() {
             type: "single-use",
             material: convertToSlug(materialName),
             materialLabel: materialName,
+            materialName,
             productType: product.productTypeId?.name || "N/A",
-            productSize: product.productSizeId?.sizeName || "N/A",
+            productTypeName: product.productTypeId?.name || "N/A",
+            productSize: sizeName,
+            sizeName,
             weight: product.weight,
             isSingleUse: true,
+            co2Emission: product.co2Emission,
+            description: product.description || "",
           };
         });
       setSingleUseProducts(mappedSingleUseProducts);
@@ -165,6 +181,7 @@ export default function StoreDetail() {
           materialLabel: materialName,
           depositPercent: productGroup.materialId?.depositPercent,
           reuseLimit: productGroup.materialId?.reuseLimit,
+          isSingleUse: false,
         };
       });
       setCatalogProducts(mappedCatalogProducts);
@@ -286,29 +303,10 @@ export default function StoreDetail() {
           // Compare both as strings to handle ObjectId comparison
           const matches = voucherBusinessId && voucherBusinessId === businessIdToMatch;
           
-          // Debug log (remove in production)
-          if (process.env.NODE_ENV === 'development' && voucherBusinessId) {
-            console.log('Voucher business ID:', voucherBusinessId, 'Store ID:', businessIdToMatch, 'Matches:', matches, 'Voucher:', {
-              id: voucher._id || voucher.id,
-              customName: voucher.customName,
-              businessName: voucher.businessInfo?.businessName,
-              claimedAt: voucher.claimedAt,
-              status: voucher.status
-            });
-          }
-          
           return matches;
         })
         // Load all vouchers for carousel (no limit)
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Filtered vouchers for store:', storeId, filtered.length, 'vouchers found', filtered.map(v => ({
-          id: v._id || v.id,
-          customName: v.customName,
-          claimedAt: v.claimedAt,
-          businessId: v.businessInfo?.businessId || v.businessId
-        })));
-      }
       setBusinessVouchers(filtered);
       // Reset carousel index when vouchers change
       setCurrentVoucherIndex(0);
@@ -407,7 +405,7 @@ export default function StoreDetail() {
           limit: 1000,
         }));
       }
-    } catch (error) {
+    } catch {
       // Error handled in slice
     } finally {
       setExchangingVoucherId(null);
@@ -516,7 +514,7 @@ export default function StoreDetail() {
           An error occurred while loading store information
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {storeError.message || "Vui lòng thử lại sau"}
+          {storeError.message || "Please try again later"}
         </Typography>
       </div>
     );
@@ -527,18 +525,14 @@ export default function StoreDetail() {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
         <Typography variant="h6">
-          Không tìm thấy cửa hàng! (ID: {storeId})
+          Store not found (ID: {storeId})
         </Typography>
       </div>
     );
   }
 
-  // Combine reusable và single-use products
-  const allProducts = [
-    ...catalogProducts.map(p => ({ ...p, isSingleUse: false })),
-    ...singleUseProducts.map(p => ({ ...p, isSingleUse: true }))
-  ];
-  const catalog = allProducts;
+  // Chỉ hiển thị sản phẩm tái sử dụng trong grid chính
+  const catalog = catalogProducts;
 
   // Xác định products types từ catalog
   const productTypes = [];
@@ -687,7 +681,7 @@ export default function StoreDetail() {
               plastic waste.
             </p>
           </div>
-          <img src={cupImg} alt="Cốc" className="storeDetail-category-image" />
+          <img src={cupImg} alt="Cup" className="storeDetail-category-image" />
         </div>
         <div
           className={`storeDetail-category-card ${
@@ -712,7 +706,7 @@ export default function StoreDetail() {
           </div>
           <img
             src={containerImg}
-            alt="Hộp đựng"
+            alt="Container"
             className="storeDetail-category-image"
           />
         </div>
@@ -745,65 +739,34 @@ export default function StoreDetail() {
               <div className="product-info">
                 <Typography className="product-name">{product.name}</Typography>
                 <div className="product-meta">
-                  {/* Product Type Tag */}
-                  <span className={`product-tag ${product.isSingleUse ? 'single-use-tag' : 'reusable-tag'}`}>
-                    {product.isSingleUse ? 'Single-Use' : 'Reusable'}
+                  <span className="product-tag reusable-tag">Reusable</span>
+                  <span className="product-dot">•</span>
+                  <span className="product-tag">
+                    {product.type === "cup"
+                      ? "Cup/Bottle"
+                      : product.type === "container"
+                      ? "Food Container"
+                      : "Other"}
                   </span>
                   <span className="product-dot">•</span>
-                  {/* Type/Category Tag */}
-                  {product.isSingleUse ? (
-                    <span className="product-tag">
-                      {product.productType} - {product.productSize}
-                    </span>
-                  ) : (
-                    <span className="product-tag">
-                      {product.type === "cup" ? "Cup/Bottle" : product.type === "container" ? "Food Container" : "Other"}
-                    </span>
-                  )}
-                  <span className="product-dot">•</span>
-                  {/* Material Tag */}
                   <span className="product-tag">
                     {materialLabelMap[product.material] || product.material}
                   </span>
                 </div>
                 <div className="product-stats">
-                  {product.isSingleUse ? (
-                    <>
-                      <span className="available">
-                        Weight: {product.weight ? `${product.weight} g` : 'N/A'}
-                      </span>
-                      {product.productType && (
-                        <>
-                          <span className="separator">|</span>
-                          <span className="unavailable">
-                            Type: {product.productType}
-                          </span>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <span className="available">
-                        Deposit: {product.depositPercent ?? 0}%
-                      </span>
-                      <span className="separator">|</span>
-                      <span className="unavailable">
-                        Reuse limit: {product.reuseLimit ?? 0}
-                      </span>
-                    </>
-                  )}
+                  <span className="available">
+                    Deposit: {product.depositPercent ?? 0}%
+                  </span>
+                  <span className="separator">|</span>
+                  <span className="unavailable">
+                    Reuse limit: {product.reuseLimit ?? 0}
+                  </span>
                 </div>
                 <div className="product-bottom">
                   <span className="product-price">
                     {product.rentalPrice ? `${product.rentalPrice.toLocaleString()}vnd/day` : "Contact for price"}
                   </span>
-                  {product.isSingleUse ? (
-                    <button className="product-btn" disabled style={{ opacity: 0.6, cursor: 'not-allowed' }}>
-                      View details
-                    </button>
-                  ) : (
-                    <button className="product-btn" onClick={() => navigate(`/product/${business._id}/${product.id}`)}>View details</button>
-                  )}
+                  <button className="product-btn" onClick={() => navigate(`/product/${business._id}/${product.id}`)}>View details</button>
                 </div>
               </div>
             </div>
@@ -827,6 +790,155 @@ export default function StoreDetail() {
             shape="rounded"
           />
         </Stack>
+      </div>
+
+      {/* Single-use comparison table */}
+      <div
+        className="storeDetail-singleuse-table"
+        style={{ marginTop: "48px", maxWidth: "1400px", marginInline: "auto" }}
+      >
+        <div className="storeDetail-categories-header">
+          <Typography variant="h4" className="storeDetail-categories-title">
+            Single-Use Products (for reference)
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Single-use products are shown for comparison only.
+          </Typography>
+        </div>
+
+        {isLoadingSingleUse ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : singleUseProducts.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              No single-use products for this store.
+            </Typography>
+          </Box>
+        ) : (
+          <>
+          <TableContainer
+            component={Paper}
+            sx={{
+              borderRadius: 2,
+              overflow: "hidden",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+            }}
+          >
+            <Table size="small">
+              <TableHead sx={{ backgroundColor: "#f7f9fb" }}>
+                <TableRow>
+                  <TableCell width="92px">Image</TableCell>
+                  <TableCell width="18%">Name</TableCell>
+                  <TableCell width="16%">Type</TableCell>
+                  <TableCell width="16%">Material</TableCell>
+                  <TableCell width="12%">Size</TableCell>
+                  <TableCell width="14%">CO2 Emission</TableCell>
+                  <TableCell>Description</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {(showAllSingleUse ? singleUseProducts : singleUseProducts.slice(0, 3)).map((product) => (
+                  <TableRow
+                    key={product.id}
+                    sx={{
+                      "&:nth-of-type(even)": { backgroundColor: "#fafafa" },
+                      "&:hover": { backgroundColor: "#eef7f1" },
+                      transition: "background-color 0.2s ease",
+                    }}
+                  >
+                    <TableCell>
+                      <Box
+                        sx={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 1.5,
+                          overflow: "hidden",
+                          border: "1px solid #e5e7eb",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "#fff",
+                        }}
+                      >
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography fontWeight={600}>{product.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {product.productType || "N/A"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{product.productTypeName || product.productType || "N/A"}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{product.materialName || product.materialLabel || "N/A"}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{product.sizeName || product.productSize || "N/A"}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1.5,
+                          backgroundColor: "#e6f4ea",
+                          color: "#0b5529",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {formatCo2(product.co2Emission)}
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ maxWidth: 320 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {product.description || "No description"}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          {singleUseProducts.length > 3 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setShowAllSingleUse((prev) => !prev)}
+                sx={{
+                  textTransform: "none",
+                  borderColor: "#0b5529",
+                  color: "#0b5529",
+                  "&:hover": { borderColor: "#094421", backgroundColor: "#f0fdf4" },
+                }}
+              >
+                {showAllSingleUse ? "Show less" : "Show more"}
+              </Button>
+            </Box>
+          )}
+          </>
+        )}
       </div>
 
         {(businessVouchers.length > 0 || isLoadingVouchers) && (
@@ -881,20 +993,8 @@ export default function StoreDetail() {
                             transition: 'transform 0.3s ease-in-out'
                           }}
                         >
-                          {businessVouchers.map((voucher, index) => {
+                          {businessVouchers.map((voucher) => {
                             const discountPercent = voucher.discountPercent || 0;
-                            const endDate = voucher.endDate;
-                            let expiryText = 'N/A';
-                            if (endDate) {
-                              const date = new Date(endDate);
-                              if (!isNaN(date.getTime())) {
-                                expiryText = date.toLocaleDateString('en-US', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric'
-                                });
-                              }
-                            }
                             const voucherId = voucher._id || voucher.id;
                             // Check if this voucher template has been exchanged by the current user
                             // by comparing template ID with user's exchanged vouchers
@@ -1099,7 +1199,7 @@ export default function StoreDetail() {
             ) : (
               paginatedReviews.map((review) => {
                 const reviewerName =
-                  review.customerId?.fullName || "Khách hàng ẩn danh";
+                  review.customerId?.fullName || "Anonymous customer";
                 const ratingValue = Number(review.rating || 0).toFixed(1);
                 const isOwner = myFeedbackIdSet.has(review._id);
 
@@ -1121,7 +1221,7 @@ export default function StoreDetail() {
                         <Typography className="review-user">
                           {reviewerName}
                         </Typography>
-                        <span className="review-role">Khách hàng</span>
+                        <span className="review-role">Customer</span>
                         {isOwner && (
                           <div className="review-actions">
                             <button

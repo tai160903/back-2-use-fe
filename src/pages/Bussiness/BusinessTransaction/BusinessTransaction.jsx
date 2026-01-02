@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import {
+import { 
   Button,
   Dialog,
   DialogTitle,
@@ -21,6 +21,8 @@ import {
   Divider,
   Pagination,
   Stack,
+  Card,
+  CardContent,
 } from "@mui/material";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { MdOutlineQrCode2 } from "react-icons/md";
@@ -34,6 +36,7 @@ import {
   getTransactionHistoryBusinessApi,
   getDetailsBorrowTransactionBusinessApi,
 } from "../../../store/slices/borrowSlice";
+import { getDetailSingleUseApi } from "../../../store/slices/singleUseSlice";
 
 // ============ Timing Helpers (similar to customer TransactionHistory) ============
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -770,6 +773,10 @@ export default function BusinessTransaction() {
   const dispatch = useDispatch();
   const { borrow, isLoading, borrowDetail, isDetailLoading, totalPages } =
     useSelector((state) => state.borrow);
+  const {
+    singleUseDetail = [],
+    isLoading: isLoadingSingleUseDetail,
+  } = useSelector((state) => state.singleUse);
 
   const [status, setStatus] = useState("");
   const [searchText, setSearchText] = useState("");
@@ -790,6 +797,7 @@ export default function BusinessTransaction() {
   const handleViewDetails = (id) => {
     if (!id) return;
     dispatch(getDetailsBorrowTransactionBusinessApi(id));
+    dispatch(getDetailSingleUseApi({ borrowTransactionId: id }));
     setOpenDetail(true);
   };
 
@@ -832,6 +840,7 @@ export default function BusinessTransaction() {
   const detailCurrentImages = detail.currentConditionImages || {};
   const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
   const detailEcoPointChanged = detail.ecoPointChanged ?? null;
+  const singleUseList = Array.isArray(singleUseDetail) ? singleUseDetail : [];
 
   // Prefer QR from productId for QR display, fallback to transaction-level or serial
   const detailQrCode =
@@ -1309,6 +1318,136 @@ export default function BusinessTransaction() {
                     </Box>
                   </Box>
                 </Box>
+
+                <Card
+                  sx={{
+                    mt: 2,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                    borderRadius: 2,
+                    border: "1px solid rgba(11, 85, 41, 0.1)",
+                    backgroundColor: "#f5f7fa",
+                  }}
+                >
+                  <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        mb: 1.5,
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 700, color: "#0b5529", fontSize: "1rem" }}
+                      >
+                        Single-use consumption
+                      </Typography>
+                    </Box>
+                    {isLoadingSingleUseDetail ? (
+                      <Typography>Loading single-use consumption...</Typography>
+                    ) : singleUseList.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        No single-use consumption records.
+                      </Typography>
+                    ) : (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                        {singleUseList.map((item) => {
+                          const product = item.product || {};
+                          const staff = item.staff || {};
+                          const loggedAt = item.createdAt
+                            ? new Date(item.createdAt).toLocaleString("vi-VN")
+                            : "N/A";
+                          const productImage =
+                            product.imageUrl ||
+                            "https://via.placeholder.com/120x120?text=Single-use";
+
+                          return (
+                            <Box
+                              key={item._id || item.id}
+                              sx={{
+                                border: "1px solid #e5e7eb",
+                                borderRadius: 1.5,
+                                p: 1.5,
+                                backgroundColor: "#ffffff",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "grid",
+                                  gridTemplateColumns: { xs: "1fr", sm: "140px 1fr 1fr" },
+                                  gap: 1.5,
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Box
+                                  component="img"
+                                  src={productImage}
+                                  alt={product.name || "Single-use item"}
+                                  sx={{
+                                    width: "100%",
+                                    maxWidth: 140,
+                                    height: 120,
+                                    objectFit: "cover",
+                                    borderRadius: 1.5,
+                                    border: "1px solid #e5e7eb",
+                                    backgroundColor: "#fff",
+                                  }}
+                                />
+
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                                    {product.name || "Single-use item"}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Type: <strong>{product.type || "N/A"}</strong>
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Size: <strong>{product.size || "N/A"}</strong>
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Material: <strong>{product.material || "N/A"}</strong>
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Weight: <strong>{product.weight ?? "N/A"} g</strong>
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    CO2 per unit:{" "}
+                                    <strong>
+                                      {item.co2PerUnit !== undefined && item.co2PerUnit !== null
+                                        ? `${item.co2PerUnit} kg`
+                                        : "N/A"}
+                                    </strong>
+                                  </Typography>
+                                </Box>
+
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                                    Staff
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Name: <strong>{staff.fullName || "N/A"}</strong>
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Email: <strong>{staff.email || "N/A"}</strong>
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Phone: <strong>{staff.phone || "N/A"}</strong>
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Logged at: <strong>{loggedAt}</strong>
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
 
                 {/* QR Code at the bottom */}
                 {detailQrCode && (
