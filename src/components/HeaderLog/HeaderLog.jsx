@@ -284,7 +284,7 @@ export default function HeaderLog() {
               </Typography>
               <Typography sx={commonValueStyle}>
                 {typeof co2Reduced === 'number' 
-                  ? `${co2Reduced.toFixed(2)} kg` 
+                  ? `${co2Reduced.toFixed(3)} kg` 
                   : '0.00 kg'}
               </Typography>
             </Box>
@@ -369,7 +369,7 @@ export default function HeaderLog() {
               </Typography>
               <Typography sx={commonValueStyle}>
                 {typeof co2Reduced === 'number' 
-                  ? `${co2Reduced.toFixed(2)} kg` 
+                  ? `${co2Reduced.toFixed(3)} kg` 
                   : '0.00 kg'}
               </Typography>
             </Box>

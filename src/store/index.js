@@ -17,6 +17,7 @@ import feedbackSlice from "./slices/feedbackSlice";
 import rewardPointPackageSlice from "./slices/rewardPointPackageSlice";
 import returnSlice from "./slices/returnSlice";
 import singleUseProductTypeSlice from "./slices/singleUseProductTypeSlice";
+import singleUseSlice from "./slices/singleUseSlice";
 export const store = configureStore({
   reducer: {
     auth: authSlice,
@@ -37,6 +38,7 @@ export const store = configureStore({
     rewardPointPackage: rewardPointPackageSlice,
     return: returnSlice,
     singleUseProductType: singleUseProductTypeSlice,
+    singleUse: singleUseSlice,
   },
 });
 

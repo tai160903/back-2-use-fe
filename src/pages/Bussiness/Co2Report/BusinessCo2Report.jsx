@@ -330,7 +330,7 @@ export default function BusinessCo2Report() {
               Total CO₂ (filtered)
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
-              {isLoadingTotal ? "..." : totalCo2Summary.total.toFixed(2)} kg
+              {isLoadingTotal ? "..." : totalCo2Summary.total.toFixed(3)} kg
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.85 }}>
               Aggregated across all pages with current filters.
@@ -357,7 +357,7 @@ export default function BusinessCo2Report() {
                 Object.entries(totalCo2Summary.byType).map(([k, v]) => (
                   <Chip
                     key={k}
-                    label={`${typeLabel(k)}: ${v.toFixed(2)} kg`}
+                    label={`${typeLabel(k)}: ${v.toFixed(3)} kg`}
                     sx={{
                       borderColor: v >= 0 ? "#0b5529" : "#c62828",
                       color: v >= 0 ? "#0b5529" : "#c62828",
@@ -482,10 +482,10 @@ export default function BusinessCo2Report() {
 
                   <Box>
                     <Typography sx={{ color: co2Color, fontWeight: 700 }}>
-                      {co2Val.toFixed(2)} kg
+                      {co2Val.toFixed(3)} kg
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Eco: {(Number(item.ecoPointChanged) || 0).toFixed(2)}
+                      Eco: {(Number(item.ecoPointChanged) || 0).toFixed(3)}
                     </Typography>
                   </Box>
 

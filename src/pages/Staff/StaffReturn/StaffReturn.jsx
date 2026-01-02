@@ -4,7 +4,8 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { scanReturnApi, checkReturnApi, confirmReturnApi, clearScanData, clearPreviewData, getDamagePolicyApi } from "../../../store/slices/returnSlice";
-import { FaBoxOpen, FaCheckCircle, FaExclamationTriangle, FaUser, FaPhone, FaCalendarAlt, FaMoneyBillWave, FaClock } from "react-icons/fa";
+import { getSingleUseProductMyApi, confirmSingleUseProductUsageApi, getDetailSingleUseApi } from "../../../store/slices/singleUseSlice";
+import { FaBoxOpen, FaCheckCircle, FaExclamationTriangle, FaUser, FaPhone, FaCalendarAlt, FaMoneyBillWave, FaClock, FaLeaf, FaImage } from "react-icons/fa";
 import {
   Box,
   Typography,
@@ -30,6 +31,7 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  Pagination,
 } from "@mui/material";
 import { QrCodeScanner as QrCodeIcon, CloudUpload as UploadIcon, Close as CloseIcon } from "@mui/icons-material";
 import toast from "react-hot-toast";
@@ -76,6 +78,23 @@ const formatIssueLabel = (issue) => {
 export default function StaffReturn() {
   const dispatch = useDispatch();
   const { scanData, previewData, isLoading, error, damagePolicy } = useSelector((state) => state.return);
+  const {
+    singleUseProductMy = [],
+    singleUseDetail = [],
+    isLoading: isLoadingSingleUse,
+  } = useSelector((state) => state.singleUse);
+  const singleUseList = Array.isArray(singleUseProductMy?.data)
+    ? singleUseProductMy.data
+    : Array.isArray(singleUseProductMy)
+    ? singleUseProductMy
+    : [];
+  const singleUsePageSize = 3;
+  const [singleUsePage, setSingleUsePage] = useState(1);
+  const pagedSingleUse = singleUseDetail.slice(
+    (singleUsePage - 1) * singleUsePageSize,
+    singleUsePage * singleUsePageSize
+  );
+  const singleUseTotalPages = Math.max(1, Math.ceil(singleUseDetail.length / singleUsePageSize));
 
   const [serialNumber, setSerialNumber] = useState("");
   const [images, setImages] = useState({
@@ -96,7 +115,10 @@ export default function StaffReturn() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isConfirmingSingleUse, setIsConfirmingSingleUse] = useState(false);
   const [confirmNote, setConfirmNote] = useState("");
+  const [singleUseDialogOpen, setSingleUseDialogOpen] = useState(false);
+  const [selectedSingleUseId, setSelectedSingleUseId] = useState("");
   const previewUrlsRef = useRef(new Set());
 
   const {
@@ -326,6 +348,44 @@ export default function StaffReturn() {
     }
   };
 
+  // Single-use CO2 record handlers
+  const handleOpenSingleUse = () => {
+    setSingleUseDialogOpen(true);
+    dispatch(getSingleUseProductMyApi({ isActive: true, page: 1, limit: 100 }));
+  };
+
+  const handleCloseSingleUse = () => {
+    setSingleUseDialogOpen(false);
+    setSelectedSingleUseId("");
+  };
+
+  const handleConfirmSingleUse = async () => {
+    if (!scanData?.transaction?._id) {
+      toast.error("Need transaction before recording single-use.");
+      return;
+    }
+    if (!selectedSingleUseId) {
+      toast.error("Please select a single-use product.");
+      return;
+    }
+    setIsConfirmingSingleUse(true);
+    try {
+      await dispatch(
+        confirmSingleUseProductUsageApi({
+          borrowTransactionId: scanData.transaction._id,
+          singleUseProductId: selectedSingleUseId,
+        })
+      ).unwrap();
+      toast.success("Recorded single-use consumption.");
+      handleCloseSingleUse();
+    } catch (err) {
+      const msg = err?.message || err?.error || "Failed to record single-use.";
+      toast.error(msg);
+    } finally {
+      setIsConfirmingSingleUse(false);
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleScanSerialNumber();
@@ -334,6 +394,7 @@ export default function StaffReturn() {
 
   const product = scanData?.product;
   const transaction = scanData?.transaction;
+  const transactionId = transaction?._id;
   const lateInfo = scanData?.lateInfo;
   const lastConditionImages = product?.lastConditionImages;
 
@@ -343,6 +404,13 @@ export default function StaffReturn() {
       console.log("Preview Data in component:", previewData);
     }
   }, [previewData]);
+
+  // Load single-use usage detail for this transaction
+  useEffect(() => {
+    if (transactionId) {
+      dispatch(getDetailSingleUseApi({ borrowTransactionId: transactionId }));
+    }
+  }, [dispatch, transactionId]);
 
   return (
     <div className="staff-return-page">
@@ -627,6 +695,199 @@ export default function StaffReturn() {
                       </>
                     )}
                   </Stack>
+                </Paper>
+              </Grid>
+
+              {/* Single-use CO₂ record */}
+              <Grid item size={12}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 2.5,
+                    background: "linear-gradient(90deg, #f4faf6 0%, #f9fbfc 100%)",
+                    border: "1px solid #e5e7eb",
+                    width: "100%",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                      <FaCheckCircle style={{ color: "#0b5529", fontSize: 20 }} />
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 800, color: "#0b5529" }}>
+                          Record single-use for CO₂ points
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: "#4b5563", mt: 0.2 }}>
+                          Ghi nhận ly/hộp dùng một lần để cộng CO₂ cho khách (100% chiều ngang).
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleOpenSingleUse}
+                        disabled={!scanData?.transaction || isLoadingSingleUse}
+                        sx={{
+                          borderColor: "#12422a",
+                          color: "#12422a",
+                          textTransform: "none",
+                          fontWeight: 700,
+                          px: 2.5,
+                          "&:hover": {
+                            borderColor: "#0d2e1c",
+                            backgroundColor: "#f0f9f4",
+                          },
+                          "&:disabled": {
+                            borderColor: "#d1d5db",
+                            color: "#9ca3af",
+                          },
+                        }}
+                      >
+                        {isLoadingSingleUse ? "Loading..." : "Choose single-use"}
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        onClick={handleConfirmSingleUse}
+                        disabled={!scanData?.transaction || isConfirmingSingleUse}
+                        sx={{
+                          textTransform: "none",
+                          fontWeight: 800,
+                          px: 2.5,
+                          boxShadow: "0 6px 14px rgba(16,185,129,0.25)",
+                        }}
+                      >
+                        {isConfirmingSingleUse ? "Submitting..." : "Confirm record"}
+                      </Button>
+                    </Box>
+                  </Box>
+                </Paper>
+              </Grid>
+
+              {/* Single-use usage detail */}
+              <Grid item size={12}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 2.5,
+                    border: "1px solid #e5e7eb",
+                    background: "linear-gradient(180deg, #f9fbfa 0%, #ffffff 100%)",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap", mb: 1.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <FaLeaf style={{ color: "#0b5529", fontSize: 18 }} />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#12422a" }}>
+                        Single-use usage record
+                      </Typography>
+                    </Box>
+                    {Array.isArray(singleUseDetail) && singleUseDetail.length > 0 && (
+                      <Chip
+                        label={`${singleUseDetail.length} record${singleUseDetail.length > 1 ? "s" : ""}`}
+                        size="small"
+                        sx={{ backgroundColor: "#e8f5e9", color: "#0b5529", fontWeight: 700, borderRadius: 1 }}
+                      />
+                    )}
+                  </Box>
+                  {isLoadingSingleUse ? (
+                    <Typography variant="body2" color="text.secondary">
+                      Loading...
+                    </Typography>
+                  ) : Array.isArray(singleUseDetail) && singleUseDetail.length > 0 ? (
+                    <>
+                      <Grid container spacing={1.5}>
+                        {pagedSingleUse.map((item) => (
+                          <Grid item size={4} key={item._id || item.id}>
+                            <Paper
+                              variant="outlined"
+                              sx={{
+                                p: 1.5,
+                                borderRadius: 1.5,
+                                borderColor: "#dce7df",
+                                backgroundColor: "#f9fbfa",
+                                height: "100%",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 0.75,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  borderRadius: 1.5,
+                                  overflow: "hidden",
+                                  border: "1px solid #e5e7eb",
+                                  backgroundColor: "#fff",
+                                  position: "relative",
+                                }}
+                              >
+                                <img
+                                  src={
+                                    item.product?.imageUrl ||
+                                    item.product?.image ||
+                                    "https://via.placeholder.com/400x240?text=Single-use"
+                                  }
+                                  alt={item.product?.name || "Single-use item"}
+                                  style={{ width: "100%", height: 160, objectFit: "cover" }}
+                                />
+                                <Chip
+                                  label="Single-use"
+                                  size="small"
+                                  sx={{
+                                    position: "absolute",
+                                    top: 8,
+                                    left: 8,
+                                    backgroundColor: "#0b5529",
+                                    color: "#fff",
+                                    fontWeight: 700,
+                                  }}
+                                />
+                              </Box>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#111827" }}>
+                                {item.product?.name || "Single-use item"}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Type: {item.product?.type || "N/A"}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Size: {item.product?.size || "N/A"}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Material: {item.product?.material || "N/A"}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                CO₂ per unit: {item.co2PerUnit ?? "N/A"} kg
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Logged at:{" "}
+                                {item.createdAt
+                                  ? new Date(item.createdAt).toLocaleString("vi-VN")
+                                  : "N/A"}
+                              </Typography>
+                            </Paper>
+                          </Grid>
+                        ))}
+                      </Grid>
+                      {singleUseTotalPages > 1 && (
+                        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                          <Stack spacing={2}>
+                            <Pagination
+                              count={singleUseTotalPages}
+                              page={singleUsePage}
+                              onChange={(e, page) => setSingleUsePage(page)}
+                              shape="rounded"
+                              color="primary"
+                            />
+                          </Stack>
+                        </Box>
+                      )}
+                    </>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No single-use record for this transaction.
+                    </Typography>
+                  )}
                 </Paper>
               </Grid>
             </Grid>
@@ -1162,6 +1423,101 @@ export default function StaffReturn() {
               }}
             >
               {isConfirming ? "Confirming..." : "Confirm Return"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Single-use selection dialog */}
+        <Dialog
+          open={singleUseDialogOpen}
+          onClose={handleCloseSingleUse}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{ sx: { width: "100%" } }}
+        >
+          <DialogTitle sx={{ fontWeight: 700, color: "#12422a" }}>
+            Chọn ly/hộp single-use để ghi nhận CO₂
+          </DialogTitle>
+          <DialogContent dividers>
+            {isLoadingSingleUse ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                <CircularProgress size={28} />
+              </Box>
+            ) : singleUseList.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Không tìm thấy sản phẩm single-use cho doanh nghiệp.
+              </Typography>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel id="single-use-select-label">Chọn sản phẩm</InputLabel>
+                  <Select
+                    labelId="single-use-select-label"
+                    value={selectedSingleUseId}
+                    label="Chọn sản phẩm"
+                    onChange={(e) => setSelectedSingleUseId(e.target.value)}
+                  >
+                    <MenuItem value="">
+                      <em>-- Chọn single-use --</em>
+                    </MenuItem>
+                    {singleUseList.map((p) => (
+                      <MenuItem key={p._id || p.id} value={p._id || p.id}>
+                        {p.name} • {p.productSizeId?.sizeName || "N/A"} • {p.materialId?.materialName || "N/A"}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <Grid container spacing={2}>
+                  {singleUseList.map((p) => {
+                    const isSelected = (p._id || p.id) === selectedSingleUseId;
+                    return (
+                      <Grid item xs={12} sm={6} md={4} key={p._id || p.id}>
+                        <Paper
+                          variant="outlined"
+                          onClick={() => setSelectedSingleUseId(p._id || p.id)}
+                          sx={{
+                            p: 2,
+                            height: "100%",
+                            borderRadius: 2,
+                            cursor: "pointer",
+                            borderColor: isSelected ? "#0b5529" : "#e5e7eb",
+                            backgroundColor: isSelected ? "#f0f7f3" : "#ffffff",
+                            transition: "all 0.2s",
+                            "&:hover": { borderColor: "#0b5529", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" },
+                          }}
+                        >
+                          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#111827", mb: 0.75 }}>
+                            {p.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Size: {p.productSizeId?.sizeName || "N/A"} ({p.productSizeId?.minWeight || "?"} - {p.productSizeId?.maxWeight || "?"} g)
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Material: {p.materialId?.materialName || "N/A"}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            CO₂: {p.co2Emission ?? "N/A"} kg
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseSingleUse} disabled={isConfirmingSingleUse}>
+              Đóng
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleConfirmSingleUse}
+              disabled={!selectedSingleUseId || isConfirmingSingleUse}
+              sx={{ backgroundColor: "#12422a", "&:hover": { backgroundColor: "#0d2e1c" } }}
+            >
+              {isConfirmingSingleUse ? "Đang ghi nhận..." : "Ghi nhận CO₂"}
             </Button>
           </DialogActions>
         </Dialog>

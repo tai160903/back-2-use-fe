@@ -38,7 +38,7 @@ const staffSidebarItems = [
   },
   {
     id: "staff-return",
-    label: "Trả Hàng",
+    label: "Return Product",
     icon: <FaBoxOpen className="navbar-icon" />,
     path: PATH.STAFF_RETURN,
   },
