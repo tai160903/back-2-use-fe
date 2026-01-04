@@ -421,6 +421,14 @@ export default function useRouterElements() {
           ),
         },
         {
+          path: PATH.STAFF_TRANSACTION_DETAIL,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <BorrowTransactionDetail type="business" />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: PATH.STAFF_VOUCHER,
           element: (
             <ProtectedRoute allowedRoles={["staff"]}>
