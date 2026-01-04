@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   getBusinessTransactionDetailApi,
@@ -18,7 +18,8 @@ import {
   CardContent,
   Grid,
   Divider,
-  Button
+  Button,
+  Pagination,
 } from '@mui/material';
 import { 
   FaArrowLeft, 
@@ -43,6 +44,7 @@ import { PATH } from '../../../routes/path';
 const BorrowTransactionDetail = ({ type = 'business' }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   
   const { borrowDetail, isDetailLoading, error } = useSelector((state) => state.borrow);
@@ -50,6 +52,9 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
     singleUseDetail = [],
     isLoading: isLoadingSingleUseDetail,
   } = useSelector((state) => state.singleUse);
+
+  const SINGLE_USE_PAGE_SIZE = 3;
+  const [singleUsePage, setSingleUsePage] = useState(1);
 
   useEffect(() => {
     if (id) {
@@ -62,12 +67,24 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
     }
   }, [id, dispatch, type]);
 
+  useEffect(() => {
+    setSingleUsePage(1);
+  }, [singleUseDetail]);
+
   const handleBack = () => {
+    const fromPath = location.state?.from;
+
+    // Nếu có state.from, ưu tiên quay lại đúng trang gốc
+    if (fromPath) return navigate(fromPath);
+
     if (type === 'business') {
-      navigate(PATH.BUSINESS_CO2_REPORT);
-    } else {
-      navigate(PATH.CUSTOMER_CO2_REPORT);
+      // Fallback theo context URL
+      if (location.pathname.startsWith('/staff')) return navigate(PATH.STAFF_TRANSACTION);
+      return navigate(PATH.BUSINESS_CO2_REPORT);
     }
+
+    // customer
+    navigate(PATH.CUSTOMER_CO2_REPORT);
   };
 
   const formatDate = (dateString) => {
@@ -193,9 +210,16 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
   const previousImages = detail.previousConditionImages || {};
   const currentImages = detail.currentConditionImages || {};
   const walletTransactions = detail.walletTransactions || [];
-  const previousDamageFaces = detail.previousDamageFaces || [];
   const currentDamageFaces = detail.currentDamageFaces || [];
   const singleUseList = Array.isArray(singleUseDetail) ? singleUseDetail : [];
+  const singleUseTotalPages = Math.max(
+    1,
+    Math.ceil(singleUseList.length / SINGLE_USE_PAGE_SIZE)
+  );
+  const singleUsePageItems = singleUseList.slice(
+    (singleUsePage - 1) * SINGLE_USE_PAGE_SIZE,
+    singleUsePage * SINGLE_USE_PAGE_SIZE
+  );
 
   const imageFaces = [
     { key: 'frontImage', label: 'Front' },
@@ -503,7 +527,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                 </Typography>
               ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                  {singleUseList.map((item) => {
+                  {singleUsePageItems.map((item) => {
                     const product = item.product || {};
                     const staff = item.staff || {};
                     const loggedAt = item.createdAt
@@ -593,6 +617,18 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                       </Box>
                     );
                   })}
+                  {singleUseTotalPages > 1 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                      <Pagination
+                        count={singleUseTotalPages}
+                        page={singleUsePage}
+                        onChange={(_, page) => setSingleUsePage(page)}
+                        shape="rounded"
+                        color="primary"
+                        size="small"
+                      />
+                    </Box>
+                  )}
                 </Box>
               )}
             </CardContent>

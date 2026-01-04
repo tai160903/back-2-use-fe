@@ -17,12 +17,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Chip,
-  Divider,
   Pagination,
   Stack,
-  Card,
-  CardContent,
 } from "@mui/material";
 import Rating from "@mui/material/Rating";
 import { FaArrowUpLong } from "react-icons/fa6";
@@ -37,13 +33,13 @@ import { getUserRole } from "../../../utils/authUtils";
 import { useForm, Controller } from "react-hook-form";
 import {
   getTransactionHistoryApi,
-  getDetailsBorrowTransactionCustomerApi,
   cancelBorrowTransactionCustomerApi,
   extendBorrowProductApi,
 } from "../../../store/slices/borrowSlice";
 import { giveFeedbackApi } from "../../../store/slices/feedbackSlice";
-import { getDetailSingleUseApi } from "../../../store/slices/singleUseSlice";
 import toast from "react-hot-toast";
+import { useNavigate, useLocation } from "react-router-dom";
+import { PATH } from "../../../routes/path";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const diffDaysCeil = (later, earlier) => {
@@ -839,14 +835,11 @@ function FailedCard({ item }) {
 
 export default function TransactionHistory() {
   const dispatch = useDispatch();
-  const { borrow, isLoading, borrowDetail, isDetailLoading, totalPages } =
-    useSelector((state) => state.borrow);
-  const {
-    singleUseDetail = [],
-    isLoading: isLoadingSingleUseDetail,
-  } = useSelector((state) => state.singleUse);
+  const { borrow, isLoading, totalPages } = useSelector((state) => state.borrow);
   const { refetch: refetchUserInfo } = useUserInfo();
   const role = getUserRole();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     control,
@@ -867,7 +860,6 @@ export default function TransactionHistory() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [value, setValue] = useState(0); // tab hiện tại
-  const [openDetail, setOpenDetail] = useState(false);
   const [openCancel, setOpenCancel] = useState(false);
   const [selectedCancelId, setSelectedCancelId] = useState(null);
   const [openExtend, setOpenExtend] = useState(false);
@@ -913,13 +905,9 @@ export default function TransactionHistory() {
 
   const handleViewDetails = (id) => {
     if (!id) return;
-    dispatch(getDetailsBorrowTransactionCustomerApi(id));
-    dispatch(getDetailSingleUseApi({ borrowTransactionId: id }));
-    setOpenDetail(true);
-  };
-
-  const handleCloseDetail = () => {
-    setOpenDetail(false);
+    navigate(PATH.CUSTOMER_TRANSACTION_DETAIL.replace(":id", id), {
+      state: { from: location.pathname },
+    });
   };
 
   const handleOpenCancel = (id) => {
@@ -1040,32 +1028,6 @@ export default function TransactionHistory() {
   };
 
   const filteredData = transactions;
-
-  const detail = borrowDetail || {};
-  const detailProduct = detail.productId || {};
-  const detailGroup = detailProduct.productGroupId || {};
-  const detailMaterial = detailGroup.materialId || {};
-  const detailSize = detailProduct.productSizeId || {};
-  const detailBusiness = detail.businessId || {};
-  const detailPreviousImages = detail.previousConditionImages || {};
-  const detailCurrentImages = detail.currentConditionImages || {};
-  const conditionFaces = ["front", "back", "left", "right", "top", "bottom"];
-  const detailQrCode =
-    detailProduct.qrCode ||
-    detail.qrCode ||
-    detailProduct.serialNumber ||
-    "";
-  const singleUseList = Array.isArray(singleUseDetail) ? singleUseDetail : [];
-
-  const toVNDate = (d) =>
-    d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
-
-  // Format type label in English
-  const detailRawType = detail.borrowTransactionType;
-  let detailTypeLabel = detailRawType;
-  if (detailRawType === "borrow") detailTypeLabel = "Borrow";
-  if (detailRawType === "return_success") detailTypeLabel = "Return Success";
-  if (detailRawType === "return_failed") detailTypeLabel = "Return Failed";
 
   return (
     <div className="transaction">
@@ -1233,452 +1195,6 @@ export default function TransactionHistory() {
           </Stack>
         )}
 
-        {/* Detail Popup */}
-        <Dialog
-          open={openDetail}
-          onClose={handleCloseDetail}
-          fullWidth
-          maxWidth="md"
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              maxWidth: 900,
-            },
-          }}
-        >
-          <DialogTitle
-            sx={{
-              fontWeight: 700,
-              fontSize: 18,
-              backgroundColor: "#0b5529",
-              color: "#ffffff",
-              borderBottom: "1px solid #eee",
-            }}
-          >
-            Transaction Detail
-          </DialogTitle>
-          <DialogContent dividers>
-            {isDetailLoading ? (
-              <Typography>Loading transaction detail...</Typography>
-            ) : !detail || !detail._id ? (
-              <Typography>Transaction not found.</Typography>
-            ) : (
-              <Box className="borrow-detail-popup" sx={{ mt: 1 }}>
-                {/* Header sản phẩm + chip trạng thái */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    mb: 2,
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={
-                      detailGroup.imageUrl ||
-                      detailProduct.imageUrl ||
-                      "https://via.placeholder.com/150"
-                    }
-                    alt={detailGroup.name || "Product"}
-                    sx={{
-                      width: 120,
-                      height: 120,
-                      borderRadius: 2,
-                      objectFit: "cover",
-                      boxShadow: 2,
-                    }}
-                  />
-                  <Box sx={{ flex: 1 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        mb: 1,
-                      }}
-                    >
-                      <Typography variant="h6">
-                        {detailGroup.name || "Unknown Item"}
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <Chip
-                          size="small"
-                          label={detailTypeLabel}
-                          variant="outlined"
-                          sx={{
-                            borderColor: "#0b5529",
-                            color: "#0b5529",
-                            fontWeight: 500,
-                          }}
-                        />
-                        <Chip
-                          size="small"
-                          label={detail.status}
-                          variant="filled"
-                          sx={{
-                            backgroundColor: "#0b5529",
-                            color: "#ffffff",
-                            fontWeight: 500,
-                          }}
-                        />
-                      </Box>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Material: {detailMaterial.materialName || "N/A"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Size: {detailSize.sizeName || "N/A"}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Two columns: Transaction & Business */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 2.5,
-                  }}
-                >
-                  <Box>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 1, fontWeight: 600 }}
-                    >
-                      Transaction Info
-                    </Typography>
-                    <Typography variant="body2">
-                      Borrowed at:{" "}
-                      <strong>
-                        {toVNDate(detail.borrowDate || detail.createdAt)}
-                      </strong>
-                    </Typography>
-                    <Typography variant="body2">
-                      Due date:{" "}
-                      <strong>{toVNDate(detail.dueDate)}</strong>
-                    </Typography>
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      Deposit:{" "}
-                      <span
-                        style={{ color: "#cc3500", fontWeight: "bold" }}
-                      >
-                        {Number(detail.depositAmount || 0).toLocaleString(
-                          "vi-VN"
-                        )}{" "}
-                        VND
-                      </span>
-                    </Typography>
-                  </Box>
-
-                  <Box>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 1, fontWeight: 600 }}
-                    >
-                      Business
-                    </Typography>
-                    <Typography variant="body2">
-                      Name:{" "}
-                      <strong>
-                        {detailBusiness.businessName || "N/A"}
-                      </strong>
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ wordBreak: "break-word" }}
-                    >
-                      Address: {detailBusiness.businessAddress || "N/A"}
-                    </Typography>
-                    <Typography variant="body2">
-                      Phone: {detailBusiness.businessPhone || "N/A"}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Only show previous & current images for condition */}
-                <Divider sx={{ my: 2 }} />
-                <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 1.5, fontWeight: 600 }}
-                >
-                  Condition images
-                </Typography>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                    gap: 2,
-                  }}
-                >
-                  <Box>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 1, fontWeight: 600 }}
-                    >
-                      Previous condition
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: { xs: "repeat(3, 1fr)" },
-                        gap: 1,
-                      }}
-                    >
-                      {conditionFaces.map((face) => {
-                        const src =
-                          detailPreviousImages[`${face}Image`] || null;
-                        if (!src) return null;
-                        return (
-                          <Box
-                            key={`prev-${face}`}
-                            sx={{ textAlign: "center" }}
-                          >
-                            <Box
-                              component="img"
-                              src={src}
-                              alt={`Previous ${face}`}
-                              sx={{
-                                width: "100%",
-                                height: 70,
-                                objectFit: "cover",
-                                borderRadius: 1,
-                                border: "1px solid #eee",
-                              }}
-                            />
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {face.charAt(0).toUpperCase() + face.slice(1)}
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-                  </Box>
-
-                  <Box>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 1, fontWeight: 600 }}
-                    >
-                      Current condition
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: { xs: "repeat(3, 1fr)" },
-                        gap: 1,
-                      }}
-                    >
-                      {conditionFaces.map((face) => {
-                        const src =
-                          detailCurrentImages[`${face}Image`] || null;
-                        if (!src) return null;
-                        return (
-                          <Box
-                            key={`curr-${face}`}
-                            sx={{ textAlign: "center" }}
-                          >
-                            <Box
-                              component="img"
-                              src={src}
-                              alt={`Current ${face}`}
-                              sx={{
-                                width: "100%",
-                                height: 70,
-                                objectFit: "cover",
-                                borderRadius: 1,
-                                border: "1px solid #eee",
-                              }}
-                            />
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {face.charAt(0).toUpperCase() + face.slice(1)}
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-                  </Box>
-                </Box>
-
-                <Card
-                  sx={{
-                    mt: 2,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                    borderRadius: 2,
-                    border: "1px solid rgba(11, 85, 41, 0.1)",
-                    backgroundColor: "#f5f7fa",
-                  }}
-                >
-                  <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        mb: 1.5,
-                        gap: 1,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 700, color: "#0b5529", fontSize: "1rem" }}
-                      >
-                        Single-use consumption
-                      </Typography>
-                    </Box>
-                    {isLoadingSingleUseDetail ? (
-                      <Typography>Loading single-use consumption...</Typography>
-                    ) : singleUseList.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No single-use consumption records.
-                      </Typography>
-                    ) : (
-                      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-                        {singleUseList.map((item) => {
-                          const product = item.product || {};
-                          const staff = item.staff || {};
-                          const loggedAt = item.createdAt
-                            ? new Date(item.createdAt).toLocaleString("vi-VN")
-                            : "N/A";
-                          const productImage =
-                            product.imageUrl ||
-                            "https://via.placeholder.com/120x120?text=Single-use";
-
-                          return (
-                            <Box
-                              key={item._id || item.id}
-                              sx={{
-                                border: "1px solid #e5e7eb",
-                                borderRadius: 1.5,
-                                p: 1.5,
-                                backgroundColor: "#ffffff",
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  display: "grid",
-                                  gridTemplateColumns: { xs: "1fr", sm: "140px 1fr 1fr" },
-                                  gap: 1.5,
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Box
-                                  component="img"
-                                  src={productImage}
-                                  alt={product.name || "Single-use item"}
-                                  sx={{
-                                    width: "100%",
-                                    maxWidth: 140,
-                                    height: 120,
-                                    objectFit: "cover",
-                                    borderRadius: 1.5,
-                                    border: "1px solid #e5e7eb",
-                                    backgroundColor: "#fff",
-                                  }}
-                                />
-
-                                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                                    {product.name || "Single-use item"}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Type: <strong>{product.type || "N/A"}</strong>
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Size: <strong>{product.size || "N/A"}</strong>
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Material: <strong>{product.material || "N/A"}</strong>
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Weight: <strong>{product.weight ?? "N/A"} g</strong>
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    CO2 per unit:{" "}
-                                    <strong>
-                                      {item.co2PerUnit !== undefined && item.co2PerUnit !== null
-                                        ? `${item.co2PerUnit} kg`
-                                        : "N/A"}
-                                    </strong>
-                                  </Typography>
-                                </Box>
-
-                                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                                    Staff
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Name: <strong>{staff.fullName || "N/A"}</strong>
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Email: <strong>{staff.email || "N/A"}</strong>
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Phone: <strong>{staff.phone || "N/A"}</strong>
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Logged at: <strong>{loggedAt}</strong>
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </Box>
-                          );
-                        })}
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* QR Code section (giống BusinessTransaction) */}
-                {detailQrCode && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 1.5, fontWeight: 600 }}
-                    >
-                      QR Code
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={detailQrCode}
-                        alt={`QR Code for ${detailProduct.qrCode || "product"}`}
-                        sx={{
-                          width: 180,
-                          height: 180,
-                          objectFit: "contain",
-                          backgroundColor: "#ffffff",
-                          borderRadius: 2,
-                          border: "1px solid #e5e7eb",
-                          p: 1.5,
-                        }}
-                      />
-                    </Box>
-                  </>
-                )}
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDetail}>Close</Button>
-          </DialogActions>
-        </Dialog>
 
         {/* Cancel confirmation popup */}
         <Dialog
