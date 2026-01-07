@@ -290,6 +290,7 @@ function SuccessCard({ item }) {
   const sizeObj = product.productSizeId || {};
   const customer = item.customerId || {};
   const ecoPointChanged = item.ecoPointChanged ?? null;
+  const rewardPointChanged = item.rewardPointChanged ?? null;
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -510,6 +511,17 @@ function SuccessCard({ item }) {
                   </span>  
                 </Typography>
               )}
+              {rewardPointChanged !== null && (
+                <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
+                  Reward Points:{" "}
+                  <span style={{ fontWeight: 600 }}>
+                    {rewardPointChanged > 0
+                      ? `-${rewardPointChanged}`
+                      : rewardPointChanged}{" "}
+                    points
+                  </span>
+                </Typography>
+              )}
                 </>
               )}
               <div style={{ display: "flex", gap: "10px" }}>
@@ -536,6 +548,7 @@ function FailedCard({ item }) {
   const sizeObj = product.productSizeId || {};
   const customer = item.customerId || {};
   const ecoPointChanged = item.ecoPointChanged ?? null;
+  const rewardPointChanged = item.rewardPointChanged ?? null;
 
   const name = productGroup.name || "Unknown Item";
   const image =
@@ -735,6 +748,17 @@ function FailedCard({ item }) {
                   </span>  
                 </Typography>
               )}
+              {rewardPointChanged !== null && (
+                <Typography sx={{ marginLeft: "10px", marginTop: "10px" }}>
+                  Reward Points:{" "}
+                  <span style={{ fontWeight: 600 }}>
+                    {rewardPointChanged > 0
+                      ? `-${rewardPointChanged}`
+                      : rewardPointChanged}{" "}
+                    points
+                  </span>
+                </Typography>
+              )}
 
               {/* No legit points display for failed transactions here */}
               <div className="borrow-failedPoint">
@@ -815,9 +839,6 @@ export default function BusinessTransaction() {
   };
 
   const filteredData = transactions;
-
-  const toVNDate = (d) =>
-    d ? new Date(d).toLocaleDateString("vi-VN") : "N/A";
 
   return (
     <div className="transaction">

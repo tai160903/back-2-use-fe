@@ -282,7 +282,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
 
       <Grid container spacing={2.5}>
         {/* Left Column - Main Info */}
-        <Grid item xs={12} lg={8}>
+        <Grid item size={6}>
           {/* Transaction Overview Card */}
           <Card sx={{ 
             mb: 2.5, 
@@ -335,7 +335,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                 )}
               </Box>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid item size={6}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25 }}>
                     <FaCalendarAlt style={{ color: '#0b5529', fontSize: '1rem', marginTop: '2px', flexShrink: 0 }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -429,7 +429,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                 Environmental Impact
               </Typography>
               <Grid container spacing={1.5}>
-                <Grid item xs={6} sm={3}>
+                <Grid item size={3}>
                   <Box sx={{ 
                     textAlign: 'center', 
                     p: 1.5, 
@@ -446,7 +446,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid item size={3}>
                   <Box sx={{ 
                     textAlign: 'center', 
                     p: 1.5, 
@@ -464,7 +464,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                   </Box>
                 </Grid>
                 {detail.rankingPointChanged !== undefined && (
-                  <Grid item xs={6} sm={3}>
+                  <Grid item size={3}>
                     <Box sx={{ 
                       textAlign: 'center', 
                       p: 1.5, 
@@ -483,7 +483,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                   </Grid>
                 )}
                 {detail.rewardPointChanged !== undefined && (
-                  <Grid item xs={6} sm={3}>
+                  <Grid item size={3}>
                     <Box sx={{ 
                       textAlign: 'center', 
                       p: 1.5, 
@@ -707,7 +707,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                         const imageUrl = previousImages[face.key];
                         if (!imageUrl) return null;
                         return (
-                          <Grid item xs={6} sm={4} md={3} key={face.key}>
+                          <Grid item size={2} key={face.key}>
                             <Box sx={{ textAlign: 'center' }}>
                               <img
                                 src={imageUrl}
@@ -771,7 +771,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                         const damageFace = currentDamageFaces.find(d => d.face === face.key.replace('Image', ''));
                         const hasDamage = damageFace && damageFace.issue && damageFace.issue !== 'none';
                         return (
-                          <Grid item xs={6} sm={4} md={3} key={face.key}>
+                          <Grid item size={2} key={face.key}>
                             <Box sx={{ 
                               textAlign: 'center',
                               position: 'relative'
@@ -934,7 +934,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
         </Grid>
 
         {/* Right Column - Side Info */}
-        <Grid item xs={12} lg={4}>
+        <Grid item size={6}>
           {/* Customer/Business Info */}
           <Card sx={{ 
             mb: 2.5, 
@@ -1132,7 +1132,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                       borderRadius: '12px',
                       padding: '12px',
                       backgroundColor: '#ffffff',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     }}
                   />
                 </Box>
