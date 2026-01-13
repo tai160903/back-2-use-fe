@@ -208,7 +208,6 @@ export default function ProductItems() {
       }
 
       const sizeDeposit = product?.productSizeId?.depositValue;
-      const sizeCo2 = product?.productSizeId?.co2Reduced ?? product?.productSizeId?.co2EmissionPerKg;
       return {
         id: product.id || product._id,
         qrCode: product.serialNumber || product.qrCode || 'N/A',
@@ -218,7 +217,6 @@ export default function ProductItems() {
         uses: product.useCount || product.uses || 0,
         reuseCount: product.reuseCount ?? product.useCount ?? product.uses ?? 0,
         guaranteeFee: product.depositValue ?? sizeDeposit ?? product.deposit ?? 0,
-        co2Reduced: product.co2Reduced ?? product.totalCo2Reduced ?? sizeCo2 ?? 0,
         status: product.status || 'available',
         nonAvailableStatus: product.nonAvailableStatus || null,
         product: product, // Store full product object
@@ -766,7 +764,6 @@ export default function ProductItems() {
                       <TableCell className="table-header-cell">Uses</TableCell>
                       <TableCell className="table-header-cell">Condition</TableCell>
                       <TableCell className="table-header-cell">Guarantee fee</TableCell>
-                      <TableCell className="table-header-cell">CO₂ Reduced</TableCell>
                       <TableCell className="table-header-cell">Status</TableCell>
                       <TableCell className="table-header-cell" align="center">Actions</TableCell>
                     </TableRow>
@@ -838,11 +835,6 @@ export default function ProductItems() {
                         <TableCell>
                           <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600 }}>
                             {formatVnd(item.guaranteeFee)} VND
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {Number(item.co2Reduced || 0).toFixed(2)} kg
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -968,7 +960,6 @@ export default function ProductItems() {
                           { label: 'Created Date', value: formatDate(selectedItem.createdAt) },
                           { label: 'Uses', value: selectedItem.reuseCount ?? selectedItem.uses ?? 0 },
                           { label: 'Guarantee fee', value: `${formatVnd(selectedItem.guaranteeFee)} VND`, highlight: '#16a34a' },
-                          { label: 'CO₂ Reduced', value: `${Number(selectedItem.co2Reduced || 0).toFixed(2)} kg`, highlight: '#111827' },
                           {
                             label: 'Status',
                             value: (
