@@ -504,7 +504,7 @@ const SingleUseProductSize = () => {
                       Size Name
                     </TableCell>
                     <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
-                      Weight Range (kg)
+                      Weight Range (g)
                     </TableCell>
                     <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
                       Status
@@ -549,7 +549,7 @@ const SingleUseProductSize = () => {
                       </TableCell>
                       <TableCell sx={{ py: 1.75 }}>
                         <Typography variant="body2" sx={{ fontFamily: 'inherit', color: '#6b7280' }}>
-                          {item.minWeight} - {item.maxWeight} kg
+                          {item.minWeight} - {item.maxWeight} g
                         </Typography>
                       </TableCell>
                       <TableCell sx={{ py: 1.75 }}>
@@ -678,7 +678,7 @@ const SingleUseProductSize = () => {
 
               <TextField
                 fullWidth
-                label="Minimum Weight (kg)"
+                label="Minimum Weight (g)"
                 placeholder="e.g., 0, 10, 50"
                 name="minWeight"
                 type="number"
@@ -689,11 +689,11 @@ const SingleUseProductSize = () => {
                 size="small"
                 inputProps={{ min: 0, step: 0.1 }}
                 error={!!formErrors.minWeight}
-                helperText={formErrors.minWeight || 'Enter the minimum weight in kilograms'}
+                helperText={formErrors.minWeight || 'Enter the minimum weight in grams'}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: 'white',
-                    '&:hover fieldset': {
+                    '&:hover fieldset': { 
                       borderColor: '#12422a',
                     },
                     '&.Mui-focused fieldset': {
@@ -706,7 +706,7 @@ const SingleUseProductSize = () => {
 
               <TextField
                 fullWidth
-                label="Maximum Weight (kg)"
+                label="Maximum Weight (g)"
                 placeholder="e.g., 10, 50, 100"
                 name="maxWeight"
                 type="number"
@@ -717,7 +717,7 @@ const SingleUseProductSize = () => {
                 size="small"
                 inputProps={{ min: 0, step: 0.1 }}
                 error={!!formErrors.maxWeight}
-                helperText={formErrors.maxWeight || 'Enter the maximum weight in kilograms (must be greater than minimum weight)'}
+                helperText={formErrors.maxWeight || 'Enter the maximum weight in grams (must be greater than minimum weight)'}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: 'white',

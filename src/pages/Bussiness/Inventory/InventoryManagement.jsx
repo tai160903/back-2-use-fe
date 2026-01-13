@@ -2183,7 +2183,7 @@ export default function InventoryManagement() {
                     }}
                   >
                     <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    Weight (kg) <span style={{ color: '#f44336' }}>*</span>
+                    Weight (g) <span style={{ color: '#f44336' }}>*</span>
                   </Typography>
                 </Box>
                 <TextField
