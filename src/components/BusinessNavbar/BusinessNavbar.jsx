@@ -39,6 +39,7 @@ import { FiPackage } from "react-icons/fi";
 import { AiOutlinePlusCircle } from "react-icons/ai";
 import { AiOutlineGift } from "react-icons/ai";
 import { LuStore } from "react-icons/lu";
+import { FaLeaf } from "react-icons/fa";
 
 const businessSidebarItems = [
   { id: "business-dashboard", label: "Dashboard", path: PATH.BUSINESS },
@@ -47,6 +48,7 @@ const businessSidebarItems = [
   { id: "materials", label: "Materials", path: PATH.BUSINESS_MATERIALS },
   { id: "transaction", label: "Transaction", path: PATH.BUSINESS_TRANSACTION },
   { id: "co2-report", label: "CO2 Report", path: PATH.BUSINESS_CO2_REPORT },
+  { id: "single-use-usage", label: "Single-use Usage", path: PATH.BUSINESS_SINGLE_USE_HISTORY },
   { id: "subscriptions", label: "Subscriptions", path: PATH.BUSINESS_SUBSCRIPTIONS },
   { id: "reedem-rewards", label: "Reedem Rewards", path: PATH.BUSINESS_REEDEM_REWARDS },
   {
@@ -92,6 +94,7 @@ const BusinessNavbar = ({ onDrawerToggle, sidebarItems }) => {
       materials: <FiPackage className="navbar-icon" />,
       transaction: <MdPayment className="navbar-icon" />,
       "co2-report": <MdOutlineEco className="navbar-icon" />,
+      "single-use-usage": <FaLeaf className="navbar-icon" />,
       "online-borrow-orders": <MdShoppingCart className="navbar-icon" />,
       subscriptions: <MdSubscriptions className="navbar-icon" />,
       "reedem-rewards": <AiOutlineGift className="navbar-icon" />,

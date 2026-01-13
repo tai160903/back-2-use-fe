@@ -533,6 +533,7 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                     const loggedAt = item.createdAt
                       ? new Date(item.createdAt).toLocaleString('en-US')
                       : 'N/A';
+                    const blockchainTxHash = item.blockchainTxHash || 'N/A';
                     const productImage =
                       product.imageUrl ||
                       'https://via.placeholder.com/140x120?text=Single-use';
@@ -611,6 +612,24 @@ const BorrowTransactionDetail = ({ type = 'business' }) => {
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               Logged at: <strong>{loggedAt}</strong>
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Blockchain Tx Hash:
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                wordBreak: 'break-all',
+                                fontFamily: 'monospace',
+                                backgroundColor: '#f5f7fa',
+                                p: 0.75,
+                                borderRadius: 1,
+                                border: '1px dashed #d0d7de',
+                                color: blockchainTxHash === 'N/A' ? 'text.secondary' : '#0b5529',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {blockchainTxHash}
                             </Typography>
                           </Box>
                         </Box>

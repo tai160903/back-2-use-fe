@@ -32,6 +32,7 @@ const sidebarItems = [
   // { id: "stores", label: "Stores", path: PATH.STORE },
   { id: "history", label: "History", path: PATH.TRANSACTION_HISTORY },
   { id: "co2-report", label: "CO₂ Report", path: PATH.CUSTOMER_CO2_REPORT },
+  { id: "single-use-usage", label: "Single-use Usage", path: PATH.CUSTOMER_SINGLE_USE_HISTORY },
   { id: "rewards", label: "Voucher Wallet", path: PATH.REWARDS },
   { id: "logout", label: "Logout", path: null },
 ];
@@ -69,6 +70,7 @@ const Navbar = ({ onDrawerToggle }) => {
       stores: <IoStorefrontOutline color="#d84315" className="navbar-icon" />,
       history: <GoHistory color="#6a1b9a" className="navbar-icon" />,
       "co2-report": <MdOutlineEco color="#2e7d32" className="navbar-icon" />,
+      "single-use-usage": <MdOutlineEco color="#388e3c" className="navbar-icon" />,
       rewards: <MdRedeem color="#fbc02d" className="navbar-icon" />,
       assistant: <TiMessages color="#0097a7" className="navbar-icon" />,
       logout: <CiLogout color="#fb4225" className="navbar-icon" />,

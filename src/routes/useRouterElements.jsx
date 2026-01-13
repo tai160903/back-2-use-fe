@@ -74,6 +74,7 @@ import StaffDashboard from "../pages/Staff/StaffDashboard/StaffDashboard";
 import StaffProfile from "../pages/Staff/StaffProfile/StaffProfile";
 import StaffVoucher from "../pages/Staff/StaffVoucher/StaffVoucher";
 import StaffReturn from "../pages/Staff/StaffReturn/StaffReturn";
+import SingleUseUsageHistory from "../pages/SingleUse/SingleUseUsageHistory";
 
 export default function useRouterElements() {
   const elements = useRoutes([
@@ -263,6 +264,14 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATH.CUSTOMER_SINGLE_USE_HISTORY,
+          element: (
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <SingleUseUsageHistory role="customer" />
+            </ProtectedRoute>
+          ),
+        },
       ],
     },
 
@@ -384,6 +393,14 @@ export default function useRouterElements() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATH.BUSINESS_SINGLE_USE_HISTORY,
+          element: (
+            <ProtectedRoute allowedRoles={["business"]}>
+              <SingleUseUsageHistory role="business" />
+            </ProtectedRoute>
+          ),
+        },
       ],
     },
 
@@ -441,6 +458,14 @@ export default function useRouterElements() {
           element: (
             <ProtectedRoute allowedRoles={["staff"]}>
               <StaffReturn />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATH.STAFF_SINGLE_USE_HISTORY,
+          element: (
+            <ProtectedRoute allowedRoles={["staff"]}>
+              <SingleUseUsageHistory role="staff" />
             </ProtectedRoute>
           ),
         },

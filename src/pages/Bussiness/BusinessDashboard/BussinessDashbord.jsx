@@ -50,9 +50,10 @@ import { PATH } from '../../../routes/path';
 import { 
   getBusinessDashboardOverview, 
   getBusinessBorrowTransactionsMonthly,
-  getBusinessTopBorrowed
+  getBusinessTopBorrowed,
+  getBusinessTopLeaderboard
 } from '../../../store/slices/bussinessSlice';
-import { Box, CircularProgress, TextField, Grid, Avatar, Chip, Typography } from '@mui/material';
+import { Box, CircularProgress, TextField, Grid, Avatar, Chip, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 
 export default function BussinessDashbord() {
   const navigate = useNavigate();
@@ -65,11 +66,15 @@ export default function BussinessDashbord() {
     borrowTransactionsMonthly,
     borrowTransactionsMonthlyLoading,
     topBorrowed,
-    topBorrowedLoading
+    topBorrowedLoading,
+    businessTopLeaderboard,
+    businessTopLeaderboardLoading
   } = useSelector((state) => state.businesses);
 
-  // Cho phép nhập tạm thời (string) để không tự nhảy về 5 khi xóa ô input
   const [topBorrowedLimit, setTopBorrowedLimit] = useState('5');
+  const [topBusinessLimit, setTopBusinessLimit] = useState('5');
+  const [topBusinessSortBy, setTopBusinessSortBy] = useState('co2Reduced');
+  const [topBusinessOrder, setTopBusinessOrder] = useState('desc');
 
   // Fetch dashboard data on component mount
   useEffect(() => {
@@ -79,12 +84,22 @@ export default function BussinessDashbord() {
       type: '',
       status: ''
     }));
+    dispatch(getBusinessTopLeaderboard({ top: 5, sortBy: 'co2Reduced', order: 'desc' }));
   }, [dispatch]);
 
   useEffect(() => {
     const topNumber = Number(topBorrowedLimit);
     dispatch(getBusinessTopBorrowed({ top: Number.isFinite(topNumber) && topNumber > 0 ? topNumber : 5 }));
   }, [dispatch, topBorrowedLimit]);
+
+  useEffect(() => {
+    const topNum = Number(topBusinessLimit);
+    dispatch(getBusinessTopLeaderboard({
+      top: Number.isFinite(topNum) && topNum > 0 ? topNum : 5,
+      sortBy: topBusinessSortBy || 'co2Reduced',
+      order: topBusinessOrder || 'desc'
+    }));
+  }, [dispatch, topBusinessLimit, topBusinessSortBy, topBusinessOrder]);
 
   // Calculate stats from dashboard overview
   const stats = dashboardOverview ? {
@@ -120,6 +135,12 @@ export default function BussinessDashbord() {
 
   // topBorrowed should be an array of products from Redux store
   const topBorrowedList = Array.isArray(topBorrowed) ? topBorrowed : [];
+  const topBusinessList = Array.isArray(businessTopLeaderboard?.data)
+    ? businessTopLeaderboard.data
+    : Array.isArray(businessTopLeaderboard)
+    ? businessTopLeaderboard
+    : [];
+  const businessTopLoading = businessTopLeaderboardLoading;
 
   // Material sales data
   const materialSalesData = [
@@ -378,6 +399,185 @@ export default function BussinessDashbord() {
           </div>
         </div>
       )}
+
+      {/* Top Businesses Leaderboard */}
+      <div className="top-ranking-section">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Top Businesses</h3>
+            <p className="chart-subtitle">Xếp hạng theo CO₂, EcoPoints hoặc đánh giá</p>
+          </div>
+          <FaStore className="chart-icon" />
+        </div>
+
+        <div className="ranking-filters-section">
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#12422a', fontSize: '18px', letterSpacing: '0.5px' }}>
+            Filters
+          </Typography>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item size={3}>
+              <TextField
+                label="Top businesses"
+                type="number"
+                value={topBusinessLimit}
+                onChange={(e) => setTopBusinessLimit(e.target.value)}
+                variant="outlined"
+                size="medium"
+                fullWidth
+                inputProps={{ min: 1, max: 50 }}
+              />
+            </Grid>
+            <Grid item size={3}>
+              <FormControl fullWidth size="medium">
+                <InputLabel id="sort-by-label">Sort by</InputLabel>
+                <Select
+                  labelId="sort-by-label"
+                  label="Sort by"
+                  value={topBusinessSortBy}
+                  onChange={(e) => setTopBusinessSortBy(e.target.value)}
+                >
+                  <MenuItem value="co2Reduced">CO₂ Reduced</MenuItem>
+                  <MenuItem value="ecoPoints">Eco Points</MenuItem>
+                  <MenuItem value="averageRating">Average Rating</MenuItem>
+                  <MenuItem value="rewardPoints">Reward Points</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item size={3}>
+              <FormControl fullWidth size="medium">
+                <InputLabel id="order-label">Order</InputLabel>
+                <Select
+                  labelId="order-label"
+                  label="Order"
+                  value={topBusinessOrder}
+                  onChange={(e) => setTopBusinessOrder(e.target.value)}
+                >
+                  <MenuItem value="desc">Desc</MenuItem>
+                  <MenuItem value="asc">Asc</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </div>
+
+        {businessTopLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '240px' }}>
+            <CircularProgress />
+          </Box>
+        ) : topBusinessList.length > 0 ? (
+          <div className="ranking-cards-grid">
+            {topBusinessList.map((item, index) => {
+              const rank = index + 1;
+              const isTopThree = rank <= 3;
+              const rankColors = {
+                1: { bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', text: '#000' },
+                2: { bg: 'linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%)', text: '#000' },
+                3: { bg: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)', text: '#fff' }
+              };
+              const rankColor = isTopThree ? rankColors[rank] : { bg: '#ffffff', text: '#6b7280' };
+              const rating = Number(item.averageRating || 0).toFixed(1);
+              const co2 = Number(item.co2Reduced || 0).toFixed(3);
+              const eco = Number(item.ecoPoints || 0);
+              const reward = Number(item.rewardPoints || 0);
+              const maxReward = Number(item.maxRewardPoints || 0);
+
+              return (
+                <div 
+                  key={item?._id || index} 
+                  className={`ranking-card ${isTopThree ? 'top-rank' : ''}`}
+                  style={isTopThree ? {
+                    border: `3px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}`,
+                    background: rankColor.bg
+                  } : {}}
+                >
+                  <div className="ranking-card-rank-badge" style={isTopThree ? { background: rankColor.bg, color: rankColor.text } : {}}>
+                    #{rank}
+                  </div>
+                  
+                  <div className="ranking-card-avatar-container">
+                    <Avatar
+                      src={item.businessLogoUrl}
+                      alt={item.businessName}
+                      sx={{ 
+                        width: 96, 
+                        height: 96, 
+                        border: isTopThree ? `4px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}` : '4px solid #12422a',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        fontSize: '28px',
+                        backgroundColor: '#12422a',
+                        color: '#fff'
+                      }}
+                    >
+                      {!item.businessLogoUrl && item.businessName?.[0]}
+                    </Avatar>
+                    {isTopThree && (
+                      <div className="ranking-medal">
+                        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="ranking-card-content">
+                    <div className="ranking-card-header-info">
+                      <h3 className="ranking-card-name" style={isTopThree ? { color: rankColor.text } : {}}>
+                        {item.businessName}
+                      </h3>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', wordBreak: 'break-word' }}>
+                        {item.businessAddress || 'N/A'}
+                      </Typography>
+                    </div>
+
+                    <div className="ranking-card-metrics">
+                      <div className="ranking-metric-item">
+                        <div className="ranking-metric-icon" style={{ backgroundColor: '#16a34a15', color: '#16a34a' }}>
+                          <FaLeaf />
+                        </div>
+                        <div className="ranking-metric-info">
+                          <span className="ranking-metric-label">CO₂ Reduced</span>
+                          <span className="ranking-metric-value">{co2} kg</span>
+                        </div>
+                      </div>
+                      <div className="ranking-metric-item">
+                        <div className="ranking-metric-icon" style={{ backgroundColor: '#0ea5e915', color: '#0ea5e9' }}>
+                          <FaChartLine />
+                        </div>
+                        <div className="ranking-metric-info">
+                          <span className="ranking-metric-label">Eco Points</span>
+                          <span className="ranking-metric-value">{formatNumber(eco)}</span>
+                        </div>
+                      </div>
+                      <div className="ranking-metric-item">
+                        <div className="ranking-metric-icon" style={{ backgroundColor: '#f59e0b15', color: '#f59e0b' }}>
+                          <FaStar />
+                        </div>
+                        <div className="ranking-metric-info">
+                          <span className="ranking-metric-label">Rating</span>
+                          <span className="ranking-metric-value">{rating} ⭐ ({item.totalReviews || 0})</span>
+                        </div>
+                      </div>
+                      <div className="ranking-metric-item">
+                        <div className="ranking-metric-icon" style={{ backgroundColor: '#8b5cf615', color: '#8b5cf6' }}>
+                          <FaDollarSign />
+                        </div>
+                        <div className="ranking-metric-info">
+                          <span className="ranking-metric-label">Reward Points</span>
+                          <span className="ranking-metric-value">
+                            {formatNumber(reward)} / {formatNumber(maxReward || 0)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '240px', backgroundColor: 'white', borderRadius: '16px', border: '2px dashed #e5e7eb' }}>
+            <Typography color="text.secondary" sx={{ fontSize: '16px' }}>Không có dữ liệu</Typography>
+          </Box>
+        )}
+      </div>
 
       {/* Charts Row 1 */}
       <div className="charts-row">

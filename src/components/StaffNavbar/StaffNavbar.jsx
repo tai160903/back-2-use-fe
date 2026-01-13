@@ -31,6 +31,12 @@ const staffSidebarItems = [
     path: PATH.STAFF_TRANSACTION,
   },
   {
+    id: "single-use-usage",
+    label: "Single-use Usage",
+    icon: <FaBoxOpen className="navbar-icon" />,
+    path: PATH.STAFF_SINGLE_USE_HISTORY,
+  },
+  {
     id: "staff-voucher",
     label: "Apply Voucher",
     icon: <IoGiftOutline className="navbar-icon" />,
