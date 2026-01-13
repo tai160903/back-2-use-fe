@@ -462,6 +462,30 @@ export default function CustomerCo2Report() {
                     <Typography variant="caption" color="text.secondary" sx={{ wordBreak: "break-all" }}>
                       {product.serialNumber || product.qrCode || "N/A"}
                     </Typography>
+                    <Box
+                      sx={{
+                        mt: 0.5,
+                        backgroundColor: "#f5f7fa",
+                        border: "1px dashed #d0d7de",
+                        borderRadius: 1,
+                        p: 0.75,
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.25 }}>
+                        Tx Hash:
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          wordBreak: "break-all",
+                          fontFamily: "monospace",
+                          fontWeight: 700,
+                          color: item.blockchainTxHash ? "#0b5529" : "text.secondary",
+                        }}
+                      >
+                        {item.blockchainTxHash || "N/A"}
+                      </Typography>
+                    </Box>
                   </Box>
 
                   <Typography

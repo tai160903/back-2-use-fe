@@ -470,6 +470,22 @@ export const exportCo2Report = createAsyncThunk(
   }
 );
 
+// business top leaderboard
+export const getBusinessTopLeaderboard = createAsyncThunk(
+  "businesses/getBusinessTopLeaderboard",
+  async ({ top = 5, sortBy = 'co2Reduced', order = 'desc' }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/admin/dashboard/business?top=${top}&sortBy=${sortBy}&order=${order}`);
+      return response.data;
+    } catch (error) {
+    return rejectWithValue(
+      error.response ? error.response.data : error.message
+    );
+    }
+  }
+);
+
+
 const businessSlice = createSlice({
   name: "businesses",
   initialState: {
@@ -523,6 +539,9 @@ const businessSlice = createSlice({
     exportCo2Report: null,
     exportCo2ReportLoading: false,
     exportCo2ReportError: null,
+    businessTopLeaderboard: null,
+    businessTopLeaderboardLoading: false,
+    businessTopLeaderboardError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -930,6 +949,20 @@ const businessSlice = createSlice({
       .addCase(exportCo2Report.rejected, (state, { payload }) => {
         state.exportCo2ReportLoading = false;
         state.exportCo2ReportError = payload;
+      })
+      // Business Top Leaderboard
+      .addCase(getBusinessTopLeaderboard.pending, (state) => {
+        state.businessTopLeaderboardLoading = true;
+        state.businessTopLeaderboardError = null;
+      })
+      .addCase(getBusinessTopLeaderboard.fulfilled, (state, { payload }) => {
+        state.businessTopLeaderboardLoading = false;
+        state.businessTopLeaderboard = payload;
+        state.businessTopLeaderboardError = null;
+      })
+      .addCase(getBusinessTopLeaderboard.rejected, (state, { payload }) => {
+        state.businessTopLeaderboardLoading = false;
+        state.businessTopLeaderboardError = payload;
       })
   },
 });

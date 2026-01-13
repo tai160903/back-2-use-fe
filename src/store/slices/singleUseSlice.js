@@ -50,11 +50,28 @@ export const confirmSingleUseProductUsageApi = createAsyncThunk(
     }
 );
 
+export const getDetailSingleUseMyApi = createAsyncThunk(
+    "singleUse/getDetailSingleUseMyApi",
+    async ({page = 1, limit = 10}, { rejectWithValue }) => {
+        try {
+            const response = await fetcher.get(`/single-use-product-usage/my?page=${page}&limit=${limit}`);
+            return response.data;
+        }
+        catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 export const singleUseSlice = createSlice({
     name: "singleUse",
     initialState: {
         singleUse: [],
         singleUseDetail: [],
+        singleUseDetailMy: [],
+        singleUseMyTotal: 0,
+        singleUseMyTotalPages: 0,
+        singleUseMyCurrentPage: 1,
         isLoading: false,
         error: null,
     },
@@ -101,6 +118,23 @@ export const singleUseSlice = createSlice({
             state.singleUseProductMy = payload?.data || payload || [];
         })
         .addCase(confirmSingleUseProductUsageApi.rejected, (state, {payload}) => {
+            state.isLoading = false;
+            state.error = payload;
+        })
+        .addCase(getDetailSingleUseMyApi.pending, (state) => {
+            state.isLoading = true;
+            state.error = null;
+            state.singleUseDetailMy = [];
+        })
+        .addCase(getDetailSingleUseMyApi.fulfilled, (state, {payload}) => {
+            state.isLoading = false;
+            state.error = null;
+            state.singleUseDetailMy = payload?.data || payload?.items || payload || [];
+            state.singleUseMyTotal = payload?.total || 0;
+            state.singleUseMyTotalPages = payload?.totalPages || 0;
+            state.singleUseMyCurrentPage = payload?.currentPage || 1;
+        })
+        .addCase(getDetailSingleUseMyApi.rejected, (state, {payload}) => {
             state.isLoading = false;
             state.error = payload;
         })
