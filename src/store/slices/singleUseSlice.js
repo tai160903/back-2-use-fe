@@ -79,6 +79,12 @@ export const singleUseSlice = createSlice({
         setSingleUse: (state, { payload }) => {
             state.singleUse = payload;
         },
+        clearSingleUseDetailMy: (state) => {
+            state.singleUseDetailMy = [];
+            state.singleUseMyTotal = 0;
+            state.singleUseMyTotalPages = 0;
+            state.singleUseMyCurrentPage = 1;
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(getDetailSingleUseApi.pending, (state) => {
@@ -127,12 +133,36 @@ export const singleUseSlice = createSlice({
             state.singleUseDetailMy = [];
         })
         .addCase(getDetailSingleUseMyApi.fulfilled, (state, {payload}) => {
+            console.log('[singleUseSlice] getDetailSingleUseMyApi fulfilled, payload:', payload);
+            console.log('[singleUseSlice] payload type:', typeof payload);
+            console.log('[singleUseSlice] payload.data:', payload?.data);
+            console.log('[singleUseSlice] payload.items:', payload?.items);
+            console.log('[singleUseSlice] payload.data isArray:', Array.isArray(payload?.data));
+            console.log('[singleUseSlice] payload.items isArray:', Array.isArray(payload?.items));
+            console.log('[singleUseSlice] payload isArray:', Array.isArray(payload));
+            
             state.isLoading = false;
             state.error = null;
-            state.singleUseDetailMy = payload?.data || payload?.items || payload || [];
-            state.singleUseMyTotal = payload?.total || 0;
-            state.singleUseMyTotalPages = payload?.totalPages || 0;
-            state.singleUseMyCurrentPage = payload?.currentPage || 1;
+            
+            // Try multiple ways to extract data
+            let data = [];
+            if (Array.isArray(payload?.data)) {
+                data = payload.data;
+            } else if (Array.isArray(payload?.items)) {
+                data = payload.items;
+            } else if (Array.isArray(payload)) {
+                data = payload;
+            } else if (payload?.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
+                // If data is an object, try to extract array from it
+                data = payload.data.data || payload.data.items || [];
+            }
+            
+            console.log('[singleUseSlice] Final parsed data:', data, 'isArray:', Array.isArray(data), 'length:', data.length);
+            state.singleUseDetailMy = data;
+            state.singleUseMyTotal = payload?.total || payload?.data?.total || 0;
+            state.singleUseMyTotalPages = payload?.totalPages || payload?.data?.totalPages || 0;
+            state.singleUseMyCurrentPage = payload?.currentPage || payload?.data?.currentPage || 1;
+            console.log('[singleUseSlice] State updated - singleUseDetailMy length:', state.singleUseDetailMy.length);
         })
         .addCase(getDetailSingleUseMyApi.rejected, (state, {payload}) => {
             state.isLoading = false;
@@ -141,5 +171,5 @@ export const singleUseSlice = createSlice({
     }
 });
 
-export const { setSingleUse } = singleUseSlice.actions;
+export const { setSingleUse, clearSingleUseDetailMy } = singleUseSlice.actions;
 export default singleUseSlice.reducer;

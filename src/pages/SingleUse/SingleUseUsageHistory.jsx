@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
@@ -16,10 +16,13 @@ import {
   Chip,
 } from "@mui/material";
 import { FaLeaf, FaBoxOpen, FaQrcode } from "react-icons/fa";
-import { getDetailSingleUseMyApi } from "../../store/slices/singleUseSlice";
+import { getDetailSingleUseMyApi, clearSingleUseDetailMy } from "../../store/slices/singleUseSlice";
+import { getUserRole, isAuthenticated } from "../../utils/authUtils";
 
 export default function SingleUseUsageHistory({ role = "business" }) {
   const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.auth);
+  const { userInfo } = useSelector((state) => state.user);
   const {
     singleUseDetailMy = [],
     singleUseMyTotalPages = 0,
@@ -28,14 +31,128 @@ export default function SingleUseUsageHistory({ role = "business" }) {
 
   const [page, setPage] = useState(1);
   const limit = 10;
+  
+  // Track previous role
+  const prevRoleRef = useRef(role);
+  const hasMountedRef = useRef(false);
 
+  // Clear state and reset page when role changes
   useEffect(() => {
-    dispatch(getDetailSingleUseMyApi({ page, limit }));
-  }, [dispatch, page]);
+    if (prevRoleRef.current !== role) {
+      console.log('[SingleUseUsageHistory] Role changed from', prevRoleRef.current, 'to', role);
+      dispatch(clearSingleUseDetailMy());
+      prevRoleRef.current = role;
+      hasMountedRef.current = false;
+      setPage(1);
+    }
+  }, [dispatch, role]);
+
+  // Initial fetch on mount or when role/userInfo changes - wait for userInfo to be loaded
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      console.log('[SingleUseUsageHistory] User not authenticated, skipping initial fetch');
+      return;
+    }
+
+    // For customer role, wait for userInfo to be loaded before fetching
+    // This ensures backend has the user context ready
+    if (role === 'customer' && !userInfo) {
+      console.log('[SingleUseUsageHistory] Waiting for userInfo to load...');
+      return;
+    }
+
+    if (hasMountedRef.current) {
+      return; // Already mounted and fetched
+    }
+
+    console.log('[SingleUseUsageHistory] Component mounting or role/userInfo changed, fetching initial data');
+    hasMountedRef.current = true;
+    dispatch(clearSingleUseDetailMy());
+    
+    // Small delay to ensure everything is ready, especially for customer role
+    const delay = role === 'customer' ? 300 : 100;
+    const timer = setTimeout(() => {
+      if (isAuthenticated()) {
+        console.log('[SingleUseUsageHistory] Executing initial fetch with page:', 1, 'limit:', limit, 'role:', role, 'userInfo:', !!userInfo);
+        dispatch(getDetailSingleUseMyApi({ page: 1, limit }))
+          .unwrap()
+          .then((payload) => {
+            console.log('[SingleUseUsageHistory] Initial fetch successful, payload:', payload);
+            // If data is empty, try fetching again after a short delay
+            // This handles the case where backend needs more time to prepare data
+            if (payload?.data && Array.isArray(payload.data) && payload.data.length === 0 && payload.total === 0) {
+              console.log('[SingleUseUsageHistory] Data is empty, retrying fetch after delay...');
+              setTimeout(() => {
+                dispatch(getDetailSingleUseMyApi({ page: 1, limit }))
+                  .unwrap()
+                  .then((retryPayload) => {
+                    console.log('[SingleUseUsageHistory] Retry fetch successful, payload:', retryPayload);
+                  })
+                  .catch((error) => {
+                    console.error('[SingleUseUsageHistory] Retry fetch failed:', error);
+                  });
+              }, 500);
+            }
+          })
+          .catch((error) => {
+            console.error('[SingleUseUsageHistory] Initial fetch failed:', error);
+          });
+      }
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [dispatch, limit, role, userInfo]);
+
+  // Fetch data when userInfo is loaded (for customer role) - retry if data was empty before
+  useEffect(() => {
+    if (!hasMountedRef.current || !isAuthenticated()) {
+      return;
+    }
+
+    // For customer role, fetch again when userInfo is loaded
+    // This handles the case where initial fetch happened before userInfo was ready
+    if (role === 'customer' && userInfo && singleUseDetailMy.length === 0) {
+      console.log('[SingleUseUsageHistory] userInfo loaded and data is empty, fetching again...');
+      dispatch(getDetailSingleUseMyApi({ page: 1, limit }))
+        .unwrap()
+        .then((payload) => {
+          console.log('[SingleUseUsageHistory] userInfo fetch successful, payload:', payload);
+        })
+        .catch((error) => {
+          console.error('[SingleUseUsageHistory] userInfo fetch failed:', error);
+        });
+    }
+  }, [dispatch, role, userInfo, limit, singleUseDetailMy.length]);
+
+  // Fetch data when page changes (after initial mount)
+  useEffect(() => {
+    if (!hasMountedRef.current || !isAuthenticated()) {
+      return;
+    }
+
+    if (page === 1) {
+      // Page 1 is handled by initial fetch or userInfo fetch
+      return;
+    }
+
+    console.log('[SingleUseUsageHistory] Page changed to', page, 'fetching data');
+    dispatch(getDetailSingleUseMyApi({ page, limit }))
+      .unwrap()
+      .then((payload) => {
+        console.log('[SingleUseUsageHistory] Page fetch successful, payload:', payload);
+      })
+      .catch((error) => {
+        console.error('[SingleUseUsageHistory] Page fetch failed:', error);
+      });
+  }, [dispatch, page, limit]);
 
   const items = useMemo(
-    () => (Array.isArray(singleUseDetailMy) ? singleUseDetailMy : []),
-    [singleUseDetailMy]
+    () => {
+      const result = Array.isArray(singleUseDetailMy) ? singleUseDetailMy : [];
+      console.log('[SingleUseUsageHistory] Items from Redux:', result, 'isLoading:', isLoading);
+      return result;
+    },
+    [singleUseDetailMy, isLoading]
   );
 
   const toVNDate = (d) =>
@@ -45,7 +162,7 @@ export default function SingleUseUsageHistory({ role = "business" }) {
     <Box sx={{ p: { xs: 2, md: 3 }, background: "#f7f9f8", minHeight: "100vh" }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 800, color: "#0b5529" }}>
-          Single-use Usage History ({role === "staff" ? "Staff" : "Business"})
+          Single-use Usage History ({role === "staff" ? "Staff" : role === "customer" ? "Customer" : "Business"})
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Single-use consumption log with CO₂, staff, and Tx hash.
