@@ -21,12 +21,12 @@ export default function NotificationProvider({ children }) {
   const authUser = useSelector((state) => state.auth.currentUser);
 
   useEffect(() => {
-    console.log("[NP] NotificationProvider mounted. authUser =", authUser);
+   
 
     const userId =
       authUser?.user?._id || authUser?.user?._uid || authUser?._id || null;
     if (!userId) {
-      console.log("[NP] ❗ Không tìm thấy userId → không connect socket");
+    
       return;
     }
 
@@ -49,16 +49,16 @@ export default function NotificationProvider({ children }) {
     const normalizedRole = normalizeRole(rawRole);
     const mode = normalizedRole || "customer";
 
-    console.log("[NP] ✔ Bắt đầu connect socket với:", { userId, mode });
+  
     connectSocket(userId, mode);
 
     // Lấy số thông báo chưa đọc ban đầu
     api
       .get(`/notifications/receiver/${userId}`)
       .then((res) => {
-        console.log("[NP] API trả về notification:", res.data);
+      
         const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
-        console.log("[NP] Danh sách:", data);
+    
         // chỉ tính unread cho đúng role (nếu backend trả về mixed)
         const unread = data.filter(
           (n) =>
@@ -66,7 +66,7 @@ export default function NotificationProvider({ children }) {
             (!n?.receiverType ||
               n.receiverType.toLowerCase() === mode)
         ).length;
-        console.log("[NP] Số chưa đọc:", unread);
+   
         dispatch(setUnreadCount(unread));
       })
       .catch((err) => {
@@ -75,7 +75,7 @@ export default function NotificationProvider({ children }) {
 
     // Khi nhận thông báo mới → tăng badge (theo đúng role)
     const handleNewNotification = (payload) => {
-      console.log("[NP] Nhận thông báo mới:", payload);
+
       if (
         payload?.receiverType &&
         payload.receiverType.toLowerCase() !== mode
@@ -84,7 +84,7 @@ export default function NotificationProvider({ children }) {
       }
       dispatch(incrementUnread());
     };
-    console.log("[NP] Đăng ký lắng nghe thông báo mới");
+   
 
     onNotification(handleNewNotification);
 

@@ -7,7 +7,7 @@ let socket = null;
 
 // Khởi tạo kết nối
 export function connectSocket(userId, mode) {
-  console.log("[WS] connectSocket() gọi với:", { userId, mode });
+
   if (!userId || !mode) {
     console.warn("Thiếu userId hoặc mode khi connect socket");
     return;
@@ -28,12 +28,12 @@ export function connectSocket(userId, mode) {
   });
 
   socket.on("connect", () => {
-    console.log("Socket connected:", socket.id);
+   
     socket.emit("register", { userId, mode });
   });
 
   socket.on("disconnect", () => {
-    console.log("Socket disconnected");
+ 
   });
 
   socket.on("connect_error", (err) => {
@@ -44,10 +44,10 @@ export function connectSocket(userId, mode) {
 // Lắng nghe notification
 export function onNotification(callback) {
   if (!socket) {
-    console.warn("[WS] ❗ onNotification gọi nhưng socket chưa được tạo");
+
     return;
   }
-  console.log("[WS] ✔ Đăng ký lắng nghe notification");
+
   // backend có thể emit "notification" hoặc "notification:new"
   socket.on("notification", callback);
   socket.on("notification:new", callback);
@@ -59,7 +59,7 @@ export function offNotification(callback) {
     console.warn("[WS] ❗ offNotification gọi nhưng socket chưa được tạo");
     return;
   }
-  console.log("[WS] ✔ Bỏ lắng nghe notification");
+
   socket.off("notification", callback);
   socket.off("notification:new", callback);
 }

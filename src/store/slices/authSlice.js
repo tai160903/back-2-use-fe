@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import fetcher from "../../apis/fetcher";
-import toast from "react-hot-toast";
 
 // Helper function để lấy user từ localStorage (đọc mỗi lần gọi, không cache)
 const getUserFromLocalStorage = () => {
@@ -181,7 +180,6 @@ const authSlice = createSlice({
     logout: (state) => {
       state.currentUser = null;
       localStorage.removeItem("currentUser");
-      toast.success("Logout successful.");
     },
     login: (state, { payload }) => {
       state.currentUser = payload;
@@ -259,7 +257,6 @@ const authSlice = createSlice({
         state.error = null;
         state.currentUser = payload;
         localStorage.setItem("currentUser", JSON.stringify(payload));
-        toast.success("Registration successful! You can log in now.");
       })
       .addCase(activeAccountAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -272,7 +269,6 @@ const authSlice = createSlice({
       .addCase(resendOtpAPI.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
-        toast.success("OTP has been resent successfully! Please check your email.");
       })
       .addCase(resendOtpAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -285,12 +281,10 @@ const authSlice = createSlice({
       .addCase(registerBusinessAPI.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
-        toast.success("Business registration successful! Please wait for approval.");
       })
       .addCase(registerBusinessAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        toast.error(payload?.message || "An error occurred during registration. Please try again later.");
       })
       .addCase(googleRedirectAPI.pending, (state) => {
         state.isLoading = true;
@@ -300,12 +294,10 @@ const authSlice = createSlice({
         state.error = null;
         state.currentUser = payload.data;
         localStorage.setItem("currentUser", JSON.stringify(payload.data));
-        toast.success("Đăng nhập bằng Google thành công!");
       })
       .addCase(googleRedirectAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        toast.error(payload?.message || "Đăng nhập bằng Google thất bại. Vui lòng thử lại.");
       })
       .addCase(switchAccountTypeAPI.pending, (state) => {
         state.isLoading = true;
@@ -315,12 +307,12 @@ const authSlice = createSlice({
         state.error = null;
         state.currentUser = payload.data;
         localStorage.setItem("currentUser", JSON.stringify(payload.data));
-        toast.success(payload?.message || "Đổi loại tài khoản thành công.");
+
       })     
        .addCase(switchAccountTypeAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        toast.error(payload?.message || "Đổi loại tài khoản thất bại. Vui lòng thử lại.");
+
       })
       .addCase(changePasswordAPI.pending, (state) => {
         state.isLoading = true;
@@ -333,7 +325,6 @@ const authSlice = createSlice({
       .addCase(changePasswordAPI.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
-        toast.error(payload?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.");
       })
   },
 });

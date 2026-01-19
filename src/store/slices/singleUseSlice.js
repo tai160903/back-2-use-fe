@@ -50,8 +50,9 @@ export const confirmSingleUseProductUsageApi = createAsyncThunk(
     }
 );
 
-export const getDetailSingleUseMyApi = createAsyncThunk(
-    "singleUse/getDetailSingleUseMyApi",
+// get all single use product
+export const getAllSingleUseProductApi = createAsyncThunk(
+    "singleUse/getAllSingleUseProductApi",
     async ({page = 1, limit = 10}, { rejectWithValue }) => {
         try {
             const response = await fetcher.get(`/single-use-product-usage/my?page=${page}&limit=${limit}`);
@@ -63,12 +64,19 @@ export const getDetailSingleUseMyApi = createAsyncThunk(
     }
 );
 
+
+
 export const singleUseSlice = createSlice({
     name: "singleUse",
     initialState: {
         singleUse: [],
         singleUseDetail: [],
         singleUseDetailMy: [],
+        singleUseProductMy: [],
+        singleUseUsage: [],
+        singleUseUsageTotal: 0,
+        singleUseUsageTotalPages: 0,
+        singleUseUsageCurrentPage: 1,
         singleUseMyTotal: 0,
         singleUseMyTotalPages: 0,
         singleUseMyCurrentPage: 1,
@@ -121,23 +129,24 @@ export const singleUseSlice = createSlice({
             state.isLoading = false;
             state.error = payload;
         })
-        .addCase(getDetailSingleUseMyApi.pending, (state) => {
+        .addCase(getAllSingleUseProductApi.pending, (state) => {
             state.isLoading = true;
             state.error = null;
-            state.singleUseDetailMy = [];
         })
-        .addCase(getDetailSingleUseMyApi.fulfilled, (state, {payload}) => {
+        .addCase(getAllSingleUseProductApi.fulfilled, (state, {payload}) => {
             state.isLoading = false;
             state.error = null;
-            state.singleUseDetailMy = payload?.data || payload?.items || payload || [];
-            state.singleUseMyTotal = payload?.total || 0;
-            state.singleUseMyTotalPages = payload?.totalPages || 0;
-            state.singleUseMyCurrentPage = payload?.currentPage || 1;
+            state.singleUseUsage = payload?.data || [];
+            state.singleUseUsageTotal = payload?.total || 0;
+            state.singleUseUsageTotalPages = payload?.totalPages || 0;
+            state.singleUseUsageCurrentPage = payload?.currentPage || 1;
         })
-        .addCase(getDetailSingleUseMyApi.rejected, (state, {payload}) => {
+        .addCase(getAllSingleUseProductApi.rejected, (state, {payload}) => {
             state.isLoading = false;
             state.error = payload;
+            state.singleUseUsage = [];
         })
+
     }
 });
 

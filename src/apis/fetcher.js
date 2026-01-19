@@ -33,8 +33,8 @@ fetcher.interceptors.request.use((config) => {
     try {
       const tokenPayload = JSON.parse(atob(currentUser.accessToken.split('.')[1]));
       console.log('Token payload:', tokenPayload);
-      console.log('User role from token:', tokenPayload.role);
-      console.log('Request URL:', config.url);
+ 
+ 
     } catch (error) {
       console.error('Error decoding token:', error);
     }

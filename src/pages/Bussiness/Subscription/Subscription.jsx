@@ -371,6 +371,12 @@ export default function Subscription() {
                             {formatLimit(subscriptionPackage.limits?.productItemLimit)}
                           </span>
                         </div>
+                        <div className='package-limit-badge'>
+                          <span className='package-limit-label'>Reward Points</span>
+                          <span className='package-limit-value'>
+                            {formatLimit(subscriptionPackage.limits?.rewardPointsLimit)}
+                          </span>
+                        </div>
                    
                 
                       </div>
