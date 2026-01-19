@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -128,6 +128,55 @@ export default function InventoryManagement() {
       dispatch(getBusinessSingleUseProductSizesApi(singleUseFormData.productTypeId));
     }
   }, [singleUseFormData.productTypeId, dispatch]);
+
+  // Filter materials based on product type
+  // For reusable products: only show materials where isSingleUse === false or undefined
+  const reusableMaterials = useMemo(() => {
+    return Array.isArray(approvedMaterials)
+      ? approvedMaterials.filter((material) => !material.isSingleUse)
+      : [];
+  }, [approvedMaterials]);
+
+  // For single-use products: only show materials where isSingleUse === true
+  const singleUseMaterials = useMemo(() => {
+    return Array.isArray(approvedMaterials)
+      ? approvedMaterials.filter((material) => material.isSingleUse === true)
+      : [];
+  }, [approvedMaterials]);
+
+  // Reset materialId for reusable form if current selection is not in filtered list
+  useEffect(() => {
+    if (formData.materialId) {
+      if (reusableMaterials.length === 0) {
+        // If no reusable materials available, reset materialId
+        setFormData((prev) => ({ ...prev, materialId: '' }));
+      } else {
+        const isMaterialValid = reusableMaterials.some(
+          (material) => (material.id || material._id) === formData.materialId
+        );
+        if (!isMaterialValid) {
+          setFormData((prev) => ({ ...prev, materialId: '' }));
+        }
+      }
+    }
+  }, [approvedMaterials, formData.materialId, reusableMaterials]);
+
+  // Reset materialId for single-use form if current selection is not in filtered list
+  useEffect(() => {
+    if (singleUseFormData.materialId) {
+      if (singleUseMaterials.length === 0) {
+        // If no single-use materials available, reset materialId
+        setSingleUseFormData((prev) => ({ ...prev, materialId: '' }));
+      } else {
+        const isMaterialValid = singleUseMaterials.some(
+          (material) => (material.id || material._id) === singleUseFormData.materialId
+        );
+        if (!isMaterialValid) {
+          setSingleUseFormData((prev) => ({ ...prev, materialId: '' }));
+        }
+      }
+    }
+  }, [approvedMaterials, singleUseFormData.materialId, singleUseMaterials]);
 
   // State to store products by product group ID
   const [productsByGroup, setProductsByGroup] = useState({});
@@ -1533,8 +1582,8 @@ export default function InventoryManagement() {
                   fullWidth
                   variant="outlined"
                   size="small"
-                  error={approvedMaterials.length === 0}
-                  disabled={approvedMaterials.length === 0}
+                  error={reusableMaterials.length === 0}
+                  disabled={reusableMaterials.length === 0}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
@@ -1552,15 +1601,15 @@ export default function InventoryManagement() {
                     value={formData.materialId}
                     onChange={(e) => setFormData({ ...formData, materialId: e.target.value })}
                   >
-                    {approvedMaterials.map((material) => (
+                    {reusableMaterials.map((material) => (
                       <MenuItem key={material.id || material._id} value={material.id || material._id}>
                         {material.materialName || material.name}
                       </MenuItem>
                     ))}
                   </Select>
-                  {approvedMaterials.length === 0 && (
+                  {reusableMaterials.length === 0 && (
                     <FormHelperText>
-                      No materials available. Please contact admin to add materials.
+                      No reusable materials available. Please contact admin to add reusable materials.
                     </FormHelperText>
                   )}
                 </FormControl>
@@ -2159,12 +2208,17 @@ export default function InventoryManagement() {
                       },
                     }}
                   >
-                    {approvedMaterials.map((material) => (
+                    {singleUseMaterials.map((material) => (
                       <MenuItem key={material.id || material._id} value={material.id || material._id}>
                         {material.materialName || material.name}
                       </MenuItem>
                     ))}
                   </Select>
+                  {singleUseMaterials.length === 0 && (
+                    <FormHelperText sx={{ mt: 0.5 }}>
+                      No single-use materials available. Please contact admin to add single-use materials.
+                    </FormHelperText>
+                  )}
                 </FormControl>
               </Grid>
 
