@@ -371,8 +371,17 @@ export default function Subscription() {
                             {formatLimit(subscriptionPackage.limits?.productItemLimit)}
                           </span>
                         </div>
-                   
-                
+                        {subscriptionPackage.limits?.rewardPointsLimit && (
+                          <div className='package-limit-badge package-limit-badge-reward'>
+                            <span className='package-limit-label'>
+                              <BsStars style={{ marginRight: '4px', fontSize: '12px' }} />
+                              Reward Points
+                            </span>
+                            <span className='package-limit-value package-limit-value-reward'>
+                              {formatLimit(subscriptionPackage.limits?.rewardPointsLimit)}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {featuresList.length > 0 && (
