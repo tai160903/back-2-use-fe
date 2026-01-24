@@ -45,6 +45,12 @@ export default function ProductDetail() {
   const [borrowDays, setBorrowDays] = useState(1);
   const [borrowItemCo2, setBorrowItemCo2] = useState(0);
   const { isLoading: isBorrowLoading } = useSelector((state) => state.borrow || { isLoading: false });
+  const formatCurrency = (value) => Number(value || 0).toLocaleString("vi-VN");
+  const calculateDeposit = (basePrice = 0, days = 1) => {
+    const price = Number(basePrice) || 0;
+    const duration = Math.max(Number(days) || 0, 1);
+    return price + price * 0.01 * duration;
+  };
 
   useEffect(() => {
     // Bảo vệ route: bắt buộc đăng nhập
@@ -158,7 +164,7 @@ export default function ProductDetail() {
       ? allItems.find((it) => (it?.productSizeId?.sizeName || "") === sizeFilter)
       : allItems[0]) || {};
   const metaBasePrice = sampleItemForMeta?.productSizeId?.basePrice || 0;
-  const metaDeposit = sampleItemForMeta?.productSizeId?.depositValue || 0;
+  const metaDeposit = calculateDeposit(metaBasePrice, 1);
   const metaSize = sampleItemForMeta?.productSizeId?.sizeName || sizeOptions[0] || "—";
 
   const handleOpenBorrowDialog = (item) => {
@@ -170,6 +176,7 @@ export default function ProductDetail() {
       item.productGroupId?.businessId ||
       null;
 
+    const basePrice = item?.productSizeId?.basePrice || 0;
     const depositValue = item?.productSizeId?.depositValue || 0;
     const co2Reduced = item?.co2Reduced || item?.totalCo2Reduced || item?.productSizeId?.co2Reduced || item?.productSizeId?.co2EmissionPerKg || 0;
 
@@ -181,8 +188,8 @@ export default function ProductDetail() {
     const basePayload = {
       productId: item._id,
       businessId,
-      durationInDays: 10,
-      depositValue,
+      basePrice,
+      depositValue, 
     };
 
     setBorrowPayload(basePayload);
@@ -288,8 +295,9 @@ export default function ProductDetail() {
             <div className="pd-stat">
               <div className="pd-stat-icon"><AutorenewRoundedIcon fontSize="small" /></div>
               <div>
-                <span className="pd-stat-label">Deposit</span>
-                <span className="pd-stat-value">{metaDeposit.toLocaleString()}đ</span>
+                <span className="pd-stat-label">Deposit (Price + 1%/day)</span>
+                <span className="pd-stat-value">{formatCurrency(metaDeposit)}đ</span>
+              
               </div>
             </div>
           </div>
@@ -355,8 +363,9 @@ export default function ProductDetail() {
         <div className="pd-items-list">
           {paginatedItems.map((item) => {
             const sizeName = item?.productSizeId?.sizeName || "—";
-            const basePrice = (item?.productSizeId?.basePrice || 0).toLocaleString();
-            const deposit = (item?.productSizeId?.depositValue || 0).toLocaleString();
+            const basePriceValue = item?.productSizeId?.basePrice || 0;
+            const basePrice = formatCurrency(basePriceValue);
+            const deposit = formatCurrency(calculateDeposit(basePriceValue, 1));
             const co2Reduced = item?.co2Reduced || item?.totalCo2Reduced || 0;
             return (
               <div key={item._id} className="pd-line-card">
@@ -388,17 +397,12 @@ export default function ProductDetail() {
                       <span className="pd-meta-value">{basePrice}đ</span>
                     </div>
                     <div className="pd-line-meta-item">
-                      <span className="pd-meta-label">Deposit</span>
+                      <span className="pd-meta-label">Deposit (Price + 1%/day)</span>
                       <span className="pd-meta-value">{deposit}đ</span>
                     </div>
                     <div className="pd-line-meta-item">
-                      <span className="pd-meta-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <LocalFloristIcon fontSize="small" style={{ fontSize: 14 }} />
-                        CO₂ Reduced
-                      </span>
-                      <span className="pd-meta-value" style={{ color: '#10b981', fontWeight: 600 }}>
-                        {Number(co2Reduced).toFixed(2)} kg
-                      </span>
+                    
+                      
                     </div>
                   </div>
                 </div>
@@ -458,69 +462,78 @@ export default function ProductDetail() {
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          {borrowPayload && (
-            <div className="pd-detail" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                Borrow information
-              </Typography>
-
-              <div className="pd-detail-row">
-                <span className="pd-meta-label">Deposit:</span>
-                <span className="pd-detail-value">
-                  {borrowPayload.depositValue.toLocaleString("vi-VN")}đ
-                </span>
-              </div>
-
-              <div style={{ marginTop: 12 }}>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Borrow days
+          {borrowPayload && (() => {
+            const borrowBasePrice = borrowPayload?.basePrice || 0;
+            const borrowDayNumber = Math.max(Number(borrowDays) || 0, 1);
+            const borrowDeposit = calculateDeposit(borrowBasePrice, borrowDayNumber);
+            const borrowDailyFee = borrowBasePrice * 0.01;
+            return (
+              <div className="pd-detail" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                  Borrow information
                 </Typography>
-                <TextField
-                  type="number"
-                  size="small"
-                  fullWidth
-                  value={borrowDays}
-                  onChange={(e) => setBorrowDays(e.target.value)}
-                  inputProps={{ min: 1 }}
-                  helperText="Enter the number of days you want to borrow (>= 1 day & <= 10 days)"
-                />
-              </div>
 
-              <div style={{ marginTop: 12 }}>
+                <div className="pd-detail-row">
+                  <span className="pd-meta-label">Deposit:</span>
+                  <span className="pd-detail-value">
+                    {formatCurrency(borrowDeposit)}đ
+                  </span>
+                </div>
                 <Typography variant="body2" color="text.secondary">
-                  Borrow type: <strong>online</strong>
+                  Deposit = Price ({formatCurrency(borrowBasePrice)}đ) + 1% Price x {borrowDayNumber} days ({formatCurrency(borrowDailyFee)}đ/day)
                 </Typography>
-              </div>
 
-              {/* Note về CO₂ Reduced */}
-              {borrowItemCo2 > 0 && (
-                <Box
-                  sx={{
-                    mt: 2,
-                    p: 2,
-                    backgroundColor: '#f0fdf4',
-                    border: '2px solid #10b981',
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 1.5,
-                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
-                  }}
-                >
-                  <InfoOutlinedIcon sx={{ color: '#10b981', fontSize: 20, mt: 0.25, flexShrink: 0 }} />
-                    <Box>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#065f46', mb: 0.5 }}>
-                        🌱 Environmental Benefit
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#047857', lineHeight: 1.6 }}>
-                        When you successfully return this product, you will help reduce <strong>{Number(borrowItemCo2).toFixed(2)} kg CO₂</strong> emissions into the environment. 
-                        This is an important contribution to protecting our planet!
-                      </Typography>
-                    </Box>
-                </Box>
-              )}
-            </div>
-          )}
+                <div style={{ marginTop: 12 }}>
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                    Borrow days
+                  </Typography>
+                  <TextField
+                    type="number"
+                    size="small"
+                    fullWidth
+                    value={borrowDays}
+                    onChange={(e) => setBorrowDays(e.target.value)}
+                    inputProps={{ min: 1 }}
+                    helperText="Enter the number of days you want to borrow (>= 1 day & <= 10 days)"
+                  />
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Borrow type: <strong>online</strong>
+                  </Typography>
+                </div>
+
+                {/* Note về CO₂ Reduced */}
+                {borrowItemCo2 > 0 && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      p: 2,
+                      backgroundColor: '#f0fdf4',
+                      border: '2px solid #10b981',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 1.5,
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
+                    }}
+                  >
+                    <InfoOutlinedIcon sx={{ color: '#10b981', fontSize: 20, mt: 0.25, flexShrink: 0 }} />
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#065f46', mb: 0.5 }}>
+                          🌱 Environmental Benefit
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#047857', lineHeight: 1.6 }}>
+                          When you successfully return this product, you will help reduce <strong>{Number(borrowItemCo2).toFixed(2)} kg CO₂</strong> emissions into the environment. 
+                          This is an important contribution to protecting our planet!
+                        </Typography>
+                      </Box>
+                  </Box>
+                )}
+              </div>
+            );
+          })()}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setBorrowDialogOpen(false)}>Close</Button>
@@ -578,6 +591,8 @@ export default function ProductDetail() {
             if (!displayProduct) return null;
 
             const co2Reduced = displayProduct?.co2Reduced || displayProduct?.totalCo2Reduced || 0;
+            const displayBasePrice = displayProduct?.productSizeId?.basePrice || 0;
+            const displayDeposit = calculateDeposit(displayBasePrice, 1);
             return (
               <div className="pd-detail">
                 <div className="pd-detail-header">
@@ -596,7 +611,10 @@ export default function ProductDetail() {
                   <div>
                     <span className="pd-meta-label">Deposit</span>
                     <div className="pd-detail-value">
-                      {(displayProduct?.productSizeId?.depositValue || 0).toLocaleString()}đ
+                      {formatCurrency(displayDeposit)}đ
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                      Price + 1% Price x {1} day
                     </div>
                   </div>
                   <div>
@@ -604,13 +622,8 @@ export default function ProductDetail() {
                     <div className="pd-detail-value">{displayProduct.reuseCount}</div>
                   </div>
                   <div>
-                    <span className="pd-meta-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <LocalFloristIcon fontSize="small" style={{ fontSize: 14 }} />
-                      CO₂ Reduced
-                    </span>
-                    <div className="pd-detail-value" style={{ color: '#10b981', fontWeight: 600 }}>
-                      {Number(co2Reduced).toFixed(2)} kg
-                    </div>
+               
+                 
                   </div>
                 </div>
 

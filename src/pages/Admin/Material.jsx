@@ -506,7 +506,6 @@ const Material = () => {
             <div className="material-list-header-cell" style={{ flex: '2' }}>Material Name</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Type</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Reuse Limit</div>
-            <div className="material-list-header-cell" style={{ flex: '1' }}>Deposit %</div>
             <div className="material-list-header-cell" style={{ flex: '1' }}>Status</div>
             <div className="material-list-header-cell" style={{ flex: '1', textAlign: 'center' }}>Actions</div>
           </div>
@@ -547,11 +546,7 @@ const Material = () => {
                       {material.reuseLimit || material.maximumReuse || 'N/A'} times
                     </span>
                   </div>
-                  <div className="material-list-cell" style={{ flex: '1' }}>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#374151' }}>
-                      {material.depositPercent || 0}%
-                    </span>
-                  </div>
+            
                   <div className="material-list-cell" style={{ flex: '1' }}>
                     <span className={`material-status-badge ${material.isActive ? 'status-active' : 'status-pending'}`}>
                       {material.isActive ? 'Active' : 'Inactive'}

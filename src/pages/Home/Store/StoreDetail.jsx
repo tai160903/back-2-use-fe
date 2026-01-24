@@ -754,10 +754,7 @@ export default function StoreDetail() {
                   </span>
                 </div>
                 <div className="product-stats">
-                  <span className="available">
-                    Deposit: {product.depositPercent ?? 0}%
-                  </span>
-                  <span className="separator">|</span>
+       
                   <span className="unavailable">
                     Reuse limit: {product.reuseLimit ?? 0}
                   </span>

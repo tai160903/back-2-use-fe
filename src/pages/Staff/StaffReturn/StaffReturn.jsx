@@ -1509,7 +1509,7 @@ export default function StaffReturn() {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseSingleUse} disabled={isConfirmingSingleUse}>
-              Đóng
+              Close
             </Button>
             <Button
               variant="contained"
