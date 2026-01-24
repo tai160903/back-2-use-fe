@@ -1263,6 +1263,9 @@ export default function InventoryManagement() {
                   Weight (gram)
                 </Typography>
                 <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem' }}>
+                  CO2 Emission
+                </Typography>
+                <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem' }}>
                   Status
                 </Typography>
                 <Typography sx={{ fontWeight: 700, color: '#f57c00', fontSize: '0.875rem', textAlign: 'center' }}>
@@ -1382,6 +1385,18 @@ export default function InventoryManagement() {
                         }}
                       >
                         {product.weight || '-'} g
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {product.co2Emission || '-'}  CO2/kg
                       </Typography>
                     </Box>
 
