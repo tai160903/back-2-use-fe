@@ -50,8 +50,9 @@ export const confirmSingleUseProductUsageApi = createAsyncThunk(
     }
 );
 
-export const getDetailSingleUseMyApi = createAsyncThunk(
-    "singleUse/getDetailSingleUseMyApi",
+// get all single use product
+export const getAllSingleUseProductApi = createAsyncThunk(
+    "singleUse/getAllSingleUseProductApi",
     async ({page = 1, limit = 10}, { rejectWithValue }) => {
         try {
             const response = await fetcher.get(`/single-use-product-usage/my?page=${page}&limit=${limit}`);
@@ -63,12 +64,19 @@ export const getDetailSingleUseMyApi = createAsyncThunk(
     }
 );
 
+
+
 export const singleUseSlice = createSlice({
     name: "singleUse",
     initialState: {
         singleUse: [],
         singleUseDetail: [],
         singleUseDetailMy: [],
+        singleUseProductMy: [],
+        singleUseUsage: [],
+        singleUseUsageTotal: 0,
+        singleUseUsageTotalPages: 0,
+        singleUseUsageCurrentPage: 1,
         singleUseMyTotal: 0,
         singleUseMyTotalPages: 0,
         singleUseMyCurrentPage: 1,
@@ -127,47 +135,24 @@ export const singleUseSlice = createSlice({
             state.isLoading = false;
             state.error = payload;
         })
-        .addCase(getDetailSingleUseMyApi.pending, (state) => {
+        .addCase(getAllSingleUseProductApi.pending, (state) => {
             state.isLoading = true;
             state.error = null;
-            state.singleUseDetailMy = [];
         })
-        .addCase(getDetailSingleUseMyApi.fulfilled, (state, {payload}) => {
-            console.log('[singleUseSlice] getDetailSingleUseMyApi fulfilled, payload:', payload);
-            console.log('[singleUseSlice] payload type:', typeof payload);
-            console.log('[singleUseSlice] payload.data:', payload?.data);
-            console.log('[singleUseSlice] payload.items:', payload?.items);
-            console.log('[singleUseSlice] payload.data isArray:', Array.isArray(payload?.data));
-            console.log('[singleUseSlice] payload.items isArray:', Array.isArray(payload?.items));
-            console.log('[singleUseSlice] payload isArray:', Array.isArray(payload));
-            
+        .addCase(getAllSingleUseProductApi.fulfilled, (state, {payload}) => {
             state.isLoading = false;
             state.error = null;
-            
-            // Try multiple ways to extract data
-            let data = [];
-            if (Array.isArray(payload?.data)) {
-                data = payload.data;
-            } else if (Array.isArray(payload?.items)) {
-                data = payload.items;
-            } else if (Array.isArray(payload)) {
-                data = payload;
-            } else if (payload?.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
-                // If data is an object, try to extract array from it
-                data = payload.data.data || payload.data.items || [];
-            }
-            
-            console.log('[singleUseSlice] Final parsed data:', data, 'isArray:', Array.isArray(data), 'length:', data.length);
-            state.singleUseDetailMy = data;
-            state.singleUseMyTotal = payload?.total || payload?.data?.total || 0;
-            state.singleUseMyTotalPages = payload?.totalPages || payload?.data?.totalPages || 0;
-            state.singleUseMyCurrentPage = payload?.currentPage || payload?.data?.currentPage || 1;
-            console.log('[singleUseSlice] State updated - singleUseDetailMy length:', state.singleUseDetailMy.length);
+            state.singleUseUsage = payload?.data || [];
+            state.singleUseUsageTotal = payload?.total || 0;
+            state.singleUseUsageTotalPages = payload?.totalPages || 0;
+            state.singleUseUsageCurrentPage = payload?.currentPage || 1;
         })
-        .addCase(getDetailSingleUseMyApi.rejected, (state, {payload}) => {
+        .addCase(getAllSingleUseProductApi.rejected, (state, {payload}) => {
             state.isLoading = false;
             state.error = payload;
+            state.singleUseUsage = [];
         })
+
     }
 });
 

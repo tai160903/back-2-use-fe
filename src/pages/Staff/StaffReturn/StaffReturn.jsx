@@ -718,7 +718,7 @@ export default function StaffReturn() {
                           Record single-use for CO₂ points
                         </Typography>
                         <Typography variant="body2" sx={{ color: "#4b5563", mt: 0.2 }}>
-                          Ghi nhận ly/hộp dùng một lần để cộng CO₂ cho khách (100% chiều ngang).
+                        Record single-use for CO₂ points
                         </Typography>
                       </Box>
                     </Box>
@@ -1436,7 +1436,7 @@ export default function StaffReturn() {
           PaperProps={{ sx: { width: "100%" } }}
         >
           <DialogTitle sx={{ fontWeight: 700, color: "#12422a" }}>
-            Chọn ly/hộp single-use để ghi nhận CO₂
+            Select single-use to record CO₂
           </DialogTitle>
           <DialogContent dividers>
             {isLoadingSingleUse ? (
@@ -1445,12 +1445,12 @@ export default function StaffReturn() {
               </Box>
             ) : singleUseList.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
-                Không tìm thấy sản phẩm single-use cho doanh nghiệp.
+                No single-use product found for the business.
               </Typography>
             ) : (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel id="single-use-select-label">Chọn sản phẩm</InputLabel>
+                  <InputLabel id="single-use-select-label">Select product</InputLabel>
                   <Select
                     labelId="single-use-select-label"
                     value={selectedSingleUseId}
@@ -1517,7 +1517,7 @@ export default function StaffReturn() {
               disabled={!selectedSingleUseId || isConfirmingSingleUse}
               sx={{ backgroundColor: "#12422a", "&:hover": { backgroundColor: "#0d2e1c" } }}
             >
-              {isConfirmingSingleUse ? "Đang ghi nhận..." : "Ghi nhận CO₂"}
+              {isConfirmingSingleUse ? "Recording..." : "Record CO₂"}
             </Button>
           </DialogActions>
         </Dialog>

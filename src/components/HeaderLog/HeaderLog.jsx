@@ -97,7 +97,7 @@ export default function HeaderLog() {
                 !n?.receiverType ||
                 n.receiverType.toLowerCase() === mode
             );
-            console.log(response);
+      
             setNotifications(filtered);
           }
         }
@@ -175,10 +175,11 @@ export default function HeaderLog() {
         setTimeout(() => {
           window.location.reload();
         }, 100);
+        toast.success("Switch to customer successful.");
       }
     } catch (error) {
       setIsSwitchingRole(false);
-      toast.error(error?.message || "Có lỗi xảy ra khi chuyển đổi loại tài khoản.");
+      toast.error(error?.message || "Cannot switch to customer.");
     }
   };
 
@@ -203,10 +204,11 @@ export default function HeaderLog() {
         setTimeout(() => {
           window.location.reload();
         }, 100);
+        toast.success("Switch to business successful.");
       }
     } catch (error) {
       setIsSwitchingRole(false);
-      toast.error(error?.message || "Có lỗi xảy ra khi chuyển đổi loại tài khoản.");
+      toast.error(error?.message || "Cannot switch to business.");
     }
   };
 

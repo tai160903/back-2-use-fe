@@ -30,7 +30,7 @@ export const PATH = {
     BUSINESS_REGISTRATION_STATUS: "/business-registration-status",
     CUSTOMER_CO2_REPORT:"/co2-report",
     CUSTOMER_TRANSACTION_DETAIL:"/co2-report/transaction/:id",
-    CUSTOMER_SINGLE_USE_HISTORY:"/single-use-usage",
+    CUSTOMER_SINGLE_USE_HISTORY: "/single-use-history",
 
     // PAYMENT
     PAYMENTSUCESS:"/payment-success",
@@ -51,7 +51,7 @@ export const PATH = {
     BUSINESS_PROFILE:"/business/profile",
     BUSINESS_MY_CUSTOMER_HISTORY:"/business/my-customer-history",
     BUSINESS_STAFF:"/business/staff",
-    BUSINESS_SINGLE_USE_HISTORY:"/business/single-use-usage",
+    BUSINESS_SINGLE_USE_HISTORY:"/business/single-use-history",
 
     // STAFF
     STAFF: "/staff",
@@ -61,7 +61,7 @@ export const PATH = {
     STAFF_TRANSACTION: "/staff/transaction",
     STAFF_TRANSACTION_DETAIL: "/staff/transaction/:id",
     STAFF_RETURN: "/staff/return",
-    STAFF_SINGLE_USE_HISTORY:"/staff/single-use-usage",
+
 
     // ADMIN
     ADMIN: "/admin",
@@ -78,6 +78,7 @@ export const PATH = {
     ADMIN_SINGLE_USE_PRODUCT_SIZE: "/admin/single-use-product-size/:productTypeId",
     ADMIN_ECO_REWARD: "/admin/eco-reward",
     ADMIN_LEADERBOARD: "/admin/leaderboard",
+    
     // Admin Dashboard Sub Pages
     ADMIN_DASHBOARD_BORROW_TRANSACTIONS: "/admin/dashboard/borrow-transactions",
     ADMIN_DASHBOARD_BUSINESS_MONTHLY: "/admin/dashboard/business-monthly",
