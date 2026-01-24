@@ -87,6 +87,12 @@ export const singleUseSlice = createSlice({
         setSingleUse: (state, { payload }) => {
             state.singleUse = payload;
         },
+        clearSingleUseDetailMy: (state) => {
+            state.singleUseDetailMy = [];
+            state.singleUseMyTotal = 0;
+            state.singleUseMyTotalPages = 0;
+            state.singleUseMyCurrentPage = 1;
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(getDetailSingleUseApi.pending, (state) => {
@@ -150,5 +156,5 @@ export const singleUseSlice = createSlice({
     }
 });
 
-export const { setSingleUse } = singleUseSlice.actions;
+export const { setSingleUse, clearSingleUseDetailMy } = singleUseSlice.actions;
 export default singleUseSlice.reducer;
